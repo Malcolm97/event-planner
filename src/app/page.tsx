@@ -1,103 +1,138 @@
+'use client';
+
+import Header from "../components/Header";
+import EventCard, { Event } from "../components/EventCard";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+const events: Event[] = [
+	{
+		id: "1",
+		name: "Summer Music Festival",
+		location: "Central Park, NYC",
+		price: 49.99,
+		description:
+			"Join us for a day of music, food, and fun in the heart of the city!",
+		image: "/vercel.svg",
+	},
+	{
+		id: "2",
+		name: "Art & Wine Night",
+		location: "Brooklyn Art House",
+		price: 0,
+		description:
+			"Sip wine and paint with local artists. All materials provided.",
+		image: "/next.svg",
+	},
+	{
+		id: "3",
+		name: "Tech Meetup 2025",
+		location: "SoHo Tech Hub",
+		price: 15.0,
+		description:
+			"Network with tech enthusiasts and hear from industry leaders.",
+		image: "/globe.svg",
+	},
+];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+const categories = [
+	{ name: "Music" },
+	{ name: "Art" },
+	{ name: "Food" },
+	{ name: "Technology" },
+	{ name: "Wellness" },
+	{ name: "Comedy" },
+];
+
+export default function Home() {
+	return (
+		<div className="min-h-screen flex flex-col bg-gradient-to-br from-[#e0c3fc] via-[#8ec5fc] to-[#f9f9f9] dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+			<Header />
+			{/* Hero Section */}
+			<section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-r from-[#e0c3fc] to-[#8ec5fc] dark:from-gray-900 dark:to-gray-800">
+				<div className="max-w-5xl mx-auto flex flex-col items-center text-center gap-6">
+					<h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight">
+						Discover Amazing
+					</h1>
+					<p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl">
+						Find concerts, festivals, workshops, and more happening in your area.
+						Create memories with events that matter to you.
+					</p>
+					{/* Search/Filter Bar */}
+					<div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
+						<input className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Search events, artists, or venues..." />
+						<select className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+							<option>All Dates</option>
+							<option>Today</option>
+							<option>This Week</option>
+							<option>This Month</option>
+						</select>
+						<button className="rounded-lg px-6 py-2 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Find Events</button>
+					</div>
+					{/* Stats */}
+					<div className="flex gap-8 mt-6 text-center justify-center">
+						<div>
+							<div className="text-2xl font-bold text-indigo-600">500+</div>
+							<div className="text-gray-700 dark:text-gray-300 text-sm">Events this month</div>
+						</div>
+						<div>
+							<div className="text-2xl font-bold text-indigo-600">50K+</div>
+							<div className="text-gray-700 dark:text-gray-300 text-sm">Happy attendees</div>
+						</div>
+						<div>
+							<div className="text-2xl font-bold text-indigo-600">100+</div>
+							<div className="text-gray-700 dark:text-gray-300 text-sm">Cities covered</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			{/* Featured Events */}
+			<section className="max-w-6xl mx-auto w-full py-12 px-4 sm:px-8">
+				<div className="flex items-center justify-between mb-6">
+					<div>
+						<h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+							<span>✨</span> Featured Events
+						</h2>
+						<p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Discover the most popular events happening near you.</p>
+					</div>
+					<button className="rounded-lg px-4 py-2 bg-indigo-50 dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 font-semibold hover:bg-indigo-100 dark:hover:bg-gray-700 transition text-sm">View All</button>
+				</div>
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+					{events.map((event) => (
+						<EventCard key={event.id} event={event} />
+					))}
+				</div>
+			</section>
+
+			{/* Explore by Category */}
+			<section className="w-full py-10 px-4 sm:px-8 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+				<div className="max-w-5xl mx-auto">
+					<h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Explore by Category</h3>
+					<div className="flex flex-wrap gap-4 justify-center">
+						{categories.map((cat) => (
+							<button key={cat.name} className="px-6 py-2 rounded-full bg-indigo-50 dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 font-medium shadow hover:bg-indigo-100 dark:hover:bg-gray-700 transition">
+								{cat.name}
+							</button>
+						))}
+					</div>
+				</div>
+			</section>
+
+			{/* Footer */}
+			<footer className="w-full py-8 px-4 sm:px-8 bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 mt-auto">
+				<div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 dark:text-gray-400 text-sm">
+					<div className="flex gap-6 mb-2 md:mb-0">
+						<a href="#" className="hover:text-indigo-600">Events</a>
+						<a href="#" className="hover:text-indigo-600">Categories</a>
+						<a href="#" className="hover:text-indigo-600">About</a>
+					</div>
+					<div className="text-center">© 2025 PNG Events. All rights reserved.</div>
+					<div className="flex gap-4">
+						<a href="#" className="hover:text-indigo-600">Terms</a>
+						<a href="#" className="hover:text-indigo-600">Privacy</a>
+					</div>
+				</div>
+			</footer>
+		</div>
+	);
 }
