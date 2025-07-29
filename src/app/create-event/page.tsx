@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth, db, storage } from "../../lib/firebase";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getDatabase, ref as dbRef, set as dbSet } from "firebase/database";
 import { useRouter } from "next/navigation";
 
 export default function CreateEventPage() {
@@ -14,7 +15,19 @@ export default function CreateEventPage() {
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        router.replace("/signin");
+      } else {
+        setUser(user);
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,17 +45,30 @@ export default function CreateEventPage() {
         await uploadBytes(imageRef, image);
         imageUrl = await getDownloadURL(imageRef);
       }
-      await addDoc(collection(db, "events"), {
+      // Use plain JS dates for Firestore
+      const eventData = {
         name,
         location,
-        date: Timestamp.fromDate(new Date(date)),
+        date: new Date(date).toISOString(),
         price: parseFloat(price),
         description,
         image: imageUrl,
         createdBy: auth.currentUser.uid,
-        createdAt: Timestamp.now(),
-      });
+        createdAt: new Date().toISOString(),
+      };
+      console.log("Creating event:", eventData);
+      // Write to Firestore
+      await addDoc(collection(db, "events"), eventData);
+      // Write to Realtime Database
+      const rtdb = getDatabase();
+      const newEventRef = dbRef(rtdb, `events/${Date.now()}`);
+      await dbSet(newEventRef, eventData);
+      setLoading(false);
+      setError("");
+      // Show confirmation and redirect after short delay
+      alert("Event created successfully!");
       router.push("/");
+      return;
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -50,10 +76,16 @@ export default function CreateEventPage() {
     }
   };
 
+  if (!user) {
+    // Optionally show a loading spinner or nothing while checking auth
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e0c3fc] via-[#8ec5fc] to-[#f9f9f9] dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 w-full max-w-lg flex flex-col gap-4">
         <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Create Event</h2>
+        <div className="text-center text-gray-600 dark:text-gray-300 mb-2 text-base">Signed in as <span className="font-semibold text-indigo-600">{user.displayName || user.email}</span></div>
         <input
           type="text"
           placeholder="Event Name"
