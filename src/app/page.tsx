@@ -105,9 +105,9 @@ export default function Home() {
 			<footer className="w-full py-8 px-4 sm:px-8 bg-white border-t border-gray-200 mt-auto">
 				<div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
 					<div className="flex gap-6 mb-2 md:mb-0">
-						<a href="#" className="hover:text-indigo-600">Events</a>
-						<a href="#" className="hover:text-indigo-600">Categories</a>
-						<a href="#" className="hover:text-indigo-600">About</a>
+						<a href="/events" className="hover:text-indigo-600">Events</a>
+						<a href="/categories" className="hover:text-indigo-600">Categories</a>
+						<a href="/about" className="hover:text-indigo-600">About</a>
 					</div>
 					<div className="text-center">© 2025 PNG Events. All rights reserved.</div>
 					<div className="flex gap-4">

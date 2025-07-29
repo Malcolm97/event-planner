@@ -91,7 +91,7 @@ export default function SignInPage() {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      router.replace("/dashboard");
+      router.push("/dashboard");
     } catch (err: any) {
       if (err.message && err.message.includes("offline")) {
         setError("You appear to be offline. Please check your connection and try again.");

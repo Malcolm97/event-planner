@@ -67,7 +67,7 @@ export default function CreateEventPage() {
       setError("");
       // Show confirmation and redirect after short delay
       alert("Event created successfully!");
-      router.push("/");
+      router.push("/events");
       return;
     } catch (err: any) {
       console.error("Error creating event:", err);
