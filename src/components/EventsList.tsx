@@ -15,9 +15,8 @@ export default function EventsList({ userId }: EventsListProps) {
 
   useEffect(() => {
     setLoading(true);
-    let unsubFirestore: (() => void) | null = null;
-    let unsubRTDB: (() => void) | null = null;
-    let didSet = false;
+    let unsubscribe: (() => void) | null = null;
+    
     // Firestore fetch
     let q;
     if (userId) {
@@ -25,52 +24,81 @@ export default function EventsList({ userId }: EventsListProps) {
     } else {
       q = query(collection(db, "events"), orderBy("createdAt", "desc"));
     }
-    unsubFirestore = onSnapshot(q, (snapshot) => {
-      const data: Event[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-      // Sort all events by date and time (earliest first)
-      const sortedData = data.slice().sort((a, b) => {
-        const aTime = a.date ? Date.parse(a.date) : (typeof a.createdAt === 'string' ? Date.parse(a.createdAt) : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0));
-        const bTime = b.date ? Date.parse(b.date) : (typeof b.createdAt === 'string' ? Date.parse(b.createdAt) : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0));
-        return aTime - bTime;
-      });
-      if (!didSet && sortedData.length > 0) {
+    
+    unsubscribe = onSnapshot(q, (snapshot) => {
+      try {
+        const data: Event[] = snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        } as Event));
+        
+        // Sort all events by date and time (earliest first)
+        const sortedData = data.slice().sort((a, b) => {
+          const getTime = (event: Event) => {
+            if (event.date) return new Date(event.date).getTime();
+            if (typeof event.createdAt === 'string') return new Date(event.createdAt).getTime();
+            if (event.createdAt?.seconds) return event.createdAt.seconds * 1000;
+            return 0;
+          };
+          
+          return getTime(a) - getTime(b);
+        });
+        
         setEvents(sortedData);
         setLoading(false);
-        didSet = true;
-      }
-    });
-    // RTDB fetch (in parallel, but only set if Firestore hasn't set)
-    const rtdb = getDatabase();
-    const eventsRef = dbRef(rtdb, "events");
-    unsubRTDB = onValue(eventsRef, (snap) => {
-      if (didSet) return; // If Firestore already returned, skip RTDB
-      const val = snap.val();
-      if (val) {
-        const arr = Object.entries(val)
-          .map(([id, event]) => {
-            if (event && typeof event === 'object') {
-              return { id, ...event };
-            }
-            return null;
-          })
-          .filter(Boolean) as Event[];
-        // Sort all events by date and time (earliest first)
-        const sortedArr = arr.slice().sort((a, b) => {
-          const aTime = a.date ? Date.parse(a.date) : (typeof a.createdAt === 'string' ? Date.parse(a.createdAt) : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0));
-          const bTime = b.date ? Date.parse(b.date) : (typeof b.createdAt === 'string' ? Date.parse(b.createdAt) : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0));
-          return aTime - bTime;
-        });
-        setEvents(sortedArr);
-        setLoading(false);
-        didSet = true;
-      } else {
-        setEvents([]);
+      } catch (error) {
+        console.error("Error processing events:", error);
         setLoading(false);
       }
+    }, (error) => {
+      console.error("Error fetching events:", error);
+      // Fallback to RTDB if Firestore fails
+      const rtdb = getDatabase();
+      const eventsRef = dbRef(rtdb, "events");
+      
+      onValue(eventsRef, (snap) => {
+        const val = snap.val();
+        if (val) {
+          try {
+            const arr = Object.entries(val)
+              .map(([id, event]) => {
+                if (event && typeof event === 'object') {
+                  const eventData = event as any;
+                  if (userId && eventData.createdBy !== userId) {
+                    return null;
+                  }
+                  return { id, ...eventData };
+                }
+                return null;
+              })
+              .filter(Boolean) as Event[];
+            
+            // Sort events
+            const sortedArr = arr.slice().sort((a, b) => {
+              const getTime = (event: Event) => {
+                if (event.date) return new Date(event.date).getTime();
+                if (typeof event.createdAt === 'string') return new Date(event.createdAt).getTime();
+                if (event.createdAt?.seconds) return event.createdAt.seconds * 1000;
+                return 0;
+              };
+              
+              return getTime(a) - getTime(b);
+            });
+            
+            setEvents(sortedArr);
+          } catch (error) {
+            console.error("Error processing RTDB events:", error);
+            setEvents([]);
+          }
+        } else {
+          setEvents([]);
+        }
+        setLoading(false);
+      });
     });
+    
     return () => {
-      if (unsubFirestore) unsubFirestore();
-      if (unsubRTDB) unsubRTDB();
+      if (unsubscribe) unsubscribe();
     };
   }, [userId]);
 

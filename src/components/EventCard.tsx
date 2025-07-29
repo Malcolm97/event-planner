@@ -26,11 +26,14 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
             fill
             className="object-cover w-full h-full"
             sizes="(max-width: 768px) 100vw, 33vw"
-            priority
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full text-gray-400 text-4xl font-bold">
-            ?
+            🎉
           </div>
         )}
       </div>
@@ -40,6 +43,11 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
         <div className="text-xs font-semibold text-indigo-600 mb-1">
           {event.price === 0 ? "Free" : `$${event.price.toFixed(2)}`}
         </div>
+        {event.date && (
+          <div className="text-xs text-gray-500 mb-1">
+            📅 {new Date(event.date).toLocaleDateString()}
+          </div>
+        )}
         <p className="text-gray-700 text-xs line-clamp-2 flex-1">{event.description}</p>
       </div>
     </div>

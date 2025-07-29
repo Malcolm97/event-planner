@@ -49,7 +49,7 @@ export default function CreateEventPage() {
       const eventData = {
         name,
         location,
-        date: new Date(date).toISOString(),
+        date: date ? new Date(date).toISOString() : new Date().toISOString(),
         price: parseFloat(price),
         description,
         image: imageUrl,
@@ -58,10 +58,10 @@ export default function CreateEventPage() {
       };
       console.log("Creating event:", eventData);
       // Write to Firestore
-      await addDoc(collection(db, "events"), eventData);
+      const docRef = await addDoc(collection(db, "events"), eventData);
       // Write to Realtime Database
       const rtdb = getDatabase();
-      const newEventRef = dbRef(rtdb, `events/${Date.now()}`);
+      const newEventRef = dbRef(rtdb, `events/${docRef.id}`);
       await dbSet(newEventRef, eventData);
       setLoading(false);
       setError("");
@@ -70,6 +70,7 @@ export default function CreateEventPage() {
       router.push("/");
       return;
     } catch (err: any) {
+      console.error("Error creating event:", err);
       setError(err.message);
     } finally {
       setLoading(false);

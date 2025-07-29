@@ -28,44 +28,44 @@ export default function DashboardPage() {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         // Fetch user's events from Firestore and RTDB
-        let didSet = false;
         // Firestore
         const q = query(collection(db, "events"), where("createdBy", "==", user.uid), orderBy("date", "asc"));
         const unsubFS = onFSnapshot(q, (snapshot) => {
-          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          if (!didSet && data.length > 0) {
+          try {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setEvents(data);
-            didSet = true;
-          }
-        });
-        // RTDB fallback
-        const rtdb = getDatabase();
-        const eventsRef = dbRef(rtdb, "events");
-        const unsubRTDB = onValue(eventsRef, (snap) => {
-          if (didSet) return;
-          const val = snap.val();
-          if (val) {
-            const arr = Object.entries(val)
-              .map(([id, event]) => {
-                if (event && typeof event === 'object' && (event as any).createdBy === user.uid) {
-                  return { id, ...(event as any) };
-                }
-                return null;
-              })
-              .filter((e): e is { id: string; date?: string; createdAt?: string | { seconds?: number } } => e !== null);
-            arr.sort((a, b) => {
-              const aTime = a.date ? Date.parse(a.date) : (typeof a.createdAt === 'string' ? Date.parse(a.createdAt) : (a.createdAt && typeof a.createdAt === 'object' && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0));
-              const bTime = b.date ? Date.parse(b.date) : (typeof b.createdAt === 'string' ? Date.parse(b.createdAt) : (b.createdAt && typeof b.createdAt === 'object' && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0));
-              return aTime - bTime;
+          } catch (error) {
+            console.error("Error fetching user events:", error);
+            // Fallback to RTDB
+            const rtdb = getDatabase();
+            const eventsRef = dbRef(rtdb, "events");
+            onValue(eventsRef, (snap) => {
+              const val = snap.val();
+              if (val) {
+                const arr = Object.entries(val)
+                  .map(([id, event]) => {
+                    if (event && typeof event === 'object' && (event as any).createdBy === user.uid) {
+                      return { id, ...(event as any) };
+                    }
+                    return null;
+                  })
+                  .filter((e): e is { id: string; date?: string; createdAt?: string | { seconds?: number } } => e !== null);
+                
+                arr.sort((a, b) => {
+                  const aTime = a.date ? Date.parse(a.date) : (typeof a.createdAt === 'string' ? Date.parse(a.createdAt) : (a.createdAt && typeof a.createdAt === 'object' && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0));
+                  const bTime = b.date ? Date.parse(b.date) : (typeof b.createdAt === 'string' ? Date.parse(b.createdAt) : (b.createdAt && typeof b.createdAt === 'object' && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0));
+                  return aTime - bTime;
+                });
+                
+                setEvents(arr);
+              } else {
+                setEvents([]);
+              }
             });
-            setEvents(arr);
-            didSet = true;
-          } else {
-            setEvents([]);
           }
         });
-        // Clean up
-        return () => { unsubFS(); unsubRTDB(); };
+        
+        return () => unsubFS();
       }
     });
     return () => unsubscribe();

@@ -15,7 +15,7 @@ export default function EditProfilePage() {
     name: "",
     phone: "",
     company: "",
-    description: "",
+    about: "",
     photoURL: ""
   });
   const [photo, setPhoto] = useState<File | null>(null);
@@ -32,12 +32,31 @@ export default function EditProfilePage() {
         setUser(user);
         // Fetch profile from Firestore (if exists)
         const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setProfile(docSnap.data()); // Only set the fetched data
-        } else {
-          setProfile((prev: any) => ({ ...prev, name: user.displayName || "", photoURL: user.photoURL || "" }));
-        }
+        
+        // Use onSnapshot for real-time updates
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setProfile({
+              name: data.name || user.displayName || "",
+              phone: data.phone || "",
+              company: data.company || "",
+              about: data.about || data.description || "",
+              photoURL: data.photoURL || user.photoURL || ""
+            });
+          } else {
+            // Set default values from Firebase Auth
+            setProfile({
+              name: user.displayName || "",
+              phone: "",
+              company: "",
+              about: "",
+              photoURL: user.photoURL || ""
+            });
+          }
+        });
+        
+        return () => unsubscribe();
       }
     });
     return () => unsubscribe();
@@ -116,7 +135,7 @@ export default function EditProfilePage() {
         name: profile.name || "",
         company: profile.company || "",
         phone: profile.phone || "",
-        description: profile.description || "",
+        about: profile.about || "",
         photoURL: photoURL || "",
         email: user.email,
         updatedAt: new Date().toISOString(),
@@ -218,8 +237,8 @@ export default function EditProfilePage() {
           />
           <textarea
             placeholder="About"
-            value={profile.description}
-            onChange={e => setProfile({ ...profile, description: e.target.value })}
+            value={profile.about}
+            onChange={e => setProfile({ ...profile, about: e.target.value })}
             className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
             rows={3}
           />

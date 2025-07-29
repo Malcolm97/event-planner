@@ -10,196 +10,192 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ userId, email, onError }: UserProfileProps) {
-  const stableOnError = onError ?? (() => {});
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [error, setError] = useState<string>("");
 
-  const handleRetry = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    setRetryCount((c) => c + 1);
-  }, []);
+  const handleError = useCallback((message: string) => {
+    setError(message);
+    if (onError) {
+      onError(message);
+    }
+  }, [onError]);
 
   useEffect(() => {
-    setLoading(true);
-    let unsubFirestore: (() => void) | null = null;
-    let unsubRTDB: (() => void) | null = null;
-    let didSet = false;
     if (!userId && !email) {
+      handleError("No user ID or email provided.");
       setLoading(false);
-      stableOnError("No user ID or email provided.");
       return;
     }
-    // Firestore fetch
+
+    setLoading(true);
+    setError("");
+    let unsubscribe: (() => void) | null = null;
+
     if (userId) {
+      // Try Firestore first
       const userRef = doc(db, "users", userId);
-      unsubFirestore = onSnapshot(
+      unsubscribe = onSnapshot(
         userRef,
         (docSnapshot) => {
           if (docSnapshot.exists()) {
-            setUserData(docSnapshot.data());
+            const data = docSnapshot.data();
+            setUserData(data);
             setLoading(false);
-            stableOnError("");
-            didSet = true;
-          } else if (email) {
-            // If no Firestore data, try RTDB by email
-            const rtdb = getDatabase();
-            const emailKey = email.replace(/\./g, ",");
-            const rtdbRef = dbRef(rtdb, `usersByEmail/${emailKey}`);
-            unsubRTDB = onValue(
-              rtdbRef,
-              (snapshot) => {
-                if (didSet) return;
-                if (snapshot.exists()) {
-                  setUserData(snapshot.val());
-                  stableOnError("");
-                  setLoading(false);
-                  didSet = true;
-                } else {
-                  setUserData(null);
-                  stableOnError("User not found in Firestore or RTDB.");
-                  setLoading(false);
-                }
-              },
-              (err) => {
-                setError(err);
-                setLoading(false);
-                stableOnError("Failed to load user data.");
-              }
-            );
+            handleError("");
           } else {
-            // If no Firestore data, try RTDB by UID
+            // If not found in Firestore, try Realtime Database
             const rtdb = getDatabase();
             const rtdbRef = dbRef(rtdb, `users/${userId}`);
-            unsubRTDB = onValue(
-              rtdbRef,
-              (snapshot) => {
-                if (didSet) return;
-                if (snapshot.exists()) {
-                  setUserData(snapshot.val());
-                  stableOnError("");
-                  setLoading(false);
-                  didSet = true;
-                } else {
-                  setUserData(null);
-                  stableOnError("User not found in Firestore or RTDB.");
-                  setLoading(false);
-                }
-              },
-              (err) => {
-                setError(err);
+            
+            onValue(rtdbRef, (snapshot) => {
+              if (snapshot.exists()) {
+                setUserData(snapshot.val());
                 setLoading(false);
-                stableOnError("Failed to load user data.");
+                handleError("");
+              } else {
+                setUserData(null);
+                setLoading(false);
+                handleError("User profile not found.");
               }
-            );
+            }, (err) => {
+              console.error("RTDB error:", err);
+              handleError("Failed to load user profile.");
+              setLoading(false);
+            });
           }
         },
         (err) => {
-          setError(err);
+          console.error("Firestore error:", err);
+          handleError("Failed to load user profile.");
           setLoading(false);
-          stableOnError("Failed to load user data.");
-        }
-      );
-      // RTDB fetch in parallel (only set if Firestore hasn't set)
-      const rtdb = getDatabase();
-      const rtdbRef = dbRef(rtdb, `users/${userId}`);
-      unsubRTDB = onValue(
-        rtdbRef,
-        (snapshot) => {
-          if (didSet) return;
-          if (snapshot.exists()) {
-            setUserData(snapshot.val());
-            stableOnError("");
-            setLoading(false);
-            didSet = true;
-          } else {
-            setUserData(null);
-            stableOnError("User not found in Firestore or RTDB.");
-            setLoading(false);
-          }
-        },
-        (err) => {
-          setError(err);
-          setLoading(false);
-          stableOnError("Failed to load user data.");
         }
       );
     } else if (email) {
-      // Only email provided
+      // Try Realtime Database with email key
       const rtdb = getDatabase();
       const emailKey = email.replace(/\./g, ",");
       const rtdbRef = dbRef(rtdb, `usersByEmail/${emailKey}`);
-      unsubRTDB = onValue(
-        rtdbRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            setUserData(snapshot.val());
-            stableOnError("");
-            setLoading(false);
-          } else {
-            setUserData(null);
-            stableOnError("User not found in Firestore or RTDB.");
-            setLoading(false);
-          }
-        },
-        (err) => {
-          setError(err);
+      
+      onValue(rtdbRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setUserData(snapshot.val());
           setLoading(false);
-          stableOnError("Failed to load user data.");
+          handleError("");
+        } else {
+          setUserData(null);
+          setLoading(false);
+          handleError("User profile not found.");
         }
-      );
+      }, (err) => {
+        console.error("RTDB error:", err);
+        handleError("Failed to load user profile.");
+        setLoading(false);
+      });
     }
-    return () => {
-      if (unsubFirestore) unsubFirestore();
-      if (unsubRTDB) unsubRTDB();
-    };
-  }, [userId, email, stableOnError, retryCount]);
 
-  if (loading && !userData) return <p>Loading user data...</p>;
-  if (error) return <p className="text-red-500 text-sm text-center">Error: {error.message}</p>;
-  if (!userData) return (
-    <div className="text-red-500 text-sm text-center flex flex-col items-center gap-2">
-      Unable to load user data. Please try again later.<br />
-      <button
-        onClick={handleRetry}
-        className="mt-2 px-4 py-2 rounded bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-      >
-        Retry
-      </button>
-    </div>
-  );
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [userId, email, handleError]);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
+        <div className="animate-pulse">
+          <div className="w-20 h-20 bg-gray-200 rounded-full mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-24"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
+        <div className="text-red-500 text-sm text-center">
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 rounded bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
+        <div className="text-gray-500 text-sm text-center">
+          <p>No profile data available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-3">
       <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
         User Profile
       </h2>
-      {userData.photoURL && (
-        <img
-          src={userData.photoURL}
-          alt="Profile"
-          className="w-20 h-20 rounded-full object-cover mb-2"
-        />
-      )}
-      <p className="text-gray-800 dark:text-gray-200 font-semibold">
-        Name: {userData.name}
-      </p>
-      <p className="text-gray-600 dark:text-gray-400">
-        Email: {userData.email}
-      </p>
-      {userData.company && (
-        <p className="text-gray-600 dark:text-gray-400">
-          Company: {userData.company}
-        </p>
-      )}
-      {userData.phone && (
-        <p className="text-gray-600 dark:text-gray-400">Phone: {userData.phone}</p>
-      )}
-      {userData.about && (
-        <p className="text-gray-600 dark:text-gray-400">About: {userData.about}</p>
-      )}
+      
+      {/* Profile Photo */}
+      <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+        {userData.photoURL ? (
+          <img
+            src={userData.photoURL}
+            alt="Profile"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : null}
+        <div className={`text-2xl font-bold text-gray-500 ${userData.photoURL ? 'hidden' : ''}`}>
+          {userData.name ? userData.name.charAt(0).toUpperCase() : '?'}
+        </div>
+      </div>
+
+      {/* Profile Information */}
+      <div className="text-center space-y-2">
+        {userData.name && (
+          <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            {userData.name}
+          </p>
+        )}
+        
+        {userData.email && (
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {userData.email}
+          </p>
+        )}
+        
+        {userData.company && (
+          <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+            {userData.company}
+          </p>
+        )}
+        
+        {userData.phone && (
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            📞 {userData.phone}
+          </p>
+        )}
+        
+        {(userData.about || userData.description) && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
+            {userData.about || userData.description}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
