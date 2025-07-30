@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import Header from '../../components/Header';
@@ -8,66 +9,116 @@ import EventCard, { Event } from '../../components/EventCard';
 import { FiMusic, FiCamera, FiCoffee, FiMonitor, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
 
 const categories = [
-  { 
-    name: 'Music', 
-    icon: FiMusic, 
-    color: 'bg-purple-100 text-purple-600',
-    description: 'Concerts, festivals, and live performances'
-  },
-  { 
-    name: 'Art', 
-    icon: FiCamera, 
-    color: 'bg-pink-100 text-pink-600',
-    description: 'Exhibitions, galleries, and creative workshops'
-  },
-  { 
-    name: 'Food', 
-    icon: FiCoffee, 
-    color: 'bg-orange-100 text-orange-600',
-    description: 'Food festivals, cooking classes, and tastings'
-  },
-  { 
-    name: 'Technology', 
-    icon: FiMonitor, 
-    color: 'bg-blue-100 text-blue-600',
-    description: 'Tech conferences, workshops, and meetups'
-  },
-  { 
-    name: 'Wellness', 
-    icon: FiHeart, 
-    color: 'bg-green-100 text-green-600',
-    description: 'Yoga, meditation, and health workshops'
-  },
-  { 
-    name: 'Comedy', 
-    icon: FiSmile, 
-    color: 'bg-yellow-100 text-yellow-600',
-    description: 'Stand-up shows, improv, and entertainment'
-  },
-  { 
-    name: 'Business', 
-    icon: FiTrendingUp, 
-    color: 'bg-indigo-100 text-indigo-600',
-    description: 'Networking, conferences, and seminars'
-  },
-  { 
-    name: 'Education', 
-    icon: FiBook, 
-    color: 'bg-teal-100 text-teal-600',
-    description: 'Workshops, courses, and learning sessions'
-  },
-  { 
-    name: 'Community', 
-    icon: FiUsers, 
-    color: 'bg-red-100 text-red-600',
-    description: 'Local meetups, social events, and gatherings'
-  }
+  { name: 'Music', icon: FiMusic, color: 'bg-purple-100 text-purple-600', description: 'Concerts, festivals, and live performances' },
+  { name: 'Art', icon: FiCamera, color: 'bg-pink-100 text-pink-600', description: 'Exhibitions, galleries, and creative workshops' },
+  { name: 'Food', icon: FiCoffee, color: 'bg-orange-100 text-orange-600', description: 'Food festivals, cooking classes, and tastings' },
+  { name: 'Technology', icon: FiMonitor, color: 'bg-blue-100 text-blue-600', description: 'Tech conferences, workshops, and meetups' },
+  { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600', description: 'Yoga, meditation, and health workshops' },
+  { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600', description: 'Stand-up shows, improv, and entertainment' },
+  { name: 'Business', icon: FiTrendingUp, color: 'bg-indigo-100 text-indigo-600', description: 'Networking, conferences, and seminars' },
+  { name: 'Education', icon: FiBook, color: 'bg-teal-100 text-teal-600', description: 'Workshops, courses, and learning sessions' },
+  { name: 'Community', icon: FiUsers, color: 'bg-red-100 text-red-600', description: 'Local meetups, social events, and gatherings' },
+  { name: 'Festival', icon: FiStar, color: 'bg-fuchsia-100 text-fuchsia-600', description: 'Festivals and large celebrations' },
+  { name: 'Conference', icon: FiTrendingUp, color: 'bg-cyan-100 text-cyan-600', description: 'Professional and industry conferences' },
+  { name: 'Workshop', icon: FiBook, color: 'bg-lime-100 text-lime-600', description: 'Hands-on learning and workshops' },
+  { name: 'Sports', icon: FiStar, color: 'bg-amber-100 text-amber-600', description: 'Sports events and competitions' },
+  { name: 'Meetup', icon: FiUsers, color: 'bg-gray-100 text-gray-600', description: 'Casual meetups and gatherings' },
 ];
+// Categories now match event creation page exactly
+
+function UpcomingPreviousSlider({ events, categories, type, selectedCategory, loading }: {
+  events: Event[];
+  categories: any[];
+  type: 'upcoming' | 'previous';
+  selectedCategory: string;
+  loading: boolean;
+}) {
+  const [slide, setSlide] = useState(0);
+  const now = new Date();
+  const filtered = events
+    .filter(ev => ev.date && (type === 'upcoming' ? new Date(ev.date) >= now : new Date(ev.date) < now))
+    .sort((a, b) => type === 'upcoming'
+      ? new Date(a.date).getTime() - new Date(b.date).getTime()
+      : new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  const perSlide = 3;
+  const maxSlide = Math.max(0, Math.ceil(filtered.length / perSlide) - 1);
+  const eventsToShow = filtered.slice(slide * perSlide, slide * perSlide + perSlide);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">
+          {selectedCategory === 'All'
+            ? (type === 'upcoming' ? 'Upcoming Events' : 'Previous Events')
+            : `${type === 'upcoming' ? 'Upcoming' : 'Previous'} ${selectedCategory} Events`}
+        </h2>
+        <div className="text-sm text-gray-500">
+          {filtered.length} event{filtered.length !== 1 ? 's' : ''} found
+        </div>
+      </div>
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading events...</p>
+        </div>
+      ) : filtered.length > 0 ? (
+        <div className="relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {eventsToShow.map(event => (
+              <div key={event.id} className="relative">
+                <EventCard event={event} />
+                <div className="absolute top-2 right-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    categories.find(cat => cat.name === event.category)?.color || 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {event.category}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {filtered.length > perSlide && (
+            <div className="flex justify-center gap-4 mt-4">
+              <button
+                onClick={() => setSlide(s => Math.max(0, s - 1))}
+                disabled={slide === 0}
+                className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition disabled:opacity-50"
+                aria-label="Previous slide"
+              >
+                &larr;
+              </button>
+              <button
+                onClick={() => setSlide(s => Math.min(maxSlide, s + 1))}
+                disabled={slide === maxSlide}
+                className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition disabled:opacity-50"
+                aria-label="Next slide"
+              >
+                &rarr;
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No {type} events found</h3>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CategoriesPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const searchParams = useSearchParams();
+  const initialCategory = (() => {
+    const param = searchParams?.get('category');
+    if (param && categories.some(cat => cat.name === param)) return param;
+    return 'All';
+  })();
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -108,7 +159,7 @@ export default function CategoriesPage() {
   };
 
   const categorizedEvents = categories.reduce((acc, category) => {
-    acc[category.name] = events.filter(event => getEventCategory(event) === category.name);
+    acc[category.name] = events.filter(event => event.category === category.name);
     return acc;
   }, {} as Record<string, Event[]>);
 
@@ -117,10 +168,12 @@ export default function CategoriesPage() {
         event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : categorizedEvents[selectedCategory]?.filter(event => 
-        event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      ) || [];
+    : events.filter(event => 
+        event.category === selectedCategory && (
+          event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f6f6fb]">
@@ -174,7 +227,8 @@ export default function CategoriesPage() {
           
           {categories.map((category) => {
             const Icon = category.icon;
-            const eventCount = categorizedEvents[category.name]?.length || 0;
+            const now = new Date();
+            const eventCount = (categorizedEvents[category.name] || []).filter(ev => ev.date && new Date(ev.date) >= now).length;
             
             return (
               <button
@@ -200,66 +254,106 @@ export default function CategoriesPage() {
         </div>
       </section>
 
-      {/* Events Display */}
+      {/* Upcoming Events Display */}
       <section className="max-w-6xl mx-auto w-full py-8 px-4 sm:px-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            {selectedCategory === 'All' ? 'All Events' : `${selectedCategory} Events`}
+            {selectedCategory === 'All' ? 'Upcoming Events' : `Upcoming ${selectedCategory} Events`}
           </h2>
           <div className="text-sm text-gray-500">
-            {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
+            {(() => {
+              const now = new Date();
+              const upcoming = filteredEvents.filter(ev => ev.date && new Date(ev.date) >= now);
+              return `${upcoming.length} event${upcoming.length !== 1 ? 's' : ''} found`;
+            })()}
           </div>
         </div>
-        
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
             <p className="text-gray-500 mt-4">Loading events...</p>
           </div>
-        ) : filteredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map(event => (
-              <div key={event.id} className="relative">
-                <EventCard event={event} />
-                <div className="absolute top-2 right-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    categories.find(cat => cat.name === getEventCategory(event))?.color || 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {getEventCategory(event)}
-                  </span>
-                </div>
+        ) : (() => {
+          const now = new Date();
+          const upcoming = filteredEvents.filter(ev => ev.date && new Date(ev.date) >= now).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          if (upcoming.length > 0) {
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {upcoming.map(event => (
+                  <div key={event.id} className="relative">
+                    <EventCard event={event} />
+                    <div className="absolute top-2 right-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        categories.find(cat => cat.name === event.category)?.color || 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {event.category}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
-            <p className="text-gray-500 mb-6">
-              {searchTerm 
-                ? `No events match "${searchTerm}" in ${selectedCategory === 'All' ? 'any category' : selectedCategory}.`
-                : `No events found in the ${selectedCategory} category.`}
-            </p>
-            <div className="flex gap-4 justify-center">
-              {searchTerm && (
-                <button 
-                  onClick={() => setSearchTerm('')}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-                >
-                  Clear Search
-                </button>
-              )}
-              <button 
-                onClick={() => {setSelectedCategory('All'); setSearchTerm('');}}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-              >
-                View All Events
-              </button>
-            </div>
-          </div>
-        )}
+            );
+          } else {
+            return (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events found</h3>
+              </div>
+            );
+          }
+        })()}
       </section>
-
+      {/* Previous Events Display */}
+      <section className="max-w-6xl mx-auto w-full py-8 px-4 sm:px-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {selectedCategory === 'All' ? 'Previous Events' : `Previous ${selectedCategory} Events`}
+          </h2>
+          <div className="text-sm text-gray-500">
+            {(() => {
+              const now = new Date();
+              const previous = filteredEvents.filter(ev => ev.date && new Date(ev.date) < now);
+              return `${previous.length} event${previous.length !== 1 ? 's' : ''} found`;
+            })()}
+          </div>
+        </div>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="text-gray-500 mt-4">Loading events...</p>
+          </div>
+        ) : (() => {
+          const now = new Date();
+          const previous = filteredEvents
+            .filter(ev => ev.date && new Date(ev.date) < now)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          if (previous.length > 0) {
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {previous.map(event => (
+                  <div key={event.id} className="relative">
+                    <EventCard event={event} />
+                    <div className="absolute top-2 right-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        categories.find(cat => cat.name === event.category)?.color || 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {event.category}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          } else {
+            return (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No previous events found</h3>
+              </div>
+            );
+          }
+        })()}
+      </section>
       {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-8 bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">

@@ -130,24 +130,57 @@ export default function UserProfile({ userId, email, onError }: UserProfileProps
   }
 
   if (!userData) {
+    // Try to show fallback from Auth if available
+    let fallbackEmail = email || '';
+    let fallbackName = '';
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const authUser = JSON.parse(window.localStorage.getItem('firebase:authUser') || '{}');
+        fallbackEmail = fallbackEmail || authUser.email || '';
+        fallbackName = authUser.displayName || '';
+      } catch {}
+    }
+    // If only email is available, show it clearly
+    if (fallbackEmail && !fallbackName) {
+      return (
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-3">
+          <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">User Profile</h2>
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+            <div className="text-2xl font-bold text-gray-500">{fallbackEmail.charAt(0).toUpperCase()}</div>
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{fallbackEmail}</p>
+            <p className="text-sm text-gray-500">No other profile data set yet.</p>
+          </div>
+        </div>
+      );
+    }
+    // If neither, show generic fallback
     return (
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
         <div className="text-gray-500 text-sm text-center">
           <p>No profile data available</p>
+          {fallbackEmail && <p className="mt-2">Email: {fallbackEmail}</p>}
+          {fallbackName && <p>Name: {fallbackName}</p>}
         </div>
       </div>
     );
   }
 
+  // Only show fields that exist
+  const hasPhoto = !!userData.photoURL;
+  const hasName = !!userData.name;
+  const hasEmail = !!userData.email;
+  const hasCompany = !!userData.company;
+  const hasPhone = !!userData.phone;
+  const hasAbout = !!userData.about || !!userData.description;
+
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-3">
-      <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
-        User Profile
-      </h2>
-      
-      {/* Profile Photo */}
+      <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">User Profile</h2>
+      {/* Profile Photo or Initial */}
       <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-        {userData.photoURL ? (
+        {hasPhoto ? (
           <img
             src={userData.photoURL}
             alt="Profile"
@@ -158,42 +191,28 @@ export default function UserProfile({ userId, email, onError }: UserProfileProps
               target.nextElementSibling?.classList.remove('hidden');
             }}
           />
+        ) : hasName ? (
+          <div className="text-2xl font-bold text-gray-500">{userData.name.charAt(0).toUpperCase()}</div>
+        ) : hasEmail ? (
+          <div className="text-2xl font-bold text-gray-500">{userData.email.charAt(0).toUpperCase()}</div>
         ) : null}
-        <div className={`text-2xl font-bold text-gray-500 ${userData.photoURL ? 'hidden' : ''}`}>
-          {userData.name ? userData.name.charAt(0).toUpperCase() : '?'}
-        </div>
       </div>
-
       {/* Profile Information */}
       <div className="text-center space-y-2">
-        {userData.name && (
-          <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            {userData.name}
-          </p>
+        {hasName && (
+          <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{userData.name}</p>
         )}
-        
-        {userData.email && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {userData.email}
-          </p>
+        {hasEmail && (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{userData.email}</p>
         )}
-        
-        {userData.company && (
-          <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
-            {userData.company}
-          </p>
+        {hasCompany && (
+          <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{userData.company}</p>
         )}
-        
-        {userData.phone && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            📞 {userData.phone}
-          </p>
+        {hasPhone && (
+          <p className="text-sm text-gray-600 dark:text-gray-400">📞 {userData.phone}</p>
         )}
-        
-        {(userData.about || userData.description) && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
-            {userData.about || userData.description}
-          </p>
+        {hasAbout && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">{userData.about || userData.description}</p>
         )}
       </div>
     </div>

@@ -37,9 +37,9 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="font-extrabold text-xl text-gray-900 tracking-tight">PNG Events</Link>
           <nav className="hidden md:flex gap-6 text-gray-700 font-medium">
-            <Link href="/events" className="hover:text-indigo-600">Events</Link>
-            <Link href="/categories" className="hover:text-indigo-600">Categories</Link>
-            <Link href="/about" className="hover:text-indigo-600">About</Link>
+            <Link href="/events" className="hover:text-red-600">Events</Link>
+            <Link href="/categories" className="hover:text-red-600">Categories</Link>
+            <Link href="/about" className="hover:text-red-600">About</Link>
           </nav>
         </div>
         <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export default function Header() {
               <span>Sign In</span>
             </Link>
           )}
-          <Link href="/create-event" className="ml-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition shadow">
+          <Link href="/create-event" className="ml-2 px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition shadow">
             Create Event
           </Link>
         </div>

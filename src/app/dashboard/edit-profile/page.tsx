@@ -15,10 +15,9 @@ export default function EditProfilePage() {
     name: "",
     phone: "",
     company: "",
-    about: "",
-    photoURL: ""
+    about: ""
   });
-  const [photo, setPhoto] = useState<File | null>(null);
+  // Image upload removed due to plan limitations
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -129,61 +128,36 @@ export default function EditProfilePage() {
     setError("");
     setSuccess("");
     try {
-      let photoURL = profile.photoURL;
-      // Only send allowed fields to Firestore and RTDB
-      const profileData = {
+      // Image upload removed due to plan limitations
+      let profileData = {
         name: profile.name || "",
         company: profile.company || "",
         phone: profile.phone || "",
         about: profile.about || "",
-        photoURL: photoURL || "",
         email: user.email,
         updatedAt: new Date().toISOString(),
       };
-      if (photo) {
-        setUploading(true);
-        try {
-          await updateDoc(doc(db, "users", user.uid), {
-            ...profileData,
-            photoURL: "",
-          });
-          const photoRef = ref(storage, `users/${user.uid}/profile.jpg`);
-          await uploadBytes(photoRef, photo);
-          photoURL = await getDownloadURL(photoRef);
-          await updateDoc(doc(db, "users", user.uid), {
-            photoURL,
-            updatedAt: new Date().toISOString(),
-          });
-        } catch (err: any) {
-          if (err.message && err.message.includes("offline")) {
-            setError("You appear to be offline. Please check your connection and try again.");
-          } else {
-            setError("Failed to save changes. Please try again.");
-          }
-          setUploading(false);
-          setLoading(false);
-          return;
+      try {
+        await setDoc(doc(db, "users", user.uid), profileData, { merge: true });
+      } catch (err: any) {
+        if (err.message && err.message.includes("offline")) {
+          setError("You appear to be offline. Please check your connection and try again.");
+        } else {
+          setError("Failed to save changes. Please try again.");
         }
-        setUploading(false);
-      } else {
-        try {
-          await updateDoc(doc(db, "users", user.uid), profileData);
-        } catch (err: any) {
-          if (err.message && err.message.includes("offline")) {
-            setError("You appear to be offline. Please check your connection and try again.");
-          } else {
-            setError("Failed to save changes. Please try again.");
-          }
-          setLoading(false);
-          return;
-        }
+        setLoading(false);
+        return;
       }
       // Write to Realtime Database as well, using email as key
       const rtdb = getDatabase();
       const emailKey = user.email.replace(/\./g, ',');
       await dbSet(dbRef(rtdb, `usersByEmail/${emailKey}`), profileData);
       setSuccess("Profile updated successfully!");
-      router.replace("/dashboard");
+      // Show success for 2 seconds, then redirect
+      setTimeout(() => {
+        setSuccess("");
+        router.replace("/dashboard");
+      }, 2000);
     } catch (err: any) {
       setError("Failed to save changes. Please try again.");
       setUploading(false);
@@ -199,19 +173,23 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e0c3fc] via-[#8ec5fc] to-[#f9f9f9] dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+      <div className="absolute top-6 left-6">
+        <a href="/dashboard" className="flex items-center text-gray-600 hover:text-indigo-600 text-sm font-medium gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Back to Dashboard
+        </a>
+      </div>
       <div className="flex flex-col gap-8 w-full max-w-md">
         <UserProfile userId={user?.uid} />
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4">
           <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Edit Profile</h2>
           <div className="flex flex-col items-center gap-2">
+            {/* Profile image upload removed due to plan limitations */}
             <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-3xl font-bold text-indigo-600 dark:text-indigo-300 overflow-hidden">
-              {profile.photoURL ? (
-                <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                profile.name[0] || "U"
-              )}
+              {profile.name[0] || "U"}
             </div>
-            <input type="file" accept="image/*" onChange={e => setPhoto(e.target.files?.[0] || null)} />
           </div>
           <input
             type="text"
@@ -242,9 +220,24 @@ export default function EditProfilePage() {
             className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
             rows={3}
           />
-          {uploading && <div className="text-indigo-500 text-sm text-center">Uploading photo...</div>}
-          {success && <div className="text-green-500 text-sm text-center">{success}</div>}
-          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+          {uploading && (
+            <div className="flex items-center justify-center gap-2 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-4 py-2 rounded mb-2 text-sm font-medium">
+              <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+              Uploading photo...
+            </div>
+          )}
+          {success && (
+            <div className="flex items-center justify-center gap-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-4 py-2 rounded mb-2 text-sm font-semibold shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-500"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              {success}
+            </div>
+          )}
+          {error && (
+            <div className="flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-4 py-2 rounded mb-2 text-sm font-semibold shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-red-500"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              {error}
+            </div>
+          )}
           <button type="submit" disabled={loading} className="rounded-lg px-6 py-2 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition disabled:opacity-50">
             {loading ? "Saving..." : "Save Changes"}
           </button>

@@ -5,6 +5,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import Header from '../../components/Header';
 import EventCard, { Event } from '../../components/EventCard';
+import CompactEventCard from '../../components/CompactEventCard';
 import { FiMapPin, FiCalendar, FiFilter } from 'react-icons/fi';
 
 const areas = [
@@ -33,32 +34,33 @@ export default function EventsPage() {
         id: doc.id,
         ...doc.data()
       } as Event));
-      
-      // Filter upcoming events and sort by date
-      const upcomingEvents = eventsData
-        .filter(event => {
-          const eventDate = new Date(event.date || event.createdAt);
-          return eventDate >= new Date();
-        })
-        .sort((a, b) => {
-          const dateA = new Date(a.date || a.createdAt);
-          const dateB = new Date(b.date || b.createdAt);
-          return dateA.getTime() - dateB.getTime();
-        });
-      
-      setEvents(upcomingEvents);
+      setEvents(eventsData);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
+  const now = new Date();
+  const upcomingEvents = events.filter(event => {
+    const eventDate = new Date(event.date || event.createdAt);
+    return eventDate >= now;
+  });
+  const previousEvents = events.filter(event => {
+    const eventDate = new Date(event.date || event.createdAt);
+    return eventDate < now;
+  });
+
   const filteredEvents = selectedArea === 'All Areas' 
-    ? events 
-    : events.filter(event => event.location?.includes(selectedArea));
+    ? upcomingEvents 
+    : upcomingEvents.filter(event => event.location?.includes(selectedArea));
+
+  const filteredPreviousEvents = selectedArea === 'All Areas'
+    ? previousEvents
+    : previousEvents.filter(event => event.location?.includes(selectedArea));
 
   const groupedEvents = areas.reduce((acc, area) => {
-    acc[area] = events.filter(event => event.location?.includes(area));
+    acc[area] = upcomingEvents.filter(event => event.location?.includes(area));
     return acc;
   }, {} as Record<string, Event[]>);
 
@@ -108,88 +110,86 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* Events by Area Slider */}
+      {/* Events by Area Grid */}
       <section className="max-w-6xl mx-auto w-full py-12 px-4 sm:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Events by Area</h2>
-          <div className="flex gap-2">
-            <button 
-              onClick={prevSlide}
-              className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition"
-            >
-              ←
-            </button>
-            <button 
-              onClick={nextSlide}
-              className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition"
-            >
-              →
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-hidden">
-          <div 
-            className="flex transition-transform duration-300 ease-in-out"
-            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-          >
-            {areas.map((area, index) => (
-              <div key={area} className="w-full flex-shrink-0 px-2">
-                <div className="bg-white rounded-xl p-6 shadow border border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiMapPin className="text-indigo-600" />
-                    {area}
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {groupedEvents[area]?.slice(0, 6).map(event => (
-                      <EventCard key={event.id} event={event} />
-                    )) || (
-                      <div className="col-span-full text-center text-gray-500 py-8">
-                        No events found in {area}
-                      </div>
-                    )}
-                  </div>
-                  {groupedEvents[area]?.length > 6 && (
-                    <div className="text-center mt-4">
-                      <button className="text-indigo-600 hover:text-indigo-700 font-medium">
-                        View all {groupedEvents[area].length} events in {area}
-                      </button>
-                    </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-8">Events by Area</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {areas.map(area => {
+            const areaEvents = upcomingEvents.filter(event => event.location?.includes(area));
+            return (
+              <div
+                key={area}
+                className={`bg-white rounded-xl p-6 shadow border border-gray-200 cursor-pointer hover:shadow-lg transition flex flex-col h-full ${selectedArea === area ? 'ring-2 ring-indigo-500' : ''}`}
+                onClick={() => setSelectedArea(area)}
+              >
+                <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <FiMapPin className="text-indigo-600" />
+                  {area}
+                </h3>
+                <div className="text-xs text-gray-500 mb-2">{areaEvents.length} upcoming event{areaEvents.length !== 1 ? 's' : ''}</div>
+                <div className="flex flex-col gap-1 mb-2">
+                  {areaEvents.slice(0, 3).map(event => (
+                    <CompactEventCard key={event.id} event={event} />
+                  ))}
+                  {areaEvents.length === 0 && (
+                    <div className="text-gray-400 text-sm text-center py-4">No events found in {area}</div>
                   )}
                 </div>
+                {areaEvents.length > 3 && (
+                  <div className="text-center mt-2">
+                    <span className="text-indigo-600 hover:text-indigo-700 font-medium text-xs">+ {areaEvents.length - 3} more</span>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Slide Indicators */}
-        <div className="flex justify-center gap-2 mt-6">
-          {areas.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-2 h-2 rounded-full transition ${
-                index === currentSlide ? 'bg-indigo-600' : 'bg-gray-300'
-              }`}
-            />
-          ))}
+            );
+          })}
         </div>
       </section>
+
+      {/* Location Events Section */}
+      {selectedArea !== 'All Areas' && (
+        <section className="max-w-6xl mx-auto w-full py-8 px-4 sm:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Events in {selectedArea}</h2>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+              <p className="text-gray-500 mt-4">Loading events...</p>
+            </div>
+          ) : filteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredEvents.map(event => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">🎭</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">No events found</h3>
+              <p className="text-gray-500 mb-4">No upcoming events found in {selectedArea}.</p>
+              <button 
+                onClick={() => setSelectedArea('All Areas')}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
+              >
+                View All Areas
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* All Events List */}
       <section className="max-w-6xl mx-auto w-full py-12 px-4 sm:px-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          {selectedArea === 'All Areas' ? 'All Upcoming Events' : `Events in ${selectedArea}`}
+          All Upcoming Events
         </h2>
-        
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
             <p className="text-gray-500 mt-4">Loading events...</p>
           </div>
-        ) : filteredEvents.length > 0 ? (
+        ) : upcomingEvents.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map(event => (
+            {upcomingEvents.map(event => (
               <EventCard key={event.id} event={event} />
             ))}
           </div>
@@ -197,11 +197,7 @@ export default function EventsPage() {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎭</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
-            <p className="text-gray-500 mb-6">
-              {selectedArea === 'All Areas' 
-                ? "There are no upcoming events at the moment." 
-                : `No upcoming events found in ${selectedArea}.`}
-            </p>
+            <p className="text-gray-500 mb-6">There are no upcoming events at the moment.</p>
             <button 
               onClick={() => setSelectedArea('All Areas')}
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
@@ -211,6 +207,18 @@ export default function EventsPage() {
           </div>
         )}
       </section>
+
+      {/* Previous Events Section */}
+      {filteredPreviousEvents.length > 0 && (
+        <section className="max-w-6xl mx-auto w-full py-8 px-4 sm:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Previous Events</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPreviousEvents.map(event => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-8 bg-white border-t border-gray-200 mt-auto">
