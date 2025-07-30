@@ -6,24 +6,7 @@ import { auth } from "../lib/firebase";
 import { collection, query, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import EventCard, { Event } from "../components/EventCard";
-import { FiMusic, FiCamera, FiCoffee, FiMonitor, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
-
-const allCategories = [
-  { name: "Music" },
-  { name: "Art" },
-  { name: "Food" },
-  { name: "Technology", color: 'bg-yellow-100 text-yellow-700' },
-  { name: "Wellness" },
-  { name: "Comedy" },
-  { name: "Business" },
-  { name: "Education" },
-  { name: "Community" },
-  { name: "Festival" },
-  { name: "Conference" },
-  { name: "Workshop" },
-  { name: "Sports" },
-  { name: "Meetup" },
-];
+import ViewAllEventsButton from '../components/ViewAllEventsButton';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
@@ -33,7 +16,11 @@ export default function Home() {
   // Dialog state
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [host, setHost] = useState<any>(null);
+  const [hostLoading, setHostLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState('All Dates');
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((u) => setUser(u));
@@ -68,9 +55,50 @@ export default function Home() {
     }
   }, [selectedEvent]);
 
+  useEffect(() => {
+    const filterEvents = () => {
+      let tempEvents = events;
+
+      if (searchTerm) {
+        tempEvents = tempEvents.filter(event =>
+          event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.location.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      if (selectedDate !== 'All Dates') {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const endOfWeek = new Date(now);
+        endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        tempEvents = tempEvents.filter(event => {
+          if (!event.date) return false;
+          const eventDate = new Date(event.date);
+          switch (selectedDate) {
+            case 'Today':
+              return eventDate.toDateString() === now.toDateString();
+            case 'This Week':
+              return eventDate >= now && eventDate <= endOfWeek;
+            case 'This Month':
+              return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
+            default:
+              return true;
+          }
+        });
+      }
+
+      setFilteredEvents(tempEvents);
+    };
+
+    filterEvents();
+  }, [events, searchTerm, selectedDate]);
+
   const now = new Date();
-  const upcomingEvents = events.filter(ev => ev.date && new Date(ev.date) >= now);
-  const previousEvents = events.filter(ev => ev.date && new Date(ev.date) < now);
+  const upcomingEvents = filteredEvents.filter(ev => ev.date && new Date(ev.date) >= now);
+  const previousEvents = filteredEvents.filter(ev => ev.date && new Date(ev.date) < now);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -197,39 +225,8 @@ export default function Home() {
             {allCategories
               .filter(cat => events.some(ev => ev.category === cat.name))
               .map((cat) => {
-                const Icon = {
-                  Music: FiMusic,
-                  Art: FiCamera,
-                  Food: FiCoffee,
-                  Technology: FiMonitor,
-                  Wellness: FiHeart,
-                  Comedy: FiSmile,
-                  Business: FiTrendingUp,
-                  Education: FiBook,
-                  Community: FiUsers,
-                  Festival: FiStar,
-                  Conference: FiTrendingUp,
-                  Workshop: FiBook,
-                  Sports: FiStar,
-                  Meetup: FiUsers,
-                }[cat.name] || FiStar;
-                const categoryColor = {
-                  Music: 'bg-yellow-400 text-black',
-                  Art: 'bg-pink-400 text-white',
-                  Food: 'bg-amber-300 text-black',
-                  Technology: 'bg-yellow-300 text-black',
-                  Wellness: 'bg-green-400 text-black',
-                  Comedy: 'bg-yellow-200 text-black',
-                  Business: 'bg-red-600 text-white',
-                  Education: 'bg-black text-yellow-300',
-                  Community: 'bg-red-400 text-white',
-                  Festival: 'bg-fuchsia-400 text-white',
-                  Conference: 'bg-cyan-400 text-black',
-                  Workshop: 'bg-lime-300 text-black',
-                  Sports: 'bg-amber-500 text-black',
-                  Meetup: 'bg-gray-300 text-black',
-                  Other: 'bg-gray-300 text-black',
-                }[cat.name] || 'bg-yellow-100 text-black';
+                const Icon = categoryIconMap[cat.name] || FiStar;
+                const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
                 return (
                   <a
                     href={`/categories?category=${encodeURIComponent(cat.name)}`}

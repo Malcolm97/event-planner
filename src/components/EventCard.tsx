@@ -1,4 +1,5 @@
-import { FiMusic, FiCamera, FiCoffee, FiMonitor, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
+import { FiStar } from 'react-icons/fi';
+import { categoryColorMap, categoryIconMap } from '../lib/utils';
 
 export interface Event {
   id: string;
@@ -15,47 +16,11 @@ export interface Event {
 }
 
 export default function EventCard({ event, onClick }: { event: Event; onClick?: () => void }) {
-  const hasCategory = event.category && event.category.trim();
-  const categoryLabel = hasCategory ? event.category : 'Other';
+  const categoryLabel = event.category?.trim() || 'Other';
 
   // Color and icon mapping
-  const categoryColorMap: Record<string, string> = {
-    Music: 'bg-yellow-400 text-black',
-    Art: 'bg-pink-400 text-white',
-    Food: 'bg-amber-300 text-black',
-    Technology: 'bg-yellow-300 text-black',
-    Wellness: 'bg-green-400 text-black',
-    Comedy: 'bg-yellow-200 text-black',
-    Business: 'bg-red-600 text-white',
-    Education: 'bg-black text-yellow-300',
-    Community: 'bg-red-400 text-white',
-    Festival: 'bg-fuchsia-400 text-white',
-    Conference: 'bg-cyan-400 text-black',
-    Workshop: 'bg-lime-300 text-black',
-    Sports: 'bg-amber-500 text-black',
-    Meetup: 'bg-gray-300 text-black',
-    Other: 'bg-gray-300 text-black',
-  };
-  const categoryColor = categoryColorMap[categoryLabel!] || 'bg-gray-300 text-black';
-
-  const categoryIconMap: Record<string, JSX.Element> = {
-    Music: <FiMusic size={48} />,
-    Art: <FiCamera size={48} />,
-    Food: <FiCoffee size={48} />,
-    Technology: <FiMonitor size={48} />,
-    Wellness: <FiHeart size={48} />,
-    Comedy: <FiSmile size={48} />,
-    Business: <FiTrendingUp size={48} />,
-    Education: <FiBook size={48} />,
-    Community: <FiUsers size={48} />,
-    Festival: <FiStar size={48} />,
-    Conference: <FiTrendingUp size={48} />,
-    Workshop: <FiBook size={48} />,
-    Sports: <FiStar size={48} />,
-    Meetup: <FiUsers size={48} />,
-    Other: <FiUsers size={48} />,
-  };
-  const categoryIcon = categoryIconMap[categoryLabel!] || <FiUsers size={48} />;
+  const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-300 text-black';
+  const Icon = categoryIconMap[categoryLabel] || FiStar;
 
   return (
     <div
