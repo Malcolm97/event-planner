@@ -1,56 +1,102 @@
-import { FiStar } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import { categoryColorMap, categoryIconMap } from '../lib/utils';
-
-export interface Event {
-  id: string;
-  name: string;
-  category?: string;
-  location: string;
-  price: number;
-  description: string;
-  image: string;
-  createdAt?: any;
-  featured?: boolean;
-  date?: string;
-  createdBy?: string;
-}
+import { Event } from '../lib/supabase';
 
 export default function EventCard({ event, onClick }: { event: Event; onClick?: () => void }) {
   const categoryLabel = event.category?.trim() || 'Other';
 
   // Color and icon mapping
-  const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-300 text-black';
+  const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700';
   const Icon = categoryIconMap[categoryLabel] || FiStar;
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
 
   return (
     <div
-      className={`bg-white rounded-2xl border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-shadow cursor-pointer flex flex-col h-full group relative overflow-hidden`}
+      className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] h-full"
       onClick={onClick}
     >
-      {/* Vibrant top bar for category */}
-      <div className={`h-2 w-full ${categoryColor}`}></div>
-      <div className="relative w-full h-36 bg-yellow-50 flex items-center justify-center">
-        {/* Category icon as photo substitute */}
-        <div className="flex items-center justify-center w-full h-full text-gray-400 text-5xl font-bold">
-          {categoryIcon}
-        </div>
+      {/* Category Badge - Top Right */}
+      <div className="absolute top-3 right-3 z-10">
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-sm`}>
+          <Icon size={12} />
+          {categoryLabel}
+        </span>
       </div>
-      <div className="p-5 flex flex-col gap-2 flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${categoryColor}`}>{categoryLabel}</span>
-          <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-400 text-black shadow-sm">
-            {event.price === 0 ? "Free" : `PGK ${event.price.toFixed(2)}`}
+
+      {/* Hero Image Area */}
+      <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+        {/* Category Icon as Hero */}
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm shadow-lg">
+          <Icon size={32} />
+        </div>
+        
+        {/* Price Badge - Bottom Left */}
+        <div className="absolute bottom-3 left-3">
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+            <FiDollarSign size={14} />
+            {event.price === 0 ? "Free" : `${event.price.toFixed(0)}`}
           </span>
         </div>
-        <h2 className="font-extrabold text-lg text-black truncate mb-1 group-hover:text-yellow-600 transition">{event.name}</h2>
-        <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
-          <span>📍 {event.location}</span>
+
+        {/* Featured Badge */}
+        {event.featured && (
+          <div className="absolute top-3 left-3">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-yellow-400 text-black shadow-sm">
+              <FiStar size={10} />
+              Featured
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Content Area */}
+      <div className="p-5 flex flex-col gap-3">
+        {/* Event Title */}
+        <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-2 group-hover:text-yellow-600 transition-colors duration-200">
+          {event.name}
+        </h3>
+
+        {/* Location and Date */}
+        <div className="flex flex-col gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <FiMapPin size={14} className="text-gray-400 flex-shrink-0" />
+            <span className="truncate">{event.location}</span>
+          </div>
+          
           {event.date && (
-            <span className="ml-auto">📅 {new Date(event.date).toLocaleDateString()}</span>
+            <div className="flex items-center gap-2">
+              <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
+              <span className="font-medium text-gray-700">{formatDate(event.date)}</span>
+            </div>
           )}
         </div>
-        {/* Description removed from card for cleaner look */}
+
+        {/* Description Preview */}
+        {event.description && (
+          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mt-1">
+            {event.description}
+          </p>
+        )}
+
+        {/* Action Button */}
+        <div className="mt-auto pt-3">
+          <div className="w-full h-1 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
       </div>
+
+      {/* Hover Overlay Effect */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
     </div>
   );
 }

@@ -1,47 +1,28 @@
 
 import { useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { User } from 'firebase/auth';
+import { supabase } from '../lib/supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
-interface UserProfile {
-  name?: string;
-  email?: string | null;
-}
-
-export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+export function useAuth() {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (u) => {
-      setUser(u);
-      if (u) {
-        try {
-          const docRef = doc(db, 'users', u.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists() && docSnap.data().name) {
-            setProfile({ name: docSnap.data().name, email: u.email });
-          } else {
-            setProfile({ name: u.displayName || 'User', email: u.email });
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-          setProfile({ name: u.displayName || 'User', email: u.email }); // Fallback
-        }
-      } else {
-        setProfile(null);
-      }
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await auth.signOut();
-  };
-
-  return { user, profile, loading, handleLogout };
-};
+  return { user, loading };
+}

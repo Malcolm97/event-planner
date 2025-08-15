@@ -1,55 +1,103 @@
 'use client';
 
-import Header from "../components/Header";
-import { useEffect, useState } from "react";
-import { auth } from "../lib/firebase";
-import { collection, query, onSnapshot, doc, getDoc } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import EventCard, { Event } from "../components/EventCard";
-import ViewAllEventsButton from '../components/ViewAllEventsButton';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Header from '../components/Header';
+import EventCard from '../components/EventCard';
+import { supabase, TABLES, Event, User } from '../lib/supabase';
+import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic';
+
+// Define categories and their properties
+const allCategories = [
+  { name: 'Music', icon: FiMusic, color: 'bg-purple-100 text-purple-600' },
+  { name: 'Art', icon: FiImage, color: 'bg-pink-100 text-pink-600' },
+  { name: 'Food', icon: FiCoffee, color: 'bg-orange-100 text-orange-600' },
+  { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
+  { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
+  { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
+];
+
+const categoryIconMap: { [key: string]: any } = {
+  'Music': FiMusic,
+  'Art': FiImage,
+  'Food': FiCoffee,
+  'Technology': FiCpu,
+  'Wellness': FiHeart,
+  'Comedy': FiSmile,
+};
+
+const categoryColorMap: { [key: string]: string } = {
+  'Music': 'bg-purple-100 text-purple-600',
+  'Art': 'bg-pink-100 text-pink-600',
+  'Food': 'bg-orange-100 text-orange-600',
+  'Technology': 'bg-blue-100 text-blue-600',
+  'Wellness': 'bg-green-100 text-green-600',
+  'Comedy': 'bg-yellow-100 text-yellow-600',
+};
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Dialog state
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [host, setHost] = useState<any>(null);
-  const [hostLoading, setHostLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('All Dates');
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [host, setHost] = useState<User | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => setUser(u));
-    return () => unsubscribe();
+    fetchEvents();
   }, []);
 
-  useEffect(() => {
-    const q = query(collection(db, "events"));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const eventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-      setEvents(eventsData);
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from(TABLES.EVENTS)
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        return;
+      }
+
+      setEvents(data || []);
+      setFilteredEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
       setLoading(false);
-    });
-    return () => unsub();
-  }, []);
+    }
+  };
 
-  // Fetch host info when selectedEvent changes
+  const fetchHost = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.USERS)
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching host:', error);
+        return;
+      }
+
+      setHost(data);
+    } catch (error) {
+      console.error('Error fetching host:', error);
+    }
+  };
+
   useEffect(() => {
-    if (
-      selectedEvent &&
-      typeof selectedEvent.createdBy === "string" &&
-      selectedEvent.createdBy.trim()
-    ) {
-      const fetchHost = async () => {
-        const userDoc = await getDoc(doc(db, "users", selectedEvent.createdBy!));
-        if (userDoc.exists()) setHost(userDoc.data());
-        else setHost(null);
-      };
-      fetchHost();
+    if (selectedEvent?.created_by) {
+      fetchHost(selectedEvent.created_by);
     } else {
       setHost(null);
     }
@@ -115,8 +163,17 @@ export default function Home() {
           </p>
           {/* Search/Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
-            <input className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Search events, artists, or venues..." />
-            <select className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900">
+            <input 
+              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+              placeholder="Search events, artists, or venues..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select 
+              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            >
               <option>All Dates</option>
               <option>Today</option>
               <option>This Week</option>
@@ -143,41 +200,51 @@ export default function Home() {
       </section>
 
       {/* Featured Events (now real-time) */}
-      <section className="max-w-6xl mx-auto w-full py-12 px-4 sm:px-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <span>✨</span> Featured Events
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">Discover the most popular events happening near you.</p>
-          </div>
-          <button className="rounded-lg px-4 py-2 bg-white border border-black text-red-600 font-semibold hover:bg-yellow-300 hover:text-black transition text-sm shadow">View All</button>
+      <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
+            <span className="text-2xl">✨</span> Featured Events
+          </h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the most popular events happening near you.</p>
         </div>
+        
         {/* Upcoming Events */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="text-gray-500 mt-4">Loading events...</p>
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
+            <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {upcomingEvents.length > 0 ? upcomingEvents.map(event => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-              )) : <div className="text-gray-500 col-span-full">No upcoming events.</div>}
+              )) : (
+                <div className="col-span-full text-center py-16">
+                  <div className="text-6xl mb-4">📅</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events</h3>
+                  <p className="text-gray-500">Check back later for new events.</p>
+                </div>
+              )}
             </div>
           </>
         )}
-        <div className="flex justify-center mt-8">
-          <button className="px-6 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition shadow">View all Events</button>
+        
+        <div className="flex justify-center mt-12">
+          <button className="px-8 py-3 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            View all Events
+          </button>
         </div>
       </section>
 
       {/* Previous Events Section */}
       {previousEvents.length > 0 && (
-        <section className="max-w-6xl mx-auto w-full py-8 px-4 sm:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Previous Events</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <section className="max-w-7xl mx-auto w-full py-12 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Previous Events</h2>
+            <p className="text-gray-600">Browse events that have already taken place.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {previousEvents.map(event => (
               <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
             ))}
@@ -187,32 +254,99 @@ export default function Home() {
 
       {/* Event Dialog */}
       {dialogOpen && selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative animate-fade-in">
-            <button onClick={() => setDialogOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-black text-2xl font-bold">&times;</button>
-            <h2 className="text-2xl font-extrabold mb-2 text-black">{selectedEvent.name}</h2>
-            <div className="mb-2 text-sm text-gray-700">
-              <span className="inline-block px-2 py-0.5 rounded bg-yellow-400 text-black font-bold uppercase mr-2">{selectedEvent.category || 'Other'}</span>
-              <span className="inline-block px-2 py-0.5 rounded bg-gray-200 text-black font-bold">{selectedEvent.price === 0 ? 'Free' : `PGK ${selectedEvent.price.toFixed(2)}`}</span>
-            </div>
-            <div className="mb-2 text-gray-600 text-sm">📍 {selectedEvent.location}</div>
-            {selectedEvent.date && (
-              <div className="mb-2 text-gray-600 text-sm">📅 {new Date(selectedEvent.date).toLocaleString()}</div>
-            )}
-            <p className="mb-4 text-gray-800 text-base">{selectedEvent.description}</p>
-            <hr className="my-4" />
-            <h3 className="text-lg font-bold mb-2 text-black">Event Host</h3>
-            {host ? (
-              <div className="mb-2 text-gray-800 text-base">
-                <div><span className="font-semibold">Name:</span> {host.name || 'N/A'}</div>
-                <div><span className="font-semibold">Email:</span> {host.email || 'N/A'}</div>
-                {host.phone && <div><span className="font-semibold">Phone:</span> {host.phone}</div>}
-                {host.company && <div><span className="font-semibold">Company:</span> {host.company}</div>}
-                {host.about && <div className="mt-2 text-gray-600 text-sm">{host.about}</div>}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 relative animate-fade-in border border-gray-200">
+            {/* Header */}
+            <div className="p-6 pb-4">
+              <button 
+                onClick={() => setDialogOpen(false)} 
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors p-1 rounded-full hover:bg-gray-100"
+              >
+                &times;
+              </button>
+              
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                  {(() => {
+                    const Icon = categoryIconMap[selectedEvent.category || 'Other'] || FiStar;
+                    return <Icon size={24} className="text-yellow-600" />;
+                  })()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">{selectedEvent.name}</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm">
+                      {selectedEvent.category || 'Other'}
+                    </span>
+                    <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
+                      {selectedEvent.price === 0 ? 'Free' : `PGK ${selectedEvent.price.toFixed(2)}`}
+                    </span>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="text-gray-500">Host information not available.</div>
-            )}
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <FiMapPin size={18} className="text-gray-400 flex-shrink-0" />
+                  <span className="font-medium">{selectedEvent.location}</span>
+                </div>
+                
+                {selectedEvent.date && (
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <FiCalendar size={18} className="text-gray-400 flex-shrink-0" />
+                    <span className="font-medium">{new Date(selectedEvent.date).toLocaleString()}</span>
+                  </div>
+                )}
+                
+                {selectedEvent.description && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+                    <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Host Information */}
+              {host && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Host</h3>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    {host.name && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Name:</span>
+                        <span className="text-gray-900">{host.name}</span>
+                      </div>
+                    )}
+                    {host.email && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Email:</span>
+                        <span className="text-gray-900">{host.email}</span>
+                      </div>
+                    )}
+                    {host.phone && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Phone:</span>
+                        <span className="text-gray-900">{host.phone}</span>
+                      </div>
+                    )}
+                    {host.company && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Company:</span>
+                        <span className="text-gray-900">{host.company}</span>
+                      </div>
+                    )}
+                    {host.about && (
+                      <div className="pt-2">
+                        <span className="text-gray-600 text-sm">{host.about}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

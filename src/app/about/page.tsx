@@ -1,6 +1,5 @@
 'use client';
 
-import Header from '../../components/Header';
 import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
 import Link from 'next/link';
 
@@ -57,11 +56,9 @@ const team = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f6fb]">
-      <Header />
-      
-      {/* Hero Section */}
-      <section className="w-full py-20 px-4 sm:px-8 bg-gradient-to-b from-[#e0c3fc] to-[#8ec5fc]">
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Hero Section - Same as homepage */}
+      <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
             Bringing Communities Together
@@ -72,10 +69,10 @@ export default function AboutPage() {
             cultural celebrations, and shared passions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/events" className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg">
+            <Link href="/events" className="px-8 py-3 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition shadow-lg">
               Explore Events
             </Link>
-            <Link href="/create-event" className="px-8 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition shadow-lg border border-indigo-200">
+            <Link href="/create-event" className="px-8 py-3 bg-white text-gray-700 font-semibold rounded-lg hover:bg-yellow-100 transition shadow-lg border border-gray-200">
               Create Your Event
             </Link>
           </div>
@@ -97,8 +94,8 @@ export default function AboutPage() {
               celebrates the rich cultural diversity of Papua New Guinea while fostering new connections and experiences.
             </p>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                <FiHeart className="text-indigo-600" size={24} />
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <FiHeart className="text-yellow-600" size={24} />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Built with Love</h3>
@@ -112,9 +109,9 @@ export default function AboutPage() {
               alt="Community gathering"
               className="rounded-2xl shadow-xl w-full h-96 object-cover"
             />
-            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg">
+            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
               <div className="flex items-center gap-3">
-                <FiUsers className="text-indigo-600" size={24} />
+                <FiUsers className="text-yellow-600" size={24} />
                 <div>
                   <div className="font-bold text-gray-900">Community First</div>
                   <div className="text-sm text-gray-600">People over profit</div>
@@ -126,7 +123,7 @@ export default function AboutPage() {
       </section>
 
       {/* Features Section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-white">
+      <section className="w-full py-16 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose PNG Events?</h2>
@@ -140,9 +137,9 @@ export default function AboutPage() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={index} className="flex gap-4 p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="text-indigo-600" size={24} />
+                <div key={index} className="flex gap-4 p-6 rounded-xl bg-white hover:bg-yellow-50 transition border border-gray-200">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Icon className="text-yellow-600" size={24} />
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
@@ -156,11 +153,11 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-r from-indigo-600 to-purple-600">
+      <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-r from-yellow-400 to-red-600">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Our Impact</h2>
-            <p className="text-lg text-indigo-100 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Impact</h2>
+            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
               Numbers that show how we're bringing communities together across Papua New Guinea.
             </p>
           </div>
@@ -171,10 +168,10 @@ export default function AboutPage() {
               return (
                 <div key={index} className="text-center">
                   <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon className="text-white" size={28} />
+                    <Icon className="text-gray-900" size={28} />
                   </div>
-                  <div className="text-3xl font-bold text-white mb-2">{stat.number}</div>
-                  <div className="text-indigo-100">{stat.label}</div>
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
+                  <div className="text-gray-700">{stat.label}</div>
                 </div>
               );
             })}
@@ -193,7 +190,7 @@ export default function AboutPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {team.map((member, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition border border-gray-200">
               <img 
                 src={member.image} 
                 alt={member.name}
@@ -201,7 +198,7 @@ export default function AboutPage() {
               />
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
-                <p className="text-indigo-600 font-medium mb-3">{member.role}</p>
+                <p className="text-yellow-600 font-medium mb-3">{member.role}</p>
                 <p className="text-gray-600">{member.bio}</p>
               </div>
             </div>
@@ -210,7 +207,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-gray-50">
+      <section className="w-full py-16 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Get Started?</h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
@@ -218,28 +215,28 @@ export default function AboutPage() {
             building stronger communities through PNG Events.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signin" className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg">
+            <Link href="/signin" className="px-8 py-3 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition shadow-lg">
               Join Our Community
             </Link>
-            <Link href="/events" className="px-8 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition shadow-lg border border-indigo-200">
+            <Link href="/events" className="px-8 py-3 bg-white text-gray-700 font-semibold rounded-lg hover:bg-yellow-100 transition shadow-lg border border-gray-200">
               Browse Events
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="w-full py-8 px-4 sm:px-8 bg-white border-t border-gray-200">
+      {/* Footer - Same as homepage */}
+      <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <a href="/events" className="hover:text-indigo-600">Events</a>
-            <a href="/categories" className="hover:text-indigo-600">Categories</a>
-            <a href="/about" className="hover:text-indigo-600">About</a>
+            <a href="/events" className="hover:text-yellow-300 text-white">Events</a>
+            <a href="/categories" className="hover:text-yellow-300 text-white">Categories</a>
+            <a href="/about" className="hover:text-yellow-300 text-white">About</a>
           </div>
-          <div className="text-center">© 2025 PNG Events. All rights reserved.</div>
+          <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-indigo-600">Terms</a>
-            <a href="#" className="hover:text-indigo-600">Privacy</a>
+            <a href="#" className="hover:text-yellow-300 text-white">Terms</a>
+            <a href="#" className="hover:text-yellow-300 text-white">Privacy</a>
           </div>
         </div>
       </footer>

@@ -1,71 +1,189 @@
-import Link from "next/link";
-import { FiSearch, FiUser, FiLogOut, FiUser as FiUserCircle } from "react-icons/fi";
-import { useEffect, useState } from "react";
-import { auth, db } from "../lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase, TABLES } from '../lib/supabase';
+import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
-  const [profileName, setProfileName] = useState<string>("");
+  const [userName, setUserName] = useState<string>('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (u) => {
-      setUser(u);
-      if (u) {
-        // Try to get the user's name from Firestore
-        const docRef = doc(db, "users", u.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().name) {
-          setProfileName(docSnap.data().name);
-        } else {
-          setProfileName(u.displayName || "");
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        // Fetch user name from profile
+        const { data } = await supabase
+          .from(TABLES.USERS)
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.name) {
+          setUserName(data.name);
+        }
+      }
+    };
+
+    checkUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        // Fetch user name from profile
+        const { data } = await supabase
+          .from(TABLES.USERS)
+          .select('name')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (data?.name) {
+          setUserName(data.name);
         }
       } else {
-        setProfileName("");
+        setUser(null);
+        setUserName('');
       }
     });
-    return () => unsubscribe();
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await auth.signOut();
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-8 h-16">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-extrabold text-xl text-gray-900 tracking-tight">PNG Events</Link>
-          <nav className="hidden md:flex gap-6 text-gray-700 font-medium">
-            <Link href="/events" className="hover:text-red-600">Events</Link>
-            <Link href="/categories" className="hover:text-red-600">Categories</Link>
-            <Link href="/about" className="hover:text-red-600">About</Link>
-          </nav>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
-            <FiSearch size={20} />
-          </button>
-          {user ? (
-            <div className="flex items-center gap-2 text-gray-600 font-medium">
-              <span>Welcome, {profileName || user.email}</span>
-              <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-full text-gray-500" title="Dashboard">
-                <FiUserCircle size={20} />
-              </Link>
-              <button onClick={handleLogout} className="p-2 hover:bg-gray-100 rounded-full text-gray-500" title="Logout">
-                <FiLogOut size={20} />
-              </button>
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-red-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">PNG</span>
             </div>
-          ) : (
-            <Link href="/signin" className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-100 transition">
-              <FiUser size={18} />
-              <span>Sign In</span>
-            </Link>
-          )}
-          <Link href="/create-event" className="ml-2 px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition shadow">
-            Create Event
+            <span className="text-xl font-bold text-gray-900">Events</span>
           </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="/events" className="text-gray-600 hover:text-gray-900 transition-colors">
+              Events
+            </Link>
+            <Link href="/categories" className="text-gray-600 hover:text-gray-900 transition-colors">
+              Categories
+            </Link>
+            <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
+              About
+            </Link>
+          </nav>
+
+          {/* User Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <FiUser size={16} />
+                  {userName || 'Dashboard'}
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <FiLogOut size={16} />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/signin"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+              >
+                <FiUser size={16} />
+                Sign In
+              </Link>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          >
+            {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 py-4">
+            <nav className="flex flex-col space-y-4">
+              <Link
+                href="/events"
+                className="text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Events
+              </Link>
+              <Link
+                href="/categories"
+                className="text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Categories
+              </Link>
+              <Link
+                href="/about"
+                className="text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+              
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-gray-700 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FiUser size={16} className="inline mr-2" />
+                    {userName || 'Dashboard'}
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                  >
+                    <FiLogOut size={16} className="inline mr-2" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/signin"
+                  className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FiUser size={16} className="inline mr-2" />
+                  Sign In
+                </Link>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

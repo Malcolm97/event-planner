@@ -1,250 +1,227 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { auth, db, storage } from "../../../lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getDatabase, ref as dbRef, set as dbSet } from "firebase/database";
-import UserProfile from "../../../components/UserProfile";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase, TABLES } from '../../../lib/supabase';
+import Link from 'next/link';
+import { FiArrowLeft } from 'react-icons/fi';
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic';
 
 export default function EditProfilePage() {
-  const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>({
-    name: "",
-    phone: "",
-    company: "",
-    about: ""
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    company: '',
+    phone: '',
+    about: ''
   });
-  // Image upload removed due to plan limitations
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [uploading, setUploading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.replace("/signin");
-      } else {
-        setUser(user);
-        // Fetch profile from Firestore (if exists)
-        const docRef = doc(db, "users", user.uid);
-        
-        // Use onSnapshot for real-time updates
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setProfile({
-              name: data.name || user.displayName || "",
-              phone: data.phone || "",
-              company: data.company || "",
-              about: data.about || data.description || "",
-              photoURL: data.photoURL || user.photoURL || ""
-            });
-          } else {
-            // Set default values from Firebase Auth
-            setProfile({
-              name: user.displayName || "",
-              phone: "",
-              company: "",
-              about: "",
-              photoURL: user.photoURL || ""
-            });
-          }
-        });
-        
-        return () => unsubscribe();
-      }
-    });
-    return () => unsubscribe();
-    // eslint-disable-next-line
-  }, [router]);
-
-  // Test Firestore connection on mount (fetch and log profile)
-  useEffect(() => {
-    if (user && user.uid) {
-      const testFetch = async () => {
-        try {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            console.log("[TEST] Profile fetched from Firestore:", docSnap.data());
-          } else {
-            console.log("[TEST] No profile found in Firestore for this user.");
-          }
-        } catch (err) {
-          console.error("[TEST] Error fetching profile from Firestore:", err);
-        }
-      };
-      testFetch();
-    }
-  }, [user]);
-
-  // Add onSnapshot listener for real-time updates
-  useEffect(() => {
-    if (user && user.uid) {
-      const unsub = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
-        if (docSnap.exists()) {
-          console.log("Profile updated: ", docSnap.data());
-        }
-      });
-      return () => unsub();
-    }
-  }, [user]);
-
-  // Add confirmation dialog for delete
-  const handleDeleteProfile = async () => {
-    if (!user) return;
-    if (!window.confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
-      return;
-    }
-    setLoading(true);
-    setError("");
-    setSuccess("");
-    try {
-      await deleteDoc(doc(db, "users", user.uid));
-      setSuccess("Profile deleted successfully!");
-      setTimeout(() => {
-        router.replace("/signin");
-      }, 1000);
-    } catch (err: any) {
-      setError("Failed to delete profile. Please try again.");
-      console.error("Profile delete error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add confirmation dialog for save
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!window.confirm("Save changes to your profile?")) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError("");
-    setSuccess("");
-    try {
-      // Image upload removed due to plan limitations
-      let profileData = {
-        name: profile.name || "",
-        company: profile.company || "",
-        phone: profile.phone || "",
-        about: profile.about || "",
-        email: user.email,
-        updatedAt: new Date().toISOString(),
-      };
-      try {
-        await setDoc(doc(db, "users", user.uid), profileData, { merge: true });
-      } catch (err: any) {
-        if (err.message && err.message.includes("offline")) {
-          setError("You appear to be offline. Please check your connection and try again.");
-        } else {
-          setError("Failed to save changes. Please try again.");
-        }
-        setLoading(false);
+        router.push('/signin');
         return;
       }
-      // Write to Realtime Database as well, using email as key
-      const rtdb = getDatabase();
-      const emailKey = user.email.replace(/\./g, ',');
-      await dbSet(dbRef(rtdb, `usersByEmail/${emailKey}`), profileData);
-      setSuccess("Profile updated successfully!");
-      // Show success for 2 seconds, then redirect
-      setTimeout(() => {
-        setSuccess("");
-        router.replace("/dashboard");
-      }, 2000);
-    } catch (err: any) {
-      setError("Failed to save changes. Please try again.");
-      setUploading(false);
-      console.error("Profile update error:", err);
-    } finally {
+      setUser(user);
+      
+      // Fetch existing profile data
+      const { data } = await supabase
+        .from(TABLES.USERS)
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        setFormData({
+          name: data.name || '',
+          company: data.company || '',
+          phone: data.phone || '',
+          about: data.about || ''
+        });
+      }
+      
       setLoading(false);
+    };
+    checkUser();
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      if (!user) {
+        setError('You must be signed in to update your profile');
+        return;
+      }
+
+      const updateData = {
+        name: formData.name,
+        company: formData.company,
+        phone: formData.phone,
+        about: formData.about,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from(TABLES.USERS)
+        .upsert({
+          id: user.id,
+          email: user.email,
+          ...updateData
+        });
+
+      if (error) throw error;
+
+      setSuccess('Profile updated successfully!');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
+          <p className="text-gray-500 mt-6 text-lg">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e0c3fc] via-[#8ec5fc] to-[#f9f9f9] dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
-      <div className="absolute top-6 left-6">
-        <a href="/dashboard" className="flex items-center text-gray-600 hover:text-indigo-600 text-sm font-medium gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-          Back to Dashboard
-        </a>
-      </div>
-      <div className="flex flex-col gap-8 w-full max-w-md">
-        <UserProfile userId={user?.uid} />
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4">
-          <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Edit Profile</h2>
-          <div className="flex flex-col items-center gap-2">
-            {/* Profile image upload removed due to plan limitations */}
-            <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-3xl font-bold text-indigo-600 dark:text-indigo-300 overflow-hidden">
-              {profile.name[0] || "U"}
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors"
+          >
+            <FiArrowLeft size={16} />
+            Back to Dashboard
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+              {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
             </div>
+            <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
+            <p className="text-gray-600 mt-2">Update your personal information</p>
           </div>
-          <input
-            type="text"
-            placeholder="Name"
-            value={profile.name}
-            onChange={e => setProfile({ ...profile, name: e.target.value })}
-            className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Company"
-            value={profile.company}
-            onChange={e => setProfile({ ...profile, company: e.target.value })}
-            className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-          <input
-            type="tel"
-            placeholder="Phone"
-            value={profile.phone}
-            onChange={e => setProfile({ ...profile, phone: e.target.value })}
-            className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-          <textarea
-            placeholder="About"
-            value={profile.about}
-            onChange={e => setProfile({ ...profile, about: e.target.value })}
-            className="rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            rows={3}
-          />
-          {uploading && (
-            <div className="flex items-center justify-center gap-2 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-4 py-2 rounded mb-2 text-sm font-medium">
-              <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-              Uploading photo...
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                placeholder="Enter your full name"
+                required
+              />
             </div>
-          )}
-          {success && (
-            <div className="flex items-center justify-center gap-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-4 py-2 rounded mb-2 text-sm font-semibold shadow">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-500"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-              {success}
+
+            <div>
+              <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                Company
+              </label>
+              <input
+                type="text"
+                id="company"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                placeholder="Enter your company name"
+              />
             </div>
-          )}
-          {error && (
-            <div className="flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-4 py-2 rounded mb-2 text-sm font-semibold shadow">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-red-500"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              {error}
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                placeholder="Enter your phone number"
+              />
             </div>
-          )}
-          <button type="submit" disabled={loading} className="rounded-lg px-6 py-2 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition disabled:opacity-50">
-            {loading ? "Saving..." : "Save Changes"}
-          </button>
-          <button type="button" onClick={handleDeleteProfile} disabled={loading} className="rounded-lg px-6 py-2 bg-red-600 text-white font-semibold hover:bg-red-700 transition disabled:opacity-50 mt-2">
-            Delete Profile
-          </button>
-        </form>
+
+            <div>
+              <label htmlFor="about" className="block text-sm font-medium text-gray-700 mb-2">
+                About
+              </label>
+              <textarea
+                id="about"
+                name="about"
+                value={formData.about}
+                onChange={handleChange}
+                rows={4}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                placeholder="Tell us about yourself..."
+              />
+            </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-600 text-sm">{success}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Updating...' : 'Update Profile'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

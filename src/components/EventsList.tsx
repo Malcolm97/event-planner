@@ -1,112 +1,60 @@
-import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import EventCard, { Event } from "./EventCard";
-import { getDatabase, ref as dbRef, onValue } from "firebase/database";
+'use client';
 
-interface EventsListProps {
-  userId?: string; // If provided, only show events created by this user
-}
+import { useState, useEffect } from 'react';
+import { supabase, TABLES, Event } from '../lib/supabase';
+import EventCard from './EventCard';
 
-export default function EventsList({ userId }: EventsListProps) {
+export default function EventsList() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    let unsubscribe: (() => void) | null = null;
-    
-    // Firestore fetch
-    let q;
-    if (userId) {
-      q = query(collection(db, "events"), where("createdBy", "==", userId), orderBy("createdAt", "desc"));
-    } else {
-      q = query(collection(db, "events"), orderBy("createdAt", "desc"));
-    }
-    
-    unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchEvents = async () => {
       try {
-        const data: Event[] = snapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
-        } as Event));
+        setLoading(true);
         
-        // Sort all events by date and time (earliest first)
-        const sortedData = data.slice().sort((a, b) => {
-          const getTime = (event: Event) => {
-            if (event.date) return new Date(event.date).getTime();
-            if (typeof event.createdAt === 'string') return new Date(event.createdAt).getTime();
-            if (event.createdAt?.seconds) return event.createdAt.seconds * 1000;
-            return 0;
-          };
-          
-          return getTime(a) - getTime(b);
-        });
-        
-        setEvents(sortedData);
-        setLoading(false);
+        const { data, error } = await supabase
+          .from(TABLES.EVENTS)
+          .select('*')
+          .order('date', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching events:', error);
+          return;
+        }
+
+        setEvents(data || []);
       } catch (error) {
-        console.error("Error processing events:", error);
+        console.error('Error fetching events:', error);
+      } finally {
         setLoading(false);
       }
-    }, (error) => {
-      console.error("Error fetching events:", error);
-      // Fallback to RTDB if Firestore fails
-      const rtdb = getDatabase();
-      const eventsRef = dbRef(rtdb, "events");
-      
-      onValue(eventsRef, (snap) => {
-        const val = snap.val();
-        if (val) {
-          try {
-            const arr = Object.entries(val)
-              .map(([id, event]) => {
-                if (event && typeof event === 'object') {
-                  const eventData = event as any;
-                  if (userId && eventData.createdBy !== userId) {
-                    return null;
-                  }
-                  return { id, ...eventData };
-                }
-                return null;
-              })
-              .filter(Boolean) as Event[];
-            
-            // Sort events
-            const sortedArr = arr.slice().sort((a, b) => {
-              const getTime = (event: Event) => {
-                if (event.date) return new Date(event.date).getTime();
-                if (typeof event.createdAt === 'string') return new Date(event.createdAt).getTime();
-                if (event.createdAt?.seconds) return event.createdAt.seconds * 1000;
-                return 0;
-              };
-              
-              return getTime(a) - getTime(b);
-            });
-            
-            setEvents(sortedArr);
-          } catch (error) {
-            console.error("Error processing RTDB events:", error);
-            setEvents([]);
-          }
-        } else {
-          setEvents([]);
-        }
-        setLoading(false);
-      });
-    });
-    
-    return () => {
-      if (unsubscribe) unsubscribe();
     };
-  }, [userId]);
 
-  if (loading) return <div className="text-gray-500 dark:text-gray-400">Loading events...</div>;
-  if (events.length === 0) return <div className="text-gray-500 dark:text-gray-400">No events found.</div>;
+    fetchEvents();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-center py-16">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
+        <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-6xl mb-4">📅</div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
+        <p className="text-gray-500">Check back later for new events.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
       {events.map(event => (
         <EventCard key={event.id} event={event} />
       ))}

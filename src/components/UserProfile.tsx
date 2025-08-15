@@ -1,220 +1,127 @@
-import { useState, useEffect, useCallback } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
-import { getDatabase, ref as dbRef, onValue } from "firebase/database";
-import { db } from "../lib/firebase";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase, TABLES, User } from '../lib/supabase';
 
 interface UserProfileProps {
-  userId?: string;
-  email?: string;
   onError?: (msg: string) => void;
 }
 
-export default function UserProfile({ userId, email, onError }: UserProfileProps) {
-  const [userData, setUserData] = useState<any>(null);
+export default function UserProfile({ onError }: UserProfileProps) {
+  const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const handleError = useCallback((message: string) => {
-    setError(message);
-    if (onError) {
-      onError(message);
-    }
-  }, [onError]);
+  const stableOnError = onError ?? (() => {});
 
   useEffect(() => {
-    if (!userId && !email) {
-      handleError("No user ID or email provided.");
-      setLoading(false);
-      return;
-    }
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    setLoading(true);
-    setError("");
-    let unsubscribe: (() => void) | null = null;
-
-    if (userId) {
-      // Try Firestore first
-      const userRef = doc(db, "users", userId);
-      unsubscribe = onSnapshot(
-        userRef,
-        (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            const data = docSnapshot.data();
-            setUserData(data);
-            setLoading(false);
-            handleError("");
-          } else {
-            // If not found in Firestore, try Realtime Database
-            const rtdb = getDatabase();
-            const rtdbRef = dbRef(rtdb, `users/${userId}`);
-            
-            onValue(rtdbRef, (snapshot) => {
-              if (snapshot.exists()) {
-                setUserData(snapshot.val());
-                setLoading(false);
-                handleError("");
-              } else {
-                setUserData(null);
-                setLoading(false);
-                handleError("User profile not found.");
-              }
-            }, (err) => {
-              console.error("RTDB error:", err);
-              handleError("Failed to load user profile.");
-              setLoading(false);
-            });
-          }
-        },
-        (err) => {
-          console.error("Firestore error:", err);
-          handleError("Failed to load user profile.");
-          setLoading(false);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setError('No authenticated user found');
+          stableOnError('No authenticated user found');
+          return;
         }
-      );
-    } else if (email) {
-      // Try Realtime Database with email key
-      const rtdb = getDatabase();
-      const emailKey = email.replace(/\./g, ",");
-      const rtdbRef = dbRef(rtdb, `usersByEmail/${emailKey}`);
-      
-      onValue(rtdbRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setUserData(snapshot.val());
-          setLoading(false);
-          handleError("");
+
+        // Fetch user profile from users table
+        const { data, error: profileError } = await supabase
+          .from(TABLES.USERS)
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+          setError('Failed to load user profile');
+          stableOnError('Failed to load user profile');
+          return;
+        }
+
+        if (data) {
+          setUserData(data);
+          stableOnError(''); // Clear any previous errors
         } else {
-          setUserData(null);
-          setLoading(false);
-          handleError("User profile not found.");
+          setError('User profile not found');
+          stableOnError('User profile not found');
         }
-      }, (err) => {
-        console.error("RTDB error:", err);
-        handleError("Failed to load user profile.");
+      } catch (err: any) {
+        console.error('Error in UserProfile:', err);
+        setError(err.message || 'An unexpected error occurred');
+        stableOnError(err.message || 'An unexpected error occurred');
+      } finally {
         setLoading(false);
-      });
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
       }
     };
-  }, [userId, email, handleError]);
 
-  if (loading) {
-    return (
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
-        <div className="animate-pulse">
-          <div className="w-20 h-20 bg-gray-200 rounded-full mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
-        </div>
-      </div>
-    );
+    fetchUserData();
+  }, [stableOnError, retryCount]);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
+
+  if (loading && !userData) {
+    return <p className="text-gray-500 text-sm text-center">Loading user data...</p>;
   }
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
-        <div className="text-red-500 text-sm text-center">
-          <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 px-4 py-2 rounded bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="text-center">
+        <p className="text-red-500 text-sm text-center mb-3">Error: {error}</p>
+        <button
+          onClick={handleRetry}
+          className="px-3 py-1 bg-yellow-400 text-black text-sm rounded hover:bg-yellow-500 transition"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   if (!userData) {
-    // Try to show fallback from Auth if available
-    let fallbackEmail = email || '';
-    let fallbackName = '';
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        const authUser = JSON.parse(window.localStorage.getItem('firebase:authUser') || '{}');
-        fallbackEmail = fallbackEmail || authUser.email || '';
-        fallbackName = authUser.displayName || '';
-      } catch {}
-    }
-    // If only email is available, show it clearly
-    if (fallbackEmail && !fallbackName) {
-      return (
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-3">
-          <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">User Profile</h2>
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-            <div className="text-2xl font-bold text-gray-500">{fallbackEmail.charAt(0).toUpperCase()}</div>
-          </div>
-          <div className="text-center space-y-2">
-            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{fallbackEmail}</p>
-            <p className="text-sm text-gray-500">No other profile data set yet.</p>
-          </div>
-        </div>
-      );
-    }
-    // If neither, show generic fallback
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-2">
-        <div className="text-gray-500 text-sm text-center">
-          <p>No profile data available</p>
-          {fallbackEmail && <p className="mt-2">Email: {fallbackEmail}</p>}
-          {fallbackName && <p>Name: {fallbackName}</p>}
-        </div>
+      <div className="text-center">
+        <div className="text-red-500 text-sm text-center mb-3">Unable to load user data. Please try again later.</div>
+        <button
+          onClick={handleRetry}
+          className="px-3 py-1 bg-yellow-400 text-black text-sm rounded hover:bg-yellow-500 transition"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
-  // Only show fields that exist
-  const hasPhoto = !!userData.photoURL;
-  const hasName = !!userData.name;
-  const hasEmail = !!userData.email;
-  const hasCompany = !!userData.company;
-  const hasPhone = !!userData.phone;
-  const hasAbout = !!userData.about || !!userData.description;
-
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center gap-3">
-      <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">User Profile</h2>
-      {/* Profile Photo or Initial */}
-      <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-        {hasPhoto ? (
-          <img
-            src={userData.photoURL}
-            alt="Profile"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              target.nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-        ) : hasName ? (
-          <div className="text-2xl font-bold text-gray-500">{userData.name.charAt(0).toUpperCase()}</div>
-        ) : hasEmail ? (
-          <div className="text-2xl font-bold text-gray-500">{userData.email.charAt(0).toUpperCase()}</div>
-        ) : null}
+    <div className="text-center">
+      <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+        {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
       </div>
-      {/* Profile Information */}
-      <div className="text-center space-y-2">
-        {hasName && (
-          <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{userData.name}</p>
-        )}
-        {hasEmail && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{userData.email}</p>
-        )}
-        {hasCompany && (
-          <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{userData.company}</p>
-        )}
-        {hasPhone && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">📞 {userData.phone}</p>
-        )}
-        {hasAbout && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">{userData.about || userData.description}</p>
-        )}
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{userData.name || 'Unnamed User'}</h3>
+      <p className="text-gray-600 text-sm mb-4">{userData.email || 'No email available'}</p>
+      
+      {userData.company && (
+        <p className="text-gray-700 text-sm mb-2">
+          <span className="font-medium">Company:</span> {userData.company}
+        </p>
+      )}
+      
+      {userData.phone && (
+        <p className="text-gray-700 text-sm mb-2">
+          <span className="font-medium">Phone:</span> {userData.phone}
+        </p>
+      )}
+      
+      {userData.about && (
+        <p className="text-gray-600 text-sm mt-3 p-3 bg-gray-50 rounded-lg">
+          {userData.about}
+        </p>
+      )}
     </div>
   );
 }
