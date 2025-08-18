@@ -1,5 +1,6 @@
 'use client';
 
+import Header from '../../components/Header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES, Event, User } from '../../lib/supabase';
@@ -73,19 +74,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleSignOut}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Sign Out
-              </button>
-            </div>
           </div>
         </div>
       </div>

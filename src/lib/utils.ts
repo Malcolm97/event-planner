@@ -1,5 +1,5 @@
 
-import { FiMusic, FiCamera, FiCoffee, FiMonitor, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
+import { FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
 
 export const allCategories = [
   { name: "Music" },
@@ -20,9 +20,9 @@ export const allCategories = [
 
 export const categoryIconMap: Record<string, React.ComponentType<{ size: number }>> = {
   Music: FiMusic,
-  Art: FiCamera,
+  Art: FiImage,
   Food: FiCoffee,
-  Technology: FiMonitor,
+  Technology: FiCpu,
   Wellness: FiHeart,
   Comedy: FiSmile,
   Business: FiTrendingUp,
