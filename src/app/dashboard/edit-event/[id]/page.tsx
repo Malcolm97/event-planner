@@ -2,7 +2,7 @@
 
 import Header from '../../../../components/Header';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation'; // Import useParams
 import { supabase, TABLES } from '../../../../lib/supabase';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
@@ -10,8 +10,9 @@ import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
-export default function EditEventPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function EditEventPage() { // Remove params from signature
+  const params = useParams(); // Get params using the hook
+  const id = params.id as string; // Access id, casting to string as per original type
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');

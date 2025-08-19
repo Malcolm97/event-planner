@@ -8,15 +8,18 @@ import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'rea
 
 // Define categories and their properties
 const allCategories = [
+  { name: 'All Categories', icon: FiStar, color: 'bg-gray-200 text-gray-800' },
   { name: 'Music', icon: FiMusic, color: 'bg-purple-100 text-purple-600' },
   { name: 'Art', icon: FiImage, color: 'bg-pink-100 text-pink-600' },
   { name: 'Food', icon: FiCoffee, color: 'bg-orange-100 text-orange-600' },
   { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
   { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
   { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Other', icon: FiSmile, color: 'bg-gray-100 text-gray-600' }, // Added 'Other' category
 ];
 
 const categoryIconMap: { [key: string]: any } = {
+  'All Categories': FiStar,
   'Music': FiMusic,
   'Art': FiImage,
   'Food': FiCoffee,
@@ -26,6 +29,7 @@ const categoryIconMap: { [key: string]: any } = {
 };
 
 const categoryColorMap: { [key: string]: string } = {
+  'All Categories': 'bg-gray-200 text-gray-800',
   'Music': 'bg-purple-100 text-purple-600',
   'Art': 'bg-pink-100 text-pink-600',
   'Food': 'bg-orange-100 text-orange-600',
@@ -38,30 +42,43 @@ function CategoriesPageContentInner() {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
   const [events, setEvents] = useState<Event[]>([]);
+  const [displayCategories, setDisplayCategories] = useState<typeof allCategories>([]); // New state for filtered categories
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchAndFilterCategories = async () => {
       try {
         setLoading(true);
-        
-        let query = supabase
+
+        // 1. Fetch all events
+        const { data, error } = await supabase
           .from(TABLES.EVENTS)
           .select('*')
           .order('date', { ascending: true });
 
-        if (category && category !== 'All Categories') {
-          query = query.eq('category', category);
-        }
-
-        const { data, error } = await query;
-
         if (error) {
           console.error('Error fetching events:', error);
+          setLoading(false);
           return;
         }
 
-        setEvents(data || []);
+        setEvents(data || []); // Set all events
+
+        // 2. Determine active categories
+        const activeCategoryNames = new Set<string>();
+        data?.forEach(event => {
+          if (event.category) {
+            activeCategoryNames.add(event.category);
+          }
+        });
+
+        // 3. Filter allCategories array
+        const filteredCategories = allCategories.filter(cat =>
+          cat.name === 'All Categories' || activeCategoryNames.has(cat.name)
+        );
+
+        setDisplayCategories(filteredCategories); // Set the state for categories to display
+
       } catch (error) {
         console.error('Error fetching events:', error);
       } finally {
@@ -69,8 +86,8 @@ function CategoriesPageContentInner() {
       }
     };
 
-    fetchEvents();
-  }, [category]);
+    fetchAndFilterCategories();
+  }, []); // Fetch only once on mount
 
   const filteredEvents = events.filter(event => {
     if (!category || category === 'All Categories') return true;
@@ -83,7 +100,7 @@ function CategoriesPageContentInner() {
     return new Date(event.date) >= now;
   });
 
-  const selectedCategory = allCategories.find(cat => cat.name === category);
+  const selectedCategory = displayCategories.find(cat => cat.name === category); // Use displayCategories here
   const Icon = selectedCategory?.icon || FiStar;
 
   return (
@@ -108,7 +125,7 @@ function CategoriesPageContentInner() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {allCategories.map((cat) => {
+            {displayCategories.map((cat) => { // Use displayCategories here
               const Icon = cat.icon;
               return (
                 <a
