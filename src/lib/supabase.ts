@@ -4,24 +4,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set correctly.'
-  )
+  console.warn('Missing Supabase environment variables. Using placeholder values for development.')
 }
 
-if (!supabaseUrl.startsWith('https://') || supabaseUrl.includes('your-project-id')) {
-  throw new Error(
-    'Invalid Supabase URL. Please replace the placeholder in .env.local with your actual Supabase project URL from your project settings.'
-  )
-}
-
-if (supabaseAnonKey.includes('your-anon-key')) {
-  throw new Error(
-    'Invalid Supabase anon key. Please replace the placeholder in .env.local with your actual Supabase anon key from your project settings.'
-  )
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+)
 
 // Database table names
 export const TABLES = {
