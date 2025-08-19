@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';
-import { supabase, TABLES, Event, User } from '../lib/supabase';
+import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supabase';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
 
 // Force dynamic rendering to prevent prerendering issues
@@ -58,11 +58,8 @@ export default function Home() {
       setLoading(true);
       
       // Check if Supabase is properly configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
-        console.warn('Supabase not configured. Using mock data.');
+      if (!isSupabaseConfigured()) {
+        console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
         setEvents([]);
         setFilteredEvents([]);
         setLoading(false);
