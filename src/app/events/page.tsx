@@ -13,6 +13,14 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArea, setSelectedArea] = useState('All Areas');
+  const [customCategoryInput, setCustomCategoryInput] = useState(''); // This state is not needed for this file, but was from previous task. I will remove it if it's not used.
+
+  // List of popular PNG cities, used for categorizing locations
+  const popularPngCities = [
+    "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
+    "Popondetta", "Arawa", "Kavieng", "Daru", "Vanimo", "Kimbe", "Mendi",
+    "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau", "Other"
+  ];
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -40,16 +48,36 @@ export default function EventsPage() {
     fetchEvents();
   }, []);
 
-  // Extract unique areas from events
-  const locationAreas = events.map(event => event.location?.split(',')[0]).filter(Boolean);
+  // Extract unique areas from events, categorizing custom locations as "Other Locations"
+  const locationAreas = events.map(event => {
+    const location = event.location;
+    if (!location) return null;
+    const firstPart = location.split(',')[0].trim();
+    if (!firstPart) return null;
+
+    if (popularPngCities.includes(firstPart)) {
+      return firstPart;
+    } else {
+      // If it's not a popular city and not empty, categorize as "Other Locations"
+      return "Other Locations";
+    }
+  }).filter(Boolean); // Filter out nulls
+
   const areas = ['All Areas', ...Array.from(new Set(locationAreas))];
 
   const now = new Date();
   const upcomingEvents = events.filter(event => event.date && new Date(event.date) >= now);      
 
-  const filteredEvents = selectedArea === 'All Areas' 
-    ? upcomingEvents 
-    : upcomingEvents.filter(event => event.location?.includes(selectedArea));
+  const filteredEvents = selectedArea === 'All Areas'
+    ? upcomingEvents
+    : selectedArea === 'Other Locations'
+      ? upcomingEvents.filter(event => {
+          const location = event.location;
+          if (!location) return false;
+          const firstPart = location.split(',')[0].trim();
+          return firstPart && !popularPngCities.includes(firstPart);
+        })
+      : upcomingEvents.filter(event => event.location?.includes(selectedArea));
 
   return (
     <div className="min-h-screen bg-white">
