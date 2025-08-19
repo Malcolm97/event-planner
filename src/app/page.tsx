@@ -57,20 +57,36 @@ export default function Home() {
     try {
       setLoading(true);
       
+      // Check if Supabase is properly configured
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
+        console.warn('Supabase not configured. Using mock data.');
+        setEvents([]);
+        setFilteredEvents([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from(TABLES.EVENTS)
         .select('*')
         .order('date', { ascending: true });
 
       if (error) {
-        console.error('Error fetching events:', error);
+        console.warn('Error fetching events:', error.message);
+        setEvents([]);
+        setFilteredEvents([]);
         return;
       }
 
       setEvents(data || []);
       setFilteredEvents(data || []);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.warn('Network error fetching events. Please check your Supabase configuration.');
+      setEvents([]);
+      setFilteredEvents([]);
     } finally {
       setLoading(false);
     }
