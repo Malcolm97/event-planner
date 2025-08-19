@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '../../../lib/supabase';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
+import Image from 'next/image'; // Import Image component
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -16,6 +17,8 @@ export default function EditProfilePage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null); // New state for photo file
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null); // New state for photo URL
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -47,6 +50,7 @@ export default function EditProfilePage() {
           phone: data.phone || '',
           about: data.about || ''
         });
+        setPhotoUrl(data.photo_url || null); // Set existing photo URL
       }
       
       setLoading(false);
@@ -66,11 +70,38 @@ export default function EditProfilePage() {
         return;
       }
 
+      let newPhotoUrl: string | null = photoUrl;
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `user-photos/${fileName}`; // Store in a 'user-photos' bucket
+
+        const { error: uploadError } = await supabase.storage
+          .from('user-photos') // Ensure you have a bucket named 'user-photos'
+          .upload(filePath, photoFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          setError(`Error uploading photo: ${uploadError.message}`);
+          setSubmitting(false);
+          return;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('user-photos')
+          .getPublicUrl(filePath);
+        
+        newPhotoUrl = publicUrlData.publicUrl;
+      }
+
       const updateData = {
         name: formData.name,
         company: formData.company,
         phone: formData.phone,
         about: formData.about,
+        photo_url: newPhotoUrl, // Update photo URL
         updated_at: new Date().toISOString(),
       };
 
@@ -85,6 +116,7 @@ export default function EditProfilePage() {
       if (error) throw error;
 
       setSuccess('Profile updated successfully!');
+      setPhotoUrl(newPhotoUrl); // Update state with new photo URL
       setTimeout(() => {
         router.push('/dashboard');
       }, 1500);
@@ -134,14 +166,34 @@ export default function EditProfilePage() {
 
         <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
           <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-              {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
-            </div>
+            {photoUrl ? (
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
+                <Image src={photoUrl} alt="Profile Photo" width={80} height={80} objectFit="cover" />
+              </div>
+            ) : (
+              <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
             <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
             <p className="text-gray-600 mt-2">Update your personal information</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="photo" className="block text-sm font-medium text-gray-700 mb-2">
+                Profile Photo
+              </label>
+              <input
+                type="file"
+                id="photo"
+                name="photo"
+                accept="image/*"
+                onChange={(e) => setPhotoFile(e.target.files ? e.target.files[0] : null)}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+              />
+            </div>
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name

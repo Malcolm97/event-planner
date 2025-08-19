@@ -1,6 +1,7 @@
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import { categoryColorMap, categoryIconMap } from '../lib/utils';
 import { Event } from '../lib/supabase';
+import Image from 'next/image'; // Import the Image component
 
 export default function EventCard({ event, onClick }: { event: Event; onClick?: () => void }) {
   const categoryLabel = event.category?.trim() || 'Other';
@@ -36,10 +37,20 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
 
       {/* Hero Image Area */}
       <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-        {/* Category Icon as Hero */}
-        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm shadow-lg">
-          <Icon size={32} />
-        </div>
+        {event.image_url ? (
+          <Image
+            src={event.image_url}
+            alt={event.name}
+            layout="fill"
+            objectFit="cover"
+            className="transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          /* Category Icon as Hero (fallback if no image) */
+          <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm shadow-lg">
+            <Icon size={32} />
+          </div>
+        )}
         
         {/* Price Badge - Bottom Left */}
         <div className="absolute bottom-3 left-3">
@@ -81,13 +92,6 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
             </div>
           )}
         </div>
-
-        {/* Description Preview */}
-        {event.description && (
-          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mt-1">
-            {event.description}
-          </p>
-        )}
 
         {/* Action Button */}
         <div className="mt-auto pt-3">

@@ -31,7 +31,7 @@ export interface Event {
   location: string
   price: number
   description: string
-  image: string
+  image_url?: string // Add image_url property
   created_at?: string
   featured?: boolean
   date?: string
@@ -48,4 +48,4 @@ export interface User {
   about?: string
   photo_url?: string
   updated_at?: string
-} 
+}

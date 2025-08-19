@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '../lib/supabase';
 import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import Image from 'next/image'; // Import Image component
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
+  const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -17,15 +19,18 @@ export default function Header() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        // Fetch user name from profile
+        // Fetch user name and photo from profile
         const { data } = await supabase
           .from(TABLES.USERS)
-          .select('name')
+          .select('name, photo_url')
           .eq('id', user.id)
           .single();
         
         if (data?.name) {
           setUserName(data.name);
+        }
+        if (data?.photo_url) {
+          setUserPhotoUrl(data.photo_url);
         }
       }
     };
@@ -36,19 +41,25 @@ export default function Header() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
-        // Fetch user name from profile
+        // Fetch user name and photo from profile
         const { data } = await supabase
           .from(TABLES.USERS)
-          .select('name')
+          .select('name, photo_url')
           .eq('id', session.user.id)
           .single();
         
         if (data?.name) {
           setUserName(data.name);
         }
+        if (data?.photo_url) {
+          setUserPhotoUrl(data.photo_url);
+        } else {
+          setUserPhotoUrl(null);
+        }
       } else {
         setUser(null);
         setUserName('');
+        setUserPhotoUrl(null);
       }
     });
 
@@ -93,7 +104,11 @@ export default function Header() {
                   href="/dashboard"
                   className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
                 >
-                  <FiUser size={16} />
+                  {userPhotoUrl ? (
+                    <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full" />
+                  ) : (
+                    <FiUser size={16} />
+                  )}
                   {userName || 'Dashboard'}
                 </Link>
                 <button
@@ -157,7 +172,11 @@ export default function Header() {
                     className="text-gray-700 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <FiUser size={16} className="inline mr-2" />
+                    {userPhotoUrl ? (
+                      <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-2" />
+                    ) : (
+                      <FiUser size={16} className="inline mr-2" />
+                    )}
                     {userName || 'Dashboard'}
                   </Link>
                   <button

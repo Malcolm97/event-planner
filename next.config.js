@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['images.pexels.com', 'images.unsplash.com'],
+    domains: ['images.pexels.com', 'images.unsplash.com', 'dvqmdzzekmegwzcwfara.supabase.co'],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
-  },
+  serverExternalPackages: ['@supabase/supabase-js'],
 };
 
 module.exports = nextConfig;

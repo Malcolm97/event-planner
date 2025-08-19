@@ -116,15 +116,16 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
       <Header />
-      <div className="absolute top-6 left-6">
-        <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
-          <FiArrowLeft className="text-lg" />
-          Back to Events
-        </Link>
-      </div>
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
+      <div className="relative flex flex-1 items-center justify-center p-4">
+        <div className="absolute top-6 left-6">
+          <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
+            <FiArrowLeft className="text-lg" />
+            Back to Events
+          </Link>
+        </div>
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
         <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
           Welcome to PNG Events
         </h2>
@@ -220,6 +221,7 @@ export default function SignInPage() {
           {loading ? "Loading..." : isRegister ? "Create Account" : "Sign In"}
         </button>
       </form>
+      </div>
     </div>
   );
 }

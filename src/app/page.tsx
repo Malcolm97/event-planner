@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import EventCard from '../components/EventCard';
 import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supabase';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
+import Link from 'next/link'; // Ensure Link is imported
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -38,19 +39,44 @@ const categoryColorMap: { [key: string]: string } = {
   'Comedy': 'bg-yellow-100 text-yellow-600',
 };
 
+const popularPngCities = [
+  "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
+  "Popondetta", "Arawa", "Kavieng", "Daru", "Vanimo", "Kimbe", "Mendi",
+  "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau"
+];
+
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('All Dates');
+  const [selectedLocationFilter, setSelectedLocationFilter] = useState('All Areas'); // New state for location filter
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [host, setHost] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null); // State to hold current user
   const router = useRouter();
 
   useEffect(() => {
     fetchEvents();
+    // Fetch current user on component mount
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    getCurrentUser();
+
+    // Listen for auth changes to update current user
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user || null);
+    });
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   const fetchEvents = async () => {
@@ -98,13 +124,13 @@ export default function Home() {
         .single();
 
       if (error) {
-        console.error('Error fetching host:', error);
+        console.error('Error fetching host:', error.message || error);
         return;
       }
 
       setHost(data);
-    } catch (error) {
-      console.error('Error fetching host:', error);
+    } catch (err: any) {
+      console.error('Error fetching host:', err.message || err);
     }
   };
 
@@ -151,15 +177,23 @@ export default function Home() {
         });
       }
 
+      if (selectedLocationFilter !== 'All Areas') {
+        tempEvents = tempEvents.filter(event => event.location === selectedLocationFilter);
+      }
+
       setFilteredEvents(tempEvents);
     };
 
     filterEvents();
-  }, [events, searchTerm, selectedDate]);
+  }, [events, searchTerm, selectedDate, selectedLocationFilter]);
 
   const now = new Date();
   const upcomingEvents = filteredEvents.filter(ev => ev.date && new Date(ev.date) >= now);
   const previousEvents = filteredEvents.filter(ev => ev.date && new Date(ev.date) < now);
+
+  // Group events by location for "Other" category
+  const otherLocationEvents = upcomingEvents.filter(event => !popularPngCities.includes(event.location));
+  const categorizedEvents = upcomingEvents.filter(event => popularPngCities.includes(event.location));
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -182,6 +216,17 @@ export default function Home() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <select 
+              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
+              value={selectedLocationFilter} // Use new state
+              onChange={(e) => setSelectedLocationFilter(e.target.value)} // Update new state
+            >
+              <option value="All Areas">All Areas</option>
+              {popularPngCities.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+              <option value="Other">Other Locations</option>
+            </select>
             <select 
               className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
               value={selectedDate}
@@ -229,17 +274,35 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {upcomingEvents.length > 0 ? upcomingEvents.map(event => (
-                <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-              )) : (
-                <div className="col-span-full text-center py-16">
-                  <div className="text-6xl mb-4">📅</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events</h3>
-                  <p className="text-gray-500">Check back later for new events.</p>
+            {categorizedEvents.length > 0 && (
+              <div className="mb-12">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Events in Popular Cities</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {categorizedEvents.map(event => (
+                    <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {otherLocationEvents.length > 0 && (
+              <div className="mb-12">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Events in Other Locations</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {otherLocationEvents.map(event => (
+                    <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {upcomingEvents.length === 0 && (
+              <div className="col-span-full text-center py-16">
+                <div className="text-6xl mb-4">📅</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events</h3>
+                <p className="text-gray-500">Check back later for new events.</p>
+              </div>
+            )}
           </>
         )}
         
@@ -326,37 +389,44 @@ export default function Home() {
               {host && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Host</h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                    {host.name && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-700">Name:</span>
-                        <span className="text-gray-900">{host.name}</span>
-                      </div>
-                    )}
-                    {host.email && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-700">Email:</span>
-                        <span className="text-gray-900">{host.email}</span>
-                      </div>
-                    )}
-                    {host.phone && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-700">Phone:</span>
-                        <span className="text-gray-900">{host.phone}</span>
-                      </div>
-                    )}
-                    {host.company && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-700">Company:</span>
-                        <span className="text-gray-900">{host.company}</span>
-                      </div>
-                    )}
-                    {host.about && (
-                      <div className="pt-2">
-                        <span className="text-gray-600 text-sm">{host.about}</span>
-                      </div>
-                    )}
-                  </div>
+                  {currentUser ? ( // Check if user is logged in
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      {host.name && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-700">Name:</span>
+                          <span className="text-gray-900">{host.name}</span>
+                        </div>
+                      )}
+                      {host.email && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-700">Email:</span>
+                          <span className="text-gray-900">{host.email}</span>
+                        </div>
+                      )}
+                      {host.phone && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-700">Phone:</span>
+                          <span className="text-gray-900">{host.phone}</span>
+                        </div>
+                      )}
+                      {host.company && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-700">Company:</span>
+                          <span className="text-gray-900">{host.company}</span>
+                        </div>
+                      )}
+                      {host.about && (
+                        <div className="pt-2">
+                          <span className="text-gray-600 text-sm">{host.about}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-center">
+                      <p className="font-semibold mb-2">Want to see host details?</p>
+                      <p className="text-sm">Please <Link href="/signin" className="text-blue-800 underline hover:text-blue-900">sign in or create an account</Link> to view host contact information.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

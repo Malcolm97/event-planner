@@ -1,63 +1,102 @@
 'use client';
 
-import Header from '../../components/Header'; // Import your component here to prevent errors on build time and avoid breaking changes when upgrading dependencies
-// Note that components should be named with Pascal Case e.g., EventForm, UserProfile etc not underlines ie user_profile for example (as per the NextJS guidelines)
-import { useState } from 'react';
+import Header from '../../../../components/Header';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase';
-import { TABLES } from '../../lib/supabase';
+import { supabase, TABLES } from '../../../../lib/supabase';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
+import Image from 'next/image';
 
-export default function CreateEventPage() {
+export const dynamic = 'force-dynamic';
+
+export default function EditEventPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
-  const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby'); // Default to a popular city
-  const [customLocation, setCustomLocation] = useState(''); // State for custom location input
+  const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby');
+  const [customLocation, setCustomLocation] = useState('');
   const [price, setPrice] = useState<number>(0);
   const [category, setCategory] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null); // New state for image file
-  const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null); // Existing image URL
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const popularPngCities = [
-    "Port Moresby",
-    "Lae",
-    "Madang",
-    "Mount Hagen",
-    "Goroka",
-    "Rabaul",
-    "Wewak",
-    "Popondetta",
-    "Arawa",
-    "Kavieng",
-    "Daru",
-    "Vanimo",
-    "Kimbe",
-    "Mendi",
-    "Kundiawa",
-    "Lorengau",
-    "Wabag",
-    "Kokopo",
-    "Buka",
-    "Alotau",
-    "Other" // Option for custom input
+    "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
+    "Popondetta", "Arawa", "Kavieng", "Daru", "Vanimo", "Kimbe", "Mendi",
+    "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau", "Other"
   ];
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/signin');
+          return;
+        }
+
+        const { data: eventData, error: fetchError } = await supabase
+          .from(TABLES.EVENTS)
+          .select('*')
+          .eq('id', id)
+          .eq('created_by', user.id) // Ensure only event creator can edit
+          .single();
+
+        if (fetchError) {
+          setError(`Error fetching event: ${fetchError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        if (eventData) {
+          setName(eventData.name || '');
+          setDescription(eventData.description || '');
+          setDate(eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : '');
+          setPrice(eventData.price || 0);
+          setCategory(eventData.category || '');
+          setImageUrl(eventData.image_url || null);
+
+          if (popularPngCities.includes(eventData.location)) {
+            setSelectedLocationType(eventData.location);
+            setCustomLocation('');
+          } else {
+            setSelectedLocationType('Other');
+            setCustomLocation(eventData.location || '');
+          }
+        } else {
+          setError('Event not found or you do not have permission to edit it.');
+        }
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred while fetching event.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchEvent();
+    }
+  }, [id, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     setError(null);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
-        setError('You must be logged in to create an event.');
-        setLoading(false);
+        setError('You must be logged in to update an event.');
+        setSubmitting(false);
         return;
       }
 
@@ -68,18 +107,18 @@ export default function CreateEventPage() {
 
       if (!finalLocation) {
         setError('Please provide a location for the event.');
-        setLoading(false);
+        setSubmitting(false);
         return;
       }
 
-      let imageUrl: string | null = null;
+      let newImageUrl: string | null = imageUrl;
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `event-images/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('event-images') // Ensure you have a bucket named 'event-images' in Supabase Storage
+          .from('event-images')
           .upload(filePath, imageFile, {
             cacheControl: '3600',
             upsert: false,
@@ -87,7 +126,7 @@ export default function CreateEventPage() {
 
         if (uploadError) {
           setError(`Error uploading image: ${uploadError.message}`);
-          setLoading(false);
+          setSubmitting(false);
           return;
         }
 
@@ -95,33 +134,46 @@ export default function CreateEventPage() {
           .from('event-images')
           .getPublicUrl(filePath);
         
-        imageUrl = publicUrlData.publicUrl;
+        newImageUrl = publicUrlData.publicUrl;
       }
 
-      const { error: insertError } = await supabase
+      const { error: updateError } = await supabase
         .from(TABLES.EVENTS)
-        .insert({
+        .update({
           name,
           description,
           date,
-          location: finalLocation, // Use the selected or custom location
+          location: finalLocation,
           price,
           category,
-          image_url: imageUrl, // Save the image URL
-          created_by: user.id,
-        });
+          image_url: newImageUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('created_by', user.id); // Ensure only event creator can update
 
-      if (insertError) {
-        setError(insertError.message);
+      if (updateError) {
+        setError(updateError.message);
       } else {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'An error occurred during update');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
+          <p className="text-gray-500 mt-6 text-lg">Loading event...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
@@ -139,8 +191,8 @@ export default function CreateEventPage() {
 
         <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
-            <p className="text-gray-600 mt-2">Fill in the details to create your event</p>
+            <h1 className="text-3xl font-bold text-gray-900">Edit Event</h1>
+            <p className="text-gray-600 mt-2">Update your event details</p>
           </div>
 
           {error && (
@@ -247,6 +299,11 @@ export default function CreateEventPage() {
 
             <div>
               <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
+              {imageUrl && (
+                <div className="mb-2">
+                  <Image src={imageUrl} alt="Current Event Image" width={150} height={100} objectFit="cover" className="rounded-md" />
+                </div>
+              )}
               <input
                 type="file"
                 id="image"
@@ -259,9 +316,9 @@ export default function CreateEventPage() {
             <button
               type="submit"
               className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
+              disabled={submitting}
             >
-              {loading ? 'Creating Event...' : 'Create Event'}
+              {submitting ? 'Updating Event...' : 'Update Event'}
             </button>
           </form>
         </div>

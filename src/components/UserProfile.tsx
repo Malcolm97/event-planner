@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase, TABLES, User } from '../lib/supabase';
+import Image from 'next/image'; // Import Image component
 
 interface UserProfileProps {
   onError?: (msg: string) => void;
@@ -29,14 +30,14 @@ export default function UserProfile({ onError }: UserProfileProps) {
         }
 
         // Fetch user profile from users table
-        const { data, error: profileError } = await supabase
+        const { data, error: fetchError } = await supabase
           .from(TABLES.USERS)
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (profileError) {
-          console.error('Error fetching user profile:', profileError);
+        if (fetchError) {
+          console.error('Error fetching user profile:', fetchError);
           setError('Failed to load user profile');
           stableOnError('Failed to load user profile');
           return;
@@ -99,9 +100,15 @@ export default function UserProfile({ onError }: UserProfileProps) {
 
   return (
     <div className="text-center">
-      <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-        {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
-      </div>
+      {userData.photo_url ? (
+        <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
+          <Image src={userData.photo_url} alt="User Photo" width={80} height={80} objectFit="cover" />
+        </div>
+      ) : (
+        <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+          {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
+        </div>
+      )}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{userData.name || 'Unnamed User'}</h3>
       <p className="text-gray-600 text-sm mb-4">{userData.email || 'No email available'}</p>
       

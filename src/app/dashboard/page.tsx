@@ -141,7 +141,9 @@ export default function DashboardPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {userEvents.map(event => (
-                    <EventCard key={event.id} event={event} />
+                    <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
+                      <EventCard event={event} />
+                    </Link>
                   ))}
                 </div>
               )}
