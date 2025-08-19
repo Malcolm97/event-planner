@@ -10,19 +10,17 @@ import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
 
 export default function CreateEventPage() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [eventName, setEventName] = useState("");
-  const [eventDescription, setEventDescription] = useState("");
-  const [eventLocation, setEventLocation] = useState("");
-  const [eventPrice, setEventPrice] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [eventTime, setEventTime] = useState("");
-  const [eventImage, setEventImage] = useState("");
-  const [eventCategory, setEventCategory] = useState("");
-  const [customLocation, setCustomLocation] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState('');
+  const [location, setLocation] = useState('');
+  const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby'); // Default to a popular city
+  const [customLocation, setCustomLocation] = useState(''); // State for custom location input
+  const [price, setPrice] = useState<number>(0);
+  const [category, setCategory] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null); // New state for image file
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const popularPngCities = [
@@ -63,28 +61,55 @@ export default function CreateEventPage() {
         return;
       }
 
-      const eventData = {
-        name: eventName,
-        description: eventDescription,
-        location: customLocation || eventLocation,
-        price: parseFloat(eventPrice) || 0,
-        date: eventDate && eventTime ? `${eventDate}T${eventTime}` : null,
-        image: eventImage || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&auto=format&fit=q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXZlbnR8ZW58MHx8MHx8fDA%3D",
-        category: eventCategory || "Other",
-        created_by: user.id,
-        created_at: new Date().toISOString(),
-        featured: false,
-      };
+      let finalLocation = selectedLocationType;
+      if (selectedLocationType === 'Other') {
+        finalLocation = customLocation;
+      }
 
-      if (!eventData.location) {
+      if (!finalLocation) {
         setError('Please provide a location for the event.');
         setLoading(false);
         return;
       }
 
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('event-images') // Ensure you have a bucket named 'event-images' in Supabase Storage
+          .upload(filePath, imageFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          setError(`Error uploading image: ${uploadError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('event-images')
+          .getPublicUrl(filePath);
+        
+        imageUrl = publicUrlData.publicUrl;
+      }
+
       const { error: insertError } = await supabase
         .from(TABLES.EVENTS)
-        .insert(eventData);
+        .insert({
+          name,
+          description,
+          date,
+          location: finalLocation, // Use the selected or custom location
+          price,
+          category,
+          image_url: imageUrl, // Save the image URL
+          created_by: user.id,
+        });
 
       if (insertError) {
         setError(insertError.message);
@@ -131,8 +156,8 @@ export default function CreateEventPage() {
                 type="text"
                 id="name"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
@@ -143,31 +168,19 @@ export default function CreateEventPage() {
                 id="description"
                 rows={4}
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventDescription}
-                onChange={(e) => setEventDescription(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               ></textarea>
             </div>
 
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
               <input
-                type="date"
+                type="datetime-local"
                 id="date"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-              <input
-                type="time"
-                id="time"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventTime}
-                onChange={(e) => setEventTime(e.target.value)}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 required
               />
             </div>
@@ -177,16 +190,15 @@ export default function CreateEventPage() {
               <select
                 id="location"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventLocation}
-                onChange={(e) => setEventLocation(e.target.value)}
+                value={selectedLocationType}
+                onChange={(e) => setSelectedLocationType(e.target.value)}
                 required
               >
-                <option value="">Select Location</option>
                 {popularPngCities.map((city) => (
                   <option key={city} value={city}>{city}</option>
                 ))}
               </select>
-              {eventLocation === 'Other' && (
+              {selectedLocationType === 'Other' && (
                 <input
                   type="text"
                   id="customLocation"
@@ -205,8 +217,8 @@ export default function CreateEventPage() {
                 type="number"
                 id="price"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventPrice}
-                onChange={(e) => setEventPrice(e.target.value)}
+                value={price}
+                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                 min="0"
                 step="0.01"
                 required
@@ -218,8 +230,8 @@ export default function CreateEventPage() {
               <select
                 id="category"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventCategory}
-                onChange={(e) => setEventCategory(e.target.value)}
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 required
               >
                 <option value="">Select a category</option>
@@ -234,14 +246,13 @@ export default function CreateEventPage() {
             </div>
 
             <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image URL</label>
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
               <input
-                type="text"
+                type="file"
                 id="image"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={eventImage}
-                onChange={(e) => setEventImage(e.target.value)}
-                placeholder="e.g., https://example.com/image.jpg"
+                accept="image/*"
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+                onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
               />
             </div>
 
