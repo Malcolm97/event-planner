@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase, TABLES, User } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image'; // Import Image component
 
 interface UserProfileProps {
@@ -13,21 +15,23 @@ export default function UserProfile({ onError }: UserProfileProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const stableOnError = onError ?? (() => {});
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchUserData = async () => {
+      if (!user) {
+        return; // Do not fetch if user is null
+      }
+
       try {
         setLoading(true);
         setError(null);
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setError('No authenticated user found');
-          stableOnError('No authenticated user found');
-          return;
-        }
 
         // Fetch user profile from users table
         const { data, error: fetchError } = await supabase
@@ -43,24 +47,38 @@ export default function UserProfile({ onError }: UserProfileProps) {
           return;
         }
 
-        if (data) {
+        if (isMounted && data) {
           setUserData(data);
           stableOnError(''); // Clear any previous errors
-        } else {
-          setError('User profile not found');
-          stableOnError('User profile not found');
+
+          // Redirect to edit profile if user data is incomplete and hasn't redirected yet
+          if (!hasRedirected && Object.keys(data).length === 0) {
+            router.push('/dashboard/edit-profile');
+            setHasRedirected(true);
+          }
+        } else if (isMounted) {
+          setError('User profile not found in database');
+          stableOnError('User profile not found in database');
         }
       } catch (err: any) {
         console.error('Error in UserProfile:', err);
         setError(err.message || 'An unexpected error occurred');
         stableOnError(err.message || 'An unexpected error occurred');
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchUserData();
-  }, [stableOnError, retryCount]);
+    if (!authLoading && user) {
+      fetchUserData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, authLoading, stableOnError, router, hasRedirected]);
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);

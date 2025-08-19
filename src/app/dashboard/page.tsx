@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const router = useRouter();
 
+  // Effect to check user authentication and fetch events
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -27,12 +28,21 @@ export default function DashboardPage() {
         return;
       }
       setUser(user);
-      fetchUserEvents(user.id);
+      fetchUserEvents(user.id); // Call the function defined outside
       setLoading(false);
     };
-    checkUser();
-  }, [router]);
 
+    checkUser();
+  }, [router, setUser]); // Dependencies for checkUser
+
+  // Effect to handle redirection if profile error occurs
+  useEffect(() => {
+    if (profileError === 'Error: Failed to load user profile') {
+      router.push('/dashboard/edit-profile');
+    }
+  }, [profileError, router]); // Dependencies for profileError redirection
+
+  // Function to fetch user events (defined outside useEffect)
   const fetchUserEvents = async (userId: string) => {
     try {
       const { data, error } = await supabase

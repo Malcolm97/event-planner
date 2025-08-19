@@ -120,15 +120,18 @@ export default function Home() {
       const { data, error } = await supabase
         .from(TABLES.USERS)
         .select('*')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId);
 
       if (error) {
         console.error('Error fetching host:', error.message || error);
         return;
       }
 
-      setHost(data);
+      if (data && data.length > 0) {
+        setHost(data[0]);
+      } else {
+        setHost(null);
+      }
     } catch (err: any) {
       console.error('Error fetching host:', err.message || err);
     }

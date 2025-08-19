@@ -52,7 +52,7 @@ export default function EventsPage() {
   const locationAreas = events.map(event => {
     const location = event.location;
     if (!location) return null;
-    const firstPart = location.split(',')[0].trim();
+    const firstPart = location.split(',')[0]?.trim();
     if (!firstPart) return null;
 
     if (popularPngCities.includes(firstPart)) {
@@ -74,7 +74,7 @@ export default function EventsPage() {
       ? upcomingEvents.filter(event => {
           const location = event.location;
           if (!location) return false;
-          const firstPart = location.split(',')[0].trim();
+          const firstPart = location.split(',')[0]?.trim();
           return firstPart && !popularPngCities.includes(firstPart);
         })
       : upcomingEvents.filter(event => event.location?.includes(selectedArea));

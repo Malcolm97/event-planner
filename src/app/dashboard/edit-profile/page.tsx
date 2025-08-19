@@ -28,6 +28,16 @@ export default function EditProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
+    const handleBeforeUnload = (event: any) => {
+      if (!formData.name || !formData.company || !formData.phone || !formData.about) {
+        event.preventDefault();
+        event.returnValue = "You haven't completed your profile. Are you sure you want to leave?";
+        return "You haven't completed your profile. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
