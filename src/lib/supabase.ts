@@ -3,18 +3,25 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Check if Supabase is properly configured
-export const isSupabaseConfigured = () => {
-  return supabaseUrl && 
-         supabaseAnonKey && 
-         !supabaseUrl.includes('your-project-id') && 
-         !supabaseAnonKey.includes('your-anon-key')
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase environment variables. Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set correctly.'
+  )
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://your-project-id.supabase.co',
-  supabaseAnonKey || 'your-anon-key-here'
-)
+if (!supabaseUrl.startsWith('https://') || supabaseUrl.includes('your-project-id')) {
+  throw new Error(
+    'Invalid Supabase URL. Please replace the placeholder in .env.local with your actual Supabase project URL from your project settings.'
+  )
+}
+
+if (supabaseAnonKey.includes('your-anon-key')) {
+  throw new Error(
+    'Invalid Supabase anon key. Please replace the placeholder in .env.local with your actual Supabase anon key from your project settings.'
+  )
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database table names
 export const TABLES = {
