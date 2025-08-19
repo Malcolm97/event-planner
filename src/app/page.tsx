@@ -389,10 +389,10 @@ export default function Home() {
               </div>
 
               {/* Host Information */}
-              {host && (
+              {selectedEvent && ( // Ensure selectedEvent exists before trying to show host info
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Host</h3>
-                  {currentUser ? ( // Check if user is logged in
+                  {host ? ( // If host data was fetched and exists
                     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                       {host.name && (
                         <div className="flex items-center gap-2">
@@ -403,13 +403,13 @@ export default function Home() {
                       {host.email && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-700">Email:</span>
-                          <span className="text-gray-900">{host.email}</span>
+                          <a href={`mailto:${host.email}`} className="text-blue-600 hover:underline text-gray-900">{host.email}</a>
                         </div>
                       )}
                       {host.phone && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-700">Phone:</span>
-                          <span className="text-gray-900">{host.phone}</span>
+                          <a href={`tel:${host.phone}`} className="text-blue-600 hover:underline text-gray-900">{host.phone}</a>
                         </div>
                       )}
                       {host.company && (
@@ -424,10 +424,13 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-center">
-                      <p className="font-semibold mb-2">Want to see host details?</p>
-                      <p className="text-sm">Please <Link href="/signin" className="text-blue-800 underline hover:text-blue-900">sign in or create an account</Link> to view host contact information.</p>
+                  ) : ( // If host data was NOT fetched or is null
+                    <div className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-3 rounded-lg text-center">
+                      {selectedEvent?.created_by ? (
+                        <p>Host details for user ID "{selectedEvent.created_by}" are not available or could not be fetched.</p>
+                      ) : (
+                        <p>Host details are not available for this event.</p>
+                      )}
                     </div>
                   )}
                 </div>
