@@ -1,4 +1,5 @@
 "use client";
+import Header from "../../components/Header";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase, TABLES } from "../../lib/supabase";
@@ -16,7 +17,6 @@ export default function CreateEventPage() {
   const [eventLocation, setEventLocation] = useState("");
   const [eventPrice, setEventPrice] = useState("");
   const [eventDate, setEventDate] = useState("");
-  const [eventTime, setEventTime] = useState("");
   const [eventImage, setEventImage] = useState("");
   const [eventCategory, setEventCategory] = useState("");
   const [customLocation, setCustomLocation] = useState("");
@@ -53,7 +53,7 @@ export default function CreateEventPage() {
         description: eventDescription,
         location: customLocation || eventLocation,
         price: parseFloat(eventPrice) || 0,
-        date: eventDate && eventTime ? `${eventDate}T${eventTime}` : null,
+        date: eventDate ? new Date(eventDate).toISOString() : null,
         image: eventImage || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXZlbnR8ZW58MHx8MHx8fDA%3D",
         category: eventCategory || "Other",
         created_by: user.id,
@@ -85,6 +85,7 @@ export default function CreateEventPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
+      <Header />
       <div className="absolute top-6 left-6">
         <Link href="/">
           <div className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
@@ -153,13 +154,6 @@ export default function CreateEventPage() {
           type="datetime-local"
           value={eventDate}
           onChange={e => setEventDate(e.target.value)}
-          className="rounded-lg px-4 py-2 border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          required
-        />
-        <input
-          type="time"
-          value={eventTime}
-          onChange={e => setEventTime(e.target.value)}
           className="rounded-lg px-4 py-2 border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           required
         />

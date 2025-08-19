@@ -1,9 +1,10 @@
 'use client';
 
+import { Event } from '../lib/supabase';
 import React from 'react';
 
 interface EventCarouselProps {
-  events?: any[];
+  events?: Event[];
 }
 
 export default function EventCarousel({ events = [] }: EventCarouselProps) {

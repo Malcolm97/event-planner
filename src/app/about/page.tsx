@@ -1,5 +1,6 @@
 'use client';
 
+import Header from '../../components/Header';
 import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
 import Link from 'next/link';
 
@@ -57,6 +58,7 @@ const team = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <Header />
       {/* Hero Section - Same as homepage */}
       <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-4xl mx-auto text-center">

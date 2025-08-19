@@ -1,5 +1,6 @@
 'use client';
 
+import Header from '../../components/Header';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, Event } from '../../lib/supabase';
@@ -88,6 +89,7 @@ function CategoriesPageContentInner() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Header />
       {/* Hero Section */}
       <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">

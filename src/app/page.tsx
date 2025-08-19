@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';
-import { supabase, TABLES, Event, User } from '../lib/supabase';
+import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supabase';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
 
 // Force dynamic rendering to prevent prerendering issues
@@ -57,20 +57,33 @@ export default function Home() {
     try {
       setLoading(true);
       
+      // Check if Supabase is properly configured
+      if (!isSupabaseConfigured()) {
+        console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
+        setEvents([]);
+        setFilteredEvents([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from(TABLES.EVENTS)
         .select('*')
         .order('date', { ascending: true });
 
       if (error) {
-        console.error('Error fetching events:', error);
+        console.warn('Error fetching events:', error.message);
+        setEvents([]);
+        setFilteredEvents([]);
         return;
       }
 
       setEvents(data || []);
       setFilteredEvents(data || []);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.warn('Network error fetching events. Please check your Supabase configuration.');
+      setEvents([]);
+      setFilteredEvents([]);
     } finally {
       setLoading(false);
     }
@@ -164,7 +177,7 @@ export default function Home() {
           {/* Search/Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
             <input 
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400" 
               placeholder="Search events, artists, or venues..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -184,15 +197,15 @@ export default function Home() {
           {/* Stats */}
           <div className="flex gap-8 mt-6 text-center justify-center">
             <div>
-              <div className="text-2xl font-bold text-indigo-600">500+</div>
+              <div className="text-2xl font-bold text-gray-900">500+</div>
               <div className="text-gray-600 text-sm">Events this month</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-indigo-600">50K+</div>
+              <div className="text-2xl font-bold text-gray-900">50K+</div>
               <div className="text-gray-600 text-sm">Happy attendees</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-indigo-600">100+</div>
+              <div className="text-2xl font-bold text-gray-900">100+</div>
               <div className="text-gray-600 text-sm">Cities covered</div>
             </div>
           </div>
