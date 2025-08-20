@@ -10,11 +10,16 @@ const isMobileDevice = () => {
 
 // Helper function to detect if added to home screen (PWA)
 // Note: navigator.standalone is not universally supported.
+interface CustomNavigator extends Navigator {
+  standalone?: boolean;
+}
+
 const isAddedToHomeScreen = () => {
   if (typeof navigator === 'undefined') return false; // SSR check
+  const customNavigator = navigator as CustomNavigator; // Type assertion
   // Check for standalone mode, which indicates PWA on home screen
   // This might not be reliable across all browsers/OS.
-  return navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
+  return customNavigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
 };
 
 interface NetworkStatusContextProps {
