@@ -1,11 +1,11 @@
 {
-  "name": "Event Planner",
-  "short_name": "EventPlanner",
+  "name": "PNG Events",
+  "short_name": "PNG Events",
   "description": "A web app to plan and manage events.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#007bff",
+  "theme_color": "#FFA500",
   "icons": [
     {
       "src": "/public/window.svg",
