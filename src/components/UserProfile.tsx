@@ -5,6 +5,16 @@ import { supabase, TABLES, User } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image'; // Import Image component
+import { createHash } from 'crypto'; // Import createHash
+
+// Helper function to get Gravatar URL
+const getGravatarUrl = (email: string | null | undefined): string => {
+  if (!email) {
+    return `https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=80`; // Fallback for no email
+  }
+  const hash = createHash('md5').update(email.toLowerCase().trim()).digest('hex');
+  return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=80`;
+};
 
 interface UserProfileProps {
   onError?: (msg: string) => void;
@@ -123,8 +133,8 @@ export default function UserProfile({ onError }: UserProfileProps) {
           <Image src={userData.photo_url} alt="User Photo" width={80} height={80} objectFit="cover" />
         </div>
       ) : (
-        <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-          {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
+        <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
+          <Image src={getGravatarUrl(userData.email)} alt="User Gravatar" width={80} height={80} objectFit="cover" />
         </div>
       )}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{userData.name || 'Unnamed User'}</h3>
