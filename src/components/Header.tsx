@@ -91,13 +91,13 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+<header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+  {hasMounted && isPwaOnMobile && (
+    <div className={`text-center py-2 bg-black ${isOnline ? 'text-green-500' : 'text-red-500'} text-sm font-medium`}>
+      {isOnline ? 'Online' : 'Offline'}
+    </div>
+  )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {hasMounted && isPwaOnMobile && (
-          <div className="text-center py-2 bg-gray-100 text-gray-700 text-sm font-medium">
-            {isOnline ? 'Online' : 'Offline'}
-          </div>
-        )}
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
