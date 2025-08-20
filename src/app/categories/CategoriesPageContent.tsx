@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { supabase, TABLES, Event } from '../../lib/supabase';
+import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../../lib/supabase'; // Added User and isSupabaseConfigured
 import EventCard from '../../components/EventCard';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 
@@ -45,19 +45,36 @@ function CategoriesPageContentInner() {
   const [displayCategories, setDisplayCategories] = useState<typeof allCategories>([]); // New state for filtered categories
   const [loading, setLoading] = useState(true);
 
+  // Modal states
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [host, setHost] = useState<User | null>(null); // State for host details
+
   useEffect(() => {
     const fetchAndFilterCategories = async () => {
       try {
         setLoading(true);
 
+        // Check if Supabase is properly configured
+        if (!isSupabaseConfigured()) {
+          console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
+          setEvents([]);
+          setDisplayCategories([]);
+          setLoading(false);
+          return;
+        }
+
         // 1. Fetch all events
         const { data, error } = await supabase
           .from(TABLES.EVENTS)
           .select('*')
+          .gte('date', now.toISOString()) // Filter for upcoming events
           .order('date', { ascending: true });
 
         if (error) {
           console.error('Error fetching events:', error);
+          setEvents([]);
+          setDisplayCategories([]);
           setLoading(false);
           return;
         }
@@ -81,13 +98,47 @@ function CategoriesPageContentInner() {
 
       } catch (error) {
         console.error('Error fetching events:', error);
-      } finally {
+        setEvents([]);
+        setDisplayCategories([]);
         setLoading(false);
       }
     };
 
     fetchAndFilterCategories();
   }, []); // Fetch only once on mount
+
+  // Fetch host details based on the event's creator ID
+  const fetchHost = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.USERS)
+        .select('*')
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error fetching host:', error.message || error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setHost(data[0]);
+      } else {
+        setHost(null);
+      }
+    } catch (err: any) {
+      console.error('Error fetching host:', err.message || err);
+    }
+  };
+
+  // Effect to fetch host details when selectedEvent changes
+  useEffect(() => {
+    if (selectedEvent?.created_by) {
+      fetchHost(selectedEvent.created_by);
+    } else {
+      setHost(null);
+    }
+  }, [selectedEvent]);
+
 
   const filteredEvents = events.filter(event => {
     if (!category || category === 'All Categories') return true;
@@ -167,7 +218,7 @@ function CategoriesPageContentInner() {
           ) : upcomingEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {upcomingEvents.map(event => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}
             </div>
           ) : (
