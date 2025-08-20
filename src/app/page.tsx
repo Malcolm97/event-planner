@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react'; // Import useContext
+import { useState, useEffect, useContext, useMemo } from 'react'; // Import useContext
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';
@@ -156,7 +156,15 @@ export default function Home() {
   }, [selectedEvent]);
 
   // Calculate upcoming and previous events based on filteredEvents
-  const now = new Date();
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    return filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) >= now);
+  }, [filteredEvents]);
+
+  const previousEvents = useMemo(() => {
+    const now = new Date();
+    return filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) < now);
+  }, [filteredEvents]);
 
   useEffect(() => {
     const filterEvents = () => {
@@ -170,6 +178,7 @@ export default function Home() {
       }
 
       if (selectedDate !== 'All Dates') {
+        const now = new Date();
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         const endOfWeek = new Date(now);
@@ -215,10 +224,7 @@ export default function Home() {
     };
 
     filterEvents();
-  }, [events, searchTerm, selectedDate, selectedLocationFilter, now]);
-
-  const upcomingEvents = filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) >= now);
-  const previousEvents = filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) < now);
+  }, [events, searchTerm, selectedDate, selectedLocationFilter]);
 
   // Effect to update displayedLocations and displayedDates after events are loaded
   useEffect(() => {
@@ -288,7 +294,7 @@ export default function Home() {
     });
 
     setDisplayedDates(newAvailableDates);
-  }, [events, upcomingEvents, now]); // Recalculate when events or upcomingEvents change
+  }, [events, upcomingEvents]); // Recalculate when events or upcomingEvents change
 
   const categorizedEvents = upcomingEvents.filter((event: Event) => {
     const firstPart = event.location?.split(',')[0]?.trim();

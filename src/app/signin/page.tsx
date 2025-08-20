@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import the hook
+import SuccessModal from '../../components/SuccessModal'; // Import the new modal component
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,7 @@ export default function SignInPage() {
   const [phone, setPhone] = useState("");
   const [about, setAbout] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
   const router = useRouter();
 
   useEffect(() => {
@@ -73,6 +75,7 @@ export default function SignInPage() {
 
     try {
       if (isRegister) {
+        console.log('Name state:', name); // Debugging: Log name state
         // Sign up
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -87,23 +90,24 @@ export default function SignInPage() {
         if (error) throw error;
 
         if (data.user) {
+          console.log('Supabase user data after signup:', data.user); // Debugging: Log user data
           // Create user profile
           const userProfile = {
             id: data.user.id,
-            name: name || "",
             company: company || "",
             phone: phone || "",
             about: about || "",
             updated_at: new Date().toISOString(),
           };
 
+          console.log('UserProfile object before insertion:', userProfile); // Debugging: Log userProfile
           // Insert into users table
           const { error: profileError } = await supabase
             .from(TABLES.USERS)
             .insert([userProfile]);
 
           if (profileError) {
-            console.error('Error creating profile:', profileError);
+            console.error('Error creating profile:', JSON.stringify(profileError));
           }
 
           // Insert into users_by_email table
@@ -113,16 +117,16 @@ export default function SignInPage() {
             .insert([{
               email: emailKey,
               user_id: data.user.id,
-              ...userProfile
+              ...userProfile,
+              name: name || "", // Add name here for users_by_email if needed for search/display
             }]);
 
           if (emailError) {
-            console.error('Error creating email record:', emailError);
+            console.error('Error creating email record:', JSON.stringify(emailError));
           }
 
           setError("");
-          alert("Account created successfully! Please check your email for verification.");
-          router.push("/dashboard");
+          setShowSuccessModal(true); // Show the success modal
         }
       } else {
         // Sign in
@@ -136,10 +140,25 @@ export default function SignInPage() {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      setError(err.message || "An error occurred");
+      let errorMessage = "An unexpected error occurred.";
+      if (err.message) {
+        if (err.message.includes("User already registered")) {
+          errorMessage = "This email is already registered. Please sign in or use a different email.";
+        } else if (err.message.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    router.push("/signin"); // Redirect to signin page
   };
 
   return (
@@ -249,6 +268,12 @@ export default function SignInPage() {
         </button>
       </form>
       </div>
+      {showSuccessModal && (
+        <SuccessModal
+          message="Account created successfully! Please check your email for verification."
+          onClose={handleCloseSuccessModal}
+        />
+      )}
     </div>
   );
 }
