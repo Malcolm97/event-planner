@@ -59,20 +59,17 @@ export default function EventsPage() {
         if (!isSupabaseConfigured()) {
           console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
           setEvents([]);
-          setLoading(false);
           return;
         }
 
         const { data, error } = await supabase
           .from(TABLES.EVENTS)
           .select('*')
-          .gte('date', now.toISOString()) // Filter for upcoming events
           .order('date', { ascending: true });
 
         if (error) {
           console.error('Error fetching events:', error);
           setEvents([]);
-          setLoading(false);
           return;
         }
 
@@ -80,6 +77,7 @@ export default function EventsPage() {
       } catch (error) {
         console.error('Error fetching events:', error);
         setEvents([]);
+      } finally {
         setLoading(false);
       }
     };
