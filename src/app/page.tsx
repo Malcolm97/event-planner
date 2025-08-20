@@ -64,111 +64,47 @@ export default function Home() {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      if (isPwaOnMobile) { // Only enable offline/online features for PWA on mobile
-        if (isOnline) {
-          // Try to fetch from Supabase
-          if (!isSupabaseConfigured()) {
-            console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-            // Fallback to cache if Supabase is not configured
-            const cachedEvents = localStorage.getItem('cachedEvents');
-            if (cachedEvents) {
-              const parsedEvents: Event[] = JSON.parse(cachedEvents);
-              setEvents(parsedEvents);
-              setFilteredEvents(parsedEvents);
-              const lastSavedTimestamp = localStorage.getItem('lastSavedTimestamp');
-              setLastSaved(lastSavedTimestamp); // Update context with cached timestamp
-            } else {
-              setEvents([]);
-              setFilteredEvents([]);
-            }
-            setLoading(false);
-            return;
-          }
+      if (!isSupabaseConfigured()) {
+        console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
+        setEvents([]);
+        setFilteredEvents([]);
+        setLoading(false);
+        return;
+      }
 
-          const { data, error } = await supabase
-            .from(TABLES.EVENTS)
-            .select('*')
-            .order('date', { ascending: true });
+      // Always attempt to fetch from Supabase. The service worker will handle caching.
+        const { data, error } = await supabase
+          .from(TABLES.EVENTS)
+          .select('*')
+          .order('date', { ascending: true });
 
-          if (error) {
-            console.warn('Error fetching events from Supabase:', error.message);
-            // If Supabase fetch fails, try to load from cache
-            const cachedEvents = localStorage.getItem('cachedEvents');
-            if (cachedEvents) {
-              const parsedEvents: Event[] = JSON.parse(cachedEvents);
-              setEvents(parsedEvents);
-              setFilteredEvents(parsedEvents);
-              const lastSavedTimestamp = localStorage.getItem('lastSavedTimestamp');
-              setLastSaved(lastSavedTimestamp); // Update context with cached timestamp
-            } else {
-              setEvents([]);
-              setFilteredEvents([]);
-            }
-          } else if (data) {
-            setEvents(data);
-            setFilteredEvents(data);
-            // Cache the fetched data
-          localStorage.setItem('cachedEvents', JSON.stringify(data));
-          const timestamp = new Date().toISOString();
-          localStorage.setItem('lastSavedTimestamp', timestamp);
-          setLastSaved(timestamp); // Update context with new timestamp
-        }
+      if (error) {
+        console.warn('Error fetching events from Supabase:', error.message);
+        // If there's an error (e.g., network offline and no cache in service worker),
+        // the service worker should return an empty array, so we handle it gracefully.
+        setEvents([]);
+        setFilteredEvents([]);
+      } else if (data) {
+        setEvents(data);
+        setFilteredEvents(data);
+        // The service worker is now responsible for caching.
+        // We can optionally update a "last saved" timestamp if needed for display,
+        // but the data itself is managed by the service worker's cache.
+        const timestamp = new Date().toISOString();
+        setLastSaved(timestamp); // Update context with new timestamp
       } else {
-          // Offline: Load from cache
-          const cachedEvents = localStorage.getItem('cachedEvents');
-          if (cachedEvents) {
-            const parsedEvents: Event[] = JSON.parse(cachedEvents);
-            setEvents(parsedEvents);
-            setFilteredEvents(parsedEvents);
-            const lastSavedTimestamp = localStorage.getItem('lastSavedTimestamp');
-            setLastSaved(lastSavedTimestamp); // Update context with cached timestamp
-          } else {
-            // No cache available and offline
-            setEvents([]);
-            setFilteredEvents([]);
-            console.warn('No events found in cache and offline.');
-          }
-        }
-      } else {
-        // Not PWA on mobile, or not offline in a PWA context
-        if (isOnline) {
-          // If online, still try to fetch from Supabase
-          if (!isSupabaseConfigured()) {
-            console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-            setEvents([]);
-            setFilteredEvents([]);
-            setLoading(false);
-            return;
-          }
-
-          const { data, error } = await supabase
-            .from(TABLES.EVENTS)
-            .select('*')
-            .order('date', { ascending: true });
-
-          if (error) {
-            console.warn('Error fetching events from Supabase:', error.message);
-            setEvents([]);
-            setFilteredEvents([]);
-          } else if (data) {
-            setEvents(data);
-            setFilteredEvents(data);
-          }
-        } else {
-          // If offline and not PWA on mobile, show a message
-          console.log('Offline features are not available in this context.');
-          setEvents([]);
-          setFilteredEvents([]);
-        }
+        // Handle case where data is null/undefined but no error
+        setEvents([]);
+        setFilteredEvents([]);
       }
     } catch (error) {
       console.error('Error loading events:', error);
       setEvents([]);
       setFilteredEvents([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   // Initial fetch on component mount
   useEffect(() => {
@@ -181,7 +117,7 @@ export default function Home() {
     getCurrentUser();
 
     // Listen for auth changes to update current user
-    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event: string, session: any) => { // Explicitly typing _event and session
       setCurrentUser(session?.user || null);
     });
 

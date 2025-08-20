@@ -47,6 +47,24 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
+  // Handle Next.js build artifacts (chunks, static files) with a network-first strategy
+  // This prevents ChunkLoadError when new deployments change chunk filenames.
+  if (requestUrl.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      fetch(event.request).catch(async () => {
+        // If network fails, try to serve from cache (fallback for offline)
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          console.log('Serving _next/static/ from cache (network failed):', event.request.url);
+          return cachedResponse;
+        }
+        // If neither network nor cache has it, return a network error response
+        return new Response(null, { status: 503, statusText: 'Service Unavailable' });
+      })
+    );
+    return; // Stop further processing for _next/static requests
+  }
+
   // Cache API requests for events and other critical assets
   if (requestUrl.pathname.startsWith('/api/events') || requestUrl.pathname.startsWith('/events')) {
     event.respondWith(
