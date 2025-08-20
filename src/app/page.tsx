@@ -57,6 +57,9 @@ export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [host, setHost] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [totalEvents, setTotalEvents] = useState<number | null>(null);
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [citiesCoveredCount, setCitiesCoveredCount] = useState<number | null>(null);
   const router = useRouter();
   const { isOnline, setLastSaved, isPwaOnMobile } = useNetworkStatus();
 
@@ -124,6 +127,74 @@ export default function Home() {
   useEffect(() => {
     loadEvents();
   }, [isOnline, isPwaOnMobile]);
+
+  // Fetch total events
+  useEffect(() => {
+    const fetchTotalEvents = async () => {
+      if (!isSupabaseConfigured()) {
+        setTotalEvents(0);
+        return;
+      }
+      try {
+        const { count, error } = await supabase
+          .from(TABLES.EVENTS)
+          .select('*', { count: 'exact' });
+        if (error) {
+          console.error('Error fetching total events:', error.message);
+          setTotalEvents(0);
+        } else {
+          setTotalEvents(count);
+        }
+      } catch (error) {
+        console.error('Error fetching total events:', error);
+        setTotalEvents(0);
+      }
+    };
+    fetchTotalEvents();
+  }, []);
+
+  // Fetch total users
+  useEffect(() => {
+    const fetchTotalUsers = async () => {
+      if (!isSupabaseConfigured()) {
+        setTotalUsers(0);
+        return;
+      }
+      try {
+        const { count, error } = await supabase
+          .from(TABLES.USERS)
+          .select('*', { count: 'exact' });
+        if (error) {
+          console.error('Error fetching total users:', error.message);
+          setTotalUsers(0);
+        } else {
+          setTotalUsers(count);
+        }
+      } catch (error) {
+        console.error('Error fetching total users:', error);
+        setTotalUsers(0);
+      }
+    };
+    fetchTotalUsers();
+  }, []);
+
+  // Calculate cities covered
+  useEffect(() => {
+    if (events.length > 0) {
+      const uniqueCities = new Set<string>();
+      events.forEach(event => {
+        if (event.location) {
+          const firstPart = event.location.split(',')[0]?.trim();
+          if (firstPart) {
+            uniqueCities.add(firstPart);
+          }
+        }
+      });
+      setCitiesCoveredCount(uniqueCities.size);
+    } else {
+      setCitiesCoveredCount(0);
+    }
+  }, [events]);
 
   const fetchHost = async (userId: string) => {
     try {
@@ -350,31 +421,30 @@ export default function Home() {
           {/* Stats */}
           <div className="flex gap-8 mt-6 text-center justify-center">
             <div>
-              <div className="text-2xl font-bold text-gray-900">500+</div>
-              <div className="text-gray-600 text-sm">Events this month</div>
+              <div className="text-2xl font-bold text-gray-900">{totalEvents !== null ? totalEvents : '...'}</div>
+              <div className="text-gray-600 text-sm">Total Events</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-900">50K+</div>
-              <div className="text-gray-600 text-sm">Happy attendees</div>
+              <div className="text-2xl font-bold text-gray-900">{totalUsers !== null ? totalUsers : '...'}</div>
+              <div className="text-gray-600 text-sm">Total Users</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-900">100+</div>
-              <div className="text-gray-600 text-sm">Cities covered</div>
+              <div className="text-2xl font-bold text-gray-900">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
+              <div className="text-gray-600 text-sm">Cities Covered</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Events (now real-time) */}
+      {/* Upcoming Events */}
       <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
-            <span className="text-2xl">✨</span> Featured Events
+            <span className="text-2xl">📅</span> Upcoming Events
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the most popular events happening near you.</p>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover all upcoming events happening near you.</p>
         </div>
 
-        {/* Upcoming Events */}
         {loading ? (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
@@ -382,29 +452,13 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {categorizedEvents.length > 0 && (
-              <div className="mb-12">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Events in Popular Cities</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {categorizedEvents.map(event => (
-                    <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-                  ))}
-                </div>
+            {upcomingEvents.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {upcomingEvents.map(event => (
+                  <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                ))}
               </div>
-            )}
-
-            {otherLocationEvents.length > 0 && (
-              <div className="mb-12">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Events in Other Locations</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {otherLocationEvents.map(event => (
-                    <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {upcomingEvents.length === 0 && (
+            ) : (
               <div className="col-span-full text-center py-16">
                 <div className="text-6xl mb-4">📅</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events</h3>
@@ -419,6 +473,17 @@ export default function Home() {
             View all Events
           </button>
         </div>
+      </section>
+
+      {/* Featured Events (empty for now) */}
+      <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
+            <span className="text-2xl">✨</span> Featured Events
+          </h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Featured events will appear here soon!</p>
+        </div>
+        {/* This section is intentionally left blank for future development */}
       </section>
 
       {/* Previous Events Section */}
@@ -452,18 +517,18 @@ export default function Home() {
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
                   {(() => {
-                    const Icon = categoryIconMap[selectedEvent.category || 'Other'] || FiStar;
+                    const Icon = categoryIconMap[selectedEvent?.category || 'Other'] || FiStar;
                     return <Icon size={24} className="text-yellow-600" />;
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">{selectedEvent.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">{selectedEvent?.name}</h2>
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm">
-                      {selectedEvent.category || 'Other'}
+                      {selectedEvent?.category || 'Other'}
                     </span>
                     <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
-                      {selectedEvent.price === 0 ? 'Free' : `PGK ${selectedEvent.price.toFixed(2)}`}
+                      {selectedEvent?.price === 0 ? 'Free' : `PGK ${selectedEvent?.price?.toFixed(2)}`}
                     </span>
                   </div>
                 </div>
@@ -475,17 +540,17 @@ export default function Home() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-gray-600">
                   <FiMapPin size={18} className="text-gray-400 flex-shrink-0" />
-                  <span className="font-medium">{selectedEvent.location}</span>
+                  <span className="font-medium">{selectedEvent?.location}</span>
                 </div>
 
-                {selectedEvent.date && (
+                {selectedEvent?.date && (
                   <div className="flex items-center gap-3 text-gray-600">
                     <FiCalendar size={18} className="text-gray-400 flex-shrink-0" />
-                    <span className="font-medium">{new Date(selectedEvent.date).toLocaleString()}</span>
+                    <span className="font-medium">{new Date(selectedEvent.date!).toLocaleString()}</span>
                   </div>
                 )}
 
-                {selectedEvent.description && (
+                {selectedEvent?.description && (
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
                     <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
@@ -499,31 +564,31 @@ export default function Home() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Host</h3>
                   {host ? (
                     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      {host.name && (
+                      {host?.name && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-700">Name:</span>
                           <span className="text-gray-900">{host.name}</span>
                         </div>
                       )}
-                      {host.email && (
+                      {host?.email && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-700">Email:</span>
                           <a href={`mailto:${host.email}`} className="text-blue-600 hover:underline text-gray-900">{host.email}</a>
                         </div>
                       )}
-                      {host.phone && (
+                      {host?.phone && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-700">Phone:</span>
                           <a href={`tel:${host.phone}`} className="text-blue-600 hover:underline text-gray-900">{host.phone}</a>
                         </div>
                       )}
-                      {host.company && (
+                      {host?.company && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-700">Company:</span>
                           <span className="text-gray-900">{host.company}</span>
                         </div>
                       )}
-                      {host.about && (
+                      {host?.about && (
                         <div className="pt-2">
                           <span className="text-gray-600 text-sm">{host.about}</span>
                         </div>
