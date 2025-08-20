@@ -1,5 +1,5 @@
 // Basic service worker for PWA features
-const CACHE_NAME = 'v1';
+const CACHE_NAME = 'v2';
 const CACHE_URLS = [
   '/', // Cache the root page
   '/events', // Cache the events page
@@ -47,6 +47,32 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
+  // Strategy for HTML navigation requests: Network-first, then cache, with offline fallback
+  if (event.request.mode === 'navigate' || (event.request.method === 'GET' && event.request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      fetch(event.request)
+        .then(async (networkResponse) => {
+          // If network response is valid, cache it and return
+          if (networkResponse.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // If network fails, try to serve from cache
+          const cachedResponse = await caches.match(event.request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // If neither network nor cache has it, serve the offline page
+          console.log('Network request failed for navigation, serving offline page.');
+          return caches.match('/offline.html');
+        })
+    );
+    return;
+  }
+
   // Handle Next.js build artifacts (chunks, static files) with a network-first strategy
   // This prevents ChunkLoadError when new deployments change chunk filenames.
   if (requestUrl.pathname.startsWith('/_next/static/')) {
@@ -93,7 +119,8 @@ self.addEventListener('fetch', (event) => {
       })
     );
   } else {
-    // For other requests (like HTML, CSS, JS, images), serve from cache if available, otherwise fetch from network
+    // For other requests (like CSS, JS, images that are not _next/static), serve from cache if available, otherwise fetch from network
+    // This is a cache-first strategy for non-critical assets.
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {

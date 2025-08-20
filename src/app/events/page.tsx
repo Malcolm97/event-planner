@@ -187,7 +187,14 @@ export default function EventsPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Popular Areas</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {areas.slice(1).map(area => {
-              const areaEvents = events.filter(event => event.location?.includes(area));
+              const areaEvents = area === 'Other Locations'
+                ? events.filter(event => {
+                    const location = event.location;
+                    if (!location) return false;
+                    const firstPart = location.split(',')[0]?.trim();
+                    return firstPart && !popularPngCities.includes(firstPart);
+                  })
+                : events.filter(event => event.location?.includes(area));
               const upcomingCount = areaEvents.filter(event => event.date && new Date(event.date) >= now).length;
               
               return (

@@ -52,15 +52,18 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('All Dates');
-  const [selectedLocationFilter, setSelectedLocationFilter] = useState('All Areas'); // New state for location filter
+  const [selectedLocationFilter, setSelectedLocationFilter] = useState('All Areas');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [host, setHost] = useState<User | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null); // State to hold current user
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const router = useRouter();
-  const { isOnline, setLastSaved, isPwaOnMobile } = useNetworkStatus(); // Get network status and setLastSaved function, and isPwaOnMobile
+  const { isOnline, setLastSaved, isPwaOnMobile } = useNetworkStatus();
 
-  // Function to load events from cache or fetch from API
+  // State for dynamically generated options to prevent hydration mismatch
+  const [displayedLocations, setDisplayedLocations] = useState<string[]>(['All Areas']);
+  const [displayedDates, setDisplayedDates] = useState<string[]>(['All Dates']);
+
   const loadEvents = async () => {
     setLoading(true);
     try {
@@ -72,28 +75,21 @@ export default function Home() {
         return;
       }
 
-      // Always attempt to fetch from Supabase. The service worker will handle caching.
-        const { data, error } = await supabase
-          .from(TABLES.EVENTS)
-          .select('*')
-          .order('date', { ascending: true });
+      const { data, error } = await supabase
+        .from(TABLES.EVENTS)
+        .select('*')
+        .order('date', { ascending: true });
 
       if (error) {
         console.warn('Error fetching events from Supabase:', error.message);
-        // If there's an error (e.g., network offline and no cache in service worker),
-        // the service worker should return an empty array, so we handle it gracefully.
         setEvents([]);
         setFilteredEvents([]);
       } else if (data) {
         setEvents(data);
         setFilteredEvents(data);
-        // The service worker is now responsible for caching.
-        // We can optionally update a "last saved" timestamp if needed for display,
-        // but the data itself is managed by the service worker's cache.
         const timestamp = new Date().toISOString();
-        setLastSaved(timestamp); // Update context with new timestamp
+        setLastSaved(timestamp);
       } else {
-        // Handle case where data is null/undefined but no error
         setEvents([]);
         setFilteredEvents([]);
       }
@@ -101,23 +97,20 @@ export default function Home() {
       console.error('Error loading events:', error);
       setEvents([]);
       setFilteredEvents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Initial fetch on component mount
   useEffect(() => {
     loadEvents();
-    // Fetch current user on component mount
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
     };
     getCurrentUser();
 
-    // Listen for auth changes to update current user
-    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event: string, session: any) => { // Explicitly typing _event and session
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
       setCurrentUser(session?.user || null);
     });
 
@@ -126,12 +119,11 @@ export default function Home() {
         subscription.unsubscribe();
       }
     };
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
-  // Re-fetch/load events when online/offline status changes or PWA status changes
   useEffect(() => {
     loadEvents();
-  }, [isOnline, isPwaOnMobile]); // Dependency array includes isOnline and isPwaOnMobile
+  }, [isOnline, isPwaOnMobile]);
 
   const fetchHost = async (userId: string) => {
     try {
@@ -163,26 +155,28 @@ export default function Home() {
     }
   }, [selectedEvent]);
 
+  // Calculate upcoming and previous events based on filteredEvents
+  const now = new Date();
+
   useEffect(() => {
     const filterEvents = () => {
       let tempEvents = events;
 
       if (searchTerm) {
-        tempEvents = tempEvents.filter(event =>
+        tempEvents = tempEvents.filter((event: Event) =>
           event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           event.location.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
 
       if (selectedDate !== 'All Dates') {
-        const now = new Date();
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         const endOfWeek = new Date(now);
         endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        tempEvents = tempEvents.filter(event => {
+        tempEvents = tempEvents.filter((event: Event) => {
           if (!event.date) return false;
           const eventDate = new Date(event.date);
           switch (selectedDate) {
@@ -193,28 +187,118 @@ export default function Home() {
             case 'This Month':
               return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
             default:
+              // Handle specific month/year (e.g., "August 2025")
+              const [monthName, yearString] = selectedDate.split(' ');
+              if (monthName && yearString) {
+                const selectedMonth = new Date(Date.parse(monthName + " 1, " + yearString)).getMonth();
+                const selectedYear = parseInt(yearString);
+                return eventDate.getMonth() === selectedMonth && eventDate.getFullYear() === selectedYear;
+              }
               return true;
           }
         });
       }
 
       if (selectedLocationFilter !== 'All Areas') {
-        tempEvents = tempEvents.filter(event => event.location === selectedLocationFilter);
+        tempEvents = tempEvents.filter((event: Event) => {
+          if (!event.location) return false;
+          const firstPart = event.location.split(',')[0]?.trim();
+          if (selectedLocationFilter === 'Other Locations') {
+            return firstPart && !popularPngCities.includes(firstPart);
+          } else {
+            return firstPart === selectedLocationFilter;
+          }
+        });
       }
 
       setFilteredEvents(tempEvents);
     };
 
     filterEvents();
-  }, [events, searchTerm, selectedDate, selectedLocationFilter]);
+  }, [events, searchTerm, selectedDate, selectedLocationFilter, now]);
 
-  const now = new Date();
-  const upcomingEvents = filteredEvents.filter(ev => ev.date && new Date(ev.date) >= now);
-  const previousEvents = filteredEvents.filter(ev => ev.date && new Date(ev.date) < now);
+  const upcomingEvents = filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) >= now);
+  const previousEvents = filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) < now);
 
-  // Group events by location for "Other" category
-  const otherLocationEvents = upcomingEvents.filter(event => !popularPngCities.includes(event.location));
-  const categorizedEvents = upcomingEvents.filter(event => popularPngCities.includes(event.location));
+  // Effect to update displayedLocations and displayedDates after events are loaded
+  useEffect(() => {
+    // Group events by location for "Other" category
+    const otherLocationEvents = upcomingEvents.filter((event: Event) => {
+      const firstPart = event.location?.split(',')[0]?.trim();
+      return firstPart && !popularPngCities.includes(firstPart);
+    });
+
+    // Generate available locations for the dropdown
+    const newAvailableLocations = ['All Areas'];
+    popularPngCities.forEach(city => {
+      if (upcomingEvents.some(event => event.location?.includes(city))) {
+        newAvailableLocations.push(city);
+      }
+    });
+    if (otherLocationEvents.length > 0) {
+      newAvailableLocations.push('Other Locations');
+    }
+    setDisplayedLocations(newAvailableLocations);
+
+    // Generate available date options for the dropdown
+    const newAvailableDates = ['All Dates'];
+    const today = new Date();
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    if (upcomingEvents.some((event: Event) => event.date && new Date(event.date).toDateString() === today.toDateString())) {
+      newAvailableDates.push('Today');
+    }
+    if (upcomingEvents.some((event: Event) => {
+      if (!event.date) return false;
+      const eventDate = new Date(event.date);
+      return eventDate >= today && eventDate <= endOfWeek;
+    })) {
+      newAvailableDates.push('This Week');
+    }
+    if (upcomingEvents.some((event: Event) => {
+      if (!event.date) return false;
+      const eventDate = new Date(event.date);
+      return eventDate.getMonth() === today.getMonth() && eventDate.getFullYear() === today.getFullYear();
+    })) {
+      newAvailableDates.push('This Month');
+    }
+
+    // Add future months/years if events exist
+    const futureMonths = new Set<string>();
+    upcomingEvents.forEach((event: Event) => {
+      if (event.date) {
+        const eventDate = new Date(event.date);
+        if (eventDate > today) {
+          const monthYear = eventDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+          futureMonths.add(monthYear);
+        }
+      }
+    });
+
+    Array.from(futureMonths).sort((a, b) => {
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      return dateA.getTime() - dateB.getTime();
+    }).forEach(monthYear => {
+      if (!newAvailableDates.includes(monthYear)) {
+        newAvailableDates.push(monthYear);
+      }
+    });
+
+    setDisplayedDates(newAvailableDates);
+  }, [events, upcomingEvents, now]); // Recalculate when events or upcomingEvents change
+
+  const categorizedEvents = upcomingEvents.filter((event: Event) => {
+    const firstPart = event.location?.split(',')[0]?.trim();
+    return firstPart && popularPngCities.includes(firstPart);
+  });
+
+  const otherLocationEvents = upcomingEvents.filter((event: Event) => {
+    const firstPart = event.location?.split(',')[0]?.trim();
+    return firstPart && !popularPngCities.includes(firstPart);
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -231,32 +315,29 @@ export default function Home() {
           </p>
           {/* Search/Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
-            <input 
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400" 
-              placeholder="Search events, artists, or venues..." 
+            <input
+              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              placeholder="Search events, artists, or venues..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <select 
+            <select
               className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
-              value={selectedLocationFilter} // Use new state
-              onChange={(e) => setSelectedLocationFilter(e.target.value)} // Update new state
+              value={selectedLocationFilter}
+              onChange={(e) => setSelectedLocationFilter(e.target.value)}
             >
-              <option value="All Areas">All Areas</option>
-              {popularPngCities.map(city => (
-                <option key={city} value={city}>{city}</option>
+              {displayedLocations.map(location => (
+                <option key={location} value={location}>{location}</option>
               ))}
-              <option value="Other">Other Locations</option>
             </select>
-            <select 
+            <select
               className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             >
-              <option>All Dates</option>
-              <option>Today</option>
-              <option>This Week</option>
-              <option>This Month</option>
+              {displayedDates.map(dateOption => (
+                <option key={dateOption} value={dateOption}>{dateOption}</option>
+              ))}
             </select>
             <button className="rounded-lg px-6 py-2 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition">Find Events</button>
           </div>
@@ -286,7 +367,7 @@ export default function Home() {
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the most popular events happening near you.</p>
         </div>
-        
+
         {/* Upcoming Events */}
         {loading ? (
           <div className="text-center py-16">
@@ -326,7 +407,7 @@ export default function Home() {
             )}
           </>
         )}
-        
+
         <div className="flex justify-center mt-12">
           <button className="px-8 py-3 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
             View all Events
@@ -355,13 +436,13 @@ export default function Home() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 relative animate-fade-in border border-gray-200">
             {/* Header */}
             <div className="p-6 pb-4">
-              <button 
-                onClick={() => setDialogOpen(false)} 
+              <button
+                onClick={() => setDialogOpen(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors p-1 rounded-full hover:bg-gray-100"
               >
                 &times;
               </button>
-              
+
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
                   {(() => {
@@ -390,14 +471,14 @@ export default function Home() {
                   <FiMapPin size={18} className="text-gray-400 flex-shrink-0" />
                   <span className="font-medium">{selectedEvent.location}</span>
                 </div>
-                
+
                 {selectedEvent.date && (
                   <div className="flex items-center gap-3 text-gray-600">
                     <FiCalendar size={18} className="text-gray-400 flex-shrink-0" />
                     <span className="font-medium">{new Date(selectedEvent.date).toLocaleString()}</span>
                   </div>
                 )}
-                
+
                 {selectedEvent.description && (
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
@@ -407,10 +488,10 @@ export default function Home() {
               </div>
 
               {/* Host Information */}
-              {selectedEvent && ( // Ensure selectedEvent exists before trying to show host info
+              {selectedEvent && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Host</h3>
-                  {host ? ( // If host data was fetched and exists
+                  {host ? (
                     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                       {host.name && (
                         <div className="flex items-center gap-2">
@@ -442,7 +523,7 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-                  ) : ( // If host data was NOT fetched or is null
+                  ) : (
                     <div className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-3 rounded-lg text-center">
                       {selectedEvent?.created_by ? (
                         <p>Host details for user ID "{selectedEvent.created_by}" are not available or could not be fetched.</p>
