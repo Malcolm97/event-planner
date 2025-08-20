@@ -48,6 +48,8 @@ export default function EventsPage() {
     "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau"
   ];
 
+  const now = new Date();
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -131,11 +133,10 @@ export default function EventsPage() {
       // If it's not a popular city and not empty, categorize as "Other Locations"
       return "Other Locations";
     }
-  }).filter(Boolean); // Filter out nulls
+  }).filter((location): location is string => !!location); // Filter out nulls
 
   const areas = ['All Areas', ...Array.from(new Set(locationAreas))];
 
-  const now = new Date();
   const upcomingEvents = events.filter(event => event.date && new Date(event.date) >= now);      
 
   const filteredEvents = selectedArea === 'All Areas'
