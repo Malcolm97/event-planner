@@ -47,36 +47,35 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
-  // Cache API requests for events
-  if (requestUrl.pathname.startsWith('/api/events') || requestUrl.pathname.startsWith('/events')) { // Adjust path if your API endpoint is different
+  // Cache API requests for events and other critical assets
+  if (requestUrl.pathname.startsWith('/api/events') || requestUrl.pathname.startsWith('/events')) {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cachedResponse) => {
-          // If found in cache, return it
-          if (cachedResponse) {
-            console.log('Serving from cache:', event.request.url);
-            return cachedResponse;
-          }
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          console.log('Serving from cache:', event.request.url);
+          return cachedResponse;
+        }
 
-          // If not in cache, fetch from network
-          console.log('Fetching from network:', event.request.url);
-          return fetch(event.request).then((networkResponse) => {
-            // Cache the response for future use
-            if (networkResponse.ok) {
-              cache.put(event.request, networkResponse.clone());
-              console.log('Cached network response:', event.request.url);
-            }
-            return networkResponse;
+        try {
+          const networkResponse = await fetch(event.request);
+          if (networkResponse.ok) {
+            cache.put(event.request, networkResponse.clone());
+            console.log('Cached network response:', event.request.url);
+          }
+          return networkResponse;
+        } catch (error) {
+          console.error('Network request failed for events:', error);
+          // If network fails and no cache, return an empty array for events
+          // This prevents the app from crashing and allows it to display an empty state
+          return new Response(JSON.stringify([]), {
+            headers: { 'Content-Type': 'application/json' }
           });
-        });
-      }).catch(error => {
-        console.error('Fetch failed:', error);
-        // Fallback to a network response if cache fails, or a custom offline page
-        return fetch(event.request);
+        }
       })
     );
   } else {
-    // For other requests (like HTML, CSS, JS), serve from cache if available, otherwise fetch from network
+    // For other requests (like HTML, CSS, JS, images), serve from cache if available, otherwise fetch from network
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
