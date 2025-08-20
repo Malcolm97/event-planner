@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { NetworkStatusProvider } from '../context/NetworkStatusContext'; // Import the provider
 
 export const metadata: Metadata = {
   title: "PNG Events - Discover Local Events",
@@ -12,6 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <NetworkStatusProvider>
 <html lang="en">
   <link rel="manifest" href="/manifest.json" />
       <body className="antialiased">
@@ -35,5 +37,6 @@ export default function RootLayout({
         />
       </body>
     </html>
+    </NetworkStatusProvider>
   );
 }

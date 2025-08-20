@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '../lib/supabase';
 import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import Image from 'next/image'; // Import Image component
+import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
 
 export default function Header() {
+  const { isOnline } = useNetworkStatus(); // Get the status
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
@@ -80,7 +82,9 @@ export default function Header() {
             <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-red-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">PNG</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Events</span>
+            <span className="text-xl font-bold text-gray-900">
+              {isOnline ? 'Online Events' : 'Offline Events'}
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
