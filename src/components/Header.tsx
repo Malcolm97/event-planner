@@ -9,12 +9,17 @@ import Image from 'next/image'; // Import Image component
 import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
 
 export default function Header() {
-  const { isOnline } = useNetworkStatus(); // Get the status
+  const { isOnline, lastSaved, setLastSaved, isPwaOnMobile } = useNetworkStatus(); // Get the status and lastSaved
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const [hasMounted, setHasMounted] = useState(false); // New state for client-side check
+
+  useEffect(() => {
+    setHasMounted(true); // Set to true after component mounts on client
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -73,9 +78,26 @@ export default function Header() {
     router.push('/');
   };
 
+  // Function to format the date and time for display
+  const formatLastSaved = (timestamp: string | null) => {
+    if (!timestamp) return '';
+    try {
+      const date = new Date(timestamp);
+      return `Last saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    } catch (error) {
+      console.error("Error formatting timestamp:", error);
+      return '';
+    }
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {hasMounted && isPwaOnMobile && (
+          <div className="text-center py-2 bg-gray-100 text-gray-700 text-sm font-medium">
+            {isOnline ? 'Online' : 'Offline'}
+          </div>
+        )}
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
@@ -83,7 +105,7 @@ export default function Header() {
               <span className="text-white font-bold text-sm">PNG</span>
             </div>
             <span className="text-xl font-bold text-gray-900">
-              {isOnline ? 'Online Events' : 'Offline Events'}
+              Events
             </span>
           </Link>
 
@@ -124,13 +146,22 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/signin"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
-              >
-                <FiUser size={16} />
-                Sign In
-              </Link>
+              // Conditionally render Sign In button
+              isOnline && (
+                <Link
+                  href="/signin"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                >
+                  <FiUser size={16} />
+                  Sign In
+                </Link>
+              )
+            )}
+            {/* Display last saved timestamp */}
+            {lastSaved && (
+              <span className="text-sm text-gray-500">
+                {formatLastSaved(lastSaved)}
+              </span>
             )}
           </div>
 
@@ -195,14 +226,17 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/signin"
-                  className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FiUser size={16} className="inline mr-2" />
-                  Sign In
-                </Link>
+                // Conditionally render Sign In link for mobile
+                isOnline && (
+                  <Link
+                    href="/signin"
+                    className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FiUser size={16} className="inline mr-2" />
+                    Sign In
+                  </Link>
+                )
               )}
             </nav>
           </div>

@@ -5,11 +5,38 @@ import { supabase, TABLES } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
+import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import the hook
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
 
 export default function SignInPage() {
+  const { isOnline } = useNetworkStatus(); // Get the network status
+
+  // If offline, show a message and a back button
+  if (!isOnline) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
+        <Header />
+        <div className="relative flex flex-1 items-center justify-center p-4">
+          <div className="absolute top-6 left-6">
+            <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
+              <FiArrowLeft className="text-lg" />
+              Back to Events
+            </Link>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
+            <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
+              Welcome to PNG Events
+            </h2>
+            <p className="text-center text-gray-500 text-base mb-2">Sign in to discover and create amazing events</p>
+            <div className="text-center text-gray-600">Sign-in and registration are not available when offline.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);

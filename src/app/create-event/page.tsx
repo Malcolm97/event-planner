@@ -8,8 +8,31 @@ import { supabase } from '../../lib/supabase';
 import { TABLES } from '../../lib/supabase';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
+import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import the hook
 
 export default function CreateEventPage() {
+  const { isOnline } = useNetworkStatus(); // Get the network status
+
+  // If offline, show a message and a back button
+  if (!isOnline) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Offline Mode</h1>
+          <p className="text-gray-600">Event creation is not available when offline.</p>
+          <Link
+            href="/dashboard"
+            className="mt-6 inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors"
+          >
+            <FiArrowLeft size={16} />
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');

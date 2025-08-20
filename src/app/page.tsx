@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react'; // Import useContext
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';
 import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supabase';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
 import Link from 'next/link'; // Ensure Link is imported
+import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -57,9 +58,121 @@ export default function Home() {
   const [host, setHost] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null); // State to hold current user
   const router = useRouter();
+  const { isOnline, setLastSaved, isPwaOnMobile } = useNetworkStatus(); // Get network status and setLastSaved function, and isPwaOnMobile
 
+  // Function to load events from cache or fetch from API
+  const loadEvents = async () => {
+    setLoading(true);
+    try {
+      if (isPwaOnMobile) { // Only enable offline/online features for PWA on mobile
+        if (isOnline) {
+          // Try to fetch from Supabase
+          if (!isSupabaseConfigured()) {
+            console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
+            // Fallback to cache if Supabase is not configured
+            const cachedEvents = localStorage.getItem('cachedEvents');
+            if (cachedEvents) {
+              const parsedEvents: Event[] = JSON.parse(cachedEvents);
+              setEvents(parsedEvents);
+              setFilteredEvents(parsedEvents);
+              const lastSavedTimestamp = localStorage.getItem('lastSavedTimestamp');
+              setLastSaved(lastSavedTimestamp); // Update context with cached timestamp
+            } else {
+              setEvents([]);
+              setFilteredEvents([]);
+            }
+            setLoading(false);
+            return;
+          }
+
+          const { data, error } = await supabase
+            .from(TABLES.EVENTS)
+            .select('*')
+            .order('date', { ascending: true });
+
+          if (error) {
+            console.warn('Error fetching events from Supabase:', error.message);
+            // If Supabase fetch fails, try to load from cache
+            const cachedEvents = localStorage.getItem('cachedEvents');
+            if (cachedEvents) {
+              const parsedEvents: Event[] = JSON.parse(cachedEvents);
+              setEvents(parsedEvents);
+              setFilteredEvents(parsedEvents);
+              const lastSavedTimestamp = localStorage.getItem('lastSavedTimestamp');
+              setLastSaved(lastSavedTimestamp); // Update context with cached timestamp
+            } else {
+              setEvents([]);
+              setFilteredEvents([]);
+            }
+          } else if (data) {
+            setEvents(data);
+            setFilteredEvents(data);
+            // Cache the fetched data
+          localStorage.setItem('cachedEvents', JSON.stringify(data));
+          const timestamp = new Date().toISOString();
+          localStorage.setItem('lastSavedTimestamp', timestamp);
+          setLastSaved(timestamp); // Update context with new timestamp
+        }
+      } else {
+          // Offline: Load from cache
+          const cachedEvents = localStorage.getItem('cachedEvents');
+          if (cachedEvents) {
+            const parsedEvents: Event[] = JSON.parse(cachedEvents);
+            setEvents(parsedEvents);
+            setFilteredEvents(parsedEvents);
+            const lastSavedTimestamp = localStorage.getItem('lastSavedTimestamp');
+            setLastSaved(lastSavedTimestamp); // Update context with cached timestamp
+          } else {
+            // No cache available and offline
+            setEvents([]);
+            setFilteredEvents([]);
+            console.warn('No events found in cache and offline.');
+          }
+        }
+      } else {
+        // Not PWA on mobile, or not offline in a PWA context
+        if (isOnline) {
+          // If online, still try to fetch from Supabase
+          if (!isSupabaseConfigured()) {
+            console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
+            setEvents([]);
+            setFilteredEvents([]);
+            setLoading(false);
+            return;
+          }
+
+          const { data, error } = await supabase
+            .from(TABLES.EVENTS)
+            .select('*')
+            .order('date', { ascending: true });
+
+          if (error) {
+            console.warn('Error fetching events from Supabase:', error.message);
+            setEvents([]);
+            setFilteredEvents([]);
+          } else if (data) {
+            setEvents(data);
+            setFilteredEvents(data);
+          }
+        } else {
+          // If offline and not PWA on mobile, show a message
+          console.log('Offline features are not available in this context.');
+          setEvents([]);
+          setFilteredEvents([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEvents([]);
+      setFilteredEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch on component mount
   useEffect(() => {
-    fetchEvents();
+    loadEvents();
     // Fetch current user on component mount
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -77,43 +190,12 @@ export default function Home() {
         subscription.unsubscribe();
       }
     };
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      
-      // Check if Supabase is properly configured
-      if (!isSupabaseConfigured()) {
-        console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-        setEvents([]);
-        setFilteredEvents([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from(TABLES.EVENTS)
-        .select('*')
-        .order('date', { ascending: true });
-
-      if (error) {
-        console.warn('Error fetching events:', error.message);
-        setEvents([]);
-        setFilteredEvents([]);
-        return;
-      }
-
-      setEvents(data || []);
-      setFilteredEvents(data || []);
-    } catch (error) {
-      console.warn('Network error fetching events. Please check your Supabase configuration.');
-      setEvents([]);
-      setFilteredEvents([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Re-fetch/load events when online/offline status changes or PWA status changes
+  useEffect(() => {
+    loadEvents();
+  }, [isOnline, isPwaOnMobile]); // Dependency array includes isOnline and isPwaOnMobile
 
   const fetchHost = async (userId: string) => {
     try {
