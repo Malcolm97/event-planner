@@ -12,8 +12,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">{children}</body>
+<html lang="en">
+  <link rel="manifest" href="/manifest.json" />
+      <body className="antialiased">
+        {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                      console.log('Service worker registered with scope:', registration.scope);
+                    })
+                    .catch((error) => {
+                      console.error('Service worker registration failed:', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
+      </body>
     </html>
   );
 }
