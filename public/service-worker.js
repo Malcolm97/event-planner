@@ -3,6 +3,7 @@ const CACHE_NAME = 'v1';
 const CACHE_URLS = [
   '/', // Cache the root page
   '/events', // Cache the events page
+  '/offline.html', // Add offline page to precache
   // Add other critical assets or pages that should be available offline
 ];
 
@@ -78,7 +79,15 @@ self.addEventListener('fetch', (event) => {
     // For other requests (like HTML, CSS, JS), serve from cache if available, otherwise fetch from network
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        return cachedResponse || fetch(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // If not in cache, try to fetch from network
+        return fetch(event.request).catch(() => {
+          // If network request fails, serve the offline page
+          console.log('Network request failed, serving offline page.');
+          return caches.match('/offline.html'); // Serve the offline page
+        });
       })
     );
   }
