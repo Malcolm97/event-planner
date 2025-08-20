@@ -34,6 +34,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Listen for messages from the client to trigger an update check
+self.addEventListener('message', (event) => {
+  if (event.data.type === 'SKIP_WAITING') {
+    console.log('Received SKIP_WAITING message, skipping waiting.');
+    self.skipWaiting();
+  }
+});
+
 // Fetch event: intercept requests and serve from cache or network
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
