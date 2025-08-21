@@ -27,7 +27,10 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
       className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] h-full"
       onClick={() => {
         console.log('Event card clicked!');
-        onClick?.();
+        // Ensure onClick is a function before calling it
+        if (typeof onClick === 'function') {
+          onClick();
+        }
       }}
     >
       {/* Category Badge - Top Right */}
