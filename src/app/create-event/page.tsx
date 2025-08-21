@@ -39,7 +39,8 @@ export default function CreateEventPage() {
   const [location, setLocation] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby'); // Default to a popular city
   const [customLocation, setCustomLocation] = useState(''); // State for custom location input
-  const [price, setPrice] = useState<number>(0);
+  const [presale_price, setPresale_price] = useState<number>(0);
+  const [gate_price, setGate_price] = useState<number>(0);
   const [category, setCategory] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null); // New state for image file
   const [loading, setLoading] = useState(false);
@@ -121,18 +122,19 @@ export default function CreateEventPage() {
         imageUrl = publicUrlData.publicUrl;
       }
 
-      const { error: insertError } = await supabase
-        .from(TABLES.EVENTS)
-        .insert({
-          name,
-          description,
-          date,
-          location: finalLocation, // Use the selected or custom location
-          price,
-          category,
-          image_url: imageUrl, // Save the image URL
-          created_by: user.id,
-        });
+          const { error: insertError } = await supabase
+            .from(TABLES.EVENTS)
+            .insert({
+              name,
+              description,
+              date,
+              location: finalLocation, // Use the selected or custom location
+              presale_price, // Use the new state variable
+              gate_price,    // Use the new state variable
+              category,
+              image_url: imageUrl, // Save the image URL
+              created_by: user.id,
+            });
 
       if (insertError) {
         setError(insertError.message);
@@ -235,16 +237,28 @@ export default function CreateEventPage() {
             </div>
 
             <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">Price (PGK)</label>
+              <label htmlFor="presale_price" className="block text-sm font-medium text-gray-700 mb-2">Presale Fee (PGK)</label>
               <input
                 type="number"
-                id="price"
+                id="presale_price"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={price}
-                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                value={presale_price}
+                onChange={(e) => setPresale_price(parseFloat(e.target.value) || 0)}
                 min="0"
                 step="0.01"
-                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="gate_price" className="block text-sm font-medium text-gray-700 mb-2">Gate Fee (PGK)</label>
+              <input
+                type="number"
+                id="gate_price"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                value={gate_price}
+                onChange={(e) => setGate_price(parseFloat(e.target.value) || 0)}
+                min="0"
+                step="0.01"
               />
             </div>
 

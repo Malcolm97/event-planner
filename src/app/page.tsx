@@ -8,6 +8,7 @@ import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supa
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
 import Link from 'next/link'; // Ensure Link is imported
 import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
+import EventModal from '../components/EventModal';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ const allCategories = [
   { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
   { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
   { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Other', icon: FiStar, color: 'bg-gray-100 text-gray-700' }, // Add Other category
 ];
 
 const categoryIconMap: { [key: string]: any } = {
@@ -29,6 +31,7 @@ const categoryIconMap: { [key: string]: any } = {
   'Technology': FiCpu,
   'Wellness': FiHeart,
   'Comedy': FiSmile,
+  'Other': FiStar, // Add Other icon
 };
 
 const categoryColorMap: { [key: string]: string } = {
@@ -38,6 +41,7 @@ const categoryColorMap: { [key: string]: string } = {
   'Technology': 'bg-blue-100 text-blue-600',
   'Wellness': 'bg-green-100 text-green-600',
   'Comedy': 'bg-yellow-100 text-yellow-600',
+  'Other': 'bg-gray-100 text-gray-700', // Add Other color
 };
 
 const popularPngCities = [
@@ -501,122 +505,22 @@ export default function Home() {
         </section>
       )}
 
-      {/* Event Dialog */}
-      {dialogOpen && selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 relative animate-fade-in border border-gray-200">
-            {/* Header */}
-            <div className="p-6 pb-4">
-              <button
-                onClick={() => setDialogOpen(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors p-1 rounded-full hover:bg-gray-100"
-              >
-                &times;
-              </button>
-
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                  {(() => {
-                    const Icon = categoryIconMap[selectedEvent?.category || 'Other'] || FiStar;
-                    return <Icon size={24} className="text-yellow-600" />;
-                  })()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">{selectedEvent?.name}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm">
-                      {selectedEvent?.category || 'Other'}
-                    </span>
-                    <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
-                      {selectedEvent?.price === 0 ? 'Free' : `PGK ${selectedEvent?.price?.toFixed(2)}`}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="px-6 pb-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <FiMapPin size={18} className="text-gray-400 flex-shrink-0" />
-                  <span className="font-medium">{selectedEvent?.location}</span>
-                </div>
-
-                {selectedEvent?.date && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <FiCalendar size={18} className="text-gray-400 flex-shrink-0" />
-                    <span className="font-medium">{new Date(selectedEvent.date!).toLocaleString()}</span>
-                  </div>
-                )}
-
-                {selectedEvent?.description && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                    <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Host Information */}
-              {selectedEvent && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Host</h3>
-                  {host ? (
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      {host?.name && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-700">Name:</span>
-                          <span className="text-gray-900">{host.name}</span>
-                        </div>
-                      )}
-                      {host?.email && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-700">Email:</span>
-                          <a href={`mailto:${host.email}`} className="text-blue-600 hover:underline text-gray-900">{host.email}</a>
-                        </div>
-                      )}
-                      {host?.phone && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-700">Phone:</span>
-                          <a href={`tel:${host.phone}`} className="text-blue-600 hover:underline text-gray-900">{host.phone}</a>
-                        </div>
-                      )}
-                      {host?.company && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-700">Company:</span>
-                          <span className="text-gray-900">{host.company}</span>
-                        </div>
-                      )}
-                      {host?.about && (
-                        <div className="pt-2">
-                          <span className="text-gray-600 text-sm">{host.about}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-3 rounded-lg text-center">
-                      {selectedEvent?.created_by ? (
-                        <p>Host details for user ID "{selectedEvent.created_by}" are not available or could not be fetched.</p>
-                      ) : (
-                        <p>Host details are not available for this event.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Explore by Category */}
       <section className="w-full py-10 px-4 sm:px-8 bg-white border-t border-black">
         <div className="max-w-5xl mx-auto">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Explore by Category</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 justify-center">
             {allCategories
-              .filter(cat => events.some(ev => ev.category === cat.name))
+              .filter(cat => {
+                if (cat.name === 'Other') {
+                  // For 'Other' category, check if there are any events whose category is not in the predefined list
+                  const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
+                  return events.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
+                } else {
+                  // For other categories, check for exact match
+                  return events.some(ev => ev.category === cat.name);
+                }
+              })
               .map((cat) => {
                 const Icon = categoryIconMap[cat.name] || FiStar;
                 const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
@@ -652,6 +556,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
     </div>
   );
 }

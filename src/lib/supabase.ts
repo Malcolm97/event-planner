@@ -29,7 +29,8 @@ export interface Event {
   name: string
   category?: string
   location: string
-  price: number
+  presale_price?: number // Added presale price
+  gate_price?: number    // Added gate price
   description: string
   image_url?: string // Add image_url property
   created_at?: string

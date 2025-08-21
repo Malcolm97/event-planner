@@ -1,4 +1,4 @@
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar } from 'react-icons/fi';
 import { categoryColorMap, categoryIconMap } from '../lib/utils';
 import { Event } from '../lib/supabase';
 import Image from 'next/image'; // Import the Image component
@@ -55,12 +55,24 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
           </div>
         )}
         
-        {/* Price Badge - Bottom Left */}
-        <div className="absolute bottom-3 left-3">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
-            <FiDollarSign size={14} />
-            {event.price === 0 ? "Free" : `${event.price.toFixed(0)}`}
-          </span>
+        {/* Price Badges - Bottom Left */}
+        <div className="absolute bottom-3 left-3 flex flex-col items-start gap-1">
+          {event.presale_price !== undefined && event.presale_price !== null && event.presale_price > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+              Presale: K {event.presale_price.toFixed(0)}
+            </span>
+          )}
+          {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+              Gate: K {event.gate_price.toFixed(0)}
+            </span>
+          )}
+          {(event.presale_price === undefined || event.presale_price === null || event.presale_price === 0) && (event.gate_price === undefined || event.gate_price === null || event.gate_price === 0) && (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+              <FiDollarSign size={14} />
+              Free
+            </span>
+          )}
         </div>
 
         {/* Featured Badge */}
