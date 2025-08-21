@@ -20,7 +20,10 @@ export default function CompactEventCard({ event }: { event: Event }) {
             if (gate !== null && gate > 0) {
               return `PGK ${gate.toFixed(2)} (Gate)`;
             }
-            return 'Free';
+            if (presale === 0 && gate === 0) {
+              return 'Free';
+            }
+            return ''; // Return empty string if none of the above conditions are met
           })()}
         </div>
       )}
