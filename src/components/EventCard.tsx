@@ -1,4 +1,4 @@
-import { FiStar, FiMapPin, FiCalendar } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import { categoryColorMap, categoryIconMap } from '../lib/utils';
 import { Event } from '../lib/supabase';
 import Image from 'next/image'; // Import the Image component
