@@ -8,16 +8,16 @@ export default function CompactEventCard({ event }: { event: Event }) {
       {event.date && (
         <div className="text-xs text-gray-500">📅 {new Date(event.date).toLocaleDateString()}</div>
       )}
-      {(event.presale_price !== undefined || event.gate_price !== undefined) && (
+      {(event.presale_price !== undefined && event.presale_price !== null || event.gate_price !== undefined && event.gate_price !== null) && (
         <div className="text-xs font-medium text-indigo-600 mt-1">
           {(() => {
-            const presale = event.presale_price;
-            const gate = event.gate_price;
+            const presale = typeof event.presale_price === 'number' ? event.presale_price : null;
+            const gate = typeof event.gate_price === 'number' ? event.gate_price : null;
 
-            if (presale !== undefined && presale > 0) {
+            if (presale !== null && presale > 0) {
               return `PGK ${presale.toFixed(2)} (Presale)`;
             }
-            if (gate !== undefined && gate > 0) {
+            if (gate !== null && gate > 0) {
               return `PGK ${gate.toFixed(2)} (Gate)`;
             }
             return 'Free';
