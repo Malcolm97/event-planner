@@ -1,20 +1,3 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { NetworkStatusProvider } from '../context/NetworkStatusContext'; // Import the provider
-
-export const metadata: Metadata = {
-  title: "PNG Events - Discover Local Events",
-  description: "Find and create amazing events in Papua New Guinea",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <NetworkStatusProvider>
-      <html lang="en">
         <link rel="manifest" href="/manifest.json" />
         <body className="antialiased">
           {children}
