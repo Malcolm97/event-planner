@@ -2,7 +2,7 @@
 
 import Header from '../../components/Header'; // Import your component here to prevent errors on build time and avoid breaking changes when upgrading dependencies
 // Note that components should be named with Pascal Case e.g., EventForm, UserProfile etc not underlines ie user_profile for example (as per the NextJS guidelines)
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { TABLES } from '../../lib/supabase';
@@ -11,6 +11,23 @@ import Link from "next/link";
 import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import the hook
 
 export default function CreateEventPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loadingPage, setLoadingPage] = useState(true); // New state for page loading
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/signin');
+        return;
+      }
+      setUser(user);
+      setLoadingPage(false);
+    };
+    checkUser();
+  }, [router]);
+
   const { isOnline } = useNetworkStatus(); // Get the network status
 
   // If offline, show a message and a back button
@@ -33,6 +50,17 @@ export default function CreateEventPage() {
     );
   }
 
+  if (loadingPage) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
+          <p className="text-gray-500 mt-6 text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
@@ -45,7 +73,6 @@ export default function CreateEventPage() {
   const [imageFile, setImageFile] = useState<File | null>(null); // New state for image file
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const popularPngCities = [
     "Port Moresby",

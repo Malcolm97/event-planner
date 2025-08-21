@@ -1,7 +1,8 @@
 'use client';
 import React, { ElementType, useState, useRef, useEffect } from 'react';
 
-import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi'; // Re-added icon imports
+import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink } from 'react-icons/fi'; // Re-added icon imports
+import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { User, Event } from '../lib/supabase';
 import Image from 'next/image';
 
@@ -158,20 +159,25 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   </div>
 
                   {selectedEvent?.description && (
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-0">About this event</h3>
+                    <div className="mt-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">About this event</h3>
                       <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedEvent.description}</p>
                     </div>
                   )}
+
+                  {/* Social Share Feature */}
+                  <div className="mt-6 pt-3 border-t border-gray-200 flex justify-end">
+                    <ShareButtons event={selectedEvent} />
+                  </div>
                 </>
               )}
 
               {activeTab === 'host-details' && (
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-0">Event Host</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Event Host</h3>
                   {host ? (
                     <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 mb-4">
                         <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                           {host?.photo_url ? (
                             <Image src={host.photo_url} alt={host.name || 'Host'} width={64} height={64} className="w-full h-full object-cover" />
@@ -195,7 +201,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         </div>
                       </div>
                       {host?.about && (
-                        <div>
+                        <div className="mb-4">
                           <p className="text-gray-600 text-sm">{host.about}</p>
                         </div>
                       )}
@@ -239,6 +245,79 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ShareButtons Component (copied from EventCard.tsx and adapted for modal context)
+function ShareButtons({ event }: { event: Event }) {
+  const [showShareOptions, setShowShareOptions] = useState(false);
+
+  const eventUrl = `${window.location.origin}/events/${event.id}`; // Construct full URL
+  const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event.name,
+          text: shareText,
+          url: eventUrl,
+        });
+        console.log('Event shared successfully');
+      } catch (error) {
+        console.error('Error sharing event:', error);
+      }
+    } else {
+      setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons
+    }
+  };
+
+  const shareOnFacebook = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+  };
+
+  const shareOnTwitter = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+  };
+
+  const shareOnLinkedIn = () => {
+    window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+  };
+
+  const shareOnWhatsApp = () => {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent modal close if clicked directly
+          handleShare();
+        }}
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+        aria-label="Share Event"
+      >
+        <FiShare2 size={18} />
+      </button>
+
+      {showShareOptions && (
+        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-lg p-2 flex gap-2 z-20">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-600" aria-label="Share on Facebook">
+            <FaFacebook size={20} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-400" aria-label="Share on Twitter">
+            <FaTwitter size={20} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-700" aria-label="Share on LinkedIn">
+            <FaLinkedin size={20} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-full hover:bg-green-100 text-green-500" aria-label="Share on WhatsApp">
+            <FaWhatsapp size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

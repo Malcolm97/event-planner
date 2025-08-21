@@ -41,6 +41,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false); // New state for forgot password
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -49,6 +50,7 @@ export default function SignInPage() {
   const [about, setAbout] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
+  const [successMessage, setSuccessMessage] = useState(""); // New state for success message
   const router = useRouter();
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
+
     if (isRegister && password !== confirmPassword) {
       setError("Passwords do not match");
       setLoading(false);
@@ -126,8 +128,19 @@ export default function SignInPage() {
           }
 
           setError("");
+          setSuccessMessage("Account created successfully! Please check your email for verification.");
           setShowSuccessModal(true); // Show the success modal
         }
+      } else if (isForgotPassword) {
+        // Forgot password
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/dashboard/update-password`, // Redirect to a page where user can set new password
+        });
+
+        if (error) throw error;
+
+        setSuccessMessage("Password reset email sent! Please check your inbox.");
+        setShowSuccessModal(true);
       } else {
         // Sign in
         const { error } = await supabase.auth.signInWithPassword({
@@ -158,7 +171,11 @@ export default function SignInPage() {
 
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
-    router.push("/signin"); // Redirect to signin page
+    // If it was a registration, redirect to signin. If forgot password, stay on signin.
+    if (successMessage.includes("Account created")) {
+      router.push("/signin");
+    }
+    setSuccessMessage(""); // Clear success message
   };
 
   return (
@@ -180,8 +197,8 @@ export default function SignInPage() {
         <div className="flex mb-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
           <button
             type="button"
-            className={`flex-1 py-2 text-lg font-semibold transition-colors duration-150 ${!isRegister ? "bg-white text-gray-900" : "text-gray-400"}`}
-            onClick={() => setIsRegister(false)}
+            className={`flex-1 py-2 text-lg font-semibold transition-colors duration-150 ${!isRegister && !isForgotPassword ? "bg-white text-gray-900" : "text-gray-400"}`}
+            onClick={() => { setIsRegister(false); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
             Sign In
@@ -189,14 +206,27 @@ export default function SignInPage() {
           <button
             type="button"
             className={`flex-1 py-2 text-lg font-semibold transition-colors duration-150 ${isRegister ? "bg-white text-gray-900" : "text-gray-400"}`}
-            onClick={() => setIsRegister(true)}
+            onClick={() => { setIsRegister(true); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
             Register
           </button>
         </div>
         <div className="flex flex-col gap-4">
-          {isRegister ? (
+          {isForgotPassword ? (
+            <>
+              <p className="text-center text-gray-600 text-sm">Enter your email to receive a password reset link.</p>
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                required
+              />
+            </>
+          ) : isRegister ? (
             <>
               <label className="text-sm font-medium text-gray-700">Full Name</label>
               <input
@@ -249,12 +279,19 @@ export default function SignInPage() {
               <label className="text-sm font-medium text-gray-700">Password</label>
               <input
                 type="password"
-                placeholder={isRegister ? "Create a password" : "Enter your password"}
+                placeholder="Enter your password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 required
               />
+              <button
+                type="button"
+                onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
+                className="text-sm text-yellow-600 hover:text-yellow-700 self-end -mt-2"
+              >
+                Forgot Password?
+              </button>
             </>
           )}
         </div>
@@ -264,13 +301,13 @@ export default function SignInPage() {
           disabled={loading}
           className="rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold text-lg shadow-md hover:bg-yellow-500 transition disabled:opacity-50 mt-2"
         >
-          {loading ? "Loading..." : isRegister ? "Create Account" : "Sign In"}
+          {loading ? "Loading..." : isForgotPassword ? "Send Reset Link" : (isRegister ? "Create Account" : "Sign In")}
         </button>
       </form>
       </div>
       {showSuccessModal && (
         <SuccessModal
-          message="Account created successfully! Please check your email for verification."
+          message={successMessage}
           onClose={handleCloseSuccessModal}
         />
       )}

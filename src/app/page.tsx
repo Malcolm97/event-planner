@@ -469,7 +469,7 @@ export default function Home() {
           <>
             {upcomingEvents.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {upcomingEvents.map(event => (
+                {upcomingEvents.slice(0, 4).map(event => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
               </div>

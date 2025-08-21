@@ -23,13 +23,14 @@ export default function EditProfilePage() {
     name: '',
     company: '',
     phone: '',
-    about: ''
+    about: '',
+    email: '' // Add email to formData
   });
   const router = useRouter();
 
   useEffect(() => {
     const handleBeforeUnload = (event: any) => {
-      if (!formData.name || !formData.company || !formData.phone || !formData.about) {
+      if (!formData.name || !formData.company || !formData.phone || !formData.about || !formData.email) { // Include email in validation
         event.preventDefault();
         event.returnValue = "You haven't completed your profile. Are you sure you want to leave?";
         return "You haven't completed your profile. Are you sure you want to leave?";
@@ -58,7 +59,8 @@ export default function EditProfilePage() {
           name: data.name || '',
           company: data.company || '',
           phone: data.phone || '',
-          about: data.about || ''
+          about: data.about || '',
+          email: user.email || '' // Set existing email
         });
         setPhotoUrl(data.photo_url || null); // Set existing photo URL
       }
@@ -115,11 +117,21 @@ export default function EditProfilePage() {
         updated_at: new Date().toISOString(),
       };
 
+      // Update user email if it has changed
+      if (formData.email !== user.email) {
+        const { error: emailUpdateError } = await supabase.auth.updateUser({
+          email: formData.email
+        });
+        if (emailUpdateError) {
+          throw emailUpdateError;
+        }
+      }
+
       const { error } = await supabase
         .from(TABLES.USERS)
         .upsert({
           id: user.id,
-          email: user.email,
+          email: formData.email, // Use formData.email for the user table
           ...updateData
         });
 
@@ -204,50 +216,68 @@ export default function EditProfilePage() {
               />
             </div>
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
+            <div className="flex flex-wrap -mx-2">
+              <div className="w-full md:w-1/2 px-2 mb-4">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
 
-            <div>
-              <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
-                Company
-              </label>
-              <input
-                type="text"
-                id="company"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                placeholder="Enter your company name"
-              />
-            </div>
+              <div className="w-full md:w-1/2 px-2 mb-4">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
 
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                placeholder="Enter your phone number"
-              />
+              <div className="w-full md:w-1/2 px-2 mb-4">
+                <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                  Company
+                </label>
+                <input
+                  type="text"
+                  id="company"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  placeholder="Enter your company name"
+                />
+              </div>
+
+              <div className="w-full md:w-1/2 px-2 mb-4">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  placeholder="Enter your phone number"
+                />
+              </div>
             </div>
 
             <div>

@@ -150,11 +150,23 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userEvents.map(event => (
-                    <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
-                      <EventCard event={event} />
-                    </Link>
-                  ))}
+                  {userEvents.map(event => {
+                    const now = new Date();
+                    const eventDate = new Date(event.date);
+                    const isExpired = eventDate < now;
+
+                    if (isExpired) {
+                      return (
+                        <EventCard key={event.id} event={event} onClick={() => { /* Optionally open a modal for expired events if needed */ }} />
+                      );
+                    } else {
+                      return (
+                        <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
+                          <EventCard event={event} />
+                        </Link>
+                      );
+                    }
+                  })}
                 </div>
               )}
             </div>

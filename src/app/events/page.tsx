@@ -152,9 +152,10 @@ export default function EventsPage() {
 
   const areas = ['All Areas', ...Array.from(new Set(locationAreas))];
 
-  const upcomingEvents = events.filter(event => event.date && new Date(event.date) >= now);      
+  const upcomingEvents = events.filter(event => event.date && new Date(event.date) >= now);
+  const previousEvents = events.filter(event => event.date && new Date(event.date) < now);
 
-  const filteredEvents = selectedArea === 'All Areas'
+  const filteredUpcomingEvents = selectedArea === 'All Areas'
     ? upcomingEvents
     : selectedArea === 'Other Locations'
       ? upcomingEvents.filter(event => {
@@ -164,6 +165,17 @@ export default function EventsPage() {
           return firstPart && !popularPngCities.includes(firstPart);
         })
       : upcomingEvents.filter(event => event.location?.includes(selectedArea));
+
+  const filteredPreviousEvents = selectedArea === 'All Areas'
+    ? previousEvents
+    : selectedArea === 'Other Locations'
+      ? previousEvents.filter(event => {
+          const location = event.location;
+          if (!location) return false;
+          const firstPart = location.split(',')[0]?.trim();
+          return firstPart && !popularPngCities.includes(firstPart);
+        })
+      : previousEvents.filter(event => event.location?.includes(selectedArea));
 
   return (
     <div className="min-h-screen bg-white">
@@ -243,10 +255,10 @@ export default function EventsPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {selectedArea === 'All Areas' ? 'All Upcoming Events' : `${selectedArea} Events`}
+              {selectedArea === 'All Areas' ? 'All Events' : `${selectedArea} Events`}
             </h2>
             <p className="text-gray-600 text-lg">
-              Showing {filteredEvents.length} upcoming event{filteredEvents.length !== 1 ? 's' : ''}
+              Showing {filteredUpcomingEvents.length} upcoming event{filteredUpcomingEvents.length !== 1 ? 's' : ''}
               {selectedArea !== 'All Areas' && ` in ${selectedArea}`}
             </p>
           </div>
@@ -256,16 +268,16 @@ export default function EventsPage() {
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
               <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
             </div>
-          ) : filteredEvents.length > 0 ? (
+          ) : filteredUpcomingEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredEvents.map(event => (
+              {filteredUpcomingEvents.map(event => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}
             </div>
           ) : (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events found</h3>
               <p className="text-gray-500">
                 {selectedArea === 'All Areas' 
                   ? 'No upcoming events found. Check back later!'
@@ -276,6 +288,22 @@ export default function EventsPage() {
           )}
         </div>
       </section>
+
+      {filteredPreviousEvents.length > 0 && (
+        <section className="py-12 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">Previous Events</h2>
+              <p className="text-gray-600">Browse events that have already taken place.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {filteredPreviousEvents.map(event => (
+                <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">

@@ -1,6 +1,8 @@
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink } from 'react-icons/fi';
+import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types'; // Import EventItem from shared types
 import Image from 'next/image'; // Import the Image component
+import { useState } from 'react';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -119,16 +121,105 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
               </div>
             </>
           )}
+          
+          {/* Sharable Website Link */}
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <FiLink size={14} className="text-gray-400 flex-shrink-0" />
+            <button 
+              className="font-medium text-blue-600 hover:underline truncate text-left"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click when clicking button
+                if (typeof onClick === 'function') {
+                  onClick(); // Trigger the same modal opening logic as the card
+                }
+              }}
+            >
+              View Event Details
+            </button>
+          </div>
         </div>
 
-        {/* Action Button */}
-        <div className="mt-auto pt-3">
-          <div className="w-full h-1 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/* Social Share Feature */}
+        <div className="mt-auto pt-3 flex justify-end">
+          <ShareButtons event={event} />
         </div>
       </div>
 
       {/* Hover Overlay Effect */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+    </div>
+  );
+}
+
+// ShareButtons Component
+function ShareButtons({ event }: { event: EventItem }) {
+  const [showShareOptions, setShowShareOptions] = useState(false);
+
+  const eventUrl = `${window.location.origin}/events/${event.id}`; // Construct full URL
+  const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event.name,
+          text: shareText,
+          url: eventUrl,
+        });
+        console.log('Event shared successfully');
+      } catch (error) {
+        console.error('Error sharing event:', error);
+      }
+    } else {
+      setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons
+    }
+  };
+
+  const shareOnFacebook = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+  };
+
+  const shareOnTwitter = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+  };
+
+  const shareOnLinkedIn = () => {
+    window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+  };
+
+  const shareOnWhatsApp = () => {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent card click
+          handleShare();
+        }}
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+        aria-label="Share Event"
+      >
+        <FiShare2 size={18} />
+      </button>
+
+      {showShareOptions && (
+        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-lg p-2 flex gap-2 z-20">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-600" aria-label="Share on Facebook">
+            <FaFacebook size={20} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-400" aria-label="Share on Twitter">
+            <FaTwitter size={20} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-700" aria-label="Share on LinkedIn">
+            <FaLinkedin size={20} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-full hover:bg-green-100 text-green-500" aria-label="Share on WhatsApp">
+            <FaWhatsapp size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
