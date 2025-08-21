@@ -1,4 +1,4 @@
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock } from 'react-icons/fi';
 import { categoryColorMap, categoryIconMap } from '../lib/utils';
 import { Event } from '../lib/supabase';
 import Image from 'next/image'; // Import the Image component
@@ -9,18 +9,6 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
   // Color and icon mapping
   const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700';
   const Icon = categoryIconMap[categoryLabel] || FiStar;
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
 
   return (
     <div
@@ -104,10 +92,16 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
           </div>
           
           {event.date && (
-            <div className="flex items-center gap-2">
-              <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
-              <span className="font-medium text-gray-700">{formatDate(event.date)}</span>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
+                <span className="font-medium text-gray-700">{new Date(event.date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FiClock size={14} className="text-gray-400 flex-shrink-0" />
+                <span className="font-medium text-gray-700">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+              </div>
+            </>
           )}
         </div>
 
