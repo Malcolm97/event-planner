@@ -1,7 +1,8 @@
 'use client';
 
-import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX } from 'react-icons/fi';
 import { User, Event } from '../lib/supabase';
+import Image from 'next/image';
 
 interface EventModalProps {
   selectedEvent: Event | null;
@@ -15,15 +16,15 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   if (!dialogOpen || !selectedEvent) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 relative animate-fade-in border border-gray-200">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <button
             onClick={() => setDialogOpen(false)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors p-1 rounded-full hover:bg-gray-100"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
           >
-            &times;
+            <FiX size={20} />
           </button>
 
           <div className="flex items-center gap-4">
@@ -61,6 +62,19 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
         {/* Content */}
         <div className="p-6">
+          {/* Event Image */}
+          {selectedEvent?.image_url && (
+            <div className="mb-6">
+              <Image
+                src={selectedEvent.image_url}
+                alt={selectedEvent.name}
+                width={400}
+                height={200}
+                className="w-full h-48 object-cover rounded-lg"
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50">
               <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
@@ -96,8 +110,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
               {host ? (
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                      <FiUser size={32} className="text-gray-500" />
+                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                      {host?.photo_url ? (
+                        <Image src={host.photo_url} alt={host.name || 'Host'} width={64} height={64} className="w-full h-full object-cover" />
+                      ) : (
+                        <FiUser size={32} className="text-gray-500" />
+                      )}
                     </div>
                     <div className="flex-1 space-y-1">
                       {host?.name && (

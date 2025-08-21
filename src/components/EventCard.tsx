@@ -1,7 +1,27 @@
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock } from 'react-icons/fi';
-import { categoryColorMap, categoryIconMap } from '../lib/utils';
 import { Event } from '../lib/supabase';
 import Image from 'next/image'; // Import the Image component
+
+// Define category mappings directly in this component
+const categoryColorMap: { [key: string]: string } = {
+  'Music': 'bg-purple-100 text-purple-600',
+  'Art': 'bg-pink-100 text-pink-600',
+  'Food': 'bg-orange-100 text-orange-600',
+  'Technology': 'bg-blue-100 text-blue-600',
+  'Wellness': 'bg-green-100 text-green-600',
+  'Comedy': 'bg-yellow-100 text-yellow-600',
+  'Other': 'bg-gray-100 text-gray-700',
+};
+
+const categoryIconMap: { [key: string]: any } = {
+  'Music': FiStar,
+  'Art': FiStar,
+  'Food': FiStar,
+  'Technology': FiStar,
+  'Wellness': FiStar,
+  'Comedy': FiStar,
+  'Other': FiStar,
+};
 
 export default function EventCard({ event, onClick }: { event: Event; onClick?: () => void }) {
   const categoryLabel = event.category?.trim() || 'Other';
