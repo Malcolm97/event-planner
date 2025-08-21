@@ -51,20 +51,14 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
 
       {/* Hero Image Area */}
       <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-        {event.image_url ? (
-          <Image
-            src={event.image_url}
-            alt={event.name}
-            fill={true} // Changed from layout="fill" to fill={true}
-            objectFit="cover"
-            className="transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          /* Category Icon as Hero (fallback if no image) */
-          <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm shadow-lg">
-            <Icon size={32} />
-          </div>
-        )}
+        <Image
+          src={event.image_url || 'https://via.placeholder.com/400x200?text=No+Image+Available'}
+          alt={event.name || 'Event Image'}
+          fill={true}
+          style={{ objectFit: 'cover' }}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="transition-transform duration-300 group-hover:scale-105"
+        />
         
         {/* Price Badges - Bottom Left */}
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-1">

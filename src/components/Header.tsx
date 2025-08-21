@@ -106,15 +106,15 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/events" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <button onClick={() => { console.log('Navigating to /events'); router.push('/events'); }} className="text-gray-600 hover:text-gray-900 transition-colors">
               Events
-            </Link>
-            <Link href="/categories" className="text-gray-600 hover:text-gray-900 transition-colors">
+            </button>
+            <button onClick={() => router.push('/categories')} className="text-gray-600 hover:text-gray-900 transition-colors">
               Categories
-            </Link>
-            <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
+            </button>
+            <button onClick={() => router.push('/about')} className="text-gray-600 hover:text-gray-900 transition-colors">
               About
-            </Link>
+            </button>
           </nav>
 
           {/* User Menu */}
@@ -140,18 +140,18 @@ export default function Header() {
                   Sign Out
                 </button>
               </div>
-            ) : (
-              // Conditionally render Sign In button
-              isOnline && (
-                <Link
-                  href="/signin"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
-                >
-                  <FiUser size={16} />
-                  Sign In
-                </Link>
-              )
-            )}
+              ) : (
+                // Conditionally render Sign In button only after client-side mount
+                hasMounted && isOnline && (
+                  <Link
+                    href="/signin"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                  >
+                    <FiUser size={16} />
+                    Sign In
+                  </Link>
+                )
+              )}
             {/* Display last saved timestamp */}
             {lastSaved && (
               <span className="text-sm text-gray-500">
@@ -173,34 +173,30 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <nav className="flex flex-col space-y-4">
-              <Link
-                href="/events"
-                className="text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
-                onClick={() => setIsMenuOpen(false)}
+              <button
+                onClick={() => { console.log('Navigating to /events (mobile)'); router.push('/events'); setIsMenuOpen(false); }}
+                className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
               >
                 Events
-              </Link>
-              <Link
-                href="/categories"
-                className="text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button
+                onClick={() => { router.push('/categories'); setIsMenuOpen(false); }}
+                className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
               >
                 Categories
-              </Link>
-              <Link
-                href="/about"
-                className="text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button
+                onClick={() => { router.push('/about'); setIsMenuOpen(false); }}
+                className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
               >
                 About
-              </Link>
+              </button>
               
               {user ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className="text-gray-700 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
-                    onClick={() => setIsMenuOpen(false)}
+                  <button
+                    onClick={() => { router.push('/dashboard'); setIsMenuOpen(false); }}
+                    className="text-left text-gray-700 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
                   >
                     {userPhotoUrl ? (
                       <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-2" />
@@ -208,7 +204,7 @@ export default function Header() {
                       <FiUser size={16} className="inline mr-2" />
                     )}
                     {userName || 'Dashboard'}
-                  </Link>
+                  </button>
                   <button
                     onClick={() => {
                       handleSignOut();
@@ -221,16 +217,15 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                // Conditionally render Sign In link for mobile
-                isOnline && (
-                  <Link
-                    href="/signin"
+                // Conditionally render Sign In link for mobile only after client-side mount
+                hasMounted && isOnline && (
+                  <button
+                    onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}
                     className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
-                    onClick={() => setIsMenuOpen(false)}
                   >
                     <FiUser size={16} className="inline mr-2" />
                     Sign In
-                  </Link>
+                  </button>
                 )
               )}
             </nav>

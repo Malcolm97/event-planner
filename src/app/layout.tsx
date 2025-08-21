@@ -1,6 +1,6 @@
 import { NetworkStatusProvider } from '@/context/NetworkStatusContext';
 import './globals.css';
-import OnlineBadge from '@/components/OnlineBadge';
+import ClientOnlineBadge from '@/components/ClientOnlineBadge';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 
@@ -19,7 +19,7 @@ export default function RootLayout({
         </head>
         <body className={`antialiased ${inter.className}`}>
           {children}
-          <OnlineBadge />
+          <ClientOnlineBadge />
           <Script id="service-worker-script">
             {`
             if ('serviceWorker' in navigator) {
