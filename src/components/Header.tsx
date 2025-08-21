@@ -9,7 +9,7 @@ import Image from 'next/image'; // Import Image component
 import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
 
 export default function Header() {
-  const { isOnline, lastSaved, setLastSaved, isPwaOnMobile } = useNetworkStatus(); // Get the status and lastSaved
+  const { isOnline, lastSaved, setLastSaved } = useNetworkStatus(); // Get the status and lastSaved
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
@@ -92,11 +92,6 @@ export default function Header() {
 
   return (
 <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-  {hasMounted && isPwaOnMobile && (
-    <div className={`text-center py-2 bg-black ${isOnline ? 'text-green-500' : 'text-red-500'} text-sm font-medium`}>
-      {isOnline ? 'Online' : 'Offline'}
-    </div>
-  )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

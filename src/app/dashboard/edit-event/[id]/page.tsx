@@ -19,7 +19,8 @@ export default function EditEventPage() { // Remove params from signature
   const [location, setLocation] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby');
   const [customLocation, setCustomLocation] = useState('');
-  const [price, setPrice] = useState<number>(0);
+  const [presale_price, setPresale_price] = useState<number>(0); // Changed from price
+  const [gate_price, setGate_price] = useState<number>(0); // Added gate_price
   const [category, setCategory] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null); // Existing image URL
@@ -62,7 +63,8 @@ export default function EditEventPage() { // Remove params from signature
           setName(eventData.name || '');
           setDescription(eventData.description || '');
           setDate(eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : '');
-          setPrice(eventData.price || 0);
+          setPresale_price(eventData.presale_price || 0); // Changed from price
+          setGate_price(eventData.gate_price || 0); // Added gate_price
           setCategory(eventData.category || '');
           setImageUrl(eventData.image_url || null);
 
@@ -145,7 +147,8 @@ export default function EditEventPage() { // Remove params from signature
           description,
           date,
           location: finalLocation,
-          price,
+          presale_price, // Changed from price
+          gate_price,    // Added gate_price
           category,
           image_url: newImageUrl,
           updated_at: new Date().toISOString(),
@@ -202,117 +205,155 @@ export default function EditEventPage() { // Remove params from signature
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
-              <input
-                type="text"
-                id="name"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                id="description"
-                rows={4}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              ></textarea>
-            </div>
-
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
-              <input
-                type="datetime-local"
-                id="date"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <select
-                id="location"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={selectedLocationType}
-                onChange={(e) => setSelectedLocationType(e.target.value)}
-                required
-              >
-                {popularPngCities.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-              {selectedLocationType === 'Other' && (
-                <input
-                  type="text"
-                  id="customLocation"
-                  className="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  placeholder="Enter custom location"
-                  value={customLocation}
-                  onChange={(e) => setCustomLocation(e.target.value)}
-                  required
-                />
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">Price (PGK)</label>
-              <input
-                type="number"
-                id="price"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={price}
-                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-              <select
-                id="category"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-              >
-                <option value="">Select a category</option>
-                <option value="Music">Music</option>
-                <option value="Art">Art</option>
-                <option value="Food">Food</option>
-                <option value="Technology">Technology</option>
-                <option value="Wellness">Wellness</option>
-                <option value="Comedy">Comedy</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
-              {imageUrl && (
-                <div className="mb-2">
-                  <Image src={imageUrl} alt="Current Event Image" width={150} height={100} objectFit="cover" className="rounded-md" />
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Event Basic Information */}
+            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
                 </div>
-              )}
-              <input
-                type="file"
-                id="image"
-                accept="image/*"
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
-                onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
-              />
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <select
+                    id="category"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Music">Music</option>
+                    <option value="Art">Art</option>
+                    <option value="Food">Food</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Wellness">Wellness</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
             </div>
+
+            {/* Event Details */}
+            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Event Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea
+                    id="description"
+                    rows={4}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  ></textarea>
+                </div>
+                <div>
+                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
+                  {imageUrl && (
+                    <div className="mb-2">
+                      <Image src={imageUrl} alt="Current Event Image" width={150} height={100} objectFit="cover" className="rounded-md" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+                    onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Date & Location */}
+            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Date & Location</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    id="date"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <select
+                    id="location"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={selectedLocationType}
+                    onChange={(e) => setSelectedLocationType(e.target.value)}
+                    required
+                  >
+                    {popularPngCities.map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                  {selectedLocationType === 'Other' && (
+                    <input
+                      type="text"
+                      id="customLocation"
+                      className="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                      placeholder="Enter custom location"
+                      value={customLocation}
+                      onChange={(e) => setCustomLocation(e.target.value)}
+                      required
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pricing</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="presale_price" className="block text-sm font-medium text-gray-700 mb-2">Presale Fee (PGK)</label>
+                  <input
+                    type="number"
+                    id="presale_price"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={presale_price}
+                    onChange={(e) => setPresale_price(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">If 0 or empty, this event will be marked as "None".</p>
+                </div>
+
+                <div>
+                  <label htmlFor="gate_price" className="block text-sm font-medium text-gray-700 mb-2">Gate Fee (PGK)</label>
+                  <input
+                    type="number"
+                    id="gate_price"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={gate_price}
+                    onChange={(e) => setGate_price(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">If 0 or empty, this event will be marked as "None".</p>
+                </div>
+              </div>
+            </div>
+
+
 
             <button
               type="submit"

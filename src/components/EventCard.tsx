@@ -1,5 +1,5 @@
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock } from 'react-icons/fi';
-import { Event } from '../lib/supabase';
+import { EventItem } from '@/lib/types'; // Import EventItem from shared types
 import Image from 'next/image'; // Import the Image component
 
 // Define category mappings directly in this component
@@ -23,7 +23,7 @@ const categoryIconMap: { [key: string]: any } = {
   'Other': FiStar,
 };
 
-export default function EventCard({ event, onClick }: { event: Event; onClick?: () => void }) {
+export default function EventCard({ event, onClick }: { event: EventItem; onClick?: () => void }) {
   const categoryLabel = event.category?.trim() || 'Other';
 
   // Color and icon mapping
@@ -55,7 +55,7 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
           <Image
             src={event.image_url}
             alt={event.name}
-            layout="fill"
+            fill={true} // Changed from layout="fill" to fill={true}
             objectFit="cover"
             className="transition-transform duration-300 group-hover:scale-105"
           />
@@ -68,20 +68,22 @@ export default function EventCard({ event, onClick }: { event: Event; onClick?: 
         
         {/* Price Badges - Bottom Left */}
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-1">
-          {event.presale_price !== undefined && event.presale_price !== null && event.presale_price > 0 && (
+          {event.presale_price !== undefined && event.presale_price !== null && event.presale_price > 0 ? (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
-              Presale: K {event.presale_price.toFixed(0)}
+              Presale: K{event.presale_price.toFixed(0)}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+              Presale: None
             </span>
           )}
-          {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 && (
+          {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 ? (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
-              Gate: K {event.gate_price.toFixed(0)}
+              Gate: K{event.gate_price.toFixed(0)}
             </span>
-          )}
-          {(event.presale_price === undefined || event.presale_price === null || event.presale_price === 0) && (event.gate_price === undefined || event.gate_price === null || event.gate_price === 0) && (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
-              <FiDollarSign size={14} />
-              Free
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+              Gate: None
             </span>
           )}
         </div>

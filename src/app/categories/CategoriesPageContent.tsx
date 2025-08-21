@@ -2,10 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../../lib/supabase'; // Added User and isSupabaseConfigured
+import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../../lib/supabase';
+import { EventItem } from '../../lib/types'; // Import EventItem
 import EventCard from '../../components/EventCard';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi'; // Added FiDollarSign
 import EventModal from '../../components/EventModal';
+import Link from 'next/link';
 
 // Define categories and their properties
 const allCategories = [
@@ -44,14 +46,14 @@ const categoryColorMap: { [key: string]: string } = {
 function CategoriesPageContentInner() {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
-  const [events, setEvents] = useState<Event[]>([]);
-  const [displayCategories, setDisplayCategories] = useState<typeof allCategories>([]); // New state for filtered categories
+  const [events, setEvents] = useState<EventItem[]>([]); // Change type to EventItem[]
+  const [displayCategories, setDisplayCategories] = useState<typeof allCategories>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [host, setHost] = useState<User | null>(null); // State for host details
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null); // Change type to EventItem
+  const [host, setHost] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchAndFilterCategories = async () => {
@@ -79,7 +81,22 @@ function CategoriesPageContentInner() {
           return;
         }
 
-        setEvents(data || []); // Set all events
+        const typedData: EventItem[] = data.map((event: any) => ({
+          ...event,
+          date: event.date ? String(event.date) : '', // Ensure date is always a string
+          id: String(event.id),
+          name: event.name,
+          location: event.location || '',
+          description: event.description || '',
+          category: event.category || 'Other',
+          presale_price: event.presale_price ?? 0,
+          gate_price: event.gate_price ?? 0,
+          image_url: event.image_url || '',
+          created_at: event.created_at || '',
+          featured: event.featured || false,
+          created_by: event.created_by || '',
+        }));
+        setEvents(typedData || []); // Set all events
 
         // 2. Determine active categories
         const activeCategoryNames = new Set<string>();
@@ -180,16 +197,16 @@ function CategoriesPageContentInner() {
             {displayCategories.map((cat) => { // Use displayCategories here
               const Icon = cat.icon;
               return (
-                <a
-                  key={cat.name}
-                  href={`/categories?category=${encodeURIComponent(cat.name)}`}
-                  className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[140px] ${cat.color} ${category === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
-                >
-                  <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white border border-yellow-400">
-                    <Icon size={24} />
-                  </span>
-                  <span className="text-sm text-center">{cat.name}</span>
-                </a>
+                  <Link
+                    key={cat.name}
+                    href={`/categories?category=${encodeURIComponent(cat.name)}`}
+                    className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[140px] ${cat.color} ${category === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
+                  >
+                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white border border-yellow-400">
+                      <Icon size={24} />
+                    </span>
+                    <span className="text-sm text-center">{cat.name}</span>
+                  </Link>
               );
             })}
           </div>
@@ -244,14 +261,14 @@ function CategoriesPageContentInner() {
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <a href="/events" className="hover:text-yellow-300 text-white">Events</a>
-            <a href="/categories" className="hover:text-yellow-300 text-white">Categories</a>
-            <a href="/about" className="hover:text-yellow-300 text-white">About</a>
+            <Link href="/events" className="hover:text-yellow-300 text-white">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-300 text-white">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-300 text-white">About</Link>
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-yellow-300 text-white">Terms</a>
-            <a href="#" className="hover:text-yellow-300 text-white">Privacy</a>
+            <Link href="#" className="hover:text-yellow-300 text-white">Terms</Link>
+            <Link href="#" className="hover:text-yellow-300 text-white">Privacy</Link>
           </div>
         </div>
       </footer>

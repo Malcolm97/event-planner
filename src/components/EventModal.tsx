@@ -76,19 +76,22 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 <span className="inline-block px-3 py-1 rounded-full bg-yellow-200 text-yellow-800 font-semibold text-sm">
                   {selectedEvent?.category || 'Other'}
                 </span>
-                {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price > 0 && (
+                {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
                   <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
-                    Presale: K {selectedEvent.presale_price.toFixed(0)}
+                    Presale: K{selectedEvent.presale_price.toFixed(0)}
+                  </span>
+                ) : (
+                  <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
+                    Presale: None
                   </span>
                 )}
-                {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price > 0 && (
+                {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
                   <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
-                    Gate: K {selectedEvent.gate_price.toFixed(0)}
+                    Gate: K{selectedEvent.gate_price.toFixed(0)}
                   </span>
-                )}
-                {(!selectedEvent?.presale_price || selectedEvent.presale_price === 0) && (!selectedEvent?.gate_price || selectedEvent.gate_price === 0) && (
-                  <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-sm">
-                    Free Event
+                ) : (
+                  <span className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm">
+                    Gate: None
                   </span>
                 )}
               </div>

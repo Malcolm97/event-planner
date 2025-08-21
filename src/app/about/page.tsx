@@ -3,6 +3,7 @@
 import Header from '../../components/Header';
 import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const features = [
   {
@@ -106,10 +107,12 @@ export default function AboutPage() {
             </div>
           </div>
           <div className="relative">
-            <img 
+            <Image 
               src="https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800" 
               alt="Community gathering"
               className="rounded-2xl shadow-xl w-full h-96 object-cover"
+              fill={true}
+              style={{objectFit: "cover"}}
             />
             <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
               <div className="flex items-center gap-3">
@@ -193,11 +196,14 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {team.map((member, index) => (
             <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition border border-gray-200">
-              <img 
-                src={member.image} 
-                alt={member.name}
-                className="w-full h-64 object-cover"
-              />
+              <div className="relative w-full h-64">
+                <Image 
+                  src={member.image} 
+                  alt={member.name}
+                  fill={true}
+                  style={{objectFit: "cover"}}
+                />
+              </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
                 <p className="text-yellow-600 font-medium mb-3">{member.role}</p>

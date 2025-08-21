@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useContext, useMemo } from 'react'; // Import useContext
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';
-import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, TABLES, User, isSupabaseConfigured } from '@/lib/supabase';
+import { EventItem } from '@/lib/types'; // Correct import for EventItem
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
-import type { IconType } from 'react-icons'; // Import IconType
-import Link from 'next/link'; // Ensure Link is imported
-import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
+import type { IconType } from 'react-icons';
+import Link from 'next/link';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import EventModal from '../components/EventModal';
 
 // Force dynamic rendering to prevent prerendering issues
@@ -22,25 +23,23 @@ const allCategories = [
   { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
   { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
   { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
-  { name: 'Other', icon: FiStar, color: 'bg-gray-100 text-gray-700' }, // Add Other category
+  { name: 'Other', icon: FiStar, color: 'bg-gray-100 text-gray-700' },
 ];
 
-const categoryIconMap: { [key: string]: IconType } = { // Add type annotation
+const categoryIconMap: { [key: string]: IconType } = {
   'Music': FiMusic,
   'Art': FiImage,
   'Food': FiCoffee,
   'Technology': FiCpu,
   'Wellness': FiHeart,
   'Comedy': FiSmile,
-  'Other': FiStar, // Add Other icon
+  'Other': FiStar,
 };
 
-// Create a serializable version for passing as a prop
 const serializableCategoryIconMap = Object.keys(categoryIconMap).reduce((acc, key) => {
-  acc[key] = key; // Map category name to itself as a string identifier
+  acc[key] = key;
   return acc;
 }, {} as { [key: string]: string });
-
 
 const categoryColorMap: { [key: string]: string } = {
   'Music': 'bg-purple-100 text-purple-600',
@@ -49,7 +48,7 @@ const categoryColorMap: { [key: string]: string } = {
   'Technology': 'bg-blue-100 text-blue-600',
   'Wellness': 'bg-green-100 text-green-600',
   'Comedy': 'bg-yellow-100 text-yellow-600',
-  'Other': 'bg-gray-100 text-gray-700', // Add Other color
+  'Other': 'bg-gray-100 text-gray-700',
 };
 
 const popularPngCities = [
@@ -59,23 +58,23 @@ const popularPngCities = [
 ];
 
 export default function Home() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('All Dates');
   const [selectedLocationFilter, setSelectedLocationFilter] = useState('All Areas');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [host, setHost] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [totalEvents, setTotalEvents] = useState<number | null>(null);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
   const [citiesCoveredCount, setCitiesCoveredCount] = useState<number | null>(null);
   const router = useRouter();
-  const { isOnline, setLastSaved, isPwaOnMobile } = useNetworkStatus();
+  // Commenting out setLastSaved and isPwaOnMobile as they are not exported by NetworkStatusContext
+  const { isOnline } = useNetworkStatus();
 
-  // State for dynamically generated options to prevent hydration mismatch
   const [displayedLocations, setDisplayedLocations] = useState<string[]>(['All Areas']);
   const [displayedDates, setDisplayedDates] = useState<string[]>(['All Dates']);
 
@@ -100,10 +99,25 @@ export default function Home() {
         setEvents([]);
         setFilteredEvents([]);
       } else if (data) {
-        setEvents(data);
-        setFilteredEvents(data);
-        const timestamp = new Date().toISOString();
-        setLastSaved(timestamp);
+        const typedData: EventItem[] = data.map((event: any) => ({
+          ...event,
+          date: event.date ? String(event.date) : '',
+          id: String(event.id),
+          name: event.name,
+          location: event.location || '',
+          description: event.description || '',
+          category: event.category || 'Other',
+          presale_price: event.presale_price ?? 0,
+          gate_price: event.gate_price ?? 0,
+          image_url: event.image_url || '',
+          created_at: event.created_at || '',
+          featured: event.featured || false,
+          created_by: event.created_by || '',
+        }));
+        setEvents(typedData);
+        setFilteredEvents(typedData);
+        // const timestamp = new Date().toISOString();
+        // setLastSaved(timestamp); // Commented out
       } else {
         setEvents([]);
         setFilteredEvents([]);
@@ -138,7 +152,7 @@ export default function Home() {
 
   useEffect(() => {
     loadEvents();
-  }, [isOnline, isPwaOnMobile]);
+  }, [isOnline]); // Removed isPwaOnMobile
 
   // Fetch total events
   useEffect(() => {
@@ -194,7 +208,7 @@ export default function Home() {
   useEffect(() => {
     if (events.length > 0) {
       const uniqueCities = new Set<string>();
-      events.forEach(event => {
+      events.forEach((event: EventItem) => {
         if (event.location) {
           const firstPart = event.location.split(',')[0]?.trim();
           if (firstPart) {
@@ -238,15 +252,14 @@ export default function Home() {
     }
   }, [selectedEvent]);
 
-  // Calculate upcoming and previous events based on filteredEvents
   const upcomingEvents = useMemo(() => {
     const now = new Date();
-    return filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) >= now);
+    return filteredEvents.filter((ev: EventItem) => ev.date && new Date(ev.date) >= now);
   }, [filteredEvents]);
 
   const previousEvents = useMemo(() => {
     const now = new Date();
-    return filteredEvents.filter((ev: Event) => ev.date && new Date(ev.date) < now);
+    return filteredEvents.filter((ev: EventItem) => ev.date && new Date(ev.date) < now);
   }, [filteredEvents]);
 
   useEffect(() => {
@@ -254,7 +267,7 @@ export default function Home() {
       let tempEvents = events;
 
       if (searchTerm) {
-        tempEvents = tempEvents.filter((event: Event) =>
+        tempEvents = tempEvents.filter((event: EventItem) =>
           event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           event.location.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -268,7 +281,7 @@ export default function Home() {
         endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        tempEvents = tempEvents.filter((event: Event) => {
+        tempEvents = tempEvents.filter((event: EventItem) => {
           if (!event.date) return false;
           const eventDate = new Date(event.date);
           switch (selectedDate) {
@@ -279,7 +292,6 @@ export default function Home() {
             case 'This Month':
               return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
             default:
-              // Handle specific month/year (e.g., "August 2025")
               const [monthName, yearString] = selectedDate.split(' ');
               if (monthName && yearString) {
                 const selectedMonth = new Date(Date.parse(monthName + " 1, " + yearString)).getMonth();
@@ -292,7 +304,7 @@ export default function Home() {
       }
 
       if (selectedLocationFilter !== 'All Areas') {
-        tempEvents = tempEvents.filter((event: Event) => {
+        tempEvents = tempEvents.filter((event: EventItem) => {
           if (!event.location) return false;
           const firstPart = event.location.split(',')[0]?.trim();
           if (selectedLocationFilter === 'Other Locations') {
@@ -309,15 +321,12 @@ export default function Home() {
     filterEvents();
   }, [events, searchTerm, selectedDate, selectedLocationFilter]);
 
-  // Effect to update displayedLocations and displayedDates after events are loaded
   useEffect(() => {
-    // Group events by location for "Other" category
-    const otherLocationEvents = upcomingEvents.filter((event: Event) => {
+    const otherLocationEvents = upcomingEvents.filter((event: EventItem) => {
       const firstPart = event.location?.split(',')[0]?.trim();
       return firstPart && !popularPngCities.includes(firstPart);
     });
 
-    // Generate available locations for the dropdown
     const newAvailableLocations = ['All Areas'];
     popularPngCities.forEach(city => {
       if (upcomingEvents.some(event => event.location?.includes(city))) {
@@ -329,24 +338,23 @@ export default function Home() {
     }
     setDisplayedLocations(newAvailableLocations);
 
-    // Generate available date options for the dropdown
     const newAvailableDates = ['All Dates'];
     const today = new Date();
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    if (upcomingEvents.some((event: Event) => event.date && new Date(event.date).toDateString() === today.toDateString())) {
+    if (upcomingEvents.some((event: EventItem) => event.date && new Date(event.date).toDateString() === today.toDateString())) {
       newAvailableDates.push('Today');
     }
-    if (upcomingEvents.some((event: Event) => {
+    if (upcomingEvents.some((event: EventItem) => {
       if (!event.date) return false;
       const eventDate = new Date(event.date);
       return eventDate >= today && eventDate <= endOfWeek;
     })) {
       newAvailableDates.push('This Week');
     }
-    if (upcomingEvents.some((event: Event) => {
+    if (upcomingEvents.some((event: EventItem) => {
       if (!event.date) return false;
       const eventDate = new Date(event.date);
       return eventDate.getMonth() === today.getMonth() && eventDate.getFullYear() === today.getFullYear();
@@ -354,9 +362,8 @@ export default function Home() {
       newAvailableDates.push('This Month');
     }
 
-    // Add future months/years if events exist
     const futureMonths = new Set<string>();
-    upcomingEvents.forEach((event: Event) => {
+    upcomingEvents.forEach((event: EventItem) => {
       if (event.date) {
         const eventDate = new Date(event.date);
         if (eventDate > today) {
@@ -377,14 +384,14 @@ export default function Home() {
     });
 
     setDisplayedDates(newAvailableDates);
-  }, [events, upcomingEvents]); // Recalculate when events or upcomingEvents change
+  }, [events, upcomingEvents]);
 
-  const categorizedEvents = upcomingEvents.filter((event: Event) => {
+  const categorizedEvents = upcomingEvents.filter((event: EventItem) => {
     const firstPart = event.location?.split(',')[0]?.trim();
     return firstPart && popularPngCities.includes(firstPart);
   });
 
-  const otherLocationEvents = upcomingEvents.filter((event: Event) => {
+  const otherLocationEvents = upcomingEvents.filter((event: EventItem) => {
     const firstPart = event.location?.split(',')[0]?.trim();
     return firstPart && !popularPngCities.includes(firstPart);
   });
@@ -392,7 +399,6 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      {/* Hero Section */}
       <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center gap-6">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-2 tracking-tight">
@@ -402,7 +408,6 @@ export default function Home() {
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>
-          {/* Search/Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
             <input
               className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -430,7 +435,6 @@ export default function Home() {
             </select>
             <button className="rounded-lg px-6 py-2 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition">Find Events</button>
           </div>
-          {/* Stats */}
           <div className="flex gap-8 mt-6 text-center justify-center">
             <div>
               <div className="text-2xl font-bold text-gray-900">{totalEvents !== null ? totalEvents : '...'}</div>
@@ -448,7 +452,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Upcoming Events */}
       <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
@@ -480,14 +483,13 @@ export default function Home() {
           </>
         )}
 
-        <div className="flex justify-center mt-12">
-          <button className="px-8 py-3 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-            View all Events
-          </button>
-        </div>
+          <div className="flex justify-center mt-12">
+            <Link href="/events" className="px-8 py-3 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center">
+              View all Events
+            </Link>
+          </div>
       </section>
 
-      {/* Featured Events (empty for now) */}
       <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
@@ -495,10 +497,8 @@ export default function Home() {
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">Featured events will appear here soon!</p>
         </div>
-        {/* This section is intentionally left blank for future development */}
       </section>
 
-      {/* Previous Events Section */}
       {previousEvents.length > 0 && (
         <section className="max-w-7xl mx-auto w-full py-12 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
           <div className="text-center mb-10">
@@ -513,7 +513,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Explore by Category */}
       <section className="w-full py-10 px-4 sm:px-8 bg-white border-t border-black">
         <div className="max-w-5xl mx-auto">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Explore by Category</h3>
@@ -521,19 +520,17 @@ export default function Home() {
             {allCategories
               .filter(cat => {
                 if (cat.name === 'Other') {
-                  // For 'Other' category, check if there are any events whose category is not in the predefined list
                   const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
                   return events.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
                 } else {
-                  // For other categories, check for exact match
                   return events.some(ev => ev.category === cat.name);
                 }
               })
               .map((cat) => {
-                const Icon = categoryIconMap[cat.name] || FiStar; // This line caused the TS error
+                const Icon = categoryIconMap[cat.name] || FiStar;
                 const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
                 return (
-                  <a
+                  <Link
                     href={`/categories?category=${encodeURIComponent(cat.name)}`}
                     key={cat.name}
                     className={`flex flex-col items-center justify-center gap-2 px-6 py-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[120px] min-w-[120px] ${categoryColor}`}
@@ -542,25 +539,24 @@ export default function Home() {
                       <Icon size={24} />
                     </span>
                     <span className="text-base font-semibold">{cat.name}</span>
-                  </a>
+                  </Link>
                 );
               })}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600 mt-auto">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
+        <div className="max-w-6xl mx-auto flex flex-col md:row justify-between items-center gap-4 text-gray-500 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <a href="/events" className="hover:text-yellow-300 text-white">Events</a>
-            <a href="/categories" className="hover:text-yellow-300 text-white">Categories</a>
-            <a href="/about" className="hover:text-yellow-300 text-white">About</a>
+            <Link href="/events" className="hover:text-yellow-300 text-white">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-300 text-white">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-300 text-white">About</Link>
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-yellow-300 text-white">Terms</a>
-            <a href="#" className="hover:text-yellow-300 text-white">Privacy</a>
+            <Link href="#" className="hover:text-yellow-300 text-white">Terms</Link>
+            <Link href="#" className="hover:text-yellow-300 text-white">Privacy</Link>
           </div>
         </div>
       </footer>

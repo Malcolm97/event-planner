@@ -35,7 +35,7 @@ export interface Event {
   image_url?: string // Add image_url property
   created_at?: string
   featured?: boolean
-  date?: string
+  date: string
   created_by?: string
 }
 

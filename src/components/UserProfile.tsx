@@ -132,7 +132,7 @@ export default function UserProfile({ onError }: UserProfileProps) {
       ) : (
         <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
           {/* Using a local image for the default avatar */}
-          <img src={DEFAULT_AVATAR_SVG_BASE64} alt="Default User Avatar" width={80} height={80} />
+          <Image src={DEFAULT_AVATAR_SVG_BASE64} alt="Default User Avatar" width={80} height={80} />
         </div>
       )}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{displayName}</h3>
