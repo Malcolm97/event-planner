@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import EventCard from '../components/EventCard';
 import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../lib/supabase';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar } from 'react-icons/fi';
+import type { IconType } from 'react-icons'; // Import IconType
 import Link from 'next/link'; // Ensure Link is imported
 import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
 import EventModal from '../components/EventModal';
@@ -24,7 +25,7 @@ const allCategories = [
   { name: 'Other', icon: FiStar, color: 'bg-gray-100 text-gray-700' }, // Add Other category
 ];
 
-const categoryIconMap: { [key: string]: any } = {
+const categoryIconMap: { [key: string]: IconType } = { // Add type annotation
   'Music': FiMusic,
   'Art': FiImage,
   'Food': FiCoffee,
@@ -33,6 +34,13 @@ const categoryIconMap: { [key: string]: any } = {
   'Comedy': FiSmile,
   'Other': FiStar, // Add Other icon
 };
+
+// Create a serializable version for passing as a prop
+const serializableCategoryIconMap = Object.keys(categoryIconMap).reduce((acc, key) => {
+  acc[key] = key; // Map category name to itself as a string identifier
+  return acc;
+}, {} as { [key: string]: string });
+
 
 const categoryColorMap: { [key: string]: string } = {
   'Music': 'bg-purple-100 text-purple-600',
@@ -522,7 +530,7 @@ export default function Home() {
                 }
               })
               .map((cat) => {
-                const Icon = categoryIconMap[cat.name] || FiStar;
+                const Icon = categoryIconMap[cat.name] || FiStar; // This line caused the TS error
                 const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
                 return (
                   <a
@@ -556,7 +564,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
+      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={serializableCategoryIconMap} />
     </div>
   );
 }
