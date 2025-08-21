@@ -1,4 +1,5 @@
 import { NetworkStatusProvider } from '@/context/NetworkStatusContext';
+import './globals.css';
 
 export default function RootLayout({
   children,
