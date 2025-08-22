@@ -27,6 +27,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   // Check if the request is for an API route
   const isApiRoute = event.request.url.includes('/api/events');
+  const isNextJsChunk = event.request.url.includes('/_next/static/chunks/');
 
   if (isApiRoute) {
     // For API routes, try network first, then cache
@@ -34,6 +35,21 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request)
         .then(async (response) => {
           // Cache the successful API response
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, response.clone());
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to serve from cache
+          return caches.match(event.request);
+        })
+    );
+  } else if (isNextJsChunk) {
+    // For Next.js chunks, use a network-first strategy with cache fallback
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          // Cache the successful network response
           const cache = await caches.open(CACHE_NAME);
           cache.put(event.request, response.clone());
           return response;

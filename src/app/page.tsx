@@ -1,6 +1,7 @@
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import HomePageContent from './HomePageContent';
+import { NetworkStatusProvider } from '@/context/NetworkStatusContext';
 
 // Revalidate the page every 60 seconds
 export const revalidate = 60;
@@ -81,11 +82,13 @@ export default async function Home() {
   const { events, totalEvents, totalUsers, citiesCovered } = await getEvents();
 
   return (
-    <HomePageContent
-      initialEvents={events}
-      initialTotalEvents={totalEvents}
-      initialTotalUsers={totalUsers}
-      initialCitiesCovered={citiesCovered}
-    />
+    <NetworkStatusProvider>
+      <HomePageContent
+        initialEvents={events}
+        initialTotalEvents={totalEvents}
+        initialTotalUsers={totalUsers}
+        initialCitiesCovered={citiesCovered}
+      />
+    </NetworkStatusProvider>
   );
 }
