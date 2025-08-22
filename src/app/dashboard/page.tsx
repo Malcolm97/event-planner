@@ -82,6 +82,9 @@ export default function DashboardPage() {
     return null;
   }
 
+  const upcomingEvents = userEvents.filter(event => new Date(event.date) >= new Date());
+  const expiredEvents = userEvents.filter(event => new Date(event.date) < new Date());
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -123,9 +126,9 @@ export default function DashboardPage() {
 
           {/* Right Column - Events */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"> {/* Added mb-8 for spacing */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">My Events</h2>
+                <h2 className="text-xl font-semibold text-gray-900">My Upcoming Events</h2> {/* Changed title */}
                 <Link
                   href="/create-event"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors shadow-sm"
@@ -135,10 +138,10 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              {userEvents.length === 0 ? (
+              {upcomingEvents.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📅</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No events yet</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events</h3>
                   <p className="text-gray-500 mb-6">Create your first event to get started!</p>
                   <Link
                     href="/create-event"
@@ -150,23 +153,32 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userEvents.map(event => {
-                    const now = new Date();
-                    const eventDate = new Date(event.date);
-                    const isExpired = eventDate < now;
+                  {upcomingEvents.map(event => (
+                    <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
+                      <EventCard event={event} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                    if (isExpired) {
-                      return (
-                        <EventCard key={event.id} event={event} onClick={() => { /* Optionally open a modal for expired events if needed */ }} />
-                      );
-                    } else {
-                      return (
-                        <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
-                          <EventCard event={event} />
-                        </Link>
-                      );
-                    }
-                  })}
+            {/* Previous Events Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Previous Events</h2>
+              </div>
+
+              {expiredEvents.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🎉</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No previous events</h3>
+                  <p className="text-gray-500 mb-6">Your past events will appear here.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {expiredEvents.map(event => (
+                    <EventCard key={event.id} event={event} onClick={() => { /* Optionally open a modal for expired events if needed */ }} />
+                  ))}
                 </div>
               )}
             </div>

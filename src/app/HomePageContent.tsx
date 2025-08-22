@@ -366,19 +366,6 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         </div>
       </section>
 
-      {previousEvents.length > 0 && (
-        <section className="max-w-7xl mx-auto w-full py-12 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">Previous Events</h2>
-            <p className="text-gray-600">Browse events that have already taken place.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {previousEvents.map(event => (
-              <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-            ))}
-          </div>
-        </section>
-      )}
 
       <section className="w-full py-10 px-4 sm:px-8 bg-white border-t border-black">
         <div className="max-w-5xl mx-auto">

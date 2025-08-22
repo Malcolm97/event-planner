@@ -41,7 +41,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   return (
     <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 relative animate-fade-in border border-gray-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 relative animate-fade-in border border-gray-200 overflow-y-auto max-h-screen">
         {/* Header */}
         <div className="p-4 md:p-6 border-b border-gray-200"> {/* Adjusted padding for responsiveness */}
           <button
