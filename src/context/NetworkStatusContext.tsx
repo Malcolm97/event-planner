@@ -12,11 +12,14 @@ interface NetworkStatusContextType {
 const NetworkStatusContext = createContext<NetworkStatusContextType | undefined>(undefined);
 
 export const NetworkStatusProvider = ({ children }: { children: ReactNode }) => {
-const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isPwaOnMobile, setIsPwaOnMobile] = useState(false); // Added to resolve the type error
+  const [isOnline, setIsOnline] = useState(true);
+  const [isPwaOnMobile, setIsPwaOnMobile] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
   useEffect(() => {
+    // Set initial online status from navigator (client-side only)
+    setIsOnline(navigator.onLine);
+    
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -26,7 +29,7 @@ const [isOnline, setIsOnline] = useState(navigator.onLine);
     // Check if PWA on mobile (basic check)
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    setIsPwaOnMobile(isMobile && isStandalone); // Added to resolve the type error
+    setIsPwaOnMobile(isMobile && isStandalone);
 
     return () => {
       window.removeEventListener('online', handleOnline);
