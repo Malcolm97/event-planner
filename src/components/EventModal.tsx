@@ -110,13 +110,13 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12"> {/* Adjusted gap for responsiveness */}
             {/* Left Column: Event Image */}
             {selectedEvent?.image_url && (
-              <div className="md:sticky md:top-4">
+              <div className="sm:sticky sm:top-4">
                 <Image
                   src={selectedEvent.image_url}
                   alt={selectedEvent.name ? `${selectedEvent.name} image` : 'Event Image'}
                   width={700}
                   height={400}
-                  className="w-full h-auto object-cover rounded-lg"
+                  className="w-full h-auto object-cover rounded-lg max-w-xs max-h-xs"
                 />
               </div>
             )}
