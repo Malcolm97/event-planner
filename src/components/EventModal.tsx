@@ -1,7 +1,7 @@
 'use client';
 import React, { ElementType, useState, useRef, useEffect } from 'react';
 
-import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink } from 'react-icons/fi'; // Re-added icon imports
+import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { User, Event } from '../lib/supabase';
 import Image from 'next/image';
@@ -11,14 +11,25 @@ interface EventModalProps {
   host: User | null;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
-  categoryIconMap: { [key: string]: React.ElementType }; // Added categoryIconMap prop
+  categoryIconMap: { [key: string]: string }; // Changed to expect string names
 }
 
-export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen, categoryIconMap }: EventModalProps) { // Added categoryIconMap to props destructuring
+// Local map to reconstruct icon components
+const localCategoryIconMap: { [key: string]: React.ElementType } = {
+  'Music': FiMusic,
+  'Art': FiImage,
+  'Food': FiCoffee,
+  'Technology': FiCpu,
+  'Wellness': FiHeart,
+  'Comedy': FiSmile,
+  'Other': FiStar,
+};
+
+export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen, categoryIconMap }: EventModalProps) {
   if (!dialogOpen || !selectedEvent) return null;
 
   const [activeTab, setActiveTab] = useState<'event-details' | 'host-details'>('event-details');
-  const modalRef = useRef<HTMLDivElement>(null); // Ref for the modal container
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -31,12 +42,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []); // Empty dependency array ensures this effect runs only once on mount and cleans up on unmount
+  }, []);
 
   // Helper function to get the correct icon component based on the string name
-  const getIconComponent = (name: string | undefined, iconMap: { [key: string]: React.ElementType }) => { // Added iconMap parameter
-    const Icon = iconMap[name || 'Other']; // Use the provided map
-    return Icon || FiStar; // Fallback to FiStar if not found
+  const getIconComponent = (name: string | undefined) => { // Removed iconMap parameter
+    const Icon = localCategoryIconMap[name || 'Other']; // Use the local map
+    return Icon || FiStar;
   };
 
   return (
@@ -55,7 +66,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             <div className="w-16 h-16 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0">
               {(() => {
               const category = selectedEvent?.category;
-              const IconComponent = getIconComponent(category || 'Other', categoryIconMap); // Pass categoryIconMap here
+              const IconComponent = getIconComponent(category || 'Other');
 
                 return React.createElement(IconComponent as ElementType, { size: 32, className: "text-yellow-600" });
               })()}

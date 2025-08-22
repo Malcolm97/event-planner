@@ -1,7 +1,8 @@
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
-import HomePageContent from './HomePageContent';
-import { NetworkStatusProvider } from '@/context/NetworkStatusContext';
+import { Suspense } from 'react';
+import ClientHomePageWrapper from './ClientHomePageWrapper';
+import Loading from './loading'; // Import the Loading component
 
 // Revalidate the page every 60 seconds
 export const revalidate = 60;
@@ -82,13 +83,13 @@ export default async function Home() {
   const { events, totalEvents, totalUsers, citiesCovered } = await getEvents();
 
   return (
-    <NetworkStatusProvider>
-      <HomePageContent
+    <Suspense fallback={<Loading />}>
+      <ClientHomePageWrapper
         initialEvents={events}
         initialTotalEvents={totalEvents}
         initialTotalUsers={totalUsers}
         initialCitiesCovered={citiesCovered}
       />
-    </NetworkStatusProvider>
+    </Suspense>
   );
 }

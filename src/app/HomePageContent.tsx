@@ -320,7 +320,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </div>
         </div>
       </section>
-      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
+      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={serializableCategoryIconMap} />
 
       <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
         <div className="text-center mb-12">

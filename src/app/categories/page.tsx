@@ -1,5 +1,7 @@
 import Header from '@/components/Header';
+import { Suspense } from 'react';
 import CategoriesPageContent from './CategoriesPageContent';
+import Loading from './loading'; // Import the Loading component
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
@@ -102,7 +104,9 @@ export default async function CategoriesPage() {
   return (
     <>
       <Header />
-      <CategoriesPageContent initialEvents={events} initialDisplayCategories={displayCategories} initialTotalEvents={totalEvents} initialTotalUsers={totalUsers} initialCitiesCovered={citiesCovered} />
+      <Suspense fallback={<Loading />}>
+        <CategoriesPageContent initialEvents={events} initialDisplayCategories={displayCategories} initialTotalEvents={totalEvents} initialTotalUsers={totalUsers} initialCitiesCovered={citiesCovered} />
+      </Suspense>
     </>
   );
 }
