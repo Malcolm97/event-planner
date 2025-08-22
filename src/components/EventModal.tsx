@@ -116,7 +116,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   alt={selectedEvent.name ? `${selectedEvent.name} image` : 'Event Image'}
                   width={700}
                   height={400}
-                  className="w-full h-auto object-cover rounded-lg max-w-xs max-h-xs"
+                  className="w-48 h-48 object-cover rounded-lg"
                 />
               </div>
             )}
