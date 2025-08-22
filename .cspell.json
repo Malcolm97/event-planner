@@ -1,0 +1,39 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "supabase",
+    "Moresby",
+    "Madang",
+    "Goroka",
+    "Wewak",
+    "Popondetta",
+    "Arawa",
+    "Kavieng",
+    "Daru",
+    "Vanimo",
+    "Kimbe",
+    "Mendi",
+    "Kundiawa",
+    "Lorengau",
+    "Wabag",
+    "Kokopo",
+    "Buka",
+    "Alotau"
+  ],
+  "ignoreWords": [],
+  "dictionaryDefinitions": [],
+  "patterns": [],
+  "ignoreRegExpList": [],
+  "allowCompoundWords": true,
+  "enabledLanguageIds": [
+    "typescript",
+    "javascript",
+    "react",
+    "tsx",
+    "css",
+    "html",
+    "json",
+    "markdown"
+  ]
+}
