@@ -37,22 +37,10 @@ const stats = [
 
 const team = [
   {
-    name: 'Sarah Johnson',
-    role: 'Founder & CEO',
-    bio: 'Passionate about connecting communities through meaningful events.',
-    image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
-  },
-  {
-    name: 'Michael Chen',
-    role: 'Head of Technology',
+    name: 'Malcolm Sioni',
+    role: 'Founder',
     bio: 'Building the platform that makes event discovery seamless.',
-    image: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400'
-  },
-  {
-    name: 'Emma Wilson',
-    role: 'Community Manager',
-    bio: 'Fostering connections and ensuring every event creates lasting memories.',
-    image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400'
+    image: 'https://picsum.photos/400/400'
   }
 ];
 
@@ -189,13 +177,13 @@ export default function AboutPage() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            The passionate individuals working to make PNG Events the best platform for community building.
+            Working to make PNG Events the best platform for community building.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="flex justify-center">
           {team.map((member, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition border border-gray-200">
+            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition border border-gray-200 w-full max-w-sm">
               <div className="relative w-full h-64">
                 <Image 
                   src={member.image} 
@@ -224,7 +212,7 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signin" className="px-8 py-3 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition shadow-lg">
-              Join Our Community
+              Sign Up
             </Link>
             <Link href="/events" className="px-8 py-3 bg-white text-gray-700 font-semibold rounded-lg hover:bg-yellow-100 transition shadow-lg border border-gray-200">
               Browse Events

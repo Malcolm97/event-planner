@@ -1,11 +1,108 @@
 import Header from '@/components/Header';
 import CategoriesPageContent from './CategoriesPageContent';
+import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
+import { EventItem } from '@/lib/types';
+import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 
-export default function CategoriesPage() {
+// Revalidate the page every 60 seconds
+export const revalidate = 60;
+
+const allCategories = [
+  { name: 'All Categories', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
+  { name: 'Music', icon: 'FiMusic', color: 'bg-purple-100 text-purple-600' },
+  { name: 'Art', icon: 'FiImage', color: 'bg-pink-100 text-pink-600' },
+  { name: 'Food', icon: 'FiCoffee', color: 'bg-orange-100 text-orange-600' },
+  { name: 'Technology', icon: 'FiCpu', color: 'bg-blue-100 text-blue-600' },
+  { name: 'Wellness', icon: 'FiHeart', color: 'bg-green-100 text-green-600' },
+  { name: 'Comedy', icon: 'FiSmile', color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Other', icon: 'FiStar', color: 'bg-gray-100 text-gray-600' },
+];
+
+async function getEvents() {
+  if (!isSupabaseConfigured()) {
+    console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
+    return { events: [], displayCategories: [], totalEvents: 0, totalUsers: 0, citiesCovered: 0 };
+  }
+
+  // Fetch events
+  const { data: eventsData, error: eventsError } = await supabase
+    .from(TABLES.EVENTS)
+    .select('id, name, date, location, category, presale_price, gate_price, image_url, featured, created_by')
+    .order('date', { ascending: true });
+
+  if (eventsError) {
+    console.warn('Error fetching events from Supabase:', eventsError.message);
+  }
+
+  const events: EventItem[] = (eventsData || []).map((event: any) => ({
+    ...event,
+    date: event.date ? String(event.date) : '',
+    id: String(event.id),
+    name: event.name,
+    location: event.location || '',
+    description: event.description || '',
+    category: event.category || 'Other',
+    presale_price: event.presale_price ?? 0,
+    gate_price: event.gate_price ?? 0,
+    image_url: event.image_url || '',
+    created_at: event.created_at || '',
+    featured: event.featured || false,
+    created_by: event.created_by || '',
+  }));
+
+  // Fetch total events count
+  const { count: totalEvents, error: totalEventsError } = await supabase
+    .from(TABLES.EVENTS)
+    .select('id', { count: 'exact', head: true }); // Select only 'id' to optimize count
+
+  if (totalEventsError) {
+    console.error('Error fetching total events:', totalEventsError.message);
+  }
+
+  // Fetch total users count
+  const { count: totalUsers, error: totalUsersError } = await supabase
+    .from(TABLES.USERS)
+    .select('id', { count: 'exact', head: true }); // Select only 'id' to optimize count
+
+  if (totalUsersError) {
+    console.error('Error fetching total users:', totalUsersError.message);
+  }
+
+  // Calculate cities covered
+  const uniqueCities = new Set<string>();
+  if (events.length > 0) {
+    events.forEach((event: EventItem) => {
+      if (event.location) {
+        const firstPart = event.location.split(',')[0]?.trim();
+        if (firstPart) {
+          uniqueCities.add(firstPart);
+        }
+      }
+    });
+  }
+  const citiesCovered = uniqueCities.size;
+
+  const activeCategoryNames = new Set<string>();
+  events.forEach(event => {
+    if (event.category) {
+      activeCategoryNames.add(event.category);
+    }
+  });
+
+  const displayCategories = allCategories.filter(cat =>
+    cat.name === 'All Categories' || activeCategoryNames.has(cat.name)
+  );
+
+  return { events, displayCategories, totalEvents, totalUsers, citiesCovered };
+}
+
+export default async function CategoriesPage() {
+  const { events, displayCategories, totalEvents, totalUsers, citiesCovered } = await getEvents();
+
   return (
     <>
       <Header />
-      <CategoriesPageContent />
+      <CategoriesPageContent initialEvents={events} initialDisplayCategories={displayCategories} initialTotalEvents={totalEvents} initialTotalUsers={totalUsers} initialCitiesCovered={citiesCovered} />
     </>
   );
 }

@@ -11,10 +11,10 @@ interface EventModalProps {
   host: User | null;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
-  categoryIconMap: { [key: string]: string }; // Changed to expect string keys
+  categoryIconMap: { [key: string]: React.ElementType }; // Added categoryIconMap prop
 }
 
-export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen, categoryIconMap }: EventModalProps) {
+export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen, categoryIconMap }: EventModalProps) { // Added categoryIconMap to props destructuring
   if (!dialogOpen || !selectedEvent) return null;
 
   const [activeTab, setActiveTab] = useState<'event-details' | 'host-details'>('event-details');
@@ -34,17 +34,9 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   }, []); // Empty dependency array ensures this effect runs only once on mount and cleans up on unmount
 
   // Helper function to get the correct icon component based on the string name
-  const getIconComponent = (name: string | undefined) => {
-    switch (name) {
-      case 'Music': return FiMusic;
-      case 'Art': return FiImage;
-      case 'Food': return FiCoffee;
-      case 'Technology': return FiCpu;
-      case 'Wellness': return FiHeart;
-      case 'Comedy': return FiSmile;
-      case 'Other': return FiStar;
-      default: return FiStar; // Default to FiStar if name is undefined or not found
-    }
+  const getIconComponent = (name: string | undefined, iconMap: { [key: string]: React.ElementType }) => { // Added iconMap parameter
+    const Icon = iconMap[name || 'Other']; // Use the provided map
+    return Icon || FiStar; // Fallback to FiStar if not found
   };
 
   return (
@@ -62,11 +54,8 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0">
               {(() => {
-                const category = selectedEvent?.category;
-                const iconName = category ? categoryIconMap[category] : undefined;
-                const otherIconName = categoryIconMap['Other'];
-
-                const IconComponent = getIconComponent(iconName || otherIconName);
+              const category = selectedEvent?.category;
+              const IconComponent = getIconComponent(category || 'Other', categoryIconMap); // Pass categoryIconMap here
 
                 return React.createElement(IconComponent as ElementType, { size: 32, className: "text-yellow-600" });
               })()}
@@ -252,8 +241,15 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 // ShareButtons Component (copied from EventCard.tsx and adapted for modal context)
 function ShareButtons({ event }: { event: Event }) {
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [eventUrl, setEventUrl] = useState(''); // State for event URL
 
-  const eventUrl = `${window.location.origin}/events/${event.id}`; // Construct full URL
+  // Use useEffect to construct the eventUrl safely on the client
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setEventUrl(`${window.location.origin}/events/${event.id}`);
+    }
+  }, [event.id]); // Re-run if event.id changes
+
   const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
 
   const handleShare = async () => {
@@ -274,19 +270,27 @@ function ShareButtons({ event }: { event: Event }) {
   };
 
   const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+    }
   };
 
   const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+    }
   };
 
   const shareOnLinkedIn = () => {
-    window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+    }
   };
 
   const shareOnWhatsApp = () => {
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+    }
   };
 
   return (

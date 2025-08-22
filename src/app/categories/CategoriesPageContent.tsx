@@ -5,31 +5,30 @@ import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../../lib/supabase';
 import { EventItem } from '../../lib/types'; // Import EventItem
 import EventCard from '../../components/EventCard';
-import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiMapPin, FiCalendar, FiDollarSign } from 'react-icons/fi'; // Added FiDollarSign
+import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi'; // Import only necessary icons
 import EventModal from '../../components/EventModal';
 import Link from 'next/link';
 
 // Define categories and their properties
 const allCategories = [
-  { name: 'All Categories', icon: FiStar, color: 'bg-gray-200 text-gray-800' },
-  { name: 'Music', icon: FiMusic, color: 'bg-purple-100 text-purple-600' },
-  { name: 'Art', icon: FiImage, color: 'bg-pink-100 text-pink-600' },
-  { name: 'Food', icon: FiCoffee, color: 'bg-orange-100 text-orange-600' },
-  { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
-  { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
-  { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
-  { name: 'Other', icon: FiSmile, color: 'bg-gray-100 text-gray-600' }, // Added 'Other' category
+  { name: 'All Categories', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
+  { name: 'Music', icon: 'FiMusic', color: 'bg-purple-100 text-purple-600' },
+  { name: 'Art', icon: 'FiImage', color: 'bg-pink-100 text-pink-600' },
+  { name: 'Food', icon: 'FiCoffee', color: 'bg-orange-100 text-orange-600' },
+  { name: 'Technology', icon: 'FiCpu', color: 'bg-blue-100 text-blue-600' },
+  { name: 'Wellness', icon: 'FiHeart', color: 'bg-green-100 text-green-600' },
+  { name: 'Comedy', icon: 'FiSmile', color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Other', icon: 'FiStar', color: 'bg-gray-100 text-gray-600' }, // Ensure 'Other' has an icon
 ];
 
-const categoryIconMap: { [key: string]: any } = {
-  'All Categories': FiStar,
-  'Music': FiMusic,
-  'Art': FiImage,
-  'Food': FiCoffee,
-  'Technology': FiCpu,
-  'Wellness': FiHeart,
-  'Comedy': FiSmile,
-  'Other': FiStar, // Ensure 'Other' has an icon
+const categoryIconMap: { [key: string]: React.ElementType } = { // Use React.ElementType for type safety
+  'FiStar': FiStar,
+  'FiMusic': FiMusic,
+  'FiImage': FiImage,
+  'FiCoffee': FiCoffee,
+  'FiCpu': FiCpu,
+  'FiHeart': FiHeart,
+  'FiSmile': FiSmile,
 };
 
 const categoryColorMap: { [key: string]: string } = {
@@ -43,87 +42,25 @@ const categoryColorMap: { [key: string]: string } = {
   'Other': 'bg-gray-100 text-gray-700', // Ensure 'Other' has a color
 };
 
-function CategoriesPageContentInner() {
+interface CategoriesPageContentInnerProps {
+  initialEvents: EventItem[];
+  initialDisplayCategories: typeof allCategories;
+  initialTotalEvents: number | null;
+  initialTotalUsers: number | null;
+  initialCitiesCovered: number;
+}
+
+function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
-  const [events, setEvents] = useState<EventItem[]>([]); // Change type to EventItem[]
-  const [displayCategories, setDisplayCategories] = useState<typeof allCategories>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<EventItem[]>(initialEvents);
+  const [displayCategories, setDisplayCategories] = useState<typeof allCategories>(initialDisplayCategories);
+  const [loading, setLoading] = useState(false);
 
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null); // Change type to EventItem
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [host, setHost] = useState<User | null>(null);
-
-  useEffect(() => {
-    const fetchAndFilterCategories = async () => {
-      try {
-        setLoading(true);
-
-        // Check if Supabase is properly configured
-        if (!isSupabaseConfigured()) {
-          console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-          setEvents([]);
-          setDisplayCategories([]);
-          return;
-        }
-
-        // 1. Fetch all events
-        const { data, error } = await supabase
-          .from(TABLES.EVENTS)
-          .select('*')
-          .order('date', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching events:', error);
-          setEvents([]);
-          setDisplayCategories([]);
-          return;
-        }
-
-        const typedData: EventItem[] = data.map((event: any) => ({
-          ...event,
-          date: event.date ? String(event.date) : '', // Ensure date is always a string
-          id: String(event.id),
-          name: event.name,
-          location: event.location || '',
-          description: event.description || '',
-          category: event.category || 'Other',
-          presale_price: event.presale_price ?? 0,
-          gate_price: event.gate_price ?? 0,
-          image_url: event.image_url || '',
-          created_at: event.created_at || '',
-          featured: event.featured || false,
-          created_by: event.created_by || '',
-        }));
-        setEvents(typedData || []); // Set all events
-
-        // 2. Determine active categories
-        const activeCategoryNames = new Set<string>();
-        data?.forEach(event => {
-          if (event.category) {
-            activeCategoryNames.add(event.category);
-          }
-        });
-
-        // 3. Filter allCategories array
-        const filteredCategories = allCategories.filter(cat =>
-          cat.name === 'All Categories' || activeCategoryNames.has(cat.name)
-        );
-
-        setDisplayCategories(filteredCategories); // Set the state for categories to display
-
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setEvents([]);
-        setDisplayCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAndFilterCategories();
-  }, []); // Fetch only once on mount
 
   // Fetch host details based on the event's creator ID
   const fetchHost = async (userId: string) => {
@@ -170,7 +107,7 @@ function CategoriesPageContentInner() {
   });
 
   const selectedCategory = displayCategories.find(cat => cat.name === category); // Use displayCategories here
-  const Icon = selectedCategory?.icon || FiStar;
+  const Icon = selectedCategory?.icon ? categoryIconMap[selectedCategory.icon] : FiStar;
 
   return (
     <div className="min-h-screen bg-white">
@@ -195,7 +132,7 @@ function CategoriesPageContentInner() {
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {displayCategories.map((cat) => { // Use displayCategories here
-              const Icon = cat.icon;
+              const Icon = cat.icon ? categoryIconMap[cat.icon] : FiStar;
               return (
                   <Link
                     key={cat.name}
@@ -255,7 +192,7 @@ function CategoriesPageContentInner() {
           )}
         </div>
       </section>
-      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
+<EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
 
       {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
@@ -276,7 +213,7 @@ function CategoriesPageContentInner() {
   );
 }
 
-export default function CategoriesPageContent() {
+export default function CategoriesPageContent({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -286,7 +223,13 @@ export default function CategoriesPageContent() {
         </div>
       </div>
     }>
-      <CategoriesPageContentInner />
+<CategoriesPageContentInner
+        initialEvents={initialEvents}
+        initialDisplayCategories={initialDisplayCategories}
+        initialTotalEvents={initialTotalEvents}
+        initialTotalUsers={initialTotalUsers}
+        initialCitiesCovered={initialCitiesCovered}
+      />
     </Suspense>
   );
 }

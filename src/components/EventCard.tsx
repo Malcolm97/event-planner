@@ -2,7 +2,7 @@ import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink }
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types'; // Import EventItem from shared types
 import Image from 'next/image'; // Import the Image component
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Import useEffect
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -154,8 +154,15 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
 // ShareButtons Component
 function ShareButtons({ event }: { event: EventItem }) {
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [eventUrl, setEventUrl] = useState(''); // State for event URL
 
-  const eventUrl = `${window.location.origin}/events/${event.id}`; // Construct full URL
+  // Use useEffect to construct the eventUrl safely on the client
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setEventUrl(`${window.location.origin}/events/${event.id}`);
+    }
+  }, [event.id]); // Re-run if event.id changes
+
   const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
 
   const handleShare = async () => {
@@ -176,19 +183,27 @@ function ShareButtons({ event }: { event: EventItem }) {
   };
 
   const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+    }
   };
 
   const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+    }
   };
 
   const shareOnLinkedIn = () => {
-    window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+    }
   };
 
   const shareOnWhatsApp = () => {
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+    }
   };
 
   return (
