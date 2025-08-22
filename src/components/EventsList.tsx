@@ -19,7 +19,13 @@ export default function EventsList() {
       setIsSyncing(false); // Reset syncing state on initial load
       try {
         // 1. Try to load from cache first
-        const cachedEvents = await getCachedEvents();
+        let cachedEvents: EventItem[] = [];
+        try {
+          cachedEvents = await getCachedEvents();
+        } catch (cacheError) {
+          console.warn('Failed to load from cache:', cacheError);
+        }
+        
         if (cachedEvents && cachedEvents.length > 0) {
           setEvents(cachedEvents);
           // If online, try to refresh from API in the background
@@ -60,7 +66,11 @@ export default function EventsList() {
         const data: EventItem[] = await response.json();
         setEvents(data);
         // Update cache with fresh data
-        await addEvents(data);
+        try {
+          await addEvents(data);
+        } catch (cacheError) {
+          console.warn('Failed to update cache:', cacheError);
+        }
         setLastSaved(new Date().toISOString()); // Update last synced timestamp
       } catch (error) {
         console.error('Error fetching events from API:', error);

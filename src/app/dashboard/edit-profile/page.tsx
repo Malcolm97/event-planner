@@ -37,7 +37,9 @@ export default function EditProfilePage() {
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    }
 
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -68,6 +70,12 @@ export default function EditProfilePage() {
       setLoading(false);
     };
     checkUser();
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      }
+    };
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {

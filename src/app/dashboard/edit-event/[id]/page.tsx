@@ -7,12 +7,13 @@ import { supabase, TABLES } from '../../../../lib/supabase';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
 import Image from 'next/image';
+import { use } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-export default function EditEventPage() { // Remove params from signature
-  const params = useParams(); // Get params using the hook
-  const id = params.id as string; // Access id, casting to string as per original type
+export default function EditEventPage() {
+  const params = useParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');

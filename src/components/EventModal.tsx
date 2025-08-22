@@ -38,11 +38,13 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [setDialogOpen]);
 
   // Helper function to get the correct icon component based on the string name
   const getIconComponent = (name: string | undefined) => { // Removed iconMap parameter
@@ -253,9 +255,11 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 function ShareButtons({ event }: { event: Event }) {
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [eventUrl, setEventUrl] = useState(''); // State for event URL
+  const [isClient, setIsClient] = useState(false);
 
   // Use useEffect to construct the eventUrl safely on the client
   useEffect(() => {
+    setIsClient(true);
     if (typeof window !== 'undefined') {
       setEventUrl(`${window.location.origin}/events/${event.id}`);
     }
@@ -264,7 +268,7 @@ function ShareButtons({ event }: { event: Event }) {
   const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
 
   const handleShare = async () => {
-    if (navigator.share) {
+    if (isClient && navigator.share) {
       try {
         await navigator.share({
           title: event.name,

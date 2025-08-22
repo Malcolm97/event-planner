@@ -134,7 +134,7 @@ export default function SignInPage() {
       } else if (isForgotPassword) {
         // Forgot password
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/dashboard/update-password`, // Redirect to a page where user can set new password
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/dashboard/update-password` : '/dashboard/update-password',
         });
 
         if (error) throw error;

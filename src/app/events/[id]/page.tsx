@@ -20,7 +20,7 @@ const categoryIconMap: { [key: string]: any } = {
 
 export default function EventDetailsPage() {
   const params = useParams();
-  const eventId = params.id as string;
+  const eventId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [host, setHost] = useState<User | null>(null);

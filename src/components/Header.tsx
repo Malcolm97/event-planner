@@ -16,9 +16,11 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false); // New state for client-side check
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setHasMounted(true); // Set to true after component mounts on client
+    setIsClient(true);
   }, []);
 
   useEffect(() => {
@@ -81,6 +83,7 @@ export default function Header() {
   // Function to format the date and time for display
   const formatLastSaved = (timestamp: string | null) => {
     if (!timestamp) return '';
+    if (!isClient) return '';
     try {
       const date = new Date(timestamp);
       return `Last saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;

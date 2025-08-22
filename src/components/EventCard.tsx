@@ -155,9 +155,11 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
 function ShareButtons({ event }: { event: EventItem }) {
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [eventUrl, setEventUrl] = useState(''); // State for event URL
+  const [isClient, setIsClient] = useState(false);
 
   // Use useEffect to construct the eventUrl safely on the client
   useEffect(() => {
+    setIsClient(true);
     if (typeof window !== 'undefined') {
       setEventUrl(`${window.location.origin}/events/${event.id}`);
     }
@@ -166,7 +168,7 @@ function ShareButtons({ event }: { event: EventItem }) {
   const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
 
   const handleShare = async () => {
-    if (navigator.share) {
+    if (isClient && navigator.share) {
       try {
         await navigator.share({
           title: event.name,

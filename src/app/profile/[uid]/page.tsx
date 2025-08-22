@@ -5,20 +5,14 @@ import { useState, useEffect } from 'react';
 import { supabase, TABLES, Event, User } from '../../../lib/supabase';
 import EventCard from '../../../components/EventCard';
 import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
+import { use } from 'react';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
 
-interface ProfileProps {
-  params: Promise<{ uid: string }>;
-}
-
-export default async function ProfilePage({ params }: ProfileProps) {
-  const { uid } = await params;
-  
-  return (
-    <ProfilePageContent uid={uid} />
-  );
+export default function ProfilePage({ params }: { params: { uid: string } }) {
+  const { uid } = params;
+  return <ProfilePageContent uid={uid} />;
 }
 
 function ProfilePageContent({ uid }: { uid: string }) {
