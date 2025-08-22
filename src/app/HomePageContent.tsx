@@ -9,8 +9,10 @@ import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import EventModal from '../components/EventModal';
+
+const EventModal = dynamic(() => import('../components/EventModal'), { ssr: false });
 
 // Define categories and their properties
 const allCategories = [
@@ -318,6 +320,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </div>
         </div>
       </section>
+      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
 
       <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
         <div className="text-center mb-12">
@@ -414,7 +417,6 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </div>
         </div>
       </footer>
-      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
     </div>
   );
 }
