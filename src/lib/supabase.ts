@@ -29,6 +29,7 @@ export interface Event {
   name: string
   category?: string
   location: string
+  venue?: string
   presale_price?: number // Added presale price
   gate_price?: number    // Added gate price
   description: string

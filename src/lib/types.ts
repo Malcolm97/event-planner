@@ -4,6 +4,7 @@ export interface EventItem {
   name: string;
   category?: string;
   location: string;
+  venue?: string;
   presale_price?: number;
   gate_price?: number;
   description: string;

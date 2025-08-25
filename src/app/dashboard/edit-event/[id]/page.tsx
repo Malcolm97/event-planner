@@ -18,6 +18,7 @@ export default function EditEventPage() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
+  const [venue, setVenue] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby');
   const [customLocation, setCustomLocation] = useState('');
   const [presale_price, setPresale_price] = useState<number>(0); // Changed from price
@@ -68,6 +69,7 @@ export default function EditEventPage() {
           setGate_price(eventData.gate_price || 0); // Added gate_price
           setCategory(eventData.category || '');
           setImageUrl(eventData.image_url || null);
+          setVenue(eventData.venue || '');
 
           if (popularPngCities.includes(eventData.location)) {
             setSelectedLocationType(eventData.location);
@@ -148,6 +150,7 @@ export default function EditEventPage() {
           description,
           date,
           location: finalLocation,
+          venue,
           presale_price, // Changed from price
           gate_price,    // Added gate_price
           category,
@@ -316,6 +319,18 @@ export default function EditEventPage() {
                       required
                     />
                   )}
+                </div>
+
+                <div>
+                  <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">Venue</label>
+                  <input
+                    type="text"
+                    id="venue"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    placeholder="Enter venue name"
+                    value={venue}
+                    onChange={(e) => setVenue(e.target.value)}
+                  />
                 </div>
               </div>
             </div>

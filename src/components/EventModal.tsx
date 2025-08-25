@@ -1,7 +1,7 @@
 'use client';
 import React, { ElementType, useState, useRef, useEffect } from 'react';
 
-import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { User, Event } from '../lib/supabase';
 import Image from 'next/image';
@@ -141,9 +141,17 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   <div className="grid grid-cols-1">
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
                       <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-gray-800">Location</h4>
-                        <p className="text-gray-600">{selectedEvent?.location || 'Not specified'}</p>
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-800">Location</h4>
+                          <p className="text-gray-600">{selectedEvent?.location || 'Not specified'}</p>
+                        </div>
+                        {selectedEvent?.venue && (
+                          <div>
+                            <h4 className="font-semibold text-gray-800">Venue</h4>
+                            <p className="text-gray-600">{selectedEvent.venue}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -159,10 +167,20 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                     )}
                   </div>
 
+                  {/* About this Event Section */}
                   {selectedEvent?.description && (
                     <div className="mt-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">About this event</h3>
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedEvent.description}</p>
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+                        <div className="flex-shrink-0 mt-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2">About this event</h4>
+                          <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedEvent.description}</p>
+                        </div>
+                      </div>
                     </div>
                   )}
 

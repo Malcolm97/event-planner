@@ -1,4 +1,4 @@
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types'; // Import EventItem from shared types
 import Image from 'next/image'; // Import the Image component
@@ -98,51 +98,57 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
       {/* Content Area */}
       <div className="p-5 flex flex-col gap-3">
         {/* Event Title */}
-        <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-2 group-hover:text-yellow-600 transition-colors duration-200">
+        <h3 className="text-xl font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
           {event.name}
         </h3>
 
         {/* Location and Date */}
-        <div className="flex flex-col gap-2 text-sm text-gray-600">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
             <FiMapPin size={14} className="text-gray-400 flex-shrink-0" />
-            <span className="truncate">{event.location}</span>
+            <span className="font-medium text-gray-700">{event.location}</span>
           </div>
-          
-          {event.date && (
-            <>
-              <div className="flex items-center gap-2">
-                <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700">{new Date(event.date).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiClock size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-              </div>
-            </>
+          {event.venue && (
+            <div className="flex items-center gap-2">
+              <FiHome size={14} className="text-gray-400 flex-shrink-0" />
+              <span className="font-medium text-gray-700">{event.venue}</span>
+            </div>
           )}
-          
-          {/* Sharable Website Link */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <FiLink size={14} className="text-gray-400 flex-shrink-0" />
-            <button 
-              className="font-medium text-blue-600 hover:underline truncate text-left"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click when clicking button
-                if (typeof onClick === 'function') {
-                  onClick(); // Trigger the same modal opening logic as the card
-                }
-              }}
-            >
-              View Event Details
-            </button>
-          </div>
         </div>
 
-        {/* Social Share Feature */}
-        <div className="mt-auto pt-3 flex justify-end">
-          <ShareButtons event={event} />
+        {event.date && (
+          <>
+            <div className="flex items-center gap-2">
+              <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
+              <span className="font-medium text-gray-700">{new Date(event.date).toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FiClock size={14} className="text-gray-400 flex-shrink-0" />
+              <span className="font-medium text-gray-700">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+            </div>
+          </>
+        )}
+        
+        {/* Sharable Website Link */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <FiLink size={14} className="text-gray-400 flex-shrink-0" />
+          <button 
+            className="font-medium text-blue-600 hover:underline truncate text-left"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click when clicking button
+              if (typeof onClick === 'function') {
+                onClick(); // Trigger the same modal opening logic as the card
+              }
+            }}
+          >
+            View Event Details
+          </button>
         </div>
+      </div>
+
+      {/* Social Share Feature */}
+      <div className="mt-auto pt-3 flex justify-end">
+        <ShareButtons event={event} />
       </div>
 
       {/* Hover Overlay Effect */}

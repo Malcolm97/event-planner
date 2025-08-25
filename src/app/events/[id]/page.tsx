@@ -37,7 +37,7 @@ export default function EventDetailsPage() {
         setLoading(true);
         const { data, error } = await supabase
           .from(TABLES.EVENTS)
-          .select('*')
+          .select('id, name, date, location, venue, category, presale_price, gate_price, image_url, featured, created_by, description, created_at')
           .eq('id', eventId)
           .single();
 

@@ -5,6 +5,9 @@ export default function CompactEventCard({ event }: { event: Event }) {
     <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
       <div className="text-sm font-medium text-gray-900 mb-1">{event.name}</div>
       <div className="text-xs text-gray-600 mb-1">📍 {event.location}</div>
+      {event.venue && (
+        <div className="text-xs text-gray-600 mb-1">🏠 {event.venue}</div>
+      )}
       {event.date && (
         <div className="text-xs text-gray-500">📅 {new Date(event.date).toLocaleDateString()}</div>
       )}

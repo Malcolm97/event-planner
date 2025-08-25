@@ -65,6 +65,7 @@ export default function CreateEventPage() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
+  const [venue, setVenue] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby'); // Default to a popular city
   const [customLocation, setCustomLocation] = useState(''); // State for custom location input
   const [presale_price, setPresale_price] = useState<number>(0);
@@ -156,6 +157,7 @@ export default function CreateEventPage() {
               description,
               date,
               location: finalLocation, // Use the selected or custom location
+              venue, // Add venue field
               presale_price, // Use the new state variable
               gate_price,    // Use the new state variable
               category,
