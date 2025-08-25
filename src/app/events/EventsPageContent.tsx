@@ -2,11 +2,12 @@
 
 import Header from '../../components/Header';
 import { useState, useEffect } from 'react';
-import { supabase, TABLES, Event, User } from '../../lib/supabase';
+import { supabase, TABLES, User } from '../../lib/supabase';
 import EventCard from '../../components/EventCard';
 import { FiMapPin, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiStar } from 'react-icons/fi';
 import EventModal from '../../components/EventModal';
 import { EventItem } from '@/lib/types';
+import { useEvents } from '../../hooks/useOfflineFirstData';
 
 // Category and Icon mapping
 const categoryIconMap: { [key: string]: any } = {
@@ -34,27 +35,8 @@ interface EventsPageContentProps {
 }
 
 export default function EventsPageContent({ initialEvents, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: EventsPageContentProps) {
-  const [events, setEvents] = useState<EventItem[]>(initialEvents);
-  const [loading, setLoading] = useState(false);
+  const { data: events = [], isLoading: loading, error } = useEvents();
   const [selectedArea, setSelectedArea] = useState('All Areas');
-
-  // Load events from IndexedDB when offline
-  useEffect(() => {
-    const loadOfflineEvents = async () => {
-      if (!navigator.onLine && !events.length) {
-        try {
-          const { getItems } = await import('../../lib/indexedDB');
-          const offlineEvents = await getItems('events');
-          if (offlineEvents.length > 0) {
-            setEvents(offlineEvents as EventItem[]);
-          }
-        } catch (error) {
-          console.error('Error loading offline events:', error);
-        }
-      }
-    };
-    loadOfflineEvents();
-  }, [events.length]);
 
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);

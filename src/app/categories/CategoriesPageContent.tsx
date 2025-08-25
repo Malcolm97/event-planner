@@ -2,10 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { supabase, TABLES, Event, User, isSupabaseConfigured } from '../../lib/supabase';
-import { EventItem } from '../../lib/types'; // Import EventItem
+import { supabase, TABLES, User } from '../../lib/supabase';
+import { EventItem } from '../../lib/types';
+import { useEvents } from '../../hooks/useOfflineFirstData';
 import EventCard from '../../components/EventCard';
-import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi'; // Import only necessary icons
+import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import EventModal from '../../components/EventModal';
 import Link from 'next/link';
 
@@ -72,13 +73,13 @@ const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
 
 function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   const searchParams = useSearchParams();
-  const category = searchParams.get('category');
-  const [events, setEvents] = useState<EventItem[]>(initialEvents);
-  const [displayCategories, setDisplayCategories] = useState<typeof allCategories>(initialDisplayCategories);
-  const [loading, setLoading] = useState(false);
+  const queryCategory = searchParams.get('category');
+  const { data: events = [], isLoading: loading } = useEvents(queryCategory || undefined);
+  const [displayCategories] = useState<typeof allCategories>(initialDisplayCategories);
+  const now = new Date();
 
-  // Use offline events hook
-  useOfflineEvents(setEvents);
+  const selectedCategoryInfo = displayCategories.find(cat => cat.name === queryCategory);
+  const Icon = selectedCategoryInfo?.icon ? categoryIconMap[selectedCategoryInfo.icon] : FiStar;
 
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -117,20 +118,15 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
     }
   }, [selectedEvent]);
 
-
   const filteredEvents = events.filter(event => {
-    if (!category || category === 'All Categories') return true;
-    return event.category === category;
+    if (!queryCategory || queryCategory === 'All Categories') return true;
+    return event.category === queryCategory;
   });
 
-  const now = new Date();
   const upcomingEvents = filteredEvents.filter(event => {
     if (!event.date) return false;
     return new Date(event.date) >= now;
   });
-
-  const selectedCategory = displayCategories.find(cat => cat.name === category); // Use displayCategories here
-  const Icon = selectedCategory?.icon ? categoryIconMap[selectedCategory.icon] : FiStar;
 
   return (
     <div className="min-h-screen bg-white">
@@ -138,11 +134,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-5xl font-extrabold text-white mb-6 tracking-tight">
-            {category ? `${category} Events` : 'All Categories'}
+            {queryCategory ? `${queryCategory} Events` : 'All Categories'}
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            {category 
-              ? `Discover amazing ${category.toLowerCase()} events happening near you.`
+            {queryCategory 
+              ? `Discover amazing ${queryCategory.toLowerCase()} events happening near you.`
               : 'Explore events by category and find something that interests you.'
             }
           </p>
@@ -154,16 +150,16 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {displayCategories.map((cat) => { // Use displayCategories here
-              const Icon = cat.icon ? categoryIconMap[cat.icon] : FiStar;
+            {displayCategories.map((cat) => {
+              const CategoryIcon = categoryIconMap[cat.icon];
               return (
                   <Link
                     key={cat.name}
                     href={`/categories?category=${encodeURIComponent(cat.name)}`}
-                    className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[140px] ${cat.color} ${category === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
+                    className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[140px] ${cat.color} ${queryCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
                   >
                     <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white border border-yellow-400">
-                      <Icon size={24} />
+                      <CategoryIcon size={24} />
                     </span>
                     <span className="text-sm text-center">{cat.name}</span>
                   </Link>
@@ -178,11 +174,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {category ? `${category} Events` : 'All Events'}
+              {queryCategory ? `${queryCategory} Events` : 'All Events'}
             </h2>
             <p className="text-gray-600 text-lg">
-              {category 
-                ? `Showing ${upcomingEvents.length} upcoming ${category.toLowerCase()} events`
+              {queryCategory 
+                ? `Showing ${upcomingEvents.length} upcoming ${queryCategory.toLowerCase()} events`
                 : `Showing ${upcomingEvents.length} upcoming events across all categories`
               }
             </p>
@@ -203,11 +199,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📅</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {category ? `No ${category} events found` : 'No events found'}
+                {queryCategory ? `No ${queryCategory} events found` : 'No events found'}
               </h3>
               <p className="text-gray-500">
-                {category 
-                  ? `Check back later for ${category.toLowerCase()} events.`
+                {queryCategory 
+                  ? `Check back later for ${queryCategory.toLowerCase()} events.`
                   : 'Check back later for new events.'
                 }
               </p>

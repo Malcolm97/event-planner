@@ -1,19 +1,33 @@
-const CACHE_NAME = 'event-planner-cache-v1';
+const CACHE_NAME = 'event-planner-cache-v2';
 const urlsToCache = [
+  // Routes
   '/',
+  '/events',
+  '/categories',
+  '/about',
+  
+  // HTML fallbacks
   '/index.html',
   '/offline.html',
+  
+  // Styles and Assets
   '/globals.css',
+  '/_next/static/css/**/*',
+  '/_next/static/chunks/**/*',
+  '/_next/static/media/**/*',
+  
+  // Images
   '/file.svg',
   '/globe.svg',
   '/next.svg',
   '/vercel.svg',
   '/window.svg',
-  '/events',
-  '/categories',
-  '/about',
-  '/_next/static/**/*',  // Cache all static assets
-  '/api/events',         // Cache the events API response
+  
+  // API responses
+  '/api/events',
+  
+  // Navigation preload
+  '/_next/data/**/*'
 ];
 
 self.addEventListener('install', (event) => {
@@ -27,27 +41,58 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Check if the request is for an API route
-  const isApiRoute = event.request.url.includes('/api/events');
-  const isNextJsChunk = event.request.url.includes('/_next/static/chunks/');
+  const { request } = event;
+  const url = new URL(request.url);
 
-  if (isApiRoute) {
-    // For API routes, try network first, then cache
+  // Different strategies based on request type
+  if (request.mode === 'navigate') {
+    // Navigation requests (routes like /events, /categories, etc.)
     event.respondWith(
-      fetch(event.request)
-        .then(async (response) => {
-          // Cache the successful API response
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, response.clone());
-          return response;
-        })
+      fetch(request)
         .catch(() => {
-          // If network fails, try to serve from cache
-          return caches.match(event.request);
+          return caches.match(request)
+            .then(response => {
+              if (response) return response; // Return cached version
+              return caches.match('/offline.html'); // Fallback for navigation
+            });
         })
     );
-  } else if (isNextJsChunk) {
-    // For Next.js chunks, use a network-first strategy with cache fallback
+  } else if (
+    request.destination === 'style' ||
+    request.destination === 'script' ||
+    request.destination === 'image' ||
+    url.pathname.startsWith('/_next/static/')
+  ) {
+    // Static assets (CSS, JS, images)
+    event.respondWith(
+      caches.match(request)
+        .then(response => {
+          return response || fetch(request)
+            .then(async response => {
+              const cache = await caches.open(CACHE_NAME);
+              cache.put(request, response.clone());
+              return response;
+            });
+        })
+    );
+  } else if (url.pathname.startsWith('/api/')) {
+    // API requests
+    event.respondWith(
+      fetch(request)
+        .then(async response => {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(request, response.clone());
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+  } else {
+    // Everything else - network first, falling back to cache
+    event.respondWith(
+      fetch(request)
+        .catch(() => caches.match(request))
+    );
+  }
     event.respondWith(
       fetch(event.request)
         .then(async (response) => {
