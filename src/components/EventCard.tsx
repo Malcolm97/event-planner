@@ -96,11 +96,12 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
       </div>
 
       {/* Content Area */}
-      <div className="p-5 flex flex-col gap-3">
-        {/* Event Title */}
-        <h3 className="text-xl font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
-          {event.name}
-        </h3>
+      <div className="flex flex-col h-full">
+        <div className="p-5 flex flex-col gap-3">
+          {/* Event Title */}
+          <h3 className="text-xl font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
+            {event.name}
+          </h3>
 
         {/* Location and Date */}
         <div className="space-y-1">
@@ -147,7 +148,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
       </div>
 
       {/* Social Share Feature */}
-      <div className="mt-auto pt-3 flex justify-end">
+      <div className="w-full mt-auto px-5 py-4 flex justify-end border-t border-gray-100">
         <ShareButtons event={event} />
       </div>
 
@@ -221,24 +222,24 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation(); // Prevent card click
           handleShare();
         }}
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+        className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 hover:shadow-sm"
         aria-label="Share Event"
       >
         <FiShare2 size={18} />
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-lg p-2 flex gap-2 z-20">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-600" aria-label="Share on Facebook">
+        <div className="absolute bottom-full right-0 mb-3 w-auto bg-white rounded-xl shadow-lg p-3 flex gap-3 z-20 border border-gray-100">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2.5 rounded-full hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
             <FaFacebook size={20} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-400" aria-label="Share on Twitter">
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2.5 rounded-full hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
             <FaTwitter size={20} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-700" aria-label="Share on LinkedIn">
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2.5 rounded-full hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
             <FaLinkedin size={20} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-full hover:bg-green-100 text-green-500" aria-label="Share on WhatsApp">
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2.5 rounded-full hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
             <FaWhatsapp size={20} />
           </button>
         </div>
