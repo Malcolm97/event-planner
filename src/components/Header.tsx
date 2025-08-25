@@ -124,6 +124,15 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => router.push('/create-event')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Event
+                </button>
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
@@ -144,15 +153,26 @@ export default function Header() {
                 </button>
               </div>
               ) : (
-                // Conditionally render Sign In button only after client-side mount
+                // Conditionally render Sign In and Create Event buttons only after client-side mount
                 hasMounted && isOnline && (
-                  <Link
-                    href="/signin"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
-                  >
-                    <FiUser size={16} />
-                    Sign In
-                  </Link>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => router.push('/signin')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Create Event
+                    </button>
+                    <Link
+                      href="/signin"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                    >
+                      <FiUser size={16} />
+                      Sign In
+                    </Link>
+                  </div>
                 )
               )}
             {/* Display last saved timestamp */}
@@ -197,6 +217,22 @@ export default function Header() {
               
               {user ? (
                 <>
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        router.push('/signin');
+                      } else {
+                        router.push('/create-event');
+                      }
+                      setIsMenuOpen(false); // Close mobile menu after click
+                    }}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 mx-4 text-white font-semibold bg-gradient-to-r from-yellow-400 via-red-500 to-red-600 hover:from-yellow-500 hover:via-red-600 hover:to-red-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 rounded-lg w-full"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Event
+                  </button>
                   <button
                     onClick={() => { router.push('/dashboard'); setIsMenuOpen(false); }}
                     className="text-left text-gray-700 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"

@@ -12,8 +12,22 @@ import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const { isOnline } = useNetworkStatus(); // Get the network status
   const [user, setUser] = useState<any>(null);
-  const [loadingPage, setLoadingPage] = useState(true); // New state for page loading
+  const [loadingPage, setLoadingPage] = useState<boolean>(true);
+  const [name, setName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [date, setDate] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [venue, setVenue] = useState<string>('');
+  const [selectedLocationType, setSelectedLocationType] = useState<string>('Port Moresby');
+  const [customLocation, setCustomLocation] = useState<string>('');
+  const [presale_price, setPresale_price] = useState<number>(0);
+  const [gate_price, setGate_price] = useState<number>(0);
+  const [category, setCategory] = useState<string>('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -27,8 +41,6 @@ export default function CreateEventPage() {
     };
     checkUser();
   }, [router]);
-
-  const { isOnline } = useNetworkStatus(); // Get the network status
 
   // If offline, show a message and a back button
   if (!isOnline) {
@@ -60,20 +72,6 @@ export default function CreateEventPage() {
       </div>
     );
   }
-
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
-  const [location, setLocation] = useState('');
-  const [venue, setVenue] = useState('');
-  const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby'); // Default to a popular city
-  const [customLocation, setCustomLocation] = useState(''); // State for custom location input
-  const [presale_price, setPresale_price] = useState<number>(0);
-  const [gate_price, setGate_price] = useState<number>(0);
-  const [category, setCategory] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null); // New state for image file
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const popularPngCities = [
     "Port Moresby",
