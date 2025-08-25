@@ -272,10 +272,10 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       <Header />
       <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center gap-6">
-          <h1 className="text-5xl font-extrabold text-gray-900 mb-2 tracking-tight">
+          <h1 className="text-5xl font-extrabold text-white mb-2 tracking-tight">
             Local Events Near You
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl">
+          <p className="text-lg text-gray-200 max-w-2xl">
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>

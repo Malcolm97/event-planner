@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
           <p className="text-gray-500 mt-6 text-lg">Loading dashboard...</p>
@@ -86,7 +86,7 @@ export default function DashboardPage() {
   const expiredEvents = userEvents.filter(event => new Date(event.date) < new Date());
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
       <Header />
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
