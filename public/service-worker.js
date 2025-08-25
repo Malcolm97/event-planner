@@ -87,43 +87,24 @@ self.addEventListener('fetch', (event) => {
         .catch(() => caches.match(request))
     );
   } else {
-    // Everything else - network first, falling back to cache
-    event.respondWith(
-      fetch(request)
-        .catch(() => caches.match(request))
-    );
-  }
-    event.respondWith(
-      fetch(event.request)
-        .then(async (response) => {
-          // Cache the successful network response
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, response.clone());
-          return response;
-        })
-        .catch(() => {
-          // If network fails, try to serve from cache
-          return caches.match(event.request);
-        })
-    );
-  } else {
     // For other assets, use a stale-while-revalidate strategy
     event.respondWith(
-      caches.match(event.request).then((response) => {
-        // Return cached response if found, otherwise fetch from network
-        return response || fetch(event.request).then((fetchResponse) => {
+      caches.match(request).then((response) => {
+        const networkFetch = fetch(request).then(async (fetchResponse) => {
           // Cache the new response
-          return caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, fetchResponse.clone());
-            return fetchResponse;
-          });
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(request, fetchResponse.clone());
+          return fetchResponse;
         }).catch(() => {
           // If both cache and network fail, serve offline page for navigation requests
-          if (event.request.mode === 'navigate') {
+          if (request.mode === 'navigate') {
             return caches.match('/offline.html');
           }
           return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         });
+
+        // Return cached response if found, otherwise wait for network
+        return response || networkFetch;
       })
     );
   }
