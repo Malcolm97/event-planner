@@ -3,11 +3,12 @@ import React, { ElementType, useState, useRef, useEffect } from 'react';
 
 import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
-import { User, Event } from '../lib/supabase';
+import { User } from '../lib/supabase';
+import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 
 interface EventModalProps {
-  selectedEvent: Event | null;
+  selectedEvent: EventItem | null;
   host: User | null;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
@@ -119,148 +120,149 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12"> {/* Adjusted gap for responsiveness */}
-            {/* Left Column: Event Image */}
-            {selectedEvent?.image_url && (
-              <div className="sm:sticky sm:top-4">
-                <Image
-                  src={selectedEvent.image_url}
-                  alt={selectedEvent.name ? `${selectedEvent.name} image` : 'Event Image'}
-                  width={700}
-                  height={400}
-                  className="w-48 h-48 object-cover rounded-lg"
-                />
-              </div>
-            )}
-
-            {/* Right Column: Event Details and Host Information */}
-            <div className="flex flex-col">
-              {activeTab === 'event-details' && (
-                <>
-                  {/* Location and Date/Time */}
-                  <div className="grid grid-cols-1">
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                      <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-800">Location</h4>
-                          <p className="text-gray-600">{selectedEvent?.location || 'Not specified'}</p>
-                        </div>
-                        {selectedEvent?.venue && (
-                          <div>
-                            <h4 className="font-semibold text-gray-800">Venue</h4>
-                            <p className="text-gray-600">{selectedEvent.venue}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {selectedEvent?.date && (
-                      <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                        <FiCalendar size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-semibold text-gray-800">Date & Time</h4>
-                          <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                          <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* About this Event Section */}
-                  {selectedEvent?.description && (
-                    <div className="mt-6">
-                      <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                        <div className="flex-shrink-0 mt-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-800 mb-2">About this event</h4>
-                          <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedEvent.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Social Share Feature */}
-                  <div className="mt-6 pt-3 border-t border-gray-200 flex justify-end">
-                    <ShareButtons event={selectedEvent} />
-                  </div>
-                </>
+          <div className="space-y-6">
+            {/* Event Image and About Section Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
+              {/* Left Column: Event Image */}
+              {selectedEvent?.image_url && (
+                <div className="sm:sticky sm:top-4">
+                  <Image
+                    src={selectedEvent.image_url}
+                    alt={selectedEvent.name ? `${selectedEvent.name} image` : 'Event Image'}
+                    width={700}
+                    height={400}
+                    className="w-full h-64 md:h-48 object-cover rounded-lg"
+                  />
+                </div>
               )}
 
-              {activeTab === 'host-details' && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Event Host</h3>
-                  {host ? (
-                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                          {host?.photo_url ? (
-                            <Image src={host.photo_url} alt={host.name || 'Host'} width={64} height={64} className="w-full h-full object-cover" />
-                          ) : (
-                            <FiUser size={32} className="text-gray-500" />
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          {host?.name && (
-                            <div className="flex items-center gap-2">
-                              <FiUser size={16} className="text-gray-500" />
-                              <span className="font-bold text-lg text-gray-900">{host.name}</span>
-                            </div>
-                          )}
-                          {host?.company && (
-                            <div className="flex items-center gap-2">
-                              <FiBriefcase size={16} className="text-gray-500" />
-                              <span className="text-gray-700">{host.company}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {host?.about && (
-                        <div className="mb-4">
-                          <p className="text-gray-600 text-sm">{host.about}</p>
-                        </div>
-                      )}
-                      <div className="flex flex-col sm:flex-row items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                        {host?.email ? (
-                          <a href={`mailto:${host.email}`} className="flex items-center gap-2 text-blue-600 hover:underline rounded-md p-2 hover:bg-blue-100 hover:text-blue-800">
-                            <FiMail size={16} />
-                            <span>Email</span>
-                          </a>
-                        ) : (
-                          <div className="flex items-center gap-2 text-red-600 font-semibold">
-                            <FiMail size={16} />
-                            <span>Email not available</span>
-                          </div>
-                        )}
-                        {host?.phone ? (
-                          <a href={`tel:${host.phone}`} className="flex items-center gap-2 text-blue-600 hover:underline rounded-md p-2 hover:bg-blue-100 hover:text-blue-800">
-                            <FiPhone size={16} />
-                            <span>Call</span>
-                          </a>
-                        ) : (
-                          <div className="flex items-center gap-2 text-red-600 font-semibold">
-                            <FiPhone size={16} />
-                            <span>Phone not available</span>
-                          </div>
-                        )}
-                      </div>
+              {/* Right Column: About this Event Section (full width when no image) */}
+              {selectedEvent?.description && (
+                <div className={`${selectedEvent?.image_url ? '' : 'md:col-span-2'}`}>
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 h-full">
+                    <div className="flex-shrink-0 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
-                  ) : (
-                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-center">
-                      {selectedEvent?.created_by ? (
-                        <p>Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
-                      ) : (
-                        <p>Host details are not available for this event.</p>
-                      )}
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-800 mb-3 text-lg">About this event</h4>
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-sm md:text-base">{selectedEvent.description}</p>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* Event Details Section */}
+            {activeTab === 'event-details' && (
+              <div className="space-y-4">
+                {/* Location and Date/Time */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50">
+                    <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Location</h4>
+                        <p className="text-gray-600">{selectedEvent?.location || 'Not specified'}</p>
+                      </div>
+                      {selectedEvent?.venue && (
+                        <div>
+                          <h4 className="font-semibold text-gray-800">Venue</h4>
+                          <p className="text-gray-600">{selectedEvent.venue}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedEvent?.date && (
+                    <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50">
+                      <FiCalendar size={20} className="text-gray-500 mt-1 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Date & Time</h4>
+                        <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Social Share Feature */}
+                <div className="pt-4 border-t border-gray-200 flex justify-end">
+                  <ShareButtons event={selectedEvent} />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'host-details' && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Event Host</h3>
+                {host ? (
+                  <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                        {host?.photo_url ? (
+                          <Image src={host.photo_url} alt={host.name || 'Host'} width={64} height={64} className="w-full h-full object-cover" />
+                        ) : (
+                          <FiUser size={32} className="text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        {host?.name && (
+                          <div className="flex items-center gap-2">
+                            <FiUser size={16} className="text-gray-500" />
+                            <span className="font-bold text-lg text-gray-900">{host.name}</span>
+                          </div>
+                        )}
+                        {host?.company && (
+                          <div className="flex items-center gap-2">
+                            <FiBriefcase size={16} className="text-gray-500" />
+                            <span className="text-gray-700">{host.company}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {host?.about && (
+                      <div className="mb-4">
+                        <p className="text-gray-600 text-sm">{host.about}</p>
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                      {host?.email ? (
+                        <a href={`mailto:${host.email}`} className="flex items-center gap-2 text-blue-600 hover:underline rounded-md p-2 hover:bg-blue-100 hover:text-blue-800">
+                          <FiMail size={16} />
+                          <span>Email</span>
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 text-red-600 font-semibold">
+                          <FiMail size={16} />
+                          <span>Email not available</span>
+                        </div>
+                      )}
+                      {host?.phone ? (
+                        <a href={`tel:${host.phone}`} className="flex items-center gap-2 text-blue-600 hover:underline rounded-md p-2 hover:bg-blue-100 hover:text-blue-800">
+                          <FiPhone size={16} />
+                          <span>Call</span>
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 text-red-600 font-semibold">
+                          <FiPhone size={16} />
+                          <span>Phone not available</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-center">
+                    {selectedEvent?.created_by ? (
+                      <p>Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
+                    ) : (
+                      <p>Host details are not available for this event.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -269,7 +271,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 }
 
 // ShareButtons Component (copied from EventCard.tsx and adapted for modal context)
-function ShareButtons({ event }: { event: Event }) {
+function ShareButtons({ event }: { event: EventItem }) {
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [eventUrl, setEventUrl] = useState(''); // State for event URL
   const [isClient, setIsClient] = useState(false);
