@@ -51,10 +51,10 @@ export default function AboutPage() {
       {/* Hero Section - Same as homepage */}
       <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
+          <h1 className="text-5xl font-extrabold text-white mb-6 tracking-tight">
             Bringing Communities Together
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+          <p className="text-xl text-gray-200 max-w-3xl mx-auto mb-8 leading-relaxed">
             PNG Events is more than just an event platform – we're a community-driven initiative 
             dedicated to connecting people across Papua New Guinea through meaningful experiences, 
             cultural celebrations, and shared passions.
@@ -81,88 +81,16 @@ export default function AboutPage() {
               and share their passions.
             </p>
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              From intimate workshops in Port Moresby to large festivals in Lae, we're building a platform that 
-              celebrates the rich cultural diversity of Papua New Guinea while fostering new connections and experiences.
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <FiHeart className="text-yellow-600" size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Built with Love</h3>
-                <p className="text-gray-600">Every feature designed with our community in mind</p>
-              </div>
-            </div>
-          </div>
-          <div className="relative">
-            <Image 
-              src="https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800" 
-              alt="Community gathering"
-              className="rounded-2xl shadow-xl w-full h-96 object-cover"
-              fill={true}
-              style={{objectFit: "cover"}}
-            />
-            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-              <div className="flex items-center gap-3">
-                <FiUsers className="text-yellow-600" size={24} />
-                <div>
-                  <div className="font-bold text-gray-900">Community First</div>
-                  <div className="text-sm text-gray-600">People over profit</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose PNG Events?</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We've built features that make discovering and creating events as easy as possible, 
-              while keeping the focus on building real connections.
+              At PNG Events, we're committed to removing the barriers to event participation and creation. 
+              We strive to empower individuals and organizations to share their events with the world, 
+              fostering a more connected and engaged society.
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="flex gap-4 p-6 rounded-xl bg-white hover:bg-yellow-50 transition border border-gray-200">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="text-yellow-600" size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-r from-yellow-400 to-red-600">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Impact</h2>
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Numbers that show how we're bringing communities together across Papua New Guinea.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 gap-8">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="text-center">
-                  <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon className="text-gray-900" size={28} />
-                  </div>
+                <div key={index} className="flex flex-col items-center text-center">
                   <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
                   <div className="text-gray-700">{stat.label}</div>
                 </div>
@@ -199,6 +127,33 @@ export default function AboutPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Our Impact Section */}
+      <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-r from-yellow-400 to-red-600">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">Our Impact</h2>
+            <p className="text-lg text-gray-200 max-w-2xl mx-auto">
+              Numbers that show how we're bringing communities together across Papua New Guinea.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div key={index} className="text-center">
+                  <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Icon className="text-white" size={28} />
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-2">{stat.number}</div>
+                  <div className="text-gray-200">{stat.label}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

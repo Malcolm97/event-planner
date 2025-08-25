@@ -114,10 +114,10 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       {/* Hero Section */}
       <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
+          <h1 className="text-5xl font-extrabold text-white mb-6 tracking-tight">
             {category ? `${category} Events` : 'All Categories'}
           </h1>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
             {category 
               ? `Discover amazing ${category.toLowerCase()} events happening near you.`
               : 'Explore events by category and find something that interests you.'
