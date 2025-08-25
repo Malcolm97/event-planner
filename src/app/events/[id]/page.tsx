@@ -133,7 +133,6 @@ export default function EventDetailsPage() {
           host={host} 
           dialogOpen={true} // Always open when this page is loaded
           setDialogOpen={setDialogOpen} 
-          categoryIconMap={categoryIconMap} 
         />
       )}
 

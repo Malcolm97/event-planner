@@ -11,7 +11,6 @@ interface EventModalProps {
   host: User | null;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
-  categoryIconMap: { [key: string]: string }; // Changed to expect string names
 }
 
 // Local map to reconstruct icon components
@@ -25,7 +24,7 @@ const localCategoryIconMap: { [key: string]: React.ElementType } = {
   'Other': FiStar,
 };
 
-export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen, categoryIconMap }: EventModalProps) {
+export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen }: EventModalProps) {
   if (!dialogOpen || !selectedEvent) return null;
 
   const [activeTab, setActiveTab] = useState<'event-details' | 'host-details'>('event-details');

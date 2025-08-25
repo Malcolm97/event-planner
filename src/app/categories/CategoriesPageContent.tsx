@@ -192,7 +192,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
           )}
         </div>
       </section>
-<EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
+<EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
       {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">

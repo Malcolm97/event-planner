@@ -256,7 +256,7 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
           </div>
         </div>
       </footer>
-<EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} categoryIconMap={categoryIconMap} />
+      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
     </div>
   );
 }
