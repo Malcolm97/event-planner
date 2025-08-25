@@ -308,15 +308,15 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </div>
           <div className="flex gap-8 mt-6 text-center justify-center">
             <div>
-              <div className="text-2xl font-bold text-gray-200">{totalEvents !== null ? totalEvents : '... ... ...'}</div>
+              <div className="text-2xl font-bold text-gray-200">{totalEvents !== null ? totalEvents : '...'}</div>
               <div className="text-sm text-gray-400">Total Events</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-200">{totalUsers !== null ? totalUsers : '... ... ...'}</div>
+              <div className="text-2xl font-bold text-gray-200">{totalUsers !== null ? totalUsers : '...'}</div>
               <div className="text-sm text-gray-400">Total Users</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-200">{citiesCoveredCount !== null ? citiesCoveredCount : '... ... ...'}</div>
+              <div className="text-2xl font-bold text-gray-200">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
               <div className="text-sm text-gray-400">Cities Covered</div>
             </div>
           </div>
@@ -335,7 +335,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         {loading ? (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-            <p className="text-gray-500 mt-6 text-lg">Loading events... ... ...</p>
+            <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
           </div>
         ) : (
           <>

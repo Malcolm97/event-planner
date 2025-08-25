@@ -88,7 +88,7 @@ export default function UserProfile({ onError }: UserProfileProps) {
   };
 
   if (loading && !userData) {
-    return <p className="text-gray-500 text-sm text-center">Loading user data... ... ...</p>;
+    return <p className="text-gray-500 text-sm text-center">Loading user data...</p>;
   }
 
   if (error) {

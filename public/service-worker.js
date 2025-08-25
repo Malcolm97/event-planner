@@ -9,9 +9,11 @@ const urlsToCache = [
   '/next.svg',
   '/vercel.svg',
   '/window.svg',
-  // Add other critical assets here, e.g., images, fonts, JS bundles
-  // '/_next/static/chunks/main.js', // Example for Next.js static assets
-  // '/_next/static/css/style.css',
+  '/events',
+  '/categories',
+  '/about',
+  '/_next/static/**/*',  // Cache all static assets
+  '/api/events',         // Cache the events API response
 ];
 
 self.addEventListener('install', (event) => {

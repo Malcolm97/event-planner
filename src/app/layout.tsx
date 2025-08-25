@@ -1,8 +1,26 @@
 import './globals.css';
-import ClientOnlineBadge from '@/components/ClientOnlineBadge';
-import { NetworkStatusProvider } from '@/context/NetworkStatusContext';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
+import dynamic from 'next/dynamic';
+
+const NetworkStatusProvider = dynamic(
+  () => import('@/context/NetworkStatusContext').then(mod => mod.NetworkStatusProvider),
+  { ssr: false }
+);
+
+const ClientOnlineBadge = dynamic(
+  () => import('@/components/ClientOnlineBadge'),
+  { ssr: false }
+);
+
+const Toaster = dynamic(
+  () => import('react-hot-toast').then(mod => mod.Toaster),
+  { ssr: false }
+);
+
+const SyncIndicator = dynamic(() => import('@/components/SyncIndicator'), {
+  ssr: false
+});
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,8 +36,12 @@ export default function RootLayout({
       </head>
       <body className={`antialiased ${inter.className}`}>
         <NetworkStatusProvider>
-          {children}
-          <ClientOnlineBadge />
+          <>
+            {children}
+            <ClientOnlineBadge />
+            <SyncIndicator />
+            <Toaster position="bottom-center" />
+          </>
         </NetworkStatusProvider>
         <Script id="service-worker-script">
           {`

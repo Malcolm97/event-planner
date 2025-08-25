@@ -40,7 +40,7 @@ const team = [
     name: 'Malcolm Sioni',
     role: 'Founder',
     bio: 'Building the platform that makes event discovery seamless.',
-    image: 'https://picsum.photos/400/400'
+    image: '/window.svg' // Using a local image that's already cached by service worker
   }
 ];
 

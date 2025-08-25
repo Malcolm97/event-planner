@@ -38,6 +38,24 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
   const [loading, setLoading] = useState(false);
   const [selectedArea, setSelectedArea] = useState('All Areas');
 
+  // Load events from IndexedDB when offline
+  useEffect(() => {
+    const loadOfflineEvents = async () => {
+      if (!navigator.onLine && !events.length) {
+        try {
+          const { getItems } = await import('../../lib/indexedDB');
+          const offlineEvents = await getItems('events');
+          if (offlineEvents.length > 0) {
+            setEvents(offlineEvents as EventItem[]);
+          }
+        } catch (error) {
+          console.error('Error loading offline events:', error);
+        }
+      }
+    };
+    loadOfflineEvents();
+  }, [events.length]);
+
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);

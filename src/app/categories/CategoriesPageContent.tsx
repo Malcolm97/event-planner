@@ -50,12 +50,35 @@ interface CategoriesPageContentInnerProps {
   initialCitiesCovered: number;
 }
 
+// Hook to get events from IndexedDB when offline
+const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
+  useEffect(() => {
+    const loadOfflineEvents = async () => {
+      if (!navigator.onLine) {
+        try {
+          const { getItems } = await import('../../lib/indexedDB');
+          const offlineEvents = await getItems('events');
+          if (offlineEvents.length > 0) {
+            setEvents(offlineEvents as EventItem[]);
+          }
+        } catch (error) {
+          console.error('Error loading offline events:', error);
+        }
+      }
+    };
+    loadOfflineEvents();
+  }, [setEvents]);
+}
+
 function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
   const [events, setEvents] = useState<EventItem[]>(initialEvents);
   const [displayCategories, setDisplayCategories] = useState<typeof allCategories>(initialDisplayCategories);
   const [loading, setLoading] = useState(false);
+
+  // Use offline events hook
+  useOfflineEvents(setEvents);
 
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);

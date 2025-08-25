@@ -1,44 +1,124 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase, TABLES } from '@/lib/supabase';
+import { EventItem } from '@/lib/types';
+import * as db from '@/lib/indexedDB';
+import { toast } from 'react-hot-toast';
 
 interface NetworkStatusContextType {
   isOnline: boolean;
-  isPwaOnMobile: boolean; // Added to resolve the type error
+  isPwaOnMobile: boolean;
   lastSaved: string | null;
   setLastSaved: (timestamp: string) => void;
+  isSyncing: boolean;
+  syncError: string | null;
+  lastSyncTime: Date | null;
 }
 
-const NetworkStatusContext = createContext<NetworkStatusContextType | undefined>(undefined);
+export const NetworkStatusContext = createContext<NetworkStatusContextType | undefined>(undefined);
 
-export const NetworkStatusProvider = ({ children }: { children: ReactNode }) => {
+export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [isPwaOnMobile, setIsPwaOnMobile] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+
+  // Function to sync data with the server
+  const syncData = async () => {
+    if (!isOnline || isSyncing) return;
+
+    setIsSyncing(true);
+    setSyncError(null);
+
+    try {
+      // Get current sync status
+      const syncStatus = await db.getSyncStatus();
+      const lastSync = syncStatus?.lastSync || 0;
+
+      // Fetch new events from server
+      const { data: eventsData, error: eventsError } = await supabase
+        .from(TABLES.EVENTS)
+        .select('*')
+        .gt('updated_at', new Date(lastSync).toISOString());
+
+      if (eventsError) throw eventsError;
+
+      // Update local database
+      if (eventsData && eventsData.length > 0) {
+        await db.addEvents(eventsData as EventItem[]);
+        toast.success(`Updated ${eventsData.length} events`);
+      }
+
+      // Update sync status
+      await db.updateSyncStatus({
+        lastSync: Date.now(),
+        inProgress: false
+      });
+
+      setLastSyncTime(new Date());
+    } catch (error) {
+      console.error('Sync error:', error);
+      setSyncError(error instanceof Error ? error.message : 'Unknown sync error');
+      toast.error('Failed to sync data');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
-    // Set initial online status from navigator (client-side only)
-    setIsOnline(navigator.onLine);
-    
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncData(); // Sync when coming back online
+    };
 
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    // Set initial online status and listeners
+    setIsOnline(navigator.onLine);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Check if PWA on mobile (basic check)
+    // Check if PWA on mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     setIsPwaOnMobile(isMobile && isStandalone);
 
+    // Initial sync
+    if (navigator.onLine) {
+      syncData();
+    }
+
+    // Set up periodic sync when online
+    const syncInterval = setInterval(() => {
+      if (navigator.onLine) {
+        syncData();
+      }
+    }, 5 * 60 * 1000); // Sync every 5 minutes
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(syncInterval);
     };
-  }, []);
+  }, []); // Empty dependency array since we want this to run once on mount
+
+  const contextValue = {
+    isOnline,
+    isPwaOnMobile,
+    lastSaved,
+    setLastSaved,
+    isSyncing,
+    syncError,
+    lastSyncTime,
+  };
 
   return (
-    <NetworkStatusContext.Provider value={{ isOnline, isPwaOnMobile, lastSaved, setLastSaved }}>
+    <NetworkStatusContext.Provider value={contextValue}>
       {children}
     </NetworkStatusContext.Provider>
   );
