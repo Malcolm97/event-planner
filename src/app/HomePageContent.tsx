@@ -146,9 +146,11 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       let tempEvents = events;
 
       if (searchTerm) {
+        const searchTermLower = searchTerm.toLowerCase();
         tempEvents = tempEvents.filter((event: EventItem) =>
-          event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          event.location.toLowerCase().includes(searchTerm.toLowerCase())
+          event.name.toLowerCase().includes(searchTermLower) ||
+          event.location.toLowerCase().includes(searchTermLower) ||
+          (event.venue && event.venue.toLowerCase().includes(searchTermLower))
         );
       }
 
@@ -280,7 +282,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           <div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
             <input
               className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              placeholder="Search events, artists, or venues..."
+              placeholder="Search events, locations, or venues..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -302,7 +304,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                 <option key={dateOption} value={dateOption}>{dateOption}</option>
               ))}
             </select>
-            <button className="rounded-lg px-6 py-2 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition">Find Events</button>
+            <button className="rounded-lg px-6 py-2 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition whitespace-nowrap">Find Events</button>
           </div>
           <div className="flex gap-8 mt-6 text-center justify-center">
             <div>
