@@ -127,7 +127,7 @@ export default function UserProfile({ onError }: UserProfileProps) {
     <div className="text-center">
       {displayPhotoUrl ? (
         <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
-          <Image src={displayPhotoUrl} alt="User Photo" width={80} height={80} objectFit="cover" />
+          <Image src={displayPhotoUrl} alt="User Photo" width={80} height={80} className="object-cover" />
         </div>
       ) : (
         <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">

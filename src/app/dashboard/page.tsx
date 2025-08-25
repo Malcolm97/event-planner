@@ -131,7 +131,7 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-gray-900">My Upcoming Events</h2> {/* Changed title */}
                 <Link
                   href="/create-event"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors shadow-sm"
+                  className="btn-primary gap-2 shadow-sm hover:shadow whitespace-nowrap"
                 >
                   <FiPlus size={16} />
                   Create Event
@@ -145,7 +145,7 @@ export default function DashboardPage() {
                   <p className="text-gray-500 mb-6">Create your first event to get started!</p>
                   <Link
                     href="/create-event"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors shadow-sm"
+                    className="btn-primary gap-2 shadow-sm hover:shadow whitespace-nowrap"
                   >
                     <FiPlus size={18} />
                     Create Your First Event

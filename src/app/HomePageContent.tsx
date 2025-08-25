@@ -304,7 +304,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                 <option key={dateOption} value={dateOption}>{dateOption}</option>
               ))}
             </select>
-            <button className="rounded-lg px-6 py-2 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition whitespace-nowrap">Find Events</button>
+            <button className="btn-primary shadow-sm hover:shadow">Find Events</button>
           </div>
           <div className="flex gap-8 mt-6 text-center justify-center">
             <div>

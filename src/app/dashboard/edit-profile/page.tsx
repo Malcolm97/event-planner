@@ -198,7 +198,7 @@ export default function EditProfilePage() {
           <div className="text-center mb-6">
             {photoUrl ? (
               <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
-                <Image src={photoUrl} alt="Profile Photo" width={80} height={80} objectFit="cover" />
+                <Image src={photoUrl} alt="Profile Photo" width={80} height={80} className="object-cover" />
               </div>
             ) : (
               <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">

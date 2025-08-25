@@ -126,7 +126,7 @@ export default function Header() {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => router.push('/create-event')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                  className="btn-primary gap-2 shadow-sm hover:shadow"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -167,7 +167,7 @@ export default function Header() {
                     </button>
                     <Link
                       href="/signin"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                      className="btn-primary gap-2 shadow-sm hover:shadow"
                     >
                       <FiUser size={16} />
                       Sign In
@@ -226,7 +226,7 @@ export default function Header() {
                       }
                       setIsMenuOpen(false); // Close mobile menu after click
                     }}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 mx-4 text-white font-semibold bg-gradient-to-r from-yellow-400 via-red-500 to-red-600 hover:from-yellow-500 hover:via-red-600 hover:to-red-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 rounded-lg w-full"
+                    className="btn-primary gap-2 mx-4 w-full shadow-sm hover:shadow"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

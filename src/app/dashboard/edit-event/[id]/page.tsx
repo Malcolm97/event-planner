@@ -265,7 +265,7 @@ export default function EditEventPage() {
                   <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
                   {imageUrl && (
                     <div className="mb-2">
-                      <Image src={imageUrl} alt="Current Event Image" width={150} height={100} objectFit="cover" className="rounded-md" />
+                      <Image src={imageUrl} alt="Current Event Image" width={150} height={100} className="rounded-md object-cover" />
                     </div>
                   )}
                   <input

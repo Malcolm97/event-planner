@@ -57,9 +57,9 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
           src={event.image_url || 'https://via.placeholder.com/400x200?text=No+Image+Available'}
           alt={event.name || 'Event Image'}
           fill={true}
-          style={{ objectFit: 'cover' }}
+          priority={true}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="transition-transform duration-300 group-hover:scale-105"
+          className="transition-transform duration-300 group-hover:scale-105 object-cover"
         />
         
         {/* Price Badges - Bottom Left */}
