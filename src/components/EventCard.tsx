@@ -25,6 +25,26 @@ const categoryIconMap: { [key: string]: any } = {
   'Other': FiStar,
 };
 
+// Helper function to format date as "16th September, 2025"
+const formatDate = (date: Date): string => {
+  const day = date.getDate();
+  const month = date.toLocaleDateString('en-US', { month: 'long' });
+  const year = date.getFullYear();
+
+  // Add ordinal suffix
+  const getOrdinalSuffix = (day: number): string => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
+  return `${day}${getOrdinalSuffix(day)} ${month}, ${year}`;
+};
+
 export default function EventCard({ event, onClick }: { event: EventItem; onClick?: () => void }) {
   const categoryLabel = event.category?.trim() || 'Other';
 
@@ -121,7 +141,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
             <>
               <div className="flex items-center gap-2">
                 <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700">{new Date(event.date).toLocaleDateString()}</span>
+                <span className="font-medium text-gray-700">{formatDate(new Date(event.date))}</span>
               </div>
               <div className="flex items-center gap-2">
                 <FiClock size={14} className="text-gray-400 flex-shrink-0" />
@@ -130,20 +150,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
             </>
           )}
 
-          {/* About this Event Section */}
-          {event.description && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-50">
-              <div className="flex-shrink-0 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-gray-800 mb-2 text-sm">About this event</h4>
-                <p className="text-gray-600 leading-relaxed text-sm line-clamp-3">{event.description}</p>
-              </div>
-            </div>
-          )}
+
 
           {/* Sharable Website Link */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
