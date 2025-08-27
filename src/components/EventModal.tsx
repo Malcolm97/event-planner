@@ -6,6 +6,7 @@ import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { User } from '../lib/supabase';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
+import { getEventPrimaryImage } from '@/lib/utils'; // Import utility function
 
 interface EventModalProps {
   selectedEvent: EventItem | null;
@@ -25,17 +26,17 @@ const localCategoryIconMap: { [key: string]: React.ElementType } = {
   'Other': FiStar,
 };
 
-// Helper function to parse image URLs consistently
-const getImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
+// Helper function to get all image URLs, handling stringified JSON or single string
+const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
   if (!imageUrls) return [];
 
   if (typeof imageUrls === 'string') {
     try {
       const parsed = JSON.parse(imageUrls);
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) ? parsed : [imageUrls]; // If it's a string, treat it as a single URL
     } catch (error) {
-      console.warn('Failed to parse image_urls as JSON:', error);
-      return [];
+      // If JSON parsing fails, treat the string as a single URL
+      return [imageUrls];
     }
   }
 
@@ -51,14 +52,14 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   // Navigation helper functions
   const handlePrevImage = () => {
-    const imageUrls = getImageUrls(selectedEvent?.image_urls);
+    const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
     if (imageUrls.length > 0) {
       setActiveImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
     }
   };
 
   const handleNextImage = () => {
-    const imageUrls = getImageUrls(selectedEvent?.image_urls);
+    const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
     if (imageUrls.length > 0) {
       setActiveImageIndex((prevIndex) => (prevIndex + 1) % imageUrls.length);
     }
@@ -170,10 +171,9 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   {/* Left Column: Event Images */}
                   <div className="order-2 md:order-1">
                     {(() => {
-                      const placeholderImageUrl = 'https://via.placeholder.com/400x300?text=No+Image+Available';
-                      const currentImageUrls = getImageUrls(selectedEvent?.image_urls);
-                      const currentHasImages = currentImageUrls.length > 0;
-                      const primaryImageUrl = currentHasImages ? currentImageUrls[0] : (selectedEvent?.image_url || placeholderImageUrl);
+                      const primaryImageUrl = selectedEvent ? getEventPrimaryImage(selectedEvent) : '/next.svg';
+                      const allImageUrls = getAllImageUrls(selectedEvent?.image_urls);
+                      const currentHasImages = allImageUrls.length > 0;
 
                       return (
                         <div className="space-y-4">
@@ -181,7 +181,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                           <div
                             className="relative cursor-pointer group"
                             onClick={() => {
-                              if (currentHasImages || selectedEvent?.image_url) {
+                              if (currentHasImages) {
                                 setActiveImageIndex(0);
                                 setImageExpanded(true);
                               }
@@ -194,7 +194,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                               height={300}
                               className="w-full h-64 md:h-80 object-cover rounded-lg transition-transform group-hover:scale-105"
                             />
-                            {(currentHasImages || selectedEvent?.image_url) && (
+                            {currentHasImages && (
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-2">
                                   <FiImage size={24} className="text-gray-700" />
@@ -204,9 +204,9 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                           </div>
 
                           {/* Additional Images */}
-                          {currentHasImages && currentImageUrls.length > 1 && (
+                          {currentHasImages && allImageUrls.length > 1 && (
                             <div className="grid grid-cols-2 gap-2">
-                              {currentImageUrls.slice(1).map((imageUrl: string, index: number) => (
+                              {allImageUrls.slice(1).map((imageUrl: string, index: number) => (
                                 <div
                                   key={index}
                                   className="relative cursor-pointer group"
@@ -368,8 +368,8 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
       {/* Expanded Image Modal */}
       {imageExpanded && (() => {
-        const imageUrls = getImageUrls(selectedEvent?.image_urls);
-        const hasImages = imageUrls.length > 0 || selectedEvent?.image_url;
+        const allImageUrls = getAllImageUrls(selectedEvent?.image_urls);
+        const hasImages = allImageUrls.length > 0;
 
   if (!hasImages) return null;
 
@@ -377,13 +377,13 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   let currentImageUrl = '';
   let currentImageAlt = 'Event Image';
 
-  if (imageUrls.length > 0) {
-    // Ensure activeImageIndex is within bounds of imageUrls array
-    const safeIndex = activeImageIndex % imageUrls.length;
-    currentImageUrl = imageUrls[safeIndex];
+  if (allImageUrls.length > 0) {
+    // Ensure activeImageIndex is within bounds of allImageUrls array
+    const safeIndex = activeImageIndex % allImageUrls.length;
+    currentImageUrl = allImageUrls[safeIndex];
     currentImageAlt = selectedEvent?.name ? `${selectedEvent.name} image ${safeIndex + 1}` : 'Event Image';
-  } else if (selectedEvent?.image_url) {
-    currentImageUrl = selectedEvent.image_url;
+  } else {
+    currentImageUrl = getEventPrimaryImage(selectedEvent || { name: 'Event' }); // Fallback using getEventPrimaryImage
     currentImageAlt = selectedEvent?.name ? `${selectedEvent.name} image` : 'Event Image';
   }
 
@@ -434,9 +434,9 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
               />
 
               {/* Show additional images if available */}
-              {imageUrls.length > 0 && (
+              {allImageUrls.length > 0 && (
                 <div className="absolute bottom-4 left-4 right-4 flex gap-2 overflow-x-auto">
-{imageUrls.map((imageUrl: string, index: number) => (
+{allImageUrls.map((imageUrl: string, index: number) => (
   <div
     key={index}
     className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer transition-colors ${

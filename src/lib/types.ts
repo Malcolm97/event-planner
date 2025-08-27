@@ -9,7 +9,6 @@ export interface EventItem {
   gate_price?: number;
   description: string;
   image_urls?: string[] | string | null; // Support both array and JSON string formats
-  image_url?: string; // Keep for backward compatibility
   created_at?: string;
   featured?: boolean;
   date: string; // Assuming date is stored as string in API/cache, matching current usage

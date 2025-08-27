@@ -16,7 +16,7 @@ async function getEvents() {
   // Fetch events
   const { data: eventsData, error: eventsError } = await supabase
     .from(TABLES.EVENTS)
-    .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_url, image_urls, featured, created_by')
+    .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by')
     .order('date', { ascending: true });
 
   if (eventsError) {
@@ -33,7 +33,7 @@ async function getEvents() {
     category: event.category || 'Other',
     presale_price: event.presale_price ?? 0,
     gate_price: event.gate_price ?? 0,
-    image_url: event.image_url || '',
+    image_urls: event.image_urls || [],
     created_at: event.created_at || '',
     featured: event.featured || false,
     created_by: event.created_by || '',

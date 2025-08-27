@@ -58,7 +58,7 @@ export const categoryColorMap: Record<string, string> = {
  * @param event - Event object that may have image_urls array or legacy image_url
  * @returns The primary image URL or fallback placeholder
  */
-export function getEventPrimaryImage(event: { image_urls?: string[] | null | string; image_url?: string | null; name?: string }): string {
+export function getEventPrimaryImage(event: { image_urls?: string[] | null | string; name?: string }): string {
   // First try the new image_urls array (primary image is the first one)
   if (event.image_urls) {
     let imageUrls: string[] | null = null;
@@ -92,13 +92,9 @@ export function getEventPrimaryImage(event: { image_urls?: string[] | null | str
     }
   }
 
-  // Fallback to legacy image_url
-  if (event.image_url && event.image_url.trim()) {
-    return event.image_url;
-  }
 
   // Final fallback - create a more event-specific placeholder
   const eventName = event.name || 'Event';
   const shortName = eventName.length > 20 ? eventName.substring(0, 20) + '...' : eventName;
-  return `https://via.placeholder.com/400x200/6366f1/ffffff?text=${encodeURIComponent(shortName)}`;
+  return `/next.svg`; // Using a local placeholder image
 }
