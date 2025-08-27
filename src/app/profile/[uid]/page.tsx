@@ -1,11 +1,10 @@
 'use client';
 
-import Header from '../../../components/Header';
+import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
-import { supabase, TABLES, Event, User } from '../../../lib/supabase';
-import EventCard from '../../../components/EventCard';
+import { supabase, TABLES, Event, User } from '@/lib/supabase';
+import EventCard from '@/components/EventCard';
 import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
-import { use } from 'react';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';

@@ -30,10 +30,10 @@ export interface Event {
   category?: string
   location: string
   venue?: string
-  presale_price?: number // Added presale price
-  gate_price?: number    // Added gate price
+  presale_price?: number
+  gate_price?: number
   description: string
-  image_urls?: string[] // Changed from single image_url to array of URLs
+  image_urls?: string[]
   created_at?: string
   featured?: boolean
   date: string

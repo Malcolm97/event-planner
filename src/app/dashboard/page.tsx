@@ -1,11 +1,11 @@
 'use client';
 
-import Header from '../../components/Header';
+import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, TABLES, Event, User } from '../../lib/supabase';
-import UserProfile from '../../components/UserProfile';
-import EventCard from '../../components/EventCard';
+import { supabase, TABLES, Event, User } from '@/lib/supabase';
+import UserProfile from '@/components/UserProfile';
+import EventCard from '@/components/EventCard';
 import Link from 'next/link';
 import { FiPlus, FiEdit, FiCalendar, FiMapPin, FiDollarSign } from 'react-icons/fi';
 

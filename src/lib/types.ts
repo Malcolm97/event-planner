@@ -1,4 +1,3 @@
-// Define the EventItem type here for shared use across the application
 export interface EventItem {
   id: string;
   name: string;
@@ -8,9 +7,9 @@ export interface EventItem {
   presale_price?: number;
   gate_price?: number;
   description: string;
-  image_urls?: string[] | string | null; // Support both array and JSON string formats
+  image_urls?: string[] | string | null;
   created_at?: string;
   featured?: boolean;
-  date: string; // Assuming date is stored as string in API/cache, matching current usage
+  date: string;
   created_by?: string;
 }

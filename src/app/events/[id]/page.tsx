@@ -5,18 +5,6 @@ import { useParams } from 'next/navigation';
 import { supabase, TABLES, Event, User } from '@/lib/supabase';
 import Header from '@/components/Header';
 import EventModal from '@/components/EventModal';
-import { FiMapPin, FiCalendar, FiClock, FiShare2, FiLink, FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
-
-// Category and Icon mapping (copied from EventsPage for consistency)
-const categoryIconMap: { [key: string]: any } = {
-  'Music': FiMusic,
-  'Art': FiImage,
-  'Food': FiCoffee,
-  'Technology': FiCpu,
-  'Wellness': FiHeart,
-  'Comedy': FiSmile,
-  'Other': FiSmile, // Default for 'Other'
-};
 
 export default function EventDetailsPage() {
   const params = useParams();

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getItems, addItems } from '../lib/indexedDB';
-import { supabase, TABLES } from '../lib/supabase';
-import { useNetworkStatus } from '../context/NetworkStatusContext';
-import { EventItem } from '../lib/types';
+import { getItems, addItems } from '@/lib/indexedDB';
+import { supabase, TABLES } from '@/lib/supabase';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { EventItem } from '@/lib/types';
 
 export function useOfflineFirstData<T>(storeName: string) {
   const [data, setData] = useState<T[]>([]);

@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase, TABLES } from '../lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
-import Image from 'next/image'; // Import Image component
-import { useNetworkStatus } from '../context/NetworkStatusContext'; // Import the hook
+import Image from 'next/image';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 export default function Header() {
   const { isOnline, lastSaved, setLastSaved } = useNetworkStatus(); // Get the status and lastSaved
@@ -109,7 +109,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <button onClick={() => { console.log('Navigating to /events'); router.push('/events'); }} className="text-gray-600 hover:text-gray-900 transition-colors">
+            <button onClick={() => router.push('/events')} className="text-gray-600 hover:text-gray-900 transition-colors">
               Events
             </button>
             <button onClick={() => router.push('/categories')} className="text-gray-600 hover:text-gray-900 transition-colors">
@@ -197,7 +197,7 @@ export default function Header() {
           <div className="md:hidden border-t border-gray-200 py-4">
             <nav className="flex flex-col space-y-4">
               <button
-                onClick={() => { console.log('Navigating to /events (mobile)'); router.push('/events'); setIsMenuOpen(false); }}
+                onClick={() => { router.push('/events'); setIsMenuOpen(false); }}
                 className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
               >
                 Events

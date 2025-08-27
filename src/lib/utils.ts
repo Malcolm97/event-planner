@@ -1,5 +1,6 @@
 
 import { FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
+import { EventItem } from '@/lib/types';
 
 export const allCategories = [
   { name: "Music" },
@@ -55,46 +56,33 @@ export const categoryColorMap: Record<string, string> = {
 
 /**
  * Get the primary image URL from an event, with support for multiple images
- * @param event - Event object that may have image_urls array or legacy image_url
+ * @param event - Event object that may have image_urls array
  * @returns The primary image URL or fallback placeholder
  */
-export function getEventPrimaryImage(event: { image_urls?: string[] | null | string; name?: string }): string {
-  // First try the new image_urls array (primary image is the first one)
+export function getEventPrimaryImage(event: EventItem | { image_urls?: string[] | null | string; name?: string }): string {
   if (event.image_urls) {
     let imageUrls: string[] | null = null;
 
-    // Handle case where image_urls might be a JSON string
-    // Handle cases where image_urls might be a string (single URL or JSON string)
     if (typeof event.image_urls === 'string') {
       try {
-        // Attempt to parse as JSON array first
         const parsedUrls = JSON.parse(event.image_urls);
         if (Array.isArray(parsedUrls) && parsedUrls.length > 0 && parsedUrls[0]) {
           imageUrls = parsedUrls;
         } else {
-          // If JSON parsing results in an empty array or not an array,
-          // treat the original string as a single URL.
           imageUrls = [event.image_urls];
         }
       } catch (error) {
-        // If JSON parsing fails, treat the string as a single URL.
         console.warn('Failed to parse image_urls as JSON, treating as single URL:', error);
         imageUrls = [event.image_urls];
       }
     } else if (Array.isArray(event.image_urls)) {
-      // If it's already an array, use it directly.
       imageUrls = event.image_urls;
     }
 
-    // Ensure we have at least one valid URL
     if (imageUrls && imageUrls.length > 0 && imageUrls[0]) {
       return imageUrls[0];
     }
   }
 
-
-  // Final fallback - create a more event-specific placeholder
-  const eventName = event.name || 'Event';
-  const shortName = eventName.length > 20 ? eventName.substring(0, 20) + '...' : eventName;
-  return `/next.svg`; // Using a local placeholder image
+  return `/next.svg`;
 }

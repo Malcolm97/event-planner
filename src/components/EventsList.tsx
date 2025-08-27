@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase, TABLES } from '../lib/supabase'; // Removed Event type import as we'll use EventItem
+import { supabase, TABLES } from '@/lib/supabase';
 import EventCard from './EventCard';
 import { getEvents as getCachedEvents, addEvents } from '@/lib/indexedDB';
-import { EventItem } from '@/lib/types'; // Import EventItem from shared types
-import { useNetworkStatus } from '@/context/NetworkStatusContext'; // Import network status hook
+import { EventItem } from '@/lib/types';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 export default function EventsList() {
   const [events, setEvents] = useState<EventItem[]>([]); // Use EventItem type

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { supabase, TABLES, User } from '../../lib/supabase';
+import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '../../lib/types';
-import { useEvents } from '../../hooks/useOfflineFirstData';
-import EventCard from '../../components/EventCard';
+import { useEvents } from '@/hooks/useOfflineFirstData';
+import EventCard from '@/components/EventCard';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
-import EventModal from '../../components/EventModal';
+import EventModal from '@/components/EventModal';
 import Link from 'next/link';
 
 const allCategories = [

@@ -1,9 +1,9 @@
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
-import { EventItem } from '@/lib/types'; // Import EventItem from shared types
-import Image from 'next/image'; // Import the Image component
-import { useState, useEffect } from 'react'; // Import useEffect
-import { getEventPrimaryImage } from '@/lib/utils'; // Import utility function
+import { EventItem } from '@/lib/types';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { getEventPrimaryImage } from '@/lib/utils';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -57,8 +57,6 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
     <div
       className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] h-full"
       onClick={() => {
-        console.log('Event card clicked!');
-        // Ensure onClick is a function before calling it
         if (typeof onClick === 'function') {
           onClick();
         }

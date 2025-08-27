@@ -1,12 +1,12 @@
 "use client";
-import Header from "../../components/Header";
+import Header from "@/components/Header";
 import { useState, useEffect } from "react";
-import { supabase, TABLES } from "../../lib/supabase";
+import { supabase, TABLES } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
-import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import the hook
-import SuccessModal from '../../components/SuccessModal'; // Import the new modal component
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import SuccessModal from '@/components/SuccessModal';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';

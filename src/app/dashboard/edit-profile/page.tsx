@@ -1,12 +1,12 @@
 'use client';
 
-import Header from '../../../components/Header';
+import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, TABLES } from '../../../lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
-import Image from 'next/image'; // Import Image component
+import Image from 'next/image';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';

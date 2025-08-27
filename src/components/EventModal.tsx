@@ -3,10 +3,10 @@ import React, { ElementType, useState, useRef, useEffect } from 'react';
 
 import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
-import { User } from '../lib/supabase';
+import { User } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
-import { getEventPrimaryImage } from '@/lib/utils'; // Import utility function
+import { getEventPrimaryImage } from '@/lib/utils';
 
 interface EventModalProps {
   selectedEvent: EventItem | null;

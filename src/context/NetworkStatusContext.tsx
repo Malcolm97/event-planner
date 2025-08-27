@@ -42,7 +42,8 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       const { data: eventsData, error: eventsError } = await supabase
         .from(TABLES.EVENTS)
         .select('*')
-        .gt('updated_at', new Date(lastSync).toISOString());
+        .gte('created_at', new Date(lastSync).toISOString())
+        .order('created_at', { ascending: false });
 
       if (eventsError) throw eventsError;
 
@@ -59,6 +60,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       });
 
       setLastSyncTime(new Date());
+      setLastSaved(new Date().toISOString());
     } catch (error) {
       console.error('Sync error:', error);
       setSyncError(error instanceof Error ? error.message : 'Unknown sync error');
@@ -69,17 +71,20 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   useEffect(() => {
+    // Check initial online status
+    setIsOnline(navigator.onLine);
+    
     const handleOnline = () => {
       setIsOnline(true);
-      syncData(); // Sync when coming back online
+      toast.success('Back online! Syncing data...');
+      syncData();
     };
 
     const handleOffline = () => {
       setIsOnline(false);
+      toast.error('You are now offline');
     };
 
-    // Set initial online status and listeners
-    setIsOnline(navigator.onLine);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
@@ -105,7 +110,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       window.removeEventListener('offline', handleOffline);
       clearInterval(syncInterval);
     };
-  }, []); // Empty dependency array since we want this to run once on mount
+  }, []);
 
   const contextValue = {
     isOnline,

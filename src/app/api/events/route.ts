@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data || []);
   } catch (error: any) {
     console.error('Unexpected error fetching events:', error.message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

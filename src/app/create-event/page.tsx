@@ -1,14 +1,12 @@
 'use client';
 
-import Header from '../../components/Header'; // Import your component here to prevent errors on build time and avoid breaking changes when upgrading dependencies
-// Note that components should be named with Pascal Case e.g., EventForm, UserProfile etc not underlines ie user_profile for example (as per the NextJS guidelines)
+import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase';
-import { TABLES } from '../../lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
-import { useNetworkStatus } from '../../context/NetworkStatusContext'; // Import the hook
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 export default function CreateEventPage() {
   const router = useRouter();

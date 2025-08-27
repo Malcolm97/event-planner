@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '../components/Header';
-import EventCard from '../components/EventCard';
+import Header from '@/components/Header';
+import EventCard from '@/components/EventCard';
 import { supabase, TABLES, User, isSupabaseConfigured } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
-const EventModal = dynamic(() => import('../components/EventModal'), { ssr: false });
+const EventModal = dynamic(() => import('@/components/EventModal'), { ssr: false });
 
 // Define categories and their properties
 const allCategories = [

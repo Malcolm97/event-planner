@@ -1,6 +1,6 @@
 'use client';
 
-import Header from '../../components/Header';
+import Header from '@/components/Header';
 import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
 import Link from 'next/link';
 import Image from 'next/image';

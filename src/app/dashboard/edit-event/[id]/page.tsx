@@ -1,13 +1,12 @@
 'use client';
 
-import Header from '../../../../components/Header';
+import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation'; // Import useParams
-import { supabase, TABLES } from '../../../../lib/supabase';
-import { FiArrowLeft, FiX } from 'react-icons/fi'; // Import FiX for delete icon
+import { useRouter, useParams } from 'next/navigation';
+import { supabase, TABLES } from '@/lib/supabase';
+import { FiArrowLeft, FiX } from 'react-icons/fi';
 import Link from "next/link";
 import Image from 'next/image';
-import { use } from 'react';
 
 export const dynamic = 'force-dynamic';
 

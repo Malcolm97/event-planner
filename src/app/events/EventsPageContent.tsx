@@ -2,12 +2,12 @@
 
 import Header from '../../components/Header';
 import { useState, useEffect } from 'react';
-import { supabase, TABLES, User } from '../../lib/supabase';
+import { supabase, TABLES, User } from '@/lib/supabase';
 import EventCard from '../../components/EventCard';
 import { FiMapPin, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiStar } from 'react-icons/fi';
 import EventModal from '../../components/EventModal';
 import { EventItem } from '@/lib/types';
-import { useEvents } from '../../hooks/useOfflineFirstData';
+import { useEvents } from '@/hooks/useOfflineFirstData';
 
 // Category and Icon mapping
 const categoryIconMap: { [key: string]: any } = {

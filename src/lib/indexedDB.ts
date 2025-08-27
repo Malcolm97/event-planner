@@ -1,7 +1,7 @@
 import { EventItem } from './types';
 
 const DB_NAME = 'event-planner-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 // Store names
 const STORES = {
@@ -26,7 +26,10 @@ export const openDatabase = (): Promise<IDBDatabase> => {
       
       // Create or update stores
       if (!db.objectStoreNames.contains(STORES.EVENTS)) {
-        db.createObjectStore(STORES.EVENTS, { keyPath: 'id' });
+        const eventsStore = db.createObjectStore(STORES.EVENTS, { keyPath: 'id' });
+        eventsStore.createIndex('date', 'date', { unique: false });
+        eventsStore.createIndex('category', 'category', { unique: false });
+        eventsStore.createIndex('location', 'location', { unique: false });
       }
       if (!db.objectStoreNames.contains(STORES.USERS)) {
         db.createObjectStore(STORES.USERS, { keyPath: 'id' });
@@ -52,6 +55,8 @@ export const openDatabase = (): Promise<IDBDatabase> => {
 
 // Generic function to add items to any store
 export const addItems = async <T>(storeName: string, items: T[]): Promise<void> => {
+  if (!items || items.length === 0) return;
+  
   const db = await openDatabase();
   const transaction = db.transaction(storeName, 'readwrite');
   const store = transaction.objectStore(storeName);
@@ -85,6 +90,23 @@ export const getItems = async <T>(storeName: string): Promise<T[]> => {
   });
 };
 
+// Get items by index
+export const getItemsByIndex = async <T>(storeName: string, indexName: string, value: string): Promise<T[]> => {
+  const db = await openDatabase();
+  const transaction = db.transaction(storeName, 'readonly');
+  const store = transaction.objectStore(storeName);
+  const index = store.index(indexName);
+  const request = index.getAll(value);
+
+  return new Promise((resolve, reject) => {
+    request.onsuccess = (event) => resolve((event.target as IDBRequest).result || []);
+    request.onerror = (event) => {
+      console.error(`Get ${storeName} by index error:`, (event.target as IDBRequest).error);
+      reject((event.target as IDBRequest).error);
+    };
+  });
+};
+
 // Specific functions for events
 export const addEvents = (events: EventItem[]): Promise<void> => {
   return addItems(STORES.EVENTS, events);
@@ -92,6 +114,11 @@ export const addEvents = (events: EventItem[]): Promise<void> => {
 
 export const getEvents = (): Promise<EventItem[]> => {
   return getItems(STORES.EVENTS);
+};
+
+// Get events by category
+export const getEventsByCategory = (category: string): Promise<EventItem[]> => {
+  return getItemsByIndex(STORES.EVENTS, 'category', category);
 };
 
 // Sync status management

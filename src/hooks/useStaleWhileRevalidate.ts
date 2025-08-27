@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getItems } from '../lib/indexedDB';
-import { supabase, TABLES } from '../lib/supabase';
-import { EventItem } from '../lib/types';
-import { useNetworkStatus } from '../context/NetworkStatusContext';
+import { getItems } from '@/lib/indexedDB';
+import { supabase, TABLES } from '@/lib/supabase';
+import { EventItem } from '@/lib/types';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 export function useStaleWhileRevalidate(storeName: string) {
   const [data, setData] = useState<EventItem[]>([]);

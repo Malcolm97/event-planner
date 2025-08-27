@@ -1,4 +1,4 @@
-import { Event } from "../lib/supabase";
+import { Event } from "@/lib/supabase";
 
 export default function CompactEventCard({ event }: { event: Event }) {
   return (
@@ -26,7 +26,7 @@ export default function CompactEventCard({ event }: { event: Event }) {
             if (presale === 0 && gate === 0) {
               return 'Free';
             }
-            return ''; // Return empty string if none of the above conditions are met
+            return '';
           })()}
         </div>
       )}

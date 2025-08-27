@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { AuthChangeEvent } from '@supabase/supabase-js';
 import { useRouter } from "next/navigation";
-import Header from "../../../components/Header";
+import Header from "@/components/Header";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
-import SuccessModal from '../../../components/SuccessModal';
+import SuccessModal from '@/components/SuccessModal';
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
