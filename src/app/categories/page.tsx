@@ -29,7 +29,7 @@ async function getEvents() {
   // Fetch events
   const { data: eventsData, error: eventsError } = await supabase
     .from(TABLES.EVENTS)
-    .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_url, featured, created_by')
+    .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_url, image_urls, featured, created_by')
     .order('date', { ascending: true });
 
   if (eventsError) {

@@ -52,3 +52,41 @@ export const categoryColorMap: Record<string, string> = {
   Meetup: 'bg-gray-300 text-black',
   Other: 'bg-gray-300 text-black',
 };
+
+/**
+ * Get the primary image URL from an event, with support for multiple images
+ * @param event - Event object that may have image_urls array or legacy image_url
+ * @returns The primary image URL or fallback placeholder
+ */
+export function getEventPrimaryImage(event: { image_urls?: string[] | null | string; image_url?: string | null; name?: string }): string {
+  // First try the new image_urls array (primary image is the first one)
+  if (event.image_urls) {
+    let imageUrls: string[] | null = null;
+
+    // Handle case where image_urls might be a JSON string
+    if (typeof event.image_urls === 'string') {
+      try {
+        imageUrls = JSON.parse(event.image_urls);
+      } catch (error) {
+        console.warn('Failed to parse image_urls as JSON:', error);
+        imageUrls = null;
+      }
+    } else if (Array.isArray(event.image_urls)) {
+      imageUrls = event.image_urls;
+    }
+
+    if (imageUrls && imageUrls.length > 0 && imageUrls[0]) {
+      return imageUrls[0];
+    }
+  }
+
+  // Fallback to legacy image_url
+  if (event.image_url && event.image_url.trim()) {
+    return event.image_url;
+  }
+
+  // Final fallback - create a more event-specific placeholder
+  const eventName = event.name || 'Event';
+  const shortName = eventName.length > 20 ? eventName.substring(0, 20) + '...' : eventName;
+  return `https://via.placeholder.com/400x200/6366f1/ffffff?text=${encodeURIComponent(shortName)}`;
+}

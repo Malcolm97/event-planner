@@ -33,7 +33,8 @@ export interface Event {
   presale_price?: number // Added presale price
   gate_price?: number    // Added gate price
   description: string
-  image_url?: string // Add image_url property
+  image_urls?: string[] // Changed from single image_url to array of URLs
+  image_url?: string // Keep for backward compatibility
   created_at?: string
   featured?: boolean
   date: string

@@ -25,7 +25,7 @@ export default function CreateEventPage() {
   const [presale_price, setPresale_price] = useState<number>(0);
   const [gate_price, setGate_price] = useState<number>(0);
   const [category, setCategory] = useState<string>('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,30 +122,32 @@ export default function CreateEventPage() {
         return;
       }
 
-      let imageUrl: string | null = null;
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+      let imageUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        for (const imageFile of imageFiles) {
+          const fileExt = imageFile.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+          const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('event-images') // Ensure you have a bucket named 'event-images' in Supabase Storage
-          .upload(filePath, imageFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+          const { error: uploadError } = await supabase.storage
+            .from('event-images') // Ensure you have a bucket named 'event-images' in Supabase Storage
+            .upload(filePath, imageFile, {
+              cacheControl: '3600',
+              upsert: false,
+            });
 
-        if (uploadError) {
-          setError(`Error uploading image: ${uploadError.message}`);
-          setLoading(false);
-          return;
+          if (uploadError) {
+            setError(`Error uploading image: ${uploadError.message}`);
+            setLoading(false);
+            return;
+          }
+
+          const { data: publicUrlData } = supabase.storage
+            .from('event-images')
+            .getPublicUrl(filePath);
+
+          imageUrls.push(publicUrlData.publicUrl);
         }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('event-images')
-          .getPublicUrl(filePath);
-        
-        imageUrl = publicUrlData.publicUrl;
       }
 
           const { error: insertError } = await supabase
@@ -159,7 +161,7 @@ export default function CreateEventPage() {
               presale_price, // Use the new state variable
               gate_price,    // Use the new state variable
               category,
-              image_url: imageUrl, // Save the image URL
+              image_urls: imageUrls.length > 0 ? imageUrls : null, // Save the image URLs array
               created_by: user.id,
             });
 
@@ -254,14 +256,31 @@ export default function CreateEventPage() {
                   ></textarea>
                 </div>
                 <div>
-                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
+                  <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
+                    Event Images (Up to 3)
+                  </label>
                   <input
                     type="file"
-                    id="image"
+                    id="images"
                     accept="image/*"
+                    multiple
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
-                    onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files) {
+                        const fileArray = Array.from(files).slice(0, 3); // Limit to 3 files
+                        setImageFiles(fileArray);
+                      }
+                    }}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    You can upload up to 3 images. The first image will be the primary image.
+                  </p>
+                  {imageFiles.length > 0 && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      Selected {imageFiles.length} image{imageFiles.length > 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

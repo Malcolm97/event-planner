@@ -24,8 +24,8 @@ export default function EditEventPage() {
   const [presale_price, setPresale_price] = useState<number>(0); // Changed from price
   const [gate_price, setGate_price] = useState<number>(0); // Added gate_price
   const [category, setCategory] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null); // Existing image URL
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]); // Existing image URLs
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export default function EditEventPage() {
           setPresale_price(eventData.presale_price || 0); // Changed from price
           setGate_price(eventData.gate_price || 0); // Added gate_price
           setCategory(eventData.category || '');
-          setImageUrl(eventData.image_url || null);
+          setImageUrls(eventData.image_urls || eventData.image_url ? [eventData.image_url] : []); // Handle both old and new format
           setVenue(eventData.venue || '');
 
           if (popularPngCities.includes(eventData.location)) {
@@ -117,30 +117,39 @@ export default function EditEventPage() {
         return;
       }
 
-      let newImageUrl: string | null = imageUrl;
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `event-images/${fileName}`;
+      let newImageUrls: string[] = [...imageUrls]; // Start with existing images
 
-        const { error: uploadError } = await supabase.storage
-          .from('event-images')
-          .upload(filePath, imageFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+      // Upload new images
+      if (imageFiles.length > 0) {
+        for (const imageFile of imageFiles) {
+          const fileExt = imageFile.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+          const filePath = `event-images/${fileName}`;
 
-        if (uploadError) {
-          setError(`Error uploading image: ${uploadError.message}`);
-          setSubmitting(false);
-          return;
+          const { error: uploadError } = await supabase.storage
+            .from('event-images')
+            .upload(filePath, imageFile, {
+              cacheControl: '3600',
+              upsert: false,
+            });
+
+          if (uploadError) {
+            setError(`Error uploading image: ${uploadError.message}`);
+            setSubmitting(false);
+            return;
+          }
+
+          const { data: publicUrlData } = supabase.storage
+            .from('event-images')
+            .getPublicUrl(filePath);
+
+          newImageUrls.push(publicUrlData.publicUrl);
         }
+      }
 
-        const { data: publicUrlData } = supabase.storage
-          .from('event-images')
-          .getPublicUrl(filePath);
-        
-        newImageUrl = publicUrlData.publicUrl;
+      // Limit to 3 images (keep the most recent ones if more than 3)
+      if (newImageUrls.length > 3) {
+        newImageUrls = newImageUrls.slice(-3);
       }
 
       const { error: updateError } = await supabase
@@ -154,7 +163,7 @@ export default function EditEventPage() {
           presale_price, // Changed from price
           gate_price,    // Added gate_price
           category,
-          image_url: newImageUrl,
+          image_urls: newImageUrls.length > 0 ? newImageUrls : null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -262,19 +271,49 @@ export default function EditEventPage() {
                   ></textarea>
                 </div>
                 <div>
-                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">Event Image</label>
-                  {imageUrl && (
-                    <div className="mb-2">
-                      <Image src={imageUrl} alt="Current Event Image" width={150} height={100} className="rounded-md object-cover" />
+                  <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
+                    Event Images (Up to 3)
+                  </label>
+                  {imageUrls.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">Current images:</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {imageUrls.map((url, index) => (
+                          <Image
+                            key={index}
+                            src={url}
+                            alt={`Event image ${index + 1}`}
+                            width={100}
+                            height={80}
+                            className="rounded-md object-cover"
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                   <input
                     type="file"
-                    id="image"
+                    id="images"
                     accept="image/*"
+                    multiple
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
-                    onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files) {
+                        const fileArray = Array.from(files).slice(0, 3 - imageUrls.length); // Limit based on existing images
+                        setImageFiles(fileArray);
+                      }
+                    }}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    You can add up to {3 - imageUrls.length} more image{3 - imageUrls.length !== 1 ? 's' : ''}.
+                    The first image will be the primary image.
+                  </p>
+                  {imageFiles.length > 0 && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      Selected {imageFiles.length} new image{imageFiles.length > 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

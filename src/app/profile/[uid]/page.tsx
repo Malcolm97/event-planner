@@ -42,7 +42,7 @@ function ProfilePageContent({ uid }: { uid: string }) {
         // Fetch user's events
         const { data: eventsData, error: eventsError } = await supabase
           .from(TABLES.EVENTS)
-          .select('id, name, date, location, venue, category, presale_price, gate_price, image_url, featured, created_by, description, created_at')
+          .select('id, name, date, location, venue, category, presale_price, gate_price, image_url, image_urls, featured, created_by, description, created_at')
           .eq('created_by', uid)
           .order('date', { ascending: true });
 

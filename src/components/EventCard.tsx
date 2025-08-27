@@ -3,6 +3,7 @@ import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types'; // Import EventItem from shared types
 import Image from 'next/image'; // Import the Image component
 import { useState, useEffect } from 'react'; // Import useEffect
+import { getEventPrimaryImage } from '@/lib/utils'; // Import utility function
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -74,7 +75,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
       {/* Hero Image Area */}
       <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
         <Image
-          src={event.image_url || 'https://via.placeholder.com/400x200?text=No+Image+Available'}
+          src={getEventPrimaryImage(event)}
           alt={event.name || 'Event Image'}
           fill={true}
           priority={true}
@@ -169,8 +170,8 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
           </div>
         </div>
 
-        {/* Social Share Feature */}
-        <div className="w-full mt-auto px-5 py-4 flex justify-end border-t border-gray-100">
+        {/* Social Share Feature - positioned in bottom right */}
+        <div className="absolute bottom-3 right-3 z-10">
           <ShareButtons event={event} />
         </div>
 

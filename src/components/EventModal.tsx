@@ -25,10 +25,28 @@ const localCategoryIconMap: { [key: string]: React.ElementType } = {
   'Other': FiStar,
 };
 
+// Helper function to parse image URLs consistently
+const getImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
+  if (!imageUrls) return [];
+
+  if (typeof imageUrls === 'string') {
+    try {
+      const parsed = JSON.parse(imageUrls);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn('Failed to parse image_urls as JSON:', error);
+      return [];
+    }
+  }
+
+  return Array.isArray(imageUrls) ? imageUrls : [];
+};
+
 export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen }: EventModalProps) {
   if (!dialogOpen || !selectedEvent) return null;
 
-  const [activeTab, setActiveTab] = useState<'event-details' | 'host-details'>('event-details');
+  const [activeTab, setActiveTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
+  const [imageExpanded, setImageExpanded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,6 +131,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
               Event Details
             </button>
             <button
+              onClick={() => setActiveTab('about-event')}
+              className={`px-4 py-2 font-semibold ${activeTab === 'about-event' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+            >
+              About this event
+            </button>
+            <button
               onClick={() => setActiveTab('host-details')}
               className={`px-4 py-2 font-semibold ${activeTab === 'host-details' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
             >
@@ -121,76 +145,154 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           </div>
 
           <div className="space-y-6">
-            {/* Event Image and About Section Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
-              {/* Left Column: Event Image */}
-              {selectedEvent?.image_url && (
-                <div className="sm:sticky sm:top-4">
-                  <Image
-                    src={selectedEvent.image_url}
-                    alt={selectedEvent.name ? `${selectedEvent.name} image` : 'Event Image'}
-                    width={700}
-                    height={400}
-                    className="w-full h-64 md:h-48 object-cover rounded-lg"
-                  />
-                </div>
-              )}
-
-              {/* Right Column: About this Event Section (full width when no image) */}
-              {selectedEvent?.description && (
-                <div className={`${selectedEvent?.image_url ? '' : 'md:col-span-2'}`}>
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 h-full">
-                    <div className="flex-shrink-0 mt-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-800 mb-3 text-lg">About this event</h4>
-                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-sm md:text-base">{selectedEvent.description}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
               <div className="space-y-4">
-                {/* Location and Date/Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50">
-                    <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-800">Location</h4>
-                        <p className="text-gray-600">{selectedEvent?.location || 'Not specified'}</p>
-                      </div>
-                      {selectedEvent?.venue && (
-                        <div>
-                          <h4 className="font-semibold text-gray-800">Venue</h4>
-                          <p className="text-gray-600">{selectedEvent.venue}</p>
-                        </div>
-                      )}
-                    </div>
+                {/* Event Image and Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                  {/* Left Column: Event Images */}
+                  <div className="order-2 md:order-1">
+                    {(() => {
+                      const imageUrls = getImageUrls(selectedEvent?.image_urls);
+                      const hasImages = imageUrls.length > 0;
+
+                      if (hasImages) {
+                        return (
+                          <div className="space-y-4">
+                            {/* Primary Image */}
+                            <div
+                              className="relative cursor-pointer group"
+                              onClick={() => setImageExpanded(true)}
+                            >
+                              <Image
+                                src={imageUrls[0]}
+                                alt={selectedEvent?.name ? `${selectedEvent.name} primary image` : 'Event Primary Image'}
+                                width={400}
+                                height={300}
+                                className="w-full h-64 md:h-80 object-cover rounded-lg transition-transform group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-2">
+                                  <FiImage size={24} className="text-gray-700" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Additional Images */}
+                            {imageUrls.length > 1 && (
+                              <div className="grid grid-cols-2 gap-2">
+                                {imageUrls.slice(1).map((imageUrl: string, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="relative cursor-pointer group"
+                                    onClick={() => setImageExpanded(true)}
+                                  >
+                                    <Image
+                                      src={imageUrl}
+                                      alt={selectedEvent?.name ? `${selectedEvent.name} image ${index + 2}` : `Event image ${index + 2}`}
+                                      width={200}
+                                      height={150}
+                                      className="w-full h-32 object-cover rounded-lg transition-transform group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+                                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-1">
+                                        <FiImage size={16} className="text-gray-700" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      } else if (selectedEvent?.image_url) {
+                        // Backward compatibility for single image
+                        return (
+                          <div
+                            className="relative cursor-pointer group"
+                            onClick={() => setImageExpanded(true)}
+                          >
+                            <Image
+                              src={selectedEvent.image_url}
+                              alt={selectedEvent.name ? `${selectedEvent.name} image` : 'Event Image'}
+                              width={400}
+                              height={300}
+                              className="w-full h-64 md:h-80 object-cover rounded-lg transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-2">
+                                <FiImage size={24} className="text-gray-700" />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="w-full h-64 md:h-80 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <FiImage size={48} className="text-gray-400" />
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
 
-                  {selectedEvent?.date && (
+                  {/* Right Column: Location and Date/Time */}
+                  <div className="order-1 md:order-2 space-y-4">
                     <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50">
-                      <FiCalendar size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-gray-800">Date & Time</h4>
-                        <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                        <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                      <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-800">Location</h4>
+                          <p className="text-gray-600">{selectedEvent?.location || 'Not specified'}</p>
+                        </div>
+                        {selectedEvent?.venue && (
+                          <div>
+                            <h4 className="font-semibold text-gray-800">Venue</h4>
+                            <p className="text-gray-600">{selectedEvent.venue}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
+
+                    {selectedEvent?.date && (
+                      <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50">
+                        <FiCalendar size={20} className="text-gray-500 mt-1 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-gray-800">Date & Time</h4>
+                          <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                          <p className="text-gray-600">{new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Social Share Feature */}
                 <div className="pt-4 border-t border-gray-200 flex justify-end">
                   <ShareButtons event={selectedEvent} />
                 </div>
+              </div>
+            )}
+
+            {/* About Event Section */}
+            {activeTab === 'about-event' && (
+              <div className="space-y-4">
+                {selectedEvent?.description ? (
+                  <div className="flex items-start gap-3 p-6 rounded-lg bg-gray-50">
+                    <div className="flex-shrink-0 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-base">{selectedEvent.description}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-4 rounded-lg text-center">
+                    <p>No description available for this event.</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -266,6 +368,74 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           </div>
         </div>
       </div>
+
+      {/* Expanded Image Modal */}
+      {imageExpanded && (() => {
+        const imageUrls = getImageUrls(selectedEvent?.image_urls);
+        const hasImages = imageUrls.length > 0 || selectedEvent?.image_url;
+
+        if (!hasImages) return null;
+
+        return (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4"
+            onClick={() => setImageExpanded(false)}
+          >
+            <div className="relative max-w-4xl max-h-full">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageExpanded(false);
+                }}
+                className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-white hover:bg-opacity-20 z-10"
+              >
+                <FiX size={24} />
+              </button>
+
+              {/* Show first image or single image */}
+              <Image
+                src={
+                  imageUrls.length > 0
+                    ? imageUrls[0]
+                    : selectedEvent?.image_url || ''
+                }
+                alt={selectedEvent?.name ? `${selectedEvent.name} image` : 'Event Image'}
+                width={800}
+                height={600}
+                className="max-w-full max-h-full object-contain rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+
+              {/* Show additional images if available */}
+              {imageUrls.length > 1 && (
+                <div className="absolute bottom-4 left-4 right-4 flex gap-2 overflow-x-auto">
+                  {imageUrls.slice(1).map((imageUrl: string, index: number) => (
+                    <div
+                      key={index}
+                      className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/50 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Image
+                        src={imageUrl}
+                        alt={`${selectedEvent?.name} image ${index + 2}`}
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="absolute bottom-4 left-4 right-4 text-white">
+                <h3 className="text-lg font-semibold bg-black bg-opacity-50 rounded px-3 py-2 inline-block">
+                  {selectedEvent?.name}
+                </h3>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
