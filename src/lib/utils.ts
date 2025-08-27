@@ -64,17 +64,29 @@ export function getEventPrimaryImage(event: { image_urls?: string[] | null | str
     let imageUrls: string[] | null = null;
 
     // Handle case where image_urls might be a JSON string
+    // Handle cases where image_urls might be a string (single URL or JSON string)
     if (typeof event.image_urls === 'string') {
       try {
-        imageUrls = JSON.parse(event.image_urls);
+        // Attempt to parse as JSON array first
+        const parsedUrls = JSON.parse(event.image_urls);
+        if (Array.isArray(parsedUrls) && parsedUrls.length > 0 && parsedUrls[0]) {
+          imageUrls = parsedUrls;
+        } else {
+          // If JSON parsing results in an empty array or not an array,
+          // treat the original string as a single URL.
+          imageUrls = [event.image_urls];
+        }
       } catch (error) {
-        console.warn('Failed to parse image_urls as JSON:', error);
-        imageUrls = null;
+        // If JSON parsing fails, treat the string as a single URL.
+        console.warn('Failed to parse image_urls as JSON, treating as single URL:', error);
+        imageUrls = [event.image_urls];
       }
     } else if (Array.isArray(event.image_urls)) {
+      // If it's already an array, use it directly.
       imageUrls = event.image_urls;
     }
 
+    // Ensure we have at least one valid URL
     if (imageUrls && imageUrls.length > 0 && imageUrls[0]) {
       return imageUrls[0];
     }

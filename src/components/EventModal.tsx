@@ -47,6 +47,23 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   const [activeTab, setActiveTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
   const [imageExpanded, setImageExpanded] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0); // New state for active image
+
+  // Navigation helper functions
+  const handlePrevImage = () => {
+    const imageUrls = getImageUrls(selectedEvent?.image_urls);
+    if (imageUrls.length > 0) {
+      setActiveImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
+    }
+  };
+
+  const handleNextImage = () => {
+    const imageUrls = getImageUrls(selectedEvent?.image_urls);
+    if (imageUrls.length > 0) {
+      setActiveImageIndex((prevIndex) => (prevIndex + 1) % imageUrls.length);
+    }
+  };
+
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -160,46 +177,46 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         return (
                           <div className="space-y-4">
                             {/* Primary Image */}
-                            <div
-                              className="relative cursor-pointer group"
-                              onClick={() => setImageExpanded(true)}
-                            >
-                              <Image
-                                src={imageUrls[0]}
-                                alt={selectedEvent?.name ? `${selectedEvent.name} primary image` : 'Event Primary Image'}
-                                width={400}
-                                height={300}
-                                className="w-full h-64 md:h-80 object-cover rounded-lg transition-transform group-hover:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-2">
-                                  <FiImage size={24} className="text-gray-700" />
-                                </div>
-                              </div>
-                            </div>
+<div
+  className="relative cursor-pointer group"
+  onClick={() => { setActiveImageIndex(0); setImageExpanded(true); }} // Set active index to 0 and expand
+>
+  <Image
+    src={imageUrls[0]}
+    alt={selectedEvent?.name ? `${selectedEvent.name} primary image` : 'Event Primary Image'}
+    width={400}
+    height={300}
+    className="w-full h-64 md:h-80 object-cover rounded-lg transition-transform group-hover:scale-105"
+  />
+  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-2">
+      <FiImage size={24} className="text-gray-700" />
+    </div>
+  </div>
+</div>
 
                             {/* Additional Images */}
                             {imageUrls.length > 1 && (
                               <div className="grid grid-cols-2 gap-2">
                                 {imageUrls.slice(1).map((imageUrl: string, index: number) => (
-                                  <div
-                                    key={index}
-                                    className="relative cursor-pointer group"
-                                    onClick={() => setImageExpanded(true)}
-                                  >
-                                    <Image
-                                      src={imageUrl}
-                                      alt={selectedEvent?.name ? `${selectedEvent.name} image ${index + 2}` : `Event image ${index + 2}`}
-                                      width={200}
-                                      height={150}
-                                      className="w-full h-32 object-cover rounded-lg transition-transform group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
-                                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-1">
-                                        <FiImage size={16} className="text-gray-700" />
-                                      </div>
-                                    </div>
-                                  </div>
+<div
+  key={index}
+  className="relative cursor-pointer group"
+  onClick={() => { setActiveImageIndex(index + 1); setImageExpanded(true); }} // Set active index and expand
+>
+  <Image
+    src={imageUrl}
+    alt={selectedEvent?.name ? `${selectedEvent.name} image ${index + 2}` : `Event image ${index + 2}`}
+    width={200}
+    height={150}
+    className="w-full h-32 object-cover rounded-lg transition-transform group-hover:scale-105"
+  />
+  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-1">
+      <FiImage size={16} className="text-gray-700" />
+    </div>
+  </div>
+</div>
                                 ))}
                               </div>
                             )}
@@ -374,13 +391,27 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         const imageUrls = getImageUrls(selectedEvent?.image_urls);
         const hasImages = imageUrls.length > 0 || selectedEvent?.image_url;
 
-        if (!hasImages) return null;
+  if (!hasImages) return null;
 
-        return (
-          <div
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4"
-            onClick={() => setImageExpanded(false)}
-          >
+  // Determine the current image URL and alt text
+  let currentImageUrl = '';
+  let currentImageAlt = 'Event Image';
+
+  if (imageUrls.length > 0) {
+    // Ensure activeImageIndex is within bounds of imageUrls array
+    const safeIndex = activeImageIndex % imageUrls.length;
+    currentImageUrl = imageUrls[safeIndex];
+    currentImageAlt = selectedEvent?.name ? `${selectedEvent.name} image ${safeIndex + 1}` : 'Event Image';
+  } else if (selectedEvent?.image_url) {
+    currentImageUrl = selectedEvent.image_url;
+    currentImageAlt = selectedEvent?.name ? `${selectedEvent.name} image` : 'Event Image';
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4"
+      onClick={() => setImageExpanded(false)}
+    >
             <div className="relative max-w-4xl max-h-full">
               <button
                 onClick={(e) => {
@@ -392,14 +423,30 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 <FiX size={24} />
               </button>
 
+              {/* Navigation Buttons */}
+              <button
+                onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
+                className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity z-10"
+                aria-label="Previous Image"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
+                className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity z-10"
+                aria-label="Next Image"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
               {/* Show first image or single image */}
               <Image
-                src={
-                  imageUrls.length > 0
-                    ? imageUrls[0]
-                    : selectedEvent?.image_url || ''
-                }
-                alt={selectedEvent?.name ? `${selectedEvent.name} image` : 'Event Image'}
+  src={currentImageUrl}
+  alt={currentImageAlt}
                 width={800}
                 height={600}
                 className="max-w-full max-h-full object-contain rounded-lg"
@@ -409,21 +456,23 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
               {/* Show additional images if available */}
               {imageUrls.length > 1 && (
                 <div className="absolute bottom-4 left-4 right-4 flex gap-2 overflow-x-auto">
-                  {imageUrls.slice(1).map((imageUrl: string, index: number) => (
-                    <div
-                      key={index}
-                      className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/50 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Image
-                        src={imageUrl}
-                        alt={`${selectedEvent?.name} image ${index + 2}`}
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
+{imageUrls.slice(1).map((imageUrl: string, index: number) => (
+  <div
+    key={index}
+    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer transition-colors ${
+      activeImageIndex === index + 1 ? 'border-2 border-white scale-105' : 'border-2 border-white/20 hover:border-white/50'
+    }`}
+    onClick={(e) => { e.stopPropagation(); setActiveImageIndex(index + 1); }} // Update active index
+  >
+    <Image
+      src={imageUrl}
+      alt={`${selectedEvent?.name} image ${index + 2}`}
+      width={80}
+      height={80}
+      className="w-full h-full object-cover"
+    />
+  </div>
+))}
                 </div>
               )}
 
