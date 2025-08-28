@@ -12,6 +12,7 @@ interface NetworkStatusContextType {
   isSyncing: boolean;
   syncError: string | null;
   lastSyncTime: Date | null;
+  setLastSyncTime: (time: Date) => void;
 }
 
 export const NetworkStatusContext = createContext<NetworkStatusContextType | undefined>(undefined);
@@ -114,6 +115,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     isSyncing,
     syncError,
     lastSyncTime,
+    setLastSyncTime,
   };
 
   return (

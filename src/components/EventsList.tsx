@@ -11,7 +11,7 @@ export default function EventsList() {
   const [events, setEvents] = useState<EventItem[]>([]); // Use EventItem type
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false); // State for syncing indicator
-  const { isOnline, setLastSaved } = useNetworkStatus();
+  const { isOnline, setLastSyncTime } = useNetworkStatus();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -71,7 +71,7 @@ export default function EventsList() {
         } catch (cacheError) {
           console.warn('Failed to update cache:', cacheError);
         }
-        setLastSaved(new Date().toISOString()); // Update last synced timestamp
+        setLastSyncTime(new Date()); // Update last synced timestamp
       } catch (error) {
         console.error('Error fetching events from API:', error);
         // If API fetch fails, and we have cached data, keep the cached data.

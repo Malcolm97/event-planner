@@ -5,7 +5,7 @@ import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { FiWifi, FiWifiOff } from 'react-icons/fi';
 
 const OnlineBadge = () => {
-  const { isOnline, lastSaved } = useNetworkStatus();
+  const { isOnline, lastSyncTime } = useNetworkStatus();
 
   return (
     <div
@@ -18,9 +18,9 @@ const OnlineBadge = () => {
         <FiWifiOff className="w-5 h-5" />
       )}
       <span>{isOnline ? 'Online' : 'Offline'}</span>
-      {lastSaved && isOnline && (
+      {lastSyncTime && isOnline && (
         <span className="ml-2 text-xs opacity-90 font-medium">
-          Last synced: {new Date(lastSaved).toLocaleTimeString()}
+          Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
         </span>
       )}
     </div>
