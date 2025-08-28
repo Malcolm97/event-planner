@@ -3,14 +3,8 @@ import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import dynamic from 'next/dynamic';
 import ErrorBoundary from '@/components/ErrorBoundary';
-
 const NetworkStatusProvider = dynamic(
   () => import('@/context/NetworkStatusContext').then(mod => mod.NetworkStatusProvider),
-  { ssr: false }
-);
-
-const ClientOnlineBadge = dynamic(
-  () => import('@/components/ClientOnlineBadge'),
   { ssr: false }
 );
 
@@ -58,7 +52,6 @@ export default function RootLayout({
         <NetworkStatusProvider>
           <>
             {children}
-            <ClientOnlineBadge />
             <SyncIndicator />
             <Toaster position="bottom-center" />
           </>

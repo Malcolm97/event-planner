@@ -9,8 +9,6 @@ import { toast } from 'react-hot-toast';
 interface NetworkStatusContextType {
   isOnline: boolean;
   isPwaOnMobile: boolean;
-  lastSaved: string | null;
-  setLastSaved: (timestamp: string) => void;
   isSyncing: boolean;
   syncError: string | null;
   lastSyncTime: Date | null;
@@ -21,7 +19,6 @@ export const NetworkStatusContext = createContext<NetworkStatusContextType | und
 export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [isPwaOnMobile, setIsPwaOnMobile] = useState(false);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -60,7 +57,6 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       });
 
       setLastSyncTime(new Date());
-      setLastSaved(new Date().toISOString());
     } catch (error) {
       console.error('Sync error:', error);
       setSyncError(error instanceof Error ? error.message : 'Unknown sync error');
@@ -115,8 +111,6 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   const contextValue = {
     isOnline,
     isPwaOnMobile,
-    lastSaved,
-    setLastSaved,
     isSyncing,
     syncError,
     lastSyncTime,

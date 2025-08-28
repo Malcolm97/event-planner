@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 export default function Header() {
-  const { isOnline, lastSaved, setLastSaved } = useNetworkStatus(); // Get the status and lastSaved
+  const { isOnline } = useNetworkStatus(); // Get the status
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
@@ -78,19 +78,6 @@ export default function Header() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/');
-  };
-
-  // Function to format the date and time for display
-  const formatLastSaved = (timestamp: string | null) => {
-    if (!timestamp) return '';
-    if (!isClient) return '';
-    try {
-      const date = new Date(timestamp);
-      return '';
-    } catch (error) {
-      console.error("Error formatting timestamp:", error);
-      return '';
-    }
   };
 
   return (
