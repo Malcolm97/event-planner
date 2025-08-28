@@ -55,7 +55,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
 
   return (
     <div
-      className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] h-full"
+      className="group relative card cursor-pointer overflow-hidden card-hover h-full"
       onClick={() => {
         if (typeof onClick === 'function') {
           onClick();
@@ -64,40 +64,40 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
     >
       {/* Category Badge - Top Right */}
       <div className="absolute top-3 right-3 z-10">
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-sm`}>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
           <Icon size={12} />
           {categoryLabel}
         </span>
       </div>
 
       {/* Hero Image Area */}
-      <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative h-52 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
         <Image
           src={getEventPrimaryImage(event)}
           alt={event.name || 'Event Image'}
           fill={true}
           priority={true}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="transition-transform duration-300 group-hover:scale-105 object-cover"
+          className="transition-transform duration-500 group-hover:scale-110 object-cover"
         />
 
         {/* Price Badges - Bottom Left */}
-        <div className="absolute bottom-3 left-3 flex flex-col items-start gap-1">
+        <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
           {event.presale_price !== undefined && event.presale_price !== null && event.presale_price > 0 ? (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
               Presale: K{event.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-500/80 backdrop-blur-md text-white shadow-lg">
               Presale: None
             </span>
           )}
           {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 ? (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
               Gate: K{event.gate_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-500/80 backdrop-blur-md text-white shadow-lg">
               Gate: None
             </span>
           )}
@@ -106,7 +106,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
         {/* Featured Badge */}
         {event.featured && (
           <div className="absolute top-3 left-3">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-yellow-400 text-black shadow-sm">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg backdrop-blur-sm">
               <FiStar size={10} />
               Featured
             </span>
@@ -116,46 +116,44 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-        <div className="p-5 flex flex-col gap-3">
+        <div className="p-6 flex flex-col gap-4">
           {/* Event Title */}
-          <h3 className="text-xl font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
+          <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
             {event.name}
           </h3>
 
           {/* Location and Date */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
               <FiMapPin size={14} className="text-gray-400 flex-shrink-0" />
-              <span className="font-medium text-gray-700">{event.location}</span>
+              <span className="font-medium text-gray-700 text-sm">{event.location}</span>
             </div>
             {event.venue && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <FiHome size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700">{event.venue}</span>
+                <span className="font-medium text-gray-700 text-sm">{event.venue}</span>
               </div>
             )}
           </div>
 
           {event.date && (
             <>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700">{formatDate(new Date(event.date))}</span>
+                <span className="font-medium text-gray-700 text-sm">{formatDate(new Date(event.date))}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <FiClock size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                <span className="font-medium text-gray-700 text-sm">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
               </div>
             </>
           )}
 
-
-
           {/* Sharable Website Link */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-3 text-sm text-gray-600 pt-2 border-t border-gray-100">
             <FiLink size={14} className="text-gray-400 flex-shrink-0" />
             <button
-              className="font-medium text-blue-600 hover:underline truncate text-left"
+              className="font-medium text-blue-600 hover:text-blue-700 hover:underline truncate text-left transition-colors"
               onClick={(e) => {
                 e.stopPropagation(); // Prevent card click when clicking button
                 if (typeof onClick === 'function') {
@@ -169,12 +167,12 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
         </div>
 
         {/* Social Share Feature - positioned in bottom right */}
-        <div className="absolute bottom-3 right-3 z-10">
+        <div className="absolute bottom-4 right-4 z-10">
           <ShareButtons event={event} />
         </div>
 
         {/* Hover Overlay Effect */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"></div>
       </div>
     </div>
   );
@@ -244,24 +242,24 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation(); // Prevent card click
           handleShare();
         }}
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+        className="p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50"
         aria-label="Share Event"
       >
         <FiShare2 size={18} />
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-lg p-2 flex gap-2 z-20">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-600" aria-label="Share on Facebook">
+        <div className="absolute bottom-full right-0 mb-3 w-auto bg-white rounded-xl shadow-xl border border-gray-200 p-3 flex gap-2 z-20 animate-slide-up">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
             <FaFacebook size={20} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-400" aria-label="Share on Twitter">
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
             <FaTwitter size={20} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-700" aria-label="Share on LinkedIn">
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
             <FaLinkedin size={20} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-full hover:bg-green-100 text-green-500" aria-label="Share on WhatsApp">
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2.5 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
             <FaWhatsapp size={20} />
           </button>
         </div>

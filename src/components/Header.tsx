@@ -94,39 +94,39 @@ export default function Header() {
   };
 
   return (
-<header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+<header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-red-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">PNG</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-base">PNG</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-gray-900 tracking-tight">
               Events
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <button onClick={() => router.push('/events')} className="text-gray-600 hover:text-gray-900 transition-colors">
+          <nav className="hidden md:flex items-center space-x-1">
+            <button onClick={() => router.push('/events')} className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 font-medium">
               Events
             </button>
-            <button onClick={() => router.push('/categories')} className="text-gray-600 hover:text-gray-900 transition-colors">
+            <button onClick={() => router.push('/categories')} className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 font-medium">
               Categories
             </button>
-            <button onClick={() => router.push('/about')} className="text-gray-600 hover:text-gray-900 transition-colors">
+            <button onClick={() => router.push('/about')} className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 font-medium">
               About
             </button>
           </nav>
 
           {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             {user ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={() => router.push('/create-event')}
-                  className="btn-primary gap-2 shadow-sm hover:shadow"
+                  className="btn-primary gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -135,7 +135,7 @@ export default function Header() {
                 </button>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
                 >
                   {userPhotoUrl ? (
                     <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full" />
@@ -146,7 +146,7 @@ export default function Header() {
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
                 >
                   <FiLogOut size={16} />
                   Sign Out
@@ -156,21 +156,22 @@ export default function Header() {
                 // Conditionally render Sign In and Create Event buttons only after client-side mount
                 hasMounted && isOnline && (
                   <div className="flex items-center space-x-3">
-                    <button
+                    <Link
                       onClick={() => router.push('/signin')}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                      href="/signin"
+                      className="btn-secondary gap-2"
+                    >
+                      <FiUser size={16} />
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/signin"
+                      className="btn-primary gap-2"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                       Create Event
-                    </button>
-                    <Link
-                      href="/signin"
-                      className="btn-primary gap-2 shadow-sm hover:shadow"
-                    >
-                      <FiUser size={16} />
-                      Sign In
                     </Link>
                   </div>
                 )
@@ -186,7 +187,7 @@ export default function Header() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="md:hidden p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
           >
             {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
@@ -194,23 +195,23 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="md:hidden border-t border-gray-200/50 py-6 animate-slide-up">
             <nav className="flex flex-col space-y-4">
               <button
                 onClick={() => { router.push('/events'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
               >
                 Events
               </button>
               <button
                 onClick={() => { router.push('/categories'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
               >
                 Categories
               </button>
               <button
                 onClick={() => { router.push('/about'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
               >
                 About
               </button>
@@ -226,7 +227,7 @@ export default function Header() {
                       }
                       setIsMenuOpen(false); // Close mobile menu after click
                     }}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 active:scale-95 mx-auto w-full sm:w-1/2 block text-center"
+                    className="btn-primary w-full justify-center"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -235,7 +236,7 @@ export default function Header() {
                   </button>
                   <button
                     onClick={() => { router.push('/dashboard'); setIsMenuOpen(false); }}
-                    className="text-left text-gray-700 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
+                    className="text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg border-t border-gray-200 pt-6 mt-4 font-medium"
                   >
                     {userPhotoUrl ? (
                       <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-2" />
@@ -249,7 +250,7 @@ export default function Header() {
                       handleSignOut();
                       setIsMenuOpen(false);
                     }}
-                    className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2"
+                    className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
                   >
                     <FiLogOut size={16} className="inline mr-2" />
                     Sign Out
@@ -260,7 +261,7 @@ export default function Header() {
                 hasMounted && isOnline && (
                   <button
                     onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}
-                    className="text-left text-gray-600 hover:text-gray-900 transition-colors px-4 py-2 border-t border-gray-200 pt-4"
+                    className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg border-t border-gray-200 pt-6 mt-4 font-medium"
                   >
                     <FiUser size={16} className="inline mr-2" />
                     Sign In

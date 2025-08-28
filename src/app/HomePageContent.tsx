@@ -271,23 +271,23 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
-        <div className="max-w-5xl mx-auto flex flex-col items-center text-center gap-6">
-          <h1 className="text-5xl font-extrabold text-white mb-2 tracking-tight">
+        <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-8">
+          <h1 className="text-6xl md:text-7xl font-extrabold text-white mb-4 tracking-tight leading-tight">
             Local Events Near You
           </h1>
-          <p className="text-lg text-gray-200 max-w-2xl">
+          <p className="text-xl md:text-2xl text-gray-100 max-w-4xl leading-relaxed">
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl justify-center mt-2">
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-4xl justify-center mt-4">
             <input
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="input-field flex-1 shadow-lg"
               placeholder="Search events, locations, or venues..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <select
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
+              className="input-field shadow-lg min-w-[200px]"
               value={selectedLocationFilter}
               onChange={(e) => setSelectedLocationFilter(e.target.value)}
             >
@@ -296,7 +296,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               ))}
             </select>
             <select
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900"
+              className="input-field shadow-lg min-w-[200px]"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             >
@@ -304,78 +304,80 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                 <option key={dateOption} value={dateOption}>{dateOption}</option>
               ))}
             </select>
-            <button className="btn-primary shadow-sm hover:shadow">Find Events</button>
+            <button className="btn-primary shadow-lg">Find Events</button>
           </div>
-          <div className="flex gap-8 mt-6 text-center justify-center">
+          <div className="grid grid-cols-3 gap-8 mt-8 w-full max-w-2xl">
             <div>
-              <div className="text-2xl font-bold text-gray-200">{totalEvents !== null ? totalEvents : '...'}</div>
-              <div className="text-sm text-gray-400">Total Events</div>
+              <div className="text-3xl md:text-4xl font-bold text-white">{totalEvents !== null ? totalEvents : '...'}</div>
+              <div className="text-sm md:text-base text-gray-200 font-medium">Total Events</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-200">{totalUsers !== null ? totalUsers : '...'}</div>
-              <div className="text-sm text-gray-400">Total Users</div>
+              <div className="text-3xl md:text-4xl font-bold text-white">{totalUsers !== null ? totalUsers : '...'}</div>
+              <div className="text-sm md:text-base text-gray-200 font-medium">Total Users</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-200">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
-              <div className="text-sm text-gray-400">Cities Covered</div>
+              <div className="text-3xl md:text-4xl font-bold text-white">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
+              <div className="text-sm md:text-base text-gray-200 font-medium">Cities Covered</div>
             </div>
           </div>
         </div>
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
+      <section className="max-w-7xl mx-auto w-full section-padding">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">📅</span> Upcoming Events
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover all upcoming events happening near you.</p>
+          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Discover all upcoming events happening near you.</p>
         </div>
 
         {loading ? (
-          <div className="text-center py-16">
+          <div className="text-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-            <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
+            <p className="text-gray-500 mt-8 text-xl">Loading events...</p>
           </div>
         ) : (
           <>
             {upcomingEvents.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-fade-in">
                 {upcomingEvents.slice(0, 4).map(event => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
               </div>
             ) : (
-              <div className="col-span-full text-center py-16">
-                <div className="text-6xl mb-4">📅</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events</h3>
-                <p className="text-gray-500">Check back later for new events.</p>
+              <div className="col-span-full text-center py-20">
+                <div className="text-8xl mb-6">📅</div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">No upcoming events</h3>
+                <p className="text-gray-500 text-lg">Check back later for new events.</p>
               </div>
             )}
           </>
         )}
 
-          <div className="flex justify-center mt-12">
-            <Link href="/events" className="px-8 py-3 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center">
+          <div className="flex justify-center mt-16">
+            <Link href="/events" className="btn-primary text-lg px-10 py-4">
               View all Events
             </Link>
           </div>
       </section>
 
-      <section className="max-w-7xl mx-auto w-full py-16 px-4 sm:px-8">
+      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3 mb-3">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">✨</span> Featured Events
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Featured events will appear here soon!</p>
+          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Featured events will appear here soon!</p>
         </div>
       </section>
 
-
-      <section className="w-full py-10 px-4 sm:px-8 bg-white border-t border-black">
-        <div className="max-w-5xl mx-auto">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Explore by Category</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 justify-center">
+      <section className="w-full section-padding bg-white border-t border-gray-200">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Explore by Category</h3>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
             {allCategories
               .filter(cat => {
                 if (cat.name === 'Other') {
@@ -392,12 +394,12 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   <Link
                     href={`/categories?category=${encodeURIComponent(cat.name)}`}
                     key={cat.name}
-                    className={`flex flex-col items-center justify-center gap-2 px-6 py-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[120px] min-w-[120px] ${categoryColor}`}
+                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-gray-200 font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${categoryColor} group`}
                   >
-                    <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-yellow-400 mb-1">
-                      <Icon size={24} />
+                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white border-2 border-gray-200 group-hover:border-yellow-400 transition-all duration-300 shadow-md">
+                      <Icon size={28} />
                     </span>
-                    <span className="text-base font-semibold">{cat.name}</span>
+                    <span className="text-base font-bold text-center">{cat.name}</span>
                   </Link>
                 );
               })}
@@ -405,17 +407,17 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         </div>
       </section>
 
-      <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600 mt-auto">
-        <div className="max-w-6xl mx-auto flex flex-col md:row justify-between items-center gap-4 text-gray-500 text-sm">
+      <footer className="w-full py-12 px-4 sm:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-300 text-white">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-300 text-white">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-300 text-white">About</Link>
+            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">About</Link>
           </div>
-          <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
+          <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <Link href="#" className="hover:text-yellow-300 text-white">Terms</Link>
-            <Link href="#" className="hover:text-yellow-300 text-white">Privacy</Link>
+            <Link href="#" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Terms</Link>
+            <Link href="#" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Privacy</Link>
           </div>
         </div>
       </footer>

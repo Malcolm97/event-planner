@@ -191,37 +191,49 @@ export default function CreateEventPage() {
 
         <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
-            <p className="text-gray-600 mt-2">Fill in the details to create your event</p>
+            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Create New Event</h1>
+            <p className="text-gray-600 text-lg">Fill in the details to create your event</p>
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-10">
             {/* Event Basic Information */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
+            <div className="card p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                Basic Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-3">Event Name</label>
                   <input
                     type="text"
                     id="name"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-3">Category</label>
                   <select
                     id="category"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     required
@@ -240,15 +252,22 @@ export default function CreateEventPage() {
             </div>
 
             {/* Event Details */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Event Details</h2>
+            <div className="card p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                Event Details
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-3">Description</label>
                   <textarea
                     id="description"
                     rows={4}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field resize-none"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   ></textarea>
@@ -257,12 +276,13 @@ export default function CreateEventPage() {
                   <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
                     Event Images (Up to 3)
                   </label>
-                  <input
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-yellow-400 transition-colors">
+                    <input
                     type="file"
                     id="images"
                     accept="image/*"
                     multiple
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 file:transition-colors"
                     onChange={(e) => {
                       const files = e.target.files;
                       if (files) {
@@ -271,11 +291,12 @@ export default function CreateEventPage() {
                       }
                     }}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-3">
                     You can upload up to 3 images. The first image will be the primary image.
                   </p>
+                  </div>
                   {imageFiles.length > 0 && (
-                    <div className="mt-2 text-sm text-gray-600">
+                    <div className="mt-3 text-sm text-green-600 font-medium">
                       Selected {imageFiles.length} image{imageFiles.length > 1 ? 's' : ''}
                     </div>
                   )}
@@ -284,15 +305,23 @@ export default function CreateEventPage() {
             </div>
 
             {/* Date & Location */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Date & Location</h2>
+            <div className="card p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                Date & Location
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
+                  <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-3">Date & Time</label>
                   <input
                     type="datetime-local"
                     id="date"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
@@ -300,10 +329,10 @@ export default function CreateEventPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-3">Location</label>
                   <select
                     id="location"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field"
                     value={selectedLocationType}
                     onChange={(e) => setSelectedLocationType(e.target.value)}
                     required
@@ -316,7 +345,7 @@ export default function CreateEventPage() {
                     <input
                       type="text"
                       id="customLocation"
-                      className="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                      className="input-field mt-3"
                       placeholder="Enter custom location"
                       value={customLocation}
                       onChange={(e) => setCustomLocation(e.target.value)}
@@ -328,42 +357,49 @@ export default function CreateEventPage() {
             </div>
 
             {/* Pricing */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pricing</h2>
+            <div className="card p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                Pricing
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="presale_price" className="block text-sm font-medium text-gray-700 mb-2">Presale Fee (PGK)</label>
+                  <label htmlFor="presale_price" className="block text-sm font-semibold text-gray-700 mb-3">Presale Fee (PGK)</label>
                   <input
                     type="number"
                     id="presale_price"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field"
                     value={presale_price}
                     onChange={(e) => setPresale_price(parseFloat(e.target.value) || 0)}
                     min="0"
                     step="0.01"
                   />
-                  <p className="text-xs text-gray-500 mt-1">If 0 or empty, this event will be marked as "None".</p>
+                  <p className="text-xs text-gray-500 mt-2">If 0 or empty, this event will be marked as "None".</p>
                 </div>
 
                 <div>
-                  <label htmlFor="gate_price" className="block text-sm font-medium text-gray-700 mb-2">Gate Fee (PGK)</label>
+                  <label htmlFor="gate_price" className="block text-sm font-semibold text-gray-700 mb-3">Gate Fee (PGK)</label>
                   <input
                     type="number"
                     id="gate_price"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className="input-field"
                     value={gate_price}
                     onChange={(e) => setGate_price(parseFloat(e.target.value) || 0)}
                     min="0"
                     step="0.01"
                   />
-                  <p className="text-xs text-gray-500 mt-1">If 0 or empty, this event will be marked as "None".</p>
+                  <p className="text-xs text-gray-500 mt-2">If 0 or empty, this event will be marked as "None".</p>
                 </div>
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               disabled={loading}
             >
               {loading ? 'Creating Event...' : 'Create Event'}

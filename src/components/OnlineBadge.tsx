@@ -9,17 +9,17 @@ const OnlineBadge = () => {
 
   return (
     <div
-      className={`fixed bottom-4 right-4 px-3 py-2 rounded-full shadow-lg flex items-center space-x-2 text-sm font-medium transition-all duration-300 ease-in-out
-        ${isOnline ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
+      className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-sm font-semibold transition-all duration-300 ease-in-out backdrop-blur-sm border
+        ${isOnline ? 'bg-green-500/90 text-white border-green-400' : 'bg-red-500/90 text-white border-red-400'}`}
     >
       {isOnline ? (
-        <FiWifi className="w-4 h-4" />
+        <FiWifi className="w-5 h-5" />
       ) : (
-        <FiWifiOff className="w-4 h-4" />
+        <FiWifiOff className="w-5 h-5" />
       )}
       <span>{isOnline ? 'Online' : 'Offline'}</span>
       {lastSaved && isOnline && (
-        <span className="ml-2 text-xs opacity-80">
+        <span className="ml-2 text-xs opacity-90 font-medium">
           Last synced: {new Date(lastSaved).toLocaleTimeString()}
         </span>
       )}

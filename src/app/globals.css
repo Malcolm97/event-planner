@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 @layer utilities {
   .line-clamp-2 {
     overflow: hidden;
@@ -15,6 +33,27 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+  }
+  
+  .line-clamp-4 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.9);
+  }
+  
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 }
 
@@ -41,20 +80,41 @@ body {
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center;
-    @apply px-4 py-2 rounded-lg;
+    @apply px-6 py-3 rounded-xl;
     @apply font-semibold transition-all duration-200;
     @apply whitespace-nowrap min-w-max;
     @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply shadow-sm hover:shadow-md;
   }
 
   .btn-primary {
-    @apply btn bg-yellow-400 text-black hover:bg-yellow-500;
-    @apply focus:ring-yellow-300;
+    @apply btn bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-500 hover:to-orange-600;
+    @apply focus:ring-yellow-300 transform hover:scale-105 active:scale-95;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-gray-900 hover:text-gray-800 border border-gray-200;
+    @apply btn bg-white text-gray-900 hover:bg-gray-50 border border-gray-300;
+    @apply focus:ring-gray-300 hover:border-gray-400;
+  }
+  
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-700 hover:bg-gray-100;
     @apply focus:ring-gray-300;
+  }
+  
+  .input-field {
+    @apply w-full rounded-xl border border-gray-300 px-4 py-3 bg-white text-gray-900;
+    @apply focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent;
+    @apply transition-all duration-200 placeholder-gray-500;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-200;
+    @apply transition-all duration-300 hover:shadow-lg;
+  }
+  
+  .section-padding {
+    @apply py-16 px-4 sm:px-6 lg:px-8;
   }
   
   .animate-fade-in {
@@ -65,6 +125,21 @@ body {
     from {
       opacity: 0;
       transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
     }
     to {
       opacity: 1;

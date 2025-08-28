@@ -189,15 +189,21 @@ export default function SignInPage() {
           </Link>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
-        <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-white font-bold text-xl">PNG</span>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
           Welcome to PNG Events
         </h2>
-        <p className="text-center text-gray-500 text-base mb-2">Sign in to discover and create amazing events</p>
+          <p className="text-gray-600 text-lg">Sign in to discover and create amazing events</p>
+        </div>
+        
         {/* Tabs */}
-        <div className="flex mb-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+        <div className="flex mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-1">
           <button
             type="button"
-            className={`flex-1 py-2 text-lg font-semibold transition-colors duration-150 ${!isRegister && !isForgotPassword ? "bg-white text-gray-900" : "text-gray-400"}`}
+            className={`flex-1 py-3 text-base font-semibold transition-all duration-200 rounded-lg ${!isRegister && !isForgotPassword ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
             onClick={() => { setIsRegister(false); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
@@ -205,101 +211,124 @@ export default function SignInPage() {
           </button>
           <button
             type="button"
-            className={`flex-1 py-2 text-lg font-semibold transition-colors duration-150 ${isRegister ? "bg-white text-gray-900" : "text-gray-400"}`}
+            className={`flex-1 py-3 text-base font-semibold transition-all duration-200 rounded-lg ${isRegister ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
             onClick={() => { setIsRegister(true); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
             Register
           </button>
         </div>
-        <div className="flex flex-col gap-4">
+        
+        <div className="flex flex-col gap-5">
           {isForgotPassword ? (
             <>
-              <p className="text-center text-gray-600 text-sm">Enter your email to receive a password reset link.</p>
-              <label className="text-sm font-medium text-gray-700">Email</label>
+              <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <p className="text-blue-800 text-sm font-medium">Enter your email to receive a password reset link.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
+              </div>
             </>
           ) : isRegister ? (
             <>
-              <label className="text-sm font-medium text-gray-700">Full Name</label>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
               <input
                 type="text"
                 placeholder="Enter your full name"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-gray-50 focus:bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
-              <label className="text-sm font-medium text-gray-700">Email</label>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 placeholder="Create a password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
-              <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
               <input
                 type="password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
+              </div>
             </>
           ) : (
             <>
-              <label className="text-sm font-medium text-gray-700">Email</label>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
                 required
               />
               <button
                 type="button"
                 onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
-                className="text-sm text-yellow-600 hover:text-yellow-700 self-end -mt-2"
+                className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium hover:underline transition-colors"
               >
                 Forgot Password?
               </button>
+              </div>
             </>
           )}
         </div>
-        {error && <div className="text-red-500 text-sm text-center mt-2">{error}</div>}
+        
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-700 text-sm font-medium text-center">{error}</p>
+          </div>
+        )}
+        
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold text-lg shadow-md hover:bg-yellow-500 transition disabled:opacity-50 mt-2"
+          className="btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           {loading ? "Loading..." : isForgotPassword ? "Send Reset Link" : (isRegister ? "Create Account" : "Sign In")}
         </button>
