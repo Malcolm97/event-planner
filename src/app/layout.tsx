@@ -30,9 +30,13 @@ export const metadata = {
   description: 'Find concerts, festivals, workshops, and more happening in Papua New Guinea.',
   keywords: 'events, Papua New Guinea, PNG, concerts, festivals, workshops',
   authors: [{ name: 'PNG Events Team' }],
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#FCD34D',
   manifest: '/manifest.json',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#FCD34D',
 };
 
 export default function RootLayout({

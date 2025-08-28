@@ -86,7 +86,7 @@ export default function Header() {
     if (!isClient) return '';
     try {
       const date = new Date(timestamp);
-      return `Last saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+      return '';
     } catch (error) {
       console.error("Error formatting timestamp:", error);
       return '';
@@ -176,12 +176,6 @@ export default function Header() {
                   </div>
                 )
               )}
-            {/* Display last saved timestamp */}
-            {lastSaved && (
-              <span className="text-sm text-gray-500">
-                {formatLastSaved(lastSaved)}
-              </span>
-            )}
           </div>
 
           {/* Mobile menu button */}
