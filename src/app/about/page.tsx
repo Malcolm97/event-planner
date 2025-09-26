@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
 import Link from 'next/link';
+import Button from '@/components/Button';
 import Image from 'next/image';
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
@@ -89,29 +90,27 @@ export default async function AboutPage() {
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       {/* Hero Section */}
-      <section className="w-full py-20 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white border-b border-gray-200">
+      <section className="w-full py-24 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight">
-            Bringing Communities Together
+          <h1 className="text-6xl font-extrabold mb-8 tracking-tight leading-tight drop-shadow-lg">
+            PNG Events: Connecting Communities
           </h1>
-          <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-10 leading-relaxed opacity-90">
-            PNG Events is more than just an event platform – we're a community-driven initiative 
-            dedicated to connecting people across Papua New Guinea through meaningful experiences, 
-            cultural celebrations, and shared passions.
+          <p className="text-2xl max-w-3xl mx-auto mb-12 leading-relaxed opacity-95 font-light">
+            Discover, create, and celebrate events that bring Papua New Guinea together. Our platform empowers everyone to share their passions and build vibrant communities.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/events" className="btn-primary text-lg px-10 py-4">
-              Explore Events
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Link href="/events">
+              <Button variant="secondary" className="w-full sm:w-auto">Explore Events</Button>
             </Link>
-            <Link href="/create-event" className="btn-secondary text-lg px-10 py-4">
-              Create Your Event
+            <Link href="/create-event">
+              <Button variant="primary" className="w-full sm:w-auto">Create Your Event</Button>
             </Link>
           </div>
         </div>
       </section>
 
       {/* Mission Section */}
-      <section className="max-w-6xl mx-auto w-full py-20 px-4 sm:px-8">
+  <section className="max-w-6xl mx-auto w-full py-24 px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-4xl font-bold text-gray-900 mb-8">Our Mission</h2>
@@ -142,18 +141,17 @@ export default async function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="max-w-6xl mx-auto w-full py-20 px-4 sm:px-8 bg-gray-50">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
-          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            Dedicated individuals working tirelessly to connect communities and create memorable experiences across Papua New Guinea.
+      <section className="max-w-6xl mx-auto w-full py-24 px-4 sm:px-8 bg-gray-50">
+        <div className="text-center mb-20">
+          <h2 className="text-5xl font-bold text-gray-900 mb-6">Meet Our Team</h2>
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto font-light">
+            Passionate people dedicated to building a connected PNG through memorable events and experiences.
           </p>
         </div>
-        
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-12">
           {team.map((member, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-gray-200 w-full max-w-sm">
-              <div className="relative w-full h-72">
+            <div key={index} className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 border border-gray-200 w-full max-w-xs flex flex-col items-center">
+              <div className="relative w-full h-64">
                 <Image 
                   src={member.image} 
                   alt={member.name}
@@ -163,9 +161,9 @@ export default async function AboutPage() {
                 />
               </div>
               <div className="p-8 text-center">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">{member.name}</h3>
-                <p className="text-red-600 font-medium mb-4 text-lg">{member.role}</p>
-                <p className="text-gray-600 leading-relaxed">{member.bio}</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{member.name}</h3>
+                <p className="text-yellow-600 font-semibold mb-4 text-lg">{member.role}</p>
+                <p className="text-gray-600 leading-relaxed font-light">{member.bio}</p>
               </div>
             </div>
           ))}
@@ -173,7 +171,7 @@ export default async function AboutPage() {
       </section>
 
       {/* Our Impact Section */}
-      <section className="w-full py-20 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white">
+  <section className="w-full py-24 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">Our Impact</h2>
@@ -200,7 +198,7 @@ export default async function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="w-full py-20 px-4 sm:px-8 bg-gray-100 border-t border-gray-200">
+  <section className="w-full py-24 px-4 sm:px-8 bg-gray-100 border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-6">Ready to Get Started?</h2>
           <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -219,16 +217,18 @@ export default async function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full py-10 px-4 sm:px-8 bg-gray-900 border-t border-red-600 mt-auto">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-base">
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-4 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-400 transition-colors duration-300">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-400 transition-colors duration-300">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-400 transition-colors duration-300">About</Link>
-            <Link href="#" className="hover:text-yellow-400 transition-colors duration-300">Terms</Link>
-            <Link href="#" className="hover:text-yellow-400 transition-colors duration-300">Privacy</Link>
+      <footer className="w-full py-12 px-4 sm:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
+          <div className="flex gap-6 mb-2 md:mb-0">
+            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">About</Link>
           </div>
-          <div className="text-center text-gray-500">© 2025 PNG Events. All rights reserved.</div>
+          <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
+          <div className="flex gap-4">
+            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Privacy</Link>
+          </div>
         </div>
       </footer>
     </div>

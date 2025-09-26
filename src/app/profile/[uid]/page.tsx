@@ -79,6 +79,12 @@ function ProfilePageContent({ uid }: { uid: string }) {
           <div className="text-6xl mb-4">❌</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">User not found</h3>
           <p className="text-gray-500">The user profile you're looking for doesn't exist.</p>
+          <button
+            className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -174,6 +180,12 @@ function ProfilePageContent({ uid }: { uid: string }) {
               <p className="text-gray-500">
                 {user.name || 'This user'} hasn't created any events yet.
               </p>
+              <button
+                className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
             </div>
           )}
         </div>
@@ -189,8 +201,8 @@ function ProfilePageContent({ uid }: { uid: string }) {
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-yellow-300 text-white">Terms</a>
-            <a href="#" className="hover:text-yellow-300 text-white">Privacy</a>
+            <a href="/terms" className="hover:text-yellow-300 text-white">Terms</a>
+            <a href="/privacy" className="hover:text-yellow-300 text-white">Privacy</a>
           </div>
         </div>
       </footer>

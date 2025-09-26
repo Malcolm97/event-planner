@@ -279,15 +279,17 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-4xl justify-center mt-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-4xl justify-center mt-4">
             <input
-              className="input-field flex-1 shadow-lg"
+              className="w-full sm:w-[280px] flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-gray-400"
               placeholder="Search events, locations, or venues..."
+              aria-label="Search events, locations, or venues"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <select
-              className="input-field shadow-lg min-w-[200px]"
+              className="w-full sm:w-[160px] rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg min-w-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200"
+              aria-label="Filter by location"
               value={selectedLocationFilter}
               onChange={(e) => setSelectedLocationFilter(e.target.value)}
             >
@@ -350,6 +352,13 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                 <div className="text-8xl mb-6">📅</div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">No upcoming events</h3>
                 <p className="text-gray-500 text-lg">Check back later for new events.</p>
+                <button
+                  className="mt-8 px-8 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all duration-150 text-lg"
+                  aria-label="Retry loading events"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </button>
               </div>
             )}
           </>
@@ -416,8 +425,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </div>
           <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <Link href="#" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Terms</Link>
-            <Link href="#" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Privacy</Link>
+            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Privacy</Link>
           </div>
         </div>
       </footer>
