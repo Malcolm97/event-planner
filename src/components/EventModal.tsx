@@ -7,6 +7,7 @@ import React, { ElementType, useState, useRef, useEffect } from 'react';
 import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { User } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 import { getEventPrimaryImage } from '@/lib/utils';
@@ -56,6 +57,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     setIsOffline(typeof navigator !== 'undefined' && !navigator.onLine);
@@ -149,14 +151,21 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-1 sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
       aria-labelledby="event-modal-title"
       aria-describedby="event-modal-desc"
     >
-  <div className="bg-white rounded-3xl shadow-2xl max-w-lg sm:max-w-4xl w-full mx-1 sm:mx-4 relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[95vh] focus:outline-none">
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-[98vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[98vh] focus:outline-none flex flex-col"
+        style={{
+          minHeight: '60vh',
+          maxHeight: '98vh',
+          boxSizing: 'border-box',
+        }}
+      >
         {/* Header */}
         {isOffline && (
           <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 rounded-t-3xl font-semibold" role="alert">
@@ -253,6 +262,8 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 </div>
                 {/* Event Image and Details Grid */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
+                  {/* On mobile, stack columns vertically. On tablet/desktop, use side-by-side layout. */}
+                  {/* Responsive image sizing and spacing */}
                   {/* Left Column: Event Images */}
                   <div className="order-2 md:order-1">
                     {(() => {
@@ -264,7 +275,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         <div className="space-y-6">
                           {/* Primary Image */}
                           <div
-                            className="relative cursor-pointer group rounded-2xl overflow-hidden shadow-lg"
+                            className="relative cursor-pointer group rounded-2xl overflow-hidden shadow-lg w-full h-56 sm:h-72 md:h-96"
                             onClick={() => {
                               if (currentHasImages) {
                                 setActiveImageIndex(0);
@@ -303,7 +314,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                                     alt={selectedEvent?.name ? `${selectedEvent.name} image ${index + 2}` : `Event image ${index + 2}`}
                                     width={200}
                                     height={150}
-                                    className="w-full h-36 object-cover transition-transform duration-300 group-hover:scale-110"
+                                    className="w-full h-24 sm:h-36 object-cover transition-transform duration-300 group-hover:scale-110"
                                     loading="lazy"
                                   />
                                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
@@ -321,10 +332,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   </div>
 
                   {/* Right Column: Location and Date/Time */}
-                  <div className="order-1 md:order-2 space-y-6">
-                    <div className="flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                  <div className="order-1 md:order-2 space-y-6 w-full">
+                    <div className="flex flex-col sm:flex-row items-start gap-4 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
                       <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div className="space-y-4">
+                      <div className="space-y-2 sm:space-y-4 w-full">
                         <div>
                           <h4 className="font-bold text-gray-900 text-lg">Location</h4>
                           <p className="text-gray-700 text-base">{selectedEvent?.location || 'Not specified'}</p>
@@ -339,17 +350,17 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                     </div>
 
                     {selectedEvent?.date && (
-                      <div className="flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                      <div className="flex flex-col sm:flex-row items-start gap-4 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
                         <FiCalendar size={20} className="text-blue-500 mt-1 flex-shrink-0" />
-                        <div>
+                        <div className="w-full">
                           <h4 className="font-bold text-gray-900 text-lg">Date & Time</h4>
-                          <p className="text-gray-700 text-base font-medium">
+                          <p className="text-gray-700 text-base font-medium break-words">
                             {new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             {selectedEvent.end_date ?
                               ` - ${new Date(selectedEvent.end_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
                               : ''}
                           </p>
-                          <p className="text-gray-700 text-base">
+                          <p className="text-gray-700 text-base break-words">
                             {new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                             {selectedEvent.end_date ?
                               ` - ${new Date(selectedEvent.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
@@ -424,26 +435,34 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                       </div>
                     )}
                     <div className="flex flex-col gap-3 sm:flex-row items-center sm:gap-4 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
-                      {host?.email ? (
-                        <div className="flex items-center gap-3 text-blue-600 rounded-lg px-4 py-3 bg-blue-50 font-medium">
-                          <FiMail size={18} />
-                          <span>{host.email}</span>
-                        </div>
+                      {authUser ? (
+                        <>
+                          {host?.email ? (
+                            <div className="flex items-center gap-3 text-blue-600 rounded-lg px-4 py-3 bg-blue-50 font-medium">
+                              <FiMail size={18} />
+                              <span>{host.email}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3 text-red-600 font-semibold">
+                              <FiMail size={18} />
+                              <span>Email not available</span>
+                            </div>
+                          )}
+                          {host?.phone ? (
+                            <div className="flex items-center gap-3 text-green-600 rounded-lg px-4 py-3 bg-green-50 font-medium">
+                              <FiPhone size={18} />
+                              <span>{host.phone}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3 text-red-600 font-semibold">
+                              <FiPhone size={18} />
+                              <span>Phone not available</span>
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <div className="flex items-center gap-3 text-red-600 font-semibold">
-                          <FiMail size={18} />
-                          <span>Email not available</span>
-                        </div>
-                      )}
-                      {host?.phone ? (
-                        <div className="flex items-center gap-3 text-green-600 rounded-lg px-4 py-3 bg-green-50 font-medium">
-                          <FiPhone size={18} />
-                          <span>{host.phone}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3 text-red-600 font-semibold">
-                          <FiPhone size={18} />
-                          <span>Phone not available</span>
+                        <div className="w-full text-center py-4 px-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
+                          <p>To view the host's email and phone number, please <span className="font-bold">log in</span> to your account.</p>
                         </div>
                       )}
                     </div>
