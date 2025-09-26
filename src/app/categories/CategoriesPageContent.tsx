@@ -149,7 +149,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <section className="py-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-6 sm:gap-2 md:gap-4">
             {displayCategories.map((cat) => {
               const CategoryIcon = categoryIconMap[cat.icon];
               return (
@@ -190,7 +190,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
               <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
             </div>
           ) : upcomingEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
               {upcomingEvents.map(event => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}

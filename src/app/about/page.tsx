@@ -148,7 +148,7 @@ export default async function AboutPage() {
             Passionate people dedicated to building a connected PNG through memorable events and experiences.
           </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-12">
+  <div className="flex flex-wrap justify-center gap-8 sm:gap-12">
           {team.map((member, index) => (
             <div key={index} className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 border border-gray-200 w-full max-w-xs flex flex-col items-center">
               <div className="relative w-full h-64">
@@ -180,7 +180,7 @@ export default async function AboutPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-10">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (

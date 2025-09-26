@@ -311,7 +311,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             </select>
             <button className="btn-primary shadow-lg focus:ring-2 focus:ring-yellow-400" aria-label="Find Events">Find Events</button>
           </div>
-          <div className="grid grid-cols-3 gap-8 mt-8 w-full max-w-2xl">
+          <div className="grid grid-cols-1 gap-6 mt-8 w-full max-w-2xl sm:grid-cols-3 sm:gap-8">
             <div>
               <div className="text-3xl md:text-4xl font-bold text-white">{totalEvents !== null ? totalEvents : '...'}</div>
               <div className="text-sm md:text-base text-gray-200 font-medium">Total Events</div>
@@ -345,7 +345,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         ) : (
           <>
             {upcomingEvents.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
                 {upcomingEvents.slice(0, 4).map(event => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
