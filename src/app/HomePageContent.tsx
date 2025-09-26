@@ -281,7 +281,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-4xl justify-center mt-4">
             <input
-              className="w-full sm:w-[320px] flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
+              className="w-full min-w-[120px] max-w-md flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               placeholder="Search events, locations, or venues..."
               aria-label="Search events, locations, or venues"
               value={searchTerm}
@@ -289,7 +289,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               style={{ color: 'black' }}
             />
             <select
-              className="w-full sm:w-[320px] flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg min-w-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
+              className="w-full min-w-[120px] max-w-md flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               aria-label="Filter by location"
               value={selectedLocationFilter}
               onChange={(e) => setSelectedLocationFilter(e.target.value)}
@@ -300,7 +300,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               ))}
             </select>
             <select
-              className="input-field shadow-lg min-w-[120px] max-w-[140px] rounded-xl border border-gray-300 bg-white px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
+              className="w-full min-w-[120px] max-w-xs rounded-xl border border-gray-300 bg-white px-4 py-2 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               style={{ color: 'black' }}
@@ -309,7 +309,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                 <option key={dateOption} value={dateOption}>{dateOption}</option>
               ))}
             </select>
-            <button className="btn-primary shadow-lg">Find Events</button>
+            <button className="btn-primary shadow-lg focus:ring-2 focus:ring-yellow-400" aria-label="Find Events">Find Events</button>
           </div>
           <div className="grid grid-cols-3 gap-8 mt-8 w-full max-w-2xl">
             <div>
@@ -345,7 +345,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         ) : (
           <>
             {upcomingEvents.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8 animate-fade-in">
                 {upcomingEvents.slice(0, 4).map(event => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -389,7 +389,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Explore by Category</h3>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {allCategories
               .filter(cat => {
                 if (cat.name === 'Other') {
@@ -422,14 +422,14 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       <footer className="w-full py-12 px-4 sm:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">About</Link>
+            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Events">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Categories">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="About">About</Link>
           </div>
           <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Terms</Link>
-            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Privacy</Link>
+            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Terms">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Privacy">Privacy</Link>
           </div>
         </div>
       </footer>

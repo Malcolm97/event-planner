@@ -149,7 +149,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <section className="py-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-4">
             {displayCategories.map((cat) => {
               const CategoryIcon = categoryIconMap[cat.icon];
               return (
@@ -190,7 +190,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
               <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
             </div>
           ) : upcomingEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
               {upcomingEvents.map(event => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}
@@ -217,14 +217,14 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-300 text-white">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-300 text-white">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-300 text-white">About</Link>
+            <Link href="/events" className="hover:text-yellow-300 text-white" aria-label="Events">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-300 text-white" aria-label="Categories">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-300 text-white" aria-label="About">About</Link>
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <Link href="#" className="hover:text-yellow-300 text-white">Terms</Link>
-            <Link href="#" className="hover:text-yellow-300 text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-yellow-300 text-white" aria-label="Terms">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-300 text-white" aria-label="Privacy">Privacy</Link>
           </div>
         </div>
       </footer>

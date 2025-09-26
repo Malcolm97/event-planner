@@ -1,6 +1,7 @@
 'use client';
 
 import Header from '../../components/Header';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import EventCard from '../../components/EventCard';
@@ -134,12 +135,13 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
 
       <section className="py-8 px-4 sm:px-8 bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <FiMapPin className="text-yellow-600 text-xl" />
             <select
               value={selectedArea}
               onChange={(e) => setSelectedArea(e.target.value ?? 'All Areas')}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full min-w-[120px] max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              aria-label="Filter by area"
             >
               {areas.map(area => (
                 <option key={area} value={area}>{area}</option>
@@ -152,7 +154,7 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
       <section className="py-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Popular Areas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {areas.slice(1).map(area => {
               const areaEvents = area === 'Other Locations'
                 ? events.filter(event => {
@@ -245,14 +247,14 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <a href="/events" className="hover:text-yellow-300 text-white">Events</a>
-            <a href="/categories" className="hover:text-yellow-300 text-white">Categories</a>
-            <a href="/about" className="hover:text-yellow-300 text-white">About</a>
+            <Link href="/events" className="hover:text-yellow-300 text-white" aria-label="Events">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-300 text-white" aria-label="Categories">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-300 text-white" aria-label="About">About</Link>
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-yellow-300 text-white">Terms</a>
-            <a href="#" className="hover:text-yellow-300 text-white">Privacy</a>
+            <Link href="/terms" className="hover:text-yellow-300 text-white" aria-label="Terms">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-300 text-white" aria-label="Privacy">Privacy</Link>
           </div>
         </div>
       </footer>

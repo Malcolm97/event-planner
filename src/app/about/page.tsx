@@ -125,7 +125,7 @@ export default async function AboutPage() {
               fostering a more connected and engaged society.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-10">
+          <div className="grid grid-cols-2 gap-6 md:gap-10">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -180,7 +180,7 @@ export default async function AboutPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -220,14 +220,14 @@ export default async function AboutPage() {
       <footer className="w-full py-12 px-4 sm:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">About</Link>
+            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Events">Events</Link>
+            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Categories">Categories</Link>
+            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="About">About</Link>
           </div>
           <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Terms</Link>
-            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium">Privacy</Link>
+            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Terms">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Privacy">Privacy</Link>
           </div>
         </div>
       </footer>

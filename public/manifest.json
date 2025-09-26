@@ -1,16 +1,21 @@
 {
-  "name": "PNG Events",
+  "name": "PNG Events - Discover Local Events",
   "short_name": "PNG Events",
-  "description": "A web app to plan and manage events.",
+  "description": "Find concerts, festivals, workshops, and more happening in Papua New Guinea.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#FFA500",
+  "theme_color": "#FCD34D",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["lifestyle", "entertainment", "social"],
   "icons": [
     {
       "src": "/window.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
       "src": "/globe.svg",
@@ -21,6 +26,14 @@
       "src": "/next.svg",
       "sizes": "512x512",
       "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/next.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
     }
   ]
 }
