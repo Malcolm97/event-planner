@@ -1,4 +1,7 @@
+
 'use client';
+import Button from './Button';
+import '../components/EventModal.animations.css';
 import React, { ElementType, useState, useRef, useEffect } from 'react';
 
 import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome } from 'react-icons/fi';
@@ -89,19 +92,28 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   };
 
   return (
-    <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-4 relative animate-slide-up border border-gray-200 overflow-y-auto max-h-[90vh]">
+    <div
+      ref={modalRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
+      tabIndex={-1}
+      aria-modal="true"
+      role="dialog"
+    >
+  <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-2 sm:mx-4 relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[90vh] focus:outline-none">
         {/* Header */}
-        <div className="p-6 md:p-8 border-b border-gray-200">
-          <button
+  <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200">
+          <Button
+            variant="secondary"
             onClick={() => setDialogOpen(false)}
-            className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-all duration-200 p-3 rounded-full hover:bg-gray-100"
+            className="absolute top-2 right-2 sm:top-6 sm:right-6 p-2 sm:p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Close Modal"
+            tabIndex={0}
           >
             <FiX size={24} />
-          </button>
+          </Button>
 
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">
               {(() => {
               const category = selectedEvent?.category;
               const IconComponent = getIconComponent(category || 'Other');
@@ -110,26 +122,26 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
               })()}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-4xl font-bold text-gray-900 leading-tight line-clamp-2">{selectedEvent?.name}</h2>
-              <div className="flex flex-wrap items-center gap-3 mt-4">
-                <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 text-yellow-800 font-bold text-sm shadow-sm">
+              <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 leading-tight line-clamp-2 break-words text-wrap">{selectedEvent?.name}</h2>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-4">
+                <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 text-yellow-800 font-bold text-xs sm:text-sm shadow-sm">
                   {selectedEvent?.category || 'Other'}
                 </span>
                 {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-                  <span className="inline-block px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold text-sm shadow-sm">
+                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-green-100 text-green-700 font-bold text-xs sm:text-sm shadow-sm">
                     Presale: K{selectedEvent.presale_price.toFixed(0)}
                   </span>
                 ) : (
-                  <span className="inline-block px-4 py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-sm shadow-sm">
+                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
                     Presale: None
                   </span>
                 )}
                 {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
-                  <span className="inline-block px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-bold text-sm shadow-sm">
+                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-blue-100 text-blue-700 font-bold text-xs sm:text-sm shadow-sm">
                     Gate: K{selectedEvent.gate_price.toFixed(0)}
                   </span>
                 ) : (
-                  <span className="inline-block px-4 py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-sm shadow-sm">
+                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
                     Gate: None
                   </span>
                 )}
@@ -139,24 +151,24 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         </div>
 
         {/* Content */}
-        <div className="p-6 md:p-8">
+  <div className="p-4 sm:p-6 md:p-8">
           {/* Tab Navigation */}
-          <div className="flex mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
+          <div className="flex mb-6 sm:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('event-details')}
-              className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
             >
               Event Details
             </button>
             <button
               onClick={() => setActiveTab('about-event')}
-              className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
             >
               About this event
             </button>
             <button
               onClick={() => setActiveTab('host-details')}
-              className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
             >
               Host Details
             </button>
@@ -256,8 +268,18 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         <FiCalendar size={24} className="text-blue-500 mt-1 flex-shrink-0" />
                         <div>
                           <h4 className="font-bold text-gray-900 text-lg">Date & Time</h4>
-                          <p className="text-gray-700 text-base font-medium">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                          <p className="text-gray-700 text-base">{new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                          <p className="text-gray-700 text-base font-medium">
+                            {new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            {selectedEvent.end_date ?
+                              ` - ${new Date(selectedEvent.end_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
+                              : ''}
+                          </p>
+                          <p className="text-gray-700 text-base">
+                            {new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            {selectedEvent.end_date ?
+                              ` - ${new Date(selectedEvent.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+                              : ''}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -328,10 +350,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                     )}
                     <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                       {host?.email ? (
-                        <a href={`mailto:${host.email}`} className="flex items-center gap-3 text-blue-600 hover:text-blue-700 rounded-lg px-4 py-3 hover:bg-blue-50 transition-all duration-200 font-medium">
+                        <div className="flex items-center gap-3 text-blue-600 rounded-lg px-4 py-3 bg-blue-50 font-medium">
                           <FiMail size={18} />
-                          <span>Email Host</span>
-                        </a>
+                          <span>{host.email}</span>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-3 text-red-600 font-semibold">
                           <FiMail size={18} />
@@ -339,10 +361,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         </div>
                       )}
                       {host?.phone ? (
-                        <a href={`tel:${host.phone}`} className="flex items-center gap-3 text-green-600 hover:text-green-700 rounded-lg px-4 py-3 hover:bg-green-50 transition-all duration-200 font-medium">
+                        <div className="flex items-center gap-3 text-green-600 rounded-lg px-4 py-3 bg-green-50 font-medium">
                           <FiPhone size={18} />
-                          <span>Call Host</span>
-                        </a>
+                          <span>{host.phone}</span>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-3 text-red-600 font-semibold">
                           <FiPhone size={18} />

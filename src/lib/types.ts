@@ -11,5 +11,6 @@ export interface EventItem {
   created_at?: string;
   featured?: boolean;
   date: string;
+  end_date?: string | null;
   created_by?: string;
 }

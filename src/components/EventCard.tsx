@@ -140,11 +140,17 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
             <>
               <div className="flex items-center gap-3">
                 <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700 text-sm">{formatDate(new Date(event.date))}</span>
+                <span className="font-medium text-gray-700 text-sm">
+                  {formatDate(new Date(event.date))}
+                  {event.end_date ? ` - ${formatDate(new Date(event.end_date))}` : ''}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <FiClock size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700 text-sm">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                <span className="font-medium text-gray-700 text-sm">
+                  {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                  {event.end_date ? ` - ${new Date(event.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}` : ''}
+                </span>
               </div>
             </>
           )}

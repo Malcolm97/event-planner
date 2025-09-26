@@ -16,6 +16,7 @@ export default function CreateEventPage() {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [date, setDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [venue, setVenue] = useState<string>('');
   const [selectedLocationType, setSelectedLocationType] = useState<string>('Port Moresby');
@@ -154,6 +155,7 @@ export default function CreateEventPage() {
               name,
               description,
               date,
+              end_date: endDate || null,
               location: finalLocation, // Use the selected or custom location
               venue, // Add venue field
               presale_price, // Use the new state variable
@@ -317,7 +319,7 @@ export default function CreateEventPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-3">Date & Time</label>
+                  <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-3">Start Date & Time</label>
                   <input
                     type="datetime-local"
                     id="date"
@@ -325,6 +327,14 @@ export default function CreateEventPage() {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
+                  />
+                  <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700 mb-3 mt-6">End Date & Time <span className="text-xs text-gray-400">(optional)</span></label>
+                  <input
+                    type="datetime-local"
+                    id="endDate"
+                    className="input-field"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
                   />
                 </div>
 

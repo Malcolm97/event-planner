@@ -281,26 +281,29 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-4xl justify-center mt-4">
             <input
-              className="w-full sm:w-[280px] flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-gray-400"
+              className="w-full sm:w-[320px] flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               placeholder="Search events, locations, or venues..."
               aria-label="Search events, locations, or venues"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ color: 'black' }}
             />
             <select
-              className="w-full sm:w-[160px] rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg min-w-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200"
+              className="w-full sm:w-[320px] flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg min-w-[120px] focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               aria-label="Filter by location"
               value={selectedLocationFilter}
               onChange={(e) => setSelectedLocationFilter(e.target.value)}
+              style={{ color: 'black' }}
             >
               {displayedLocations.map(location => (
                 <option key={location} value={location}>{location}</option>
               ))}
             </select>
             <select
-              className="input-field shadow-lg min-w-[200px]"
+              className="input-field shadow-lg min-w-[120px] max-w-[140px] rounded-xl border border-gray-300 bg-white px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
+              style={{ color: 'black' }}
             >
               {displayedDates.map(dateOption => (
                 <option key={dateOption} value={dateOption}>{dateOption}</option>
