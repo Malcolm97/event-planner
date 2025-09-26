@@ -1,7 +1,7 @@
-  // Offline mode detection
-  const isOffline = typeof window !== 'undefined' && !navigator.onLine;
 "use client";
 
+// Offline mode detection
+const isOffline = typeof window !== 'undefined' && !navigator.onLine;
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, User } from '@/lib/supabase';
