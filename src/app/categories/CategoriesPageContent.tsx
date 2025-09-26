@@ -1,3 +1,5 @@
+  // Offline mode detection
+  const isOffline = typeof window !== 'undefined' && !navigator.onLine;
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -149,6 +151,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <section className="py-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
+          {isOffline && (
+            <div className="text-center mb-4">
+              <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-6 sm:gap-2 md:gap-4">
             {displayCategories.map((cat) => {
               const CategoryIcon = categoryIconMap[cat.icon];
@@ -220,6 +227,9 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
             <Link href="/events" className="hover:text-yellow-300 text-white" aria-label="Events">Events</Link>
             <Link href="/categories" className="hover:text-yellow-300 text-white" aria-label="Categories">Categories</Link>
             <Link href="/about" className="hover:text-yellow-300 text-white" aria-label="About">About</Link>
+            {isOffline && (
+              <span className="text-yellow-300 font-semibold ml-4">Offline: Registration/Login/Event Creation Disabled</span>
+            )}
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">

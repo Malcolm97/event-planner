@@ -1,3 +1,5 @@
+  // Offline mode detection
+  const isOffline = typeof window !== 'undefined' && !navigator.onLine;
 import Header from '@/components/Header';
 import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
 import Link from 'next/link';
@@ -102,10 +104,13 @@ export default async function AboutPage() {
             <Link href="/events">
               <Button variant="secondary" className="w-full sm:w-auto">Explore Events</Button>
             </Link>
-            <Link href="/create-event">
-              <Button variant="primary" className="w-full sm:w-auto">Create Your Event</Button>
-            </Link>
+            <Button variant="primary" className="w-full sm:w-auto" disabled={isOffline} aria-disabled={isOffline} style={isOffline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>Create Your Event</Button>
           </div>
+          {isOffline && (
+            <div className="text-center mt-4">
+              <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -206,13 +211,16 @@ export default async function AboutPage() {
             building stronger communities through PNG Events.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signin" className="btn-primary text-lg px-10 py-4">
-              Sign Up Now
-            </Link>
+            <Button className="btn-primary text-lg px-10 py-4" disabled={isOffline} aria-disabled={isOffline} style={isOffline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>Sign Up Now</Button>
             <Link href="/events" className="btn-secondary text-lg px-10 py-4">
               Browse Events
             </Link>
           </div>
+          {isOffline && (
+            <div className="text-center mt-4">
+              <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
+            </div>
+          )}
         </div>
       </section>
 
