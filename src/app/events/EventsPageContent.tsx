@@ -9,6 +9,7 @@ import { FiMapPin, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiStar }
 import EventModal from '../../components/EventModal';
 import { EventItem } from '@/lib/types';
 import { useEvents } from '@/hooks/useOfflineFirstData';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 // Category and Icon mapping
 const categoryIconMap: { [key: string]: any } = {
@@ -37,6 +38,7 @@ interface EventsPageContentProps {
 
 export default function EventsPageContent({ initialEvents, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: EventsPageContentProps) {
   const { data: events = [], isLoading: loading, error } = useEvents();
+  const { isSyncing, syncError, lastSyncTime } = useNetworkStatus();
   const [selectedArea, setSelectedArea] = useState('All Areas');
 
   // Modal states
@@ -120,8 +122,23 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
       : previousEvents.filter(event => event.location?.includes(selectedArea));
 
   return (
-    <div className="min-h-screen bg-white">
+  <div className="min-h-screen bg-white" role="main" tabIndex={-1}>
       <Header />
+      {/* Sync status indicator */}
+  <div className="w-full bg-yellow-50 border-b border-yellow-200 py-2 flex flex-col items-center text-sm" role="status" aria-live="polite" tabIndex={0}>
+        {isSyncing && (
+          <span className="flex items-center gap-2 text-yellow-700">
+            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></span>
+            Syncing events...
+          </span>
+        )}
+        {syncError && (
+          <span className="text-red-600">Sync error: {syncError}</span>
+        )}
+        {lastSyncTime && !isSyncing && !syncError && (
+          <span className="text-gray-600">Last synced: {lastSyncTime.toLocaleString()}</span>
+        )}
+      </div>
       <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-5xl font-extrabold text-white mb-6 tracking-tight">
@@ -202,7 +219,13 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
             </p>
           </div>
 
-          {loading ? (
+          {error ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">❌</div>
+              <h3 className="text-xl font-semibold text-red-600 mb-2">Error loading events</h3>
+              <p className="text-gray-500">{error}</p>
+            </div>
+          ) : loading ? (
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
               <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
@@ -252,9 +275,20 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
             <Link href="/about" className="hover:text-yellow-300 text-white" aria-label="About">About</Link>
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <Link href="/terms" className="hover:text-yellow-300 text-white" aria-label="Terms">Terms</Link>
             <Link href="/privacy" className="hover:text-yellow-300 text-white" aria-label="Privacy">Privacy</Link>
+            <button
+              className="ml-4 px-3 py-1 rounded bg-yellow-600 text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              aria-label="Clear cached events"
+              onClick={async () => {
+                const { clearEventsCache } = await import('@/lib/indexedDB');
+                await clearEventsCache();
+                window.location.reload();
+              }}
+            >
+              Clear Cache
+            </button>
           </div>
         </div>
       </footer>

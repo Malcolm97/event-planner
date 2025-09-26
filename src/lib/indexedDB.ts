@@ -107,13 +107,35 @@ export const getItemsByIndex = async <T>(storeName: string, indexName: string, v
   });
 };
 
-// Specific functions for events
-export const addEvents = (events: EventItem[]): Promise<void> => {
-  return addItems(STORES.EVENTS, events);
+
+// Add events with cache timestamp
+export const addEvents = async (events: EventItem[]): Promise<void> => {
+  const timestamp = Date.now();
+  // Limit cache size to 500 events
+  const limitedEvents = events.slice(0, 500);
+  await addItems(STORES.EVENTS, [{ id: 'cache-meta', timestamp }, ...limitedEvents]);
 };
 
-export const getEvents = (): Promise<EventItem[]> => {
-  return getItems(STORES.EVENTS);
+// Clear events cache utility
+export const clearEventsCache = async (): Promise<void> => {
+  await clearStore(STORES.EVENTS);
+};
+
+// Get events and check cache expiration (24h)
+export const getEvents = async (): Promise<EventItem[]> => {
+  const items = await getItems<any>(STORES.EVENTS);
+  const meta = items.find((item: any) => item.id === 'cache-meta');
+  const events = items.filter((item: any) => item.id !== 'cache-meta');
+  if (meta && meta.timestamp) {
+    const now = Date.now();
+    const age = now - meta.timestamp;
+    if (age > 24 * 60 * 60 * 1000) {
+      // Cache expired, clear store
+      await clearStore(STORES.EVENTS);
+      return [];
+    }
+  }
+  return events;
 };
 
 // Get events by category

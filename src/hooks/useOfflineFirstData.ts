@@ -15,15 +15,23 @@ export function useOfflineFirstData<T>(storeName: string) {
 
     const loadData = async () => {
       try {
-        // First load cached data
-        const cachedData = await getItems(storeName);
+        // First load cached data (with expiration check for events)
+        let cachedData: T[] = [];
+        let cacheExpired = false;
+        if (storeName === 'events') {
+          // Use getEvents for expiration logic
+          cachedData = (await (await import('@/lib/indexedDB')).getEvents()) as T[];
+          cacheExpired = cachedData.length === 0;
+        } else {
+          cachedData = await getItems(storeName);
+        }
         if (cachedData.length > 0 && mounted) {
           setData(cachedData as T[]);
           setIsLoading(false);
         }
 
-        // If online, fetch fresh data
-        if (isOnline) {
+        // If online, fetch fresh data (or if cache expired)
+        if (isOnline || cacheExpired) {
           const { data: freshData, error } = await supabase
             .from(storeName)
             .select('*')

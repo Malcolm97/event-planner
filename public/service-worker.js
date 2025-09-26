@@ -97,14 +97,23 @@ self.addEventListener('fetch', (event) => {
             });
         })
     );
-  } else if (url.pathname.startsWith('/api/')) {
-    // API requests
+  } else if (url.pathname.startsWith('/api/events')) {
+    // API requests for events (support caching by event ID and category)
     event.respondWith(
       fetch(request)
         .then(async response => {
           if (response.status === 200) {
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(request, response.clone());
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, response.clone());
+            // If fetching a single event or category, cache separately
+            const eventIdMatch = url.pathname.match(/\/api\/events\/(\w+)/);
+            const categoryMatch = url.searchParams.get('category');
+            if (eventIdMatch) {
+              cache.put(`/api/events/${eventIdMatch[1]}`, response.clone());
+            }
+            if (categoryMatch) {
+              cache.put(`/api/events?category=${categoryMatch}`, response.clone());
+            }
           }
           return response;
         })

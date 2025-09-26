@@ -1,6 +1,6 @@
   // Offline mode detection
   const isOffline = typeof window !== 'undefined' && !navigator.onLine;
-'use client';
+"use client";
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
