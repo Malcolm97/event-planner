@@ -159,11 +159,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       aria-describedby="event-modal-desc"
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-[98vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[98vh] focus:outline-none flex flex-col"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-[98vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto relative animate-modal-in border border-gray-200 overflow-y-auto focus:outline-none flex flex-col"
         style={{
           minHeight: '60vh',
-          maxHeight: '98vh',
+          maxHeight: '90vh',
           boxSizing: 'border-box',
+          overflowY: 'auto',
         }}
       >
         {/* Header */}
@@ -172,16 +173,17 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             You are offline. Event details may be cached. RSVP and registration are disabled.
           </div>
         )}
-        <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200">
-          <Button
-            variant="secondary"
+        <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200 relative">
+          <button
             onClick={() => setDialogOpen(false)}
-            className="absolute top-2 right-2 sm:top-6 sm:right-6 p-3 sm:p-4 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-3 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20"
             aria-label="Close Modal"
             tabIndex={0}
+            style={{ lineHeight: 0 }}
           >
-            <FiX size={28} />
-          </Button>
+            <FiX size={22} />
+            <span className="sr-only">Close (ESC)</span>
+          </button>
 
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">
