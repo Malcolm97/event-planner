@@ -94,22 +94,22 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-1 sm:p-4 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
     >
-  <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-2 sm:mx-4 relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[90vh] focus:outline-none">
+  <div className="bg-white rounded-3xl shadow-2xl max-w-lg sm:max-w-4xl w-full mx-1 sm:mx-4 relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[95vh] focus:outline-none">
         {/* Header */}
   <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200">
           <Button
             variant="secondary"
             onClick={() => setDialogOpen(false)}
-            className="absolute top-2 right-2 sm:top-6 sm:right-6 p-2 sm:p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="absolute top-2 right-2 sm:top-6 sm:right-6 p-3 sm:p-4 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
             aria-label="Close Modal"
             tabIndex={0}
           >
-            <FiX size={24} />
+            <FiX size={28} />
           </Button>
 
           <div className="flex items-center gap-4 sm:gap-6">
@@ -122,7 +122,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
               })()}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 leading-tight line-clamp-2 break-words text-wrap">{selectedEvent?.name}</h2>
+              <h2 className="text-xl sm:text-4xl font-bold text-gray-900 leading-tight line-clamp-2 break-words text-wrap">{selectedEvent?.name}</h2>
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-4">
                 <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 text-yellow-800 font-bold text-xs sm:text-sm shadow-sm">
                   {selectedEvent?.category || 'Other'}
@@ -153,7 +153,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         {/* Content */}
   <div className="p-4 sm:p-6 md:p-8">
           {/* Tab Navigation */}
-          <div className="flex mb-6 sm:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
+          <div className="flex mb-4 sm:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('event-details')}
               className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
@@ -179,7 +179,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             {activeTab === 'event-details' && (
               <div className="space-y-8">
                 {/* Event Image and Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
                   {/* Left Column: Event Images */}
                   <div className="order-2 md:order-1">
                     {(() => {
@@ -217,7 +217,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
                           {/* Additional Images */}
                           {currentHasImages && allImageUrls.length > 1 && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-2 sm:gap-4">
                               {allImageUrls.slice(1).map((imageUrl: string, index: number) => (
                                 <div
                                   key={index}
@@ -248,7 +248,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   {/* Right Column: Location and Date/Time */}
                   <div className="order-1 md:order-2 space-y-6">
                     <div className="flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
-                      <FiMapPin size={24} className="text-gray-500 mt-1 flex-shrink-0" />
+                      <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
                       <div className="space-y-4">
                         <div>
                           <h4 className="font-bold text-gray-900 text-lg">Location</h4>
@@ -265,7 +265,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
                     {selectedEvent?.date && (
                       <div className="flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
-                        <FiCalendar size={24} className="text-blue-500 mt-1 flex-shrink-0" />
+                        <FiCalendar size={20} className="text-blue-500 mt-1 flex-shrink-0" />
                         <div>
                           <h4 className="font-bold text-gray-900 text-lg">Date & Time</h4>
                           <p className="text-gray-700 text-base font-medium">
@@ -299,7 +299,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 {selectedEvent?.description ? (
                   <div className="flex items-start gap-4 p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
                     <div className="flex-shrink-0 mt-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
@@ -320,12 +320,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 <h3 className="text-2xl font-bold text-gray-900 mb-6">Event Host</h3>
                 {host ? (
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
-                    <div className="flex items-center gap-6 mb-6">
-                      <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
                         {host?.photo_url ? (
-                          <Image src={host.photo_url} alt={host.name || 'Host'} width={80} height={80} className="w-full h-full object-cover" />
+                          <Image src={host.photo_url} alt={host.name || 'Host'} width={64} height={64} className="w-full h-full object-cover" />
                         ) : (
-                          <FiUser size={36} className="text-gray-500" />
+                          <FiUser size={28} className="text-gray-500" />
                         )}
                       </div>
                       <div className="flex-1 space-y-2">
@@ -348,7 +348,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         <p className="text-gray-700 text-base leading-relaxed">{host.about}</p>
                       </div>
                     )}
-                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex flex-col gap-3 sm:flex-row items-center sm:gap-4 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
                       {host?.email ? (
                         <div className="flex items-center gap-3 text-blue-600 rounded-lg px-4 py-3 bg-blue-50 font-medium">
                           <FiMail size={18} />
