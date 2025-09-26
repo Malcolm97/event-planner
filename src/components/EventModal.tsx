@@ -47,11 +47,60 @@ const getAllImageUrls = (imageUrls: string[] | string | null | undefined): strin
 };
 
 export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen }: EventModalProps) {
-  if (!dialogOpen || !selectedEvent) return null;
-
+  // Accessibility: focus trap and keyboard navigation
+  const modalRef = useRef<HTMLDivElement>(null);
+  const lastActiveElement = useRef<HTMLElement | null>(null);
   const [activeTab, setActiveTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
   const [imageExpanded, setImageExpanded] = useState(false);
-  const [activeImageIndex, setActiveImageIndex] = useState(0); // New state for active image
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    setIsOffline(typeof navigator !== 'undefined' && !navigator.onLine);
+  }, [dialogOpen]);
+
+  useEffect(() => {
+    if (!dialogOpen) return;
+    lastActiveElement.current = document.activeElement as HTMLElement;
+    if (modalRef.current) modalRef.current.focus();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDialogOpen(false);
+      if (e.key === 'Tab') {
+        // Trap focus inside modal
+        const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      lastActiveElement.current?.focus();
+    };
+  }, [dialogOpen, setDialogOpen]);
+
+  // Error handling for missing event/host
+  useEffect(() => {
+    setError(null);
+    setLoading(false);
+    if (!selectedEvent) {
+      setError('No event selected.');
+    }
+    // Simulate loading state for async fetches (if needed)
+    // setLoading(true); setTimeout(() => setLoading(false), 300);
+  }, [selectedEvent]);
 
   // Navigation helper functions
   const handlePrevImage = () => {
@@ -60,7 +109,6 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       setActiveImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
     }
   };
-
   const handleNextImage = () => {
     const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
     if (imageUrls.length > 0) {
@@ -68,28 +116,35 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     }
   };
 
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        setDialogOpen(false);
-      }
-    };
-
-    if (typeof document !== 'undefined') {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [setDialogOpen]);
-
   // Helper function to get the correct icon component based on the string name
-  const getIconComponent = (name: string | undefined) => { // Removed iconMap parameter
-    const Icon = localCategoryIconMap[name || 'Other']; // Use the local map
+  const getIconComponent = (name: string | undefined) => {
+    const Icon = localCategoryIconMap[name || 'Other'];
     return Icon || FiStar;
   };
+
+  if (!dialogOpen) return null;
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto mb-6"></div>
+          <p className="text-lg text-gray-700">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h3 className="text-xl font-semibold text-red-600 mb-2">Error</h3>
+          <p className="text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+  if (!selectedEvent) return null;
 
   return (
     <div
@@ -98,10 +153,17 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
+      aria-labelledby="event-modal-title"
+      aria-describedby="event-modal-desc"
     >
   <div className="bg-white rounded-3xl shadow-2xl max-w-lg sm:max-w-4xl w-full mx-1 sm:mx-4 relative animate-modal-in border border-gray-200 overflow-y-auto max-h-[95vh] focus:outline-none">
         {/* Header */}
-  <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200">
+        {isOffline && (
+          <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 rounded-t-3xl font-semibold" role="alert">
+            You are offline. Event details may be cached. RSVP and registration are disabled.
+          </div>
+        )}
+        <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200">
           <Button
             variant="secondary"
             onClick={() => setDialogOpen(false)}
@@ -150,8 +212,8 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           </div>
         </div>
 
-        {/* Content */}
-  <div className="p-4 sm:p-6 md:p-8">
+    {/* Content */}
+    <div className="p-4 sm:p-6 md:p-8">
           {/* Tab Navigation */}
           <div className="flex mb-4 sm:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
             <button
@@ -178,6 +240,17 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
               <div className="space-y-8">
+                {/* RSVP/Registration button example (disabled offline) */}
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant="primary"
+                    disabled={isOffline}
+                    className={`px-6 py-3 rounded-lg font-bold text-lg ${isOffline ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    aria-disabled={isOffline}
+                  >
+                    RSVP / Register
+                  </Button>
+                </div>
                 {/* Event Image and Details Grid */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
                   {/* Left Column: Event Images */}
@@ -205,6 +278,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                               width={400}
                               height={300}
                               className="w-full h-72 md:h-96 object-cover transition-transform duration-500 group-hover:scale-110"
+                              loading="lazy"
                             />
                             {currentHasImages && (
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
@@ -230,6 +304,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                                     width={200}
                                     height={150}
                                     className="w-full h-36 object-cover transition-transform duration-300 group-hover:scale-110"
+                                    loading="lazy"
                                   />
                                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-2 shadow-lg">
@@ -447,12 +522,13 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
               {/* Show first image or single image */}
               <Image
-  src={currentImageUrl}
-  alt={currentImageAlt}
+                src={currentImageUrl}
+                alt={currentImageAlt}
                 width={800}
                 height={600}
                 className="max-w-full max-h-full object-contain rounded-lg"
                 onClick={(e) => e.stopPropagation()}
+                loading="lazy"
               />
 
               {/* Show additional images if available */}
@@ -472,6 +548,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       width={80}
       height={80}
       className="w-full h-full object-cover"
+      loading="lazy"
     />
   </div>
 ))}
