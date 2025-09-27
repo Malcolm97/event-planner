@@ -9,8 +9,11 @@ import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
 
-export default function ProfilePage({ params }: { params: { uid: string } }) {
-  const { uid } = params;
+
+
+export default async function ProfilePage({ params }: { params: any }) {
+  const resolvedParams = await params;
+  const uid = resolvedParams?.uid as string;
   return <ProfilePageContent uid={uid} />;
 }
 

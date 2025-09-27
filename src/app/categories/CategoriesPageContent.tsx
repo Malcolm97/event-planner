@@ -65,7 +65,7 @@ const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
             setEvents(offlineEvents as EventItem[]);
           }
         } catch (error) {
-          console.error('Error loading offline events:', error);
+          // ...existing code...
         }
       }
     };
@@ -97,7 +97,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
         .eq('id', userId);
 
       if (error) {
-        console.error('Error fetching host:', error.message || error);
+  // ...existing code...
         return;
       }
 
@@ -107,7 +107,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
         setHost(null);
       }
     } catch (err: any) {
-      console.error('Error fetching host:', err.message || err);
+  // ...existing code...
     }
   };
 
@@ -195,6 +195,12 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
               <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
+            </div>
+          ) : events.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📴</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No cached events available offline</h3>
+              <p className="text-gray-500">Connect to the internet to load events for offline use.</p>
             </div>
           ) : upcomingEvents.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">

@@ -68,18 +68,24 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   useEffect(() => {
-    // Check initial online status
     setIsOnline(navigator.onLine);
-    
+    // Read offlineNotif and autoSync from localStorage
+    let offlineNotif = true;
+    let autoSync = true;
+    try {
+      offlineNotif = localStorage.getItem('offlineNotif') !== 'false';
+      autoSync = localStorage.getItem('autoSync') !== 'false';
+    } catch {}
+
     const handleOnline = () => {
       setIsOnline(true);
-      toast.success('Back online! Syncing data...');
-      syncData();
+      if (offlineNotif) toast.success('Back online! Syncing data...');
+      if (autoSync) syncData();
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      toast.error('You are now offline');
+      if (offlineNotif) toast.error('You are now offline');
     };
 
     window.addEventListener('online', handleOnline);
@@ -91,16 +97,16 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     setIsPwaOnMobile(isMobile && isStandalone);
 
     // Initial sync
-    if (navigator.onLine) {
+    if (navigator.onLine && autoSync) {
       syncData();
     }
 
-    // Set up periodic sync when online
+    // Set up periodic sync when online and autoSync enabled
     const syncInterval = setInterval(() => {
-      if (navigator.onLine) {
+      if (navigator.onLine && autoSync) {
         syncData();
       }
-    }, 5 * 60 * 1000); // Sync every 5 minutes
+    }, 5 * 60 * 1000);
 
     return () => {
       window.removeEventListener('online', handleOnline);

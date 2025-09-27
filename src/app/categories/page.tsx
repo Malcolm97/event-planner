@@ -2,7 +2,7 @@ import Header from '@/components/Header';
 import { Suspense } from 'react';
 import CategoriesPageContent from './CategoriesPageContent';
 import Loading from './loading'; // Import the Loading component
-import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 
@@ -21,10 +21,7 @@ const allCategories = [
 ];
 
 async function getEvents() {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-    return { events: [], displayCategories: [], totalEvents: 0, totalUsers: 0, citiesCovered: 0 };
-  }
+
 
   // Fetch events
   const { data: eventsData, error: eventsError } = await supabase
@@ -33,7 +30,7 @@ async function getEvents() {
     .order('date', { ascending: true });
 
   if (eventsError) {
-    console.warn('Error fetching events from Supabase:', eventsError.message);
+  // ...existing code...
   }
 
   const events: EventItem[] = (eventsData || []).map((event: any) => ({
@@ -58,7 +55,7 @@ async function getEvents() {
     .select('id', { count: 'exact', head: true }); // Select only 'id' to optimize count
 
   if (totalEventsError) {
-    console.error('Error fetching total events:', totalEventsError.message);
+  // ...existing code...
   }
 
   // Fetch total users count
@@ -67,7 +64,7 @@ async function getEvents() {
     .select('id', { count: 'exact', head: true }); // Select only 'id' to optimize count
 
   if (totalUsersError) {
-    console.error('Error fetching total users:', totalUsersError.message);
+  // ...existing code...
   }
 
   // Calculate cities covered

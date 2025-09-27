@@ -10,6 +10,8 @@ import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 import { getEventPrimaryImage } from '@/lib/utils';
 
 interface EventModalProps {
@@ -170,7 +172,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         {/* Header */}
         {isOffline && (
           <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 rounded-t-3xl font-semibold" role="alert">
-            You are offline. Event details may be cached. RSVP and registration are disabled.
+            You are offline. Event details may be cached.
           </div>
         )}
         <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200 relative">
@@ -251,17 +253,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
               <div className="space-y-8">
-                {/* RSVP/Registration button example (disabled offline) */}
-                <div className="flex justify-end mb-4">
-                  <Button
-                    variant="primary"
-                    disabled={isOffline}
-                    className={`px-6 py-3 rounded-lg font-bold text-lg ${isOffline ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    aria-disabled={isOffline}
-                  >
-                    RSVP / Register
-                  </Button>
-                </div>
+
                 {/* Event Image and Details Grid */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
                   {/* On mobile, stack columns vertically. On tablet/desktop, use side-by-side layout. */}
@@ -277,22 +269,54 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         <div className="space-y-6">
                           {/* Primary Image */}
                           <div
-                            className="relative cursor-pointer group rounded-2xl overflow-hidden shadow-lg w-full h-56 sm:h-72 md:h-96"
-                            onClick={() => {
-                              if (currentHasImages) {
-                                setActiveImageIndex(0);
-                                setImageExpanded(true);
-                              }
-                            }}
+                            className="relative group rounded-2xl overflow-hidden shadow-lg w-full h-56 sm:h-72 md:h-96"
                           >
-                            <Image
-                              src={primaryImageUrl}
-                              alt={selectedEvent?.name ? `${selectedEvent.name} primary image` : 'Event Primary Image'}
-                              width={400}
-                              height={300}
-                              className="w-full h-72 md:h-96 object-cover transition-transform duration-500 group-hover:scale-110"
-                              loading="lazy"
-                            />
+                            {/* Navigation arrows for multiple images */}
+                            {currentHasImages && allImageUrls.length > 1 && (
+                              <>
+                                <button
+                                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow transition z-10"
+                                  onClick={e => { e.stopPropagation(); setActiveImageIndex((prev) => (prev - 1 + allImageUrls.length) % allImageUrls.length); }}
+                                  aria-label="Previous image"
+                                >
+                                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                                </button>
+                                <button
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow transition z-10"
+                                  onClick={e => { e.stopPropagation(); setActiveImageIndex((prev) => (prev + 1) % allImageUrls.length); }}
+                                  aria-label="Next image"
+                                >
+                                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                                </button>
+                              </>
+                            )}
+                            {/* Loading spinner */}
+                            <div id="event-image-spinner" className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+                              <span className="animate-spin h-8 w-8 border-4 border-yellow-400 border-t-transparent rounded-full opacity-70"></span>
+                            </div>
+                            <Zoom>
+                              <Image
+                                src={currentHasImages ? allImageUrls[activeImageIndex] : primaryImageUrl}
+                                alt={selectedEvent?.name ? `${selectedEvent.name} image ${activeImageIndex + 1}` : 'Event Image'}
+                                width={400}
+                                height={300}
+                                className="w-full h-72 md:h-96 object-cover transition-transform duration-500 group-hover:scale-110"
+                                loading="eager"
+                                onLoad={() => {
+                                  const spinner = document.getElementById('event-image-spinner');
+                                  if (spinner) spinner.style.display = 'none';
+                                }}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/window.svg';
+                                }}
+                              />
+                            </Zoom>
+                            {/* Image count indicator */}
+                            {currentHasImages && allImageUrls.length > 1 && (
+                              <span className="absolute bottom-2 right-4 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-10">
+                                {activeImageIndex + 1} / {allImageUrls.length}
+                              </span>
+                            )}
                             {currentHasImages && (
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-3 shadow-lg">
@@ -613,9 +637,9 @@ function ShareButtons({ event }: { event: EventItem }) {
           text: shareText,
           url: eventUrl,
         });
-        console.log('Event shared successfully');
+  // ...existing code...
       } catch (error) {
-        console.error('Error sharing event:', error);
+  // ...existing code...
       }
     } else {
       setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons

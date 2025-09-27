@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import EventCard from '@/components/EventCard';
-import { supabase, TABLES, User, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, TABLES, User } from '@/lib/supabase';
+import { getEvents as getCachedEvents } from '@/lib/indexedDB';
 import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
@@ -78,7 +79,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   const [totalUsers, setTotalUsers] = useState<number | null>(initialTotalUsers);
   const [citiesCoveredCount, setCitiesCoveredCount] = useState<number | null>(initialCitiesCovered);
   const router = useRouter();
-  const { isOnline } = useNetworkStatus();
+  const { isOnline, isSyncing } = useNetworkStatus();
 
   const [displayedLocations, setDisplayedLocations] = useState<string[]>(['All Areas']);
   const [displayedDates, setDisplayedDates] = useState<string[]>(['All Dates']);
@@ -101,6 +102,26 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     };
   }, []);
 
+  // Offline-first: load events from cache if offline
+  useEffect(() => {
+    const loadOfflineEvents = async () => {
+      if (!isOnline) {
+        try {
+          const offlineEvents = await getCachedEvents();
+          if (offlineEvents.length > 0) {
+            setEvents(offlineEvents);
+            setFilteredEvents(offlineEvents);
+          }
+        } catch (error) {
+          // fallback: show empty state
+          setEvents([]);
+          setFilteredEvents([]);
+        }
+      }
+    };
+    loadOfflineEvents();
+  }, [isOnline]);
+
   const fetchHost = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -109,7 +130,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         .eq('id', userId);
 
       if (error) {
-        console.error('Error fetching host:', error.message || error);
+  // ...existing code...
         return;
       }
 
@@ -119,7 +140,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         setHost(null);
       }
     } catch (err: any) {
-      console.error('Error fetching host:', err.message || err);
+  // ...existing code...
     }
   };
 
@@ -271,6 +292,10 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
+        {/* Sync indicator */}
+        {isSyncing && (
+          <div className="w-full text-center py-2 bg-yellow-50 text-yellow-800 font-semibold text-sm animate-pulse">Syncing events...</div>
+        )}
         <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-8">
           <h1 className="text-6xl md:text-7xl font-extrabold text-white mb-4 tracking-tight leading-tight">
             Local Events Near You
@@ -341,6 +366,12 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
             <p className="text-gray-500 mt-8 text-xl">Loading events...</p>
+          </div>
+        ) : !isOnline && events.length === 0 ? (
+          <div className="col-span-full text-center py-20">
+            <div className="text-8xl mb-6">📴</div>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">No cached events available offline</h3>
+            <p className="text-gray-500 text-lg">Connect to the internet to load events for offline use.</p>
           </div>
         ) : (
           <>
@@ -422,9 +453,9 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       <footer className="w-full py-12 px-4 sm:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
           <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Events">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Categories">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="About">About</Link>
+            <Link href="/events" className="whitespace-nowrap min-w-[90px] px-3 py-2 hover:text-yellow-400 text-gray-300 transition-colors font-medium text-base sm:text-sm" aria-label="Events">Events</Link>
+            <Link href="/categories" className="whitespace-nowrap min-w-[110px] px-3 py-2 hover:text-yellow-400 text-gray-300 transition-colors font-medium text-base sm:text-sm" aria-label="Categories">Categories</Link>
+            <Link href="/about" className="whitespace-nowrap min-w-[80px] px-3 py-2 hover:text-yellow-400 text-gray-300 transition-colors font-medium text-base sm:text-sm" aria-label="About">About</Link>
           </div>
           <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4">

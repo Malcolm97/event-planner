@@ -1,21 +1,7 @@
 import './globals.css';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
-import dynamic from 'next/dynamic';
-import ErrorBoundary from '@/components/ErrorBoundary';
-const NetworkStatusProvider = dynamic(
-  () => import('@/context/NetworkStatusContext').then(mod => mod.NetworkStatusProvider),
-  { ssr: false }
-);
-
-const Toaster = dynamic(
-  () => import('react-hot-toast').then(mod => mod.Toaster),
-  { ssr: false }
-);
-
-const SyncIndicator = dynamic(() => import('@/components/SyncIndicator'), {
-  ssr: false
-});
+import ClientProviders from './ClientProviders';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -48,15 +34,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="PNG Events" />
       </head>
       <body className={`antialiased ${inter.className}`}>
-        <ErrorBoundary>
-        <NetworkStatusProvider>
-          <>
-            {children}
-            <SyncIndicator />
-            <Toaster position="bottom-center" />
-          </>
-        </NetworkStatusProvider>
-        </ErrorBoundary>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
         <Script id="service-worker-script">
           {`
           if ('serviceWorker' in navigator) {

@@ -14,7 +14,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ message, onClose }) => {
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition"
+            className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition whitespace-nowrap min-w-[80px] text-base sm:text-sm truncate"
           >
             OK
           </button>

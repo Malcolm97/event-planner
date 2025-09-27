@@ -4,7 +4,7 @@ import React from 'react';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { FiWifi, FiWifiOff } from 'react-icons/fi';
 
-const OnlineBadge = () => {
+const OnlineBadge = React.memo(() => {
   const { isOnline, lastSyncTime } = useNetworkStatus();
 
   return (
@@ -25,6 +25,6 @@ const OnlineBadge = () => {
       )}
     </div>
   );
-};
+});
 
 export default OnlineBadge;

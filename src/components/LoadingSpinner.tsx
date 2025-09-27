@@ -4,7 +4,8 @@ interface LoadingSpinnerProps {
   text?: string;
 }
 
-export default function LoadingSpinner({ 
+import React from 'react';
+const LoadingSpinner = React.memo(function LoadingSpinner({ 
   size = 'md', 
   color = 'yellow', 
   text 
@@ -31,4 +32,5 @@ export default function LoadingSpinner({
       )}
     </div>
   );
-}
+});
+export default LoadingSpinner;

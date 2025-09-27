@@ -8,7 +8,8 @@ import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
-export default function Header() {
+import React from 'react';
+const Header = React.memo(function Header() {
   const { isOnline } = useNetworkStatus(); // Get the status
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
@@ -95,17 +96,12 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <button onClick={() => router.push('/events')} className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 font-medium">
-              Events
-            </button>
-            <button onClick={() => router.push('/categories')} className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 font-medium">
-              Categories
-            </button>
-            <button onClick={() => router.push('/about')} className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 font-medium">
-              About
-            </button>
-          </nav>
+            <nav className="flex flex-nowrap gap-x-4 sm:gap-x-6 items-center overflow-x-auto py-1 bg-white/80 rounded-xl shadow-sm px-2">
+              <Link href="/events" className="whitespace-nowrap min-w-[90px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">Events</Link>
+              <Link href="/categories" className="whitespace-nowrap min-w-[110px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">Categories</Link>
+              <Link href="/about" className="whitespace-nowrap min-w-[80px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">About</Link>
+              <Link href="/settings" className="whitespace-nowrap min-w-[100px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">Settings</Link>
+            </nav>
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-3">
@@ -255,4 +251,5 @@ export default function Header() {
       </div>
     </header>
   );
-}
+});
+export default Header;

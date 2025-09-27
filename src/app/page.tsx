@@ -1,4 +1,4 @@
-import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { Suspense } from 'react';
 import ClientHomePageWrapper from './ClientHomePageWrapper';
@@ -8,10 +8,7 @@ import Loading from './loading'; // Import the Loading component
 export const revalidate = 60;
 
 async function getEvents() {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-    return { events: [], totalEvents: 0, totalUsers: 0, citiesCovered: 0 };
-  }
+
 
   // Fetch events
   const { data: eventsData, error: eventsError } = await supabase

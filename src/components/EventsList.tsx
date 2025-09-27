@@ -7,7 +7,8 @@ import { getEvents as getCachedEvents, addEvents } from '@/lib/indexedDB';
 import { EventItem } from '@/lib/types';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
-export default function EventsList() {
+import React from 'react';
+const EventsList = React.memo(function EventsList() {
   const [events, setEvents] = useState<EventItem[]>([]); // Use EventItem type
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false); // State for syncing indicator
@@ -131,4 +132,5 @@ export default function EventsList() {
       ))}
     </div>
   );
-}
+});
+export default EventsList;

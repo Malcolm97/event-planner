@@ -1,8 +1,11 @@
+import React from 'react';
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { FiBookmark, FiBookmark as FiBookmarkFilled } from 'react-icons/fi';
 import { getEventPrimaryImage } from '@/lib/utils';
 
 // Define category mappings directly in this component
@@ -46,32 +49,77 @@ const formatDate = (date: Date): string => {
   return `${day}${getOrdinalSuffix(day)} ${month}, ${year}`;
 };
 
-export default function EventCard({ event, onClick }: { event: EventItem; onClick?: () => void }) {
+const EventCard = React.memo(function EventCard({ event, onClick }: { event: EventItem; onClick?: () => void }) {
   const categoryLabel = event.category?.trim() || 'Other';
-
-  // Color and icon mapping
   const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700';
   const Icon = categoryIconMap[categoryLabel] || FiStar;
+  const { user } = useAuth();
+  const [bookmarked, setBookmarked] = useState(false);
+
+  // Status badge logic
+  const now = new Date();
+  const eventDate = new Date(event.date);
+  let status = 'upcoming';
+  if (eventDate < now) status = 'past';
+  if (eventDate.toDateString() === now.toDateString()) status = 'ongoing';
+  // New badge logic (created within last 7 days)
+  const isNew = event.created_at && (now.getTime() - new Date(event.created_at).getTime() < 1000 * 60 * 60 * 24 * 7);
+  // Popular badge logic (placeholder: random or attendee count)
+  const attendees = (event as any).attendees_count || Math.floor(Math.random() * 100 + 1);
+  const isPopular = attendees > 50;
+
+  // Save/Bookmark logic (placeholder, should be replaced with real API)
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBookmarked((prev) => !prev);
+  };
 
   return (
     <div
-      className="group relative card cursor-pointer overflow-hidden card-hover h-full"
+      className="group relative card cursor-pointer overflow-hidden card-hover h-full rounded-2xl shadow transition-transform duration-200 hover:scale-[1.025] focus-within:scale-[1.025] focus:outline-none"
+      tabIndex={0}
+      aria-label={event.name}
       onClick={() => {
         if (typeof onClick === 'function') {
           onClick();
         }
       }}
     >
+      {/* Status Badge - Top Left */}
+      <span className={`absolute top-3 left-3 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg ${status === 'upcoming' ? 'bg-blue-100 text-blue-700' : status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+      {/* Featured Badge */}
+      {event.featured && (
+        <span className="absolute top-3 left-20 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
+      )}
+      {/* New Badge */}
+      {isNew && (
+        <span className="absolute bottom-3 left-3 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
+      )}
+      {/* Popular Badge */}
+      {isPopular && (
+        <span className="absolute bottom-3 right-3 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-pink-200 text-pink-800 shadow">Popular</span>
+      )}
       {/* Category Badge - Top Right */}
-      <div className="absolute top-3 right-3 z-10">
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
           <Icon size={12} />
           {categoryLabel}
         </span>
+        {/* Save/Bookmark button for logged-in users */}
+        {user && (
+          <button
+            className={`ml-2 p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 text-yellow-600 hover:text-yellow-700 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400`}
+            aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
+            onClick={handleBookmark}
+            tabIndex={0}
+          >
+            {bookmarked ? <FiBookmarkFilled size={16} /> : <FiBookmark size={16} />}
+          </button>
+        )}
       </div>
 
       {/* Hero Image Area */}
-      <div className="relative h-52 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
         <Image
           src={getEventPrimaryImage(event)}
           alt={event.name || 'Event Image'}
@@ -80,7 +128,6 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="transition-transform duration-500 group-hover:scale-110 object-cover"
         />
-
         {/* Price Badges - Bottom Left */}
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
           {event.presale_price !== undefined && event.presale_price !== null && event.presale_price > 0 ? (
@@ -102,16 +149,6 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
             </span>
           )}
         </div>
-
-        {/* Featured Badge */}
-        {event.featured && (
-          <div className="absolute top-3 left-3">
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg backdrop-blur-sm">
-              <FiStar size={10} />
-              Featured
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Content Area */}
@@ -159,7 +196,7 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
           <div className="flex items-center gap-3 text-sm text-gray-600 pt-2 border-t border-gray-100">
             <FiLink size={14} className="text-gray-400 flex-shrink-0" />
             <button
-              className="font-medium text-blue-600 hover:text-blue-700 hover:underline truncate text-left transition-colors"
+              className="font-medium text-blue-600 hover:text-blue-700 hover:underline truncate text-left transition-colors whitespace-nowrap min-w-[120px] text-base sm:text-sm"
               onClick={(e) => {
                 e.stopPropagation(); // Prevent card click when clicking button
                 if (typeof onClick === 'function') {
@@ -182,7 +219,8 @@ export default function EventCard({ event, onClick }: { event: EventItem; onClic
       </div>
     </div>
   );
-}
+});
+export default EventCard;
 
 // ShareButtons Component
 function ShareButtons({ event }: { event: EventItem }) {
@@ -208,9 +246,9 @@ function ShareButtons({ event }: { event: EventItem }) {
           text: shareText,
           url: eventUrl,
         });
-        console.log('Event shared successfully');
+  // ...existing code...
       } catch (error) {
-        console.error('Error sharing event:', error);
+  // ...existing code...
       }
     } else {
       setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons

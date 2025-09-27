@@ -30,7 +30,7 @@ export default function EventDetailsPage() {
           .single();
 
         if (error) {
-          console.error('Error fetching event:', error);
+          // ...existing code...
           setEvent(null);
           return;
         }
@@ -40,7 +40,7 @@ export default function EventDetailsPage() {
           fetchHost(data.created_by);
         }
       } catch (error) {
-        console.error('Error fetching event:', error);
+  // ...existing code...
         setEvent(null);
       } finally {
         setLoading(false);
@@ -59,13 +59,13 @@ export default function EventDetailsPage() {
         .single();
 
       if (error) {
-        console.error('Error fetching host:', error.message || error);
+  // ...existing code...
         setHost(null);
         return;
       }
       setHost(data || null);
     } catch (err: any) {
-      console.error('Error fetching host:', err.message || err);
+  // ...existing code...
       setHost(null);
     }
   };

@@ -2,10 +2,21 @@
 
 import Header from '../../components/Header';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import EventCard from '../../components/EventCard';
-import { FiMapPin, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiStar } from 'react-icons/fi';
+import { FiMapPin, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiStar, FiSearch, FiChevronUp } from 'react-icons/fi';
+// Event categories (customize as needed)
+const categories = [
+  'All',
+  'Music',
+  'Art',
+  'Food',
+  'Technology',
+  'Wellness',
+  'Comedy',
+  'Other',
+];
 import EventModal from '../../components/EventModal';
 import { EventItem } from '@/lib/types';
 import { useEvents } from '@/hooks/useOfflineFirstData';
@@ -41,6 +52,24 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
   const { isSyncing, syncError, lastSyncTime } = useNetworkStatus();
   const [selectedArea, setSelectedArea] = useState('All Areas');
 
+  // Enhanced UI state
+  const [search, setSearch] = useState('');
+  // Multi-select state for category and location
+  const [category, setCategory] = useState<string[]>([]);
+  const [location, setLocation] = useState<string[]>([]);
+  const [date, setDate] = useState<string>('');
+  const [sort, setSort] = useState('date-asc');
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // Show back-to-top button on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
@@ -57,7 +86,7 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
         .eq('id', userId);
 
       if (error) {
-        console.error('Error fetching host:', error.message || error);
+  // ...existing code...
         return;
       }
 
@@ -67,7 +96,7 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
         setHost(null);
       }
     } catch (err: any) {
-      console.error('Error fetching host:', err.message || err);
+  // ...existing code...
     }
   };
 
@@ -96,10 +125,12 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
 
   const areas = ['All Areas', ...Array.from(new Set(locationAreas))];
 
+
+  // Filter, search, and sort logic
   const upcomingEvents = events.filter(event => event.date && new Date(event.date) >= now);
   const previousEvents = events.filter(event => event.date && new Date(event.date) < now);
 
-  const filteredUpcomingEvents = selectedArea === 'All Areas'
+  let filteredUpcomingEvents = selectedArea === 'All Areas'
     ? upcomingEvents
     : selectedArea === 'Other Locations'
       ? upcomingEvents.filter(event => {
@@ -110,7 +141,54 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
         })
       : upcomingEvents.filter(event => event.location?.includes(selectedArea));
 
-  const filteredPreviousEvents = selectedArea === 'All Areas'
+  // Multi-category filter
+  if (category.length > 0) {
+    filteredUpcomingEvents = filteredUpcomingEvents.filter(event => event.category && category.includes(event.category));
+  }
+  // Multi-location filter
+  if (location.length > 0) {
+    filteredUpcomingEvents = filteredUpcomingEvents.filter(event => {
+      const loc = event.location?.split(',')[0]?.trim();
+      return loc && location.includes(loc);
+    });
+  }
+  // Date filter
+  if (date) {
+    filteredUpcomingEvents = filteredUpcomingEvents.filter(event => event.date && event.date.startsWith(date));
+  }
+  // Debounced search filter
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
+  }, [search]);
+  if (debouncedSearch.trim()) {
+    const q = debouncedSearch.trim().toLowerCase();
+    filteredUpcomingEvents = filteredUpcomingEvents.filter(event =>
+      event.name?.toLowerCase().includes(q) ||
+      event.location?.toLowerCase().includes(q)
+    );
+  }
+  // Sort
+  filteredUpcomingEvents = [...filteredUpcomingEvents].sort((a, b) => {
+    if (sort === 'date-asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (sort === 'date-desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (sort === 'price-asc') {
+      const aPrice = a.presale_price ?? a.gate_price ?? 0;
+      const bPrice = b.presale_price ?? b.gate_price ?? 0;
+      return aPrice - bPrice;
+    }
+    if (sort === 'price-desc') {
+      const aPrice = a.presale_price ?? a.gate_price ?? 0;
+      const bPrice = b.presale_price ?? b.gate_price ?? 0;
+      return bPrice - aPrice;
+    }
+    return 0;
+  });
+
+  let filteredPreviousEvents = selectedArea === 'All Areas'
     ? previousEvents
     : selectedArea === 'Other Locations'
       ? previousEvents.filter(event => {
@@ -122,10 +200,10 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
       : previousEvents.filter(event => event.location?.includes(selectedArea));
 
   return (
-  <div className="min-h-screen bg-white" role="main" tabIndex={-1}>
+  <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
       <Header />
       {/* Sync status indicator */}
-  <div className="w-full bg-yellow-50 border-b border-yellow-200 py-2 flex flex-col items-center text-sm" role="status" aria-live="polite" tabIndex={0}>
+  <div className="w-full bg-yellow-50 border-b border-yellow-200 py-2 flex flex-col items-center text-sm" role="status" aria-live="polite" tabIndex={0} id="sync-indicator">
         {isSyncing && (
           <span className="flex items-center gap-2 text-yellow-700">
             <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></span>
@@ -171,39 +249,46 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
       <section className="py-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Popular Areas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {areas.slice(1).map(area => {
-              const areaEvents = area === 'Other Locations'
-                ? events.filter(event => {
-                    const location = event.location;
-                    if (!location) return false;
-                    const firstPart = location.split(',')[0]?.trim();
-                    return firstPart && !popularPngCities.includes(firstPart);
-                  })
-                : events.filter(event => event.location?.includes(area));
-              const upcomingCount = areaEvents.filter(event => event.date && new Date(event.date) >= now).length;
-              
-              return (
-                <div
-                  key={area}
-                  onClick={() => setSelectedArea(area ?? 'All Areas')}
-                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    selectedArea === area
-                      ? 'border-yellow-400 bg-yellow-50 ring-4 ring-yellow-400 ring-offset-2'
-                      : 'border-gray-200 bg-white hover:border-yellow-300 hover:shadow-lg'
-                  }`}
-                >
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{area}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{upcomingCount} upcoming events</p>
-                    <button className="text-yellow-600 hover:text-yellow-700 text-sm font-medium">
-                      View Events →
-                    </button>
+          {events.length === 0 && !loading ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📴</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No cached events available offline</h3>
+              <p className="text-gray-500">Connect to the internet to load events for offline use.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {areas.slice(1).map(area => {
+                const areaEvents = area === 'Other Locations'
+                  ? events.filter(event => {
+                      const location = event.location;
+                      if (!location) return false;
+                      const firstPart = location.split(',')[0]?.trim();
+                      return firstPart && !popularPngCities.includes(firstPart);
+                    })
+                  : events.filter(event => event.location?.includes(area));
+                const upcomingCount = areaEvents.filter(event => event.date && new Date(event.date) >= now).length;
+                return (
+                  <div
+                    key={area}
+                    onClick={() => setSelectedArea(area ?? 'All Areas')}
+                    className={`p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      selectedArea === area
+                        ? 'border-yellow-400 bg-yellow-50 ring-4 ring-yellow-400 ring-offset-2'
+                        : 'border-gray-200 bg-white hover:border-yellow-300 hover:shadow-lg'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{area}</h3>
+                      <p className="text-sm text-gray-600 mb-3">{upcomingCount} upcoming events</p>
+                      <button className="text-yellow-600 hover:text-yellow-700 text-sm font-medium">
+                        View Events →
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -219,34 +304,150 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
             </p>
           </div>
 
-          {error ? (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">❌</div>
-              <h3 className="text-xl font-semibold text-red-600 mb-2">Error loading events</h3>
-              <p className="text-gray-500">{error}</p>
+          {/* Enhanced event controls */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 mb-8 w-full">
+            <div className="flex-1 min-w-[180px] flex items-center gap-2 bg-white rounded-lg shadow px-3 py-2 w-full sm:w-auto focus-within:ring-2 focus-within:ring-yellow-400">
+              <FiSearch className="text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search events by name or location..."
+                className="w-full min-w-0 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-base sm:text-sm focus:ring-2 focus:ring-yellow-400"
+                aria-label="Search events"
+              />
             </div>
-          ) : loading ? (
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-              <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
-            </div>
-          ) : filteredUpcomingEvents.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-8">
-              {filteredUpcomingEvents.map(event => (
-                <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+              <div className="flex gap-4 w-full sm:w-auto">
+                <select
+                  id="category-filter"
+                  multiple
+                  value={category}
+                  onChange={e => setCategory(Array.from(e.target.selectedOptions, o => o.value))}
+                  className="min-w-[120px] rounded-lg border-gray-200 px-4 py-2 bg-white shadow text-gray-700 text-base sm:text-sm h-20"
+                  aria-label="Filter by category"
+                >
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+                <select
+                  id="sort-filter"
+                  value={sort}
+                  onChange={e => setSort(e.target.value)}
+                  className="min-w-[120px] rounded-lg border-gray-200 px-4 py-2 bg-white shadow text-gray-700 text-base sm:text-sm"
+                  aria-label="Sort events"
+                >
+                  <option value="date-asc">Date (Soonest)</option>
+                  <option value="date-desc">Date (Latest)</option>
+                  <option value="price-asc">Price (Lowest)</option>
+                  <option value="price-desc">Price (Highest)</option>
+                </select>
+              </div>
+              {/* Multi-category filter */}
+              <div className="flex flex-col gap-1 min-w-[140px]">
+                <label htmlFor="category-filter" className="text-xs font-semibold text-gray-600">Category</label>
+                <select
+                  id="category-filter"
+                  multiple
+                  value={category}
+                  onChange={e => setCategory(Array.from(e.target.selectedOptions, o => o.value))}
+                  className="rounded-lg border-gray-200 px-4 py-2 bg-white shadow text-gray-700 text-base sm:text-sm h-20"
+                  aria-label="Filter by category"
+                >
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              {/* Multi-location filter */}
+              <div className="flex flex-col gap-1 min-w-[140px]">
+                <label htmlFor="location-filter" className="text-xs font-semibold text-gray-600">Location</label>
+                <select
+                  id="location-filter"
+                  multiple
+                  value={location}
+                  onChange={e => setLocation(Array.from(e.target.selectedOptions, o => o.value))}
+                  className="rounded-lg border-gray-200 px-4 py-2 bg-white shadow text-gray-700 text-base sm:text-sm h-20"
+                  aria-label="Filter by location"
+                >
+                  {areas.filter(a => a !== 'All Areas').map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              {/* Date picker */}
+              <div className="flex flex-col gap-1 min-w-[140px]">
+                <label htmlFor="date-filter" className="text-xs font-semibold text-gray-600">Date</label>
+                <input
+                  id="date-filter"
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="rounded-lg border-gray-200 px-4 py-2 bg-white shadow text-gray-700 text-base sm:text-sm"
+                  aria-label="Filter by date"
+                />
+              </div>
+          </div>
+
+          {/* Skeleton loader while loading */}
+          {loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8" role="list" aria-label="Event List">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse bg-white rounded-2xl h-72 shadow flex flex-col gap-4 p-6">
+                  <div className="bg-gray-200 h-32 w-full rounded-xl" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No upcoming events found</h3>
-              <p className="text-gray-500">
-                {selectedArea === 'All Areas' 
-                  ? 'No upcoming events found. Check back later!'
-                  : `No upcoming events found in ${selectedArea}. Try selecting a different area.`
-                }
-              </p>
+          )}
+
+          {/* No events found message */}
+          {!loading && filteredUpcomingEvents.length === 0 && (
+            <div className="text-center py-16 text-gray-500">
+              <FiSmile size={40} className="mx-auto mb-4 text-yellow-400" />
+              <h2 className="text-xl sm:text-2xl font-semibold mb-2">No events found</h2>
+              <p className="mb-4 text-base sm:text-lg">Try adjusting your search, filters, or check back later for new events.</p>
+              <Link href="/create-event" className="inline-block bg-yellow-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold shadow hover:bg-yellow-600 transition text-base sm:text-lg whitespace-nowrap">Create an Event</Link>
             </div>
+          )}
+
+          {/* Events grid */}
+          {!loading && filteredUpcomingEvents.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
+              {filteredUpcomingEvents.map(event => {
+                // Event status
+                const now = new Date();
+                const eventDate = new Date(event.date);
+                let status = 'upcoming';
+                if (eventDate < now) status = 'past';
+                if (eventDate.toDateString() === now.toDateString()) status = 'ongoing';
+                // Social proof placeholder
+                const attendees = (event as any).attendees_count || Math.floor(Math.random() * 100 + 1);
+                return (
+                  <div key={event.id} className="relative group focus-within:ring-2 focus-within:ring-yellow-400" tabIndex={0} aria-label={event.name} role="listitem">
+                    {/* Status badge */}
+                    <span className={`absolute top-2 left-2 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg ${status === 'upcoming' ? 'bg-blue-100 text-blue-700' : status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                    {/* Featured badge */}
+                    {event.featured && <span className="absolute top-2 right-2 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>}
+                    {/* New badge */}
+                    {event.created_at && (now.getTime() - new Date(event.created_at).getTime() < 1000 * 60 * 60 * 24 * 7) && (
+                      <span className="absolute bottom-2 left-2 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
+                    )}
+                    {/* Popular badge (placeholder logic) */}
+                    {attendees > 50 && <span className="absolute bottom-2 right-2 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-pink-200 text-pink-800 shadow">Popular</span>}
+                    <EventCard event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Back to Top button */}
+          {showBackToTop && (
+            <button
+              className="fixed right-4 sm:right-8 z-50 bg-yellow-500 text-white p-2 sm:p-3 rounded-full shadow-lg hover:bg-yellow-600 transition flex items-center focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              style={{ bottom: isSyncing ? '5.5rem' : '2rem' }}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              aria-label="Back to top"
+            >
+              <FiChevronUp size={20} className="sm:w-6 sm:h-6 w-5 h-5" />
+            </button>
           )}
         </div>
       </section>
@@ -269,10 +470,10 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
 
       <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-          <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-300 text-white" aria-label="Events">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-300 text-white" aria-label="Categories">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-300 text-white" aria-label="About">About</Link>
+          <div className="flex flex-nowrap gap-x-4 sm:gap-x-6 mb-2 md:mb-0 overflow-x-auto">
+            <Link href="/events" className="whitespace-nowrap min-w-[90px] px-3 py-2 hover:text-yellow-300 text-white text-base sm:text-sm" aria-label="Events">Events</Link>
+            <Link href="/categories" className="whitespace-nowrap min-w-[110px] px-3 py-2 hover:text-yellow-300 text-white text-base sm:text-sm" aria-label="Categories">Categories</Link>
+            <Link href="/about" className="whitespace-nowrap min-w-[80px] px-3 py-2 hover:text-yellow-300 text-white text-base sm:text-sm" aria-label="About">About</Link>
           </div>
           <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
           <div className="flex gap-4 items-center">

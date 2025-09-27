@@ -7,7 +7,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const baseClass =
-  'rounded-xl px-6 py-3 font-semibold shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-yellow-400';
+  'rounded-xl px-6 py-3 font-semibold shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-yellow-400 whitespace-nowrap min-w-[100px] text-base sm:text-sm truncate';
 
 const variantClass: Record<string, string> = {
   primary: 'bg-yellow-500 text-white hover:bg-yellow-600 active:scale-95',
@@ -15,7 +15,7 @@ const variantClass: Record<string, string> = {
   danger: 'bg-red-500 text-white hover:bg-red-600 active:scale-95',
 };
 
-export default function Button({ variant = 'primary', className, children, ...props }: ButtonProps) {
+const Button = React.memo(function Button({ variant = 'primary', className, children, ...props }: ButtonProps) {
   return (
     <button
       className={clsx(baseClass, variantClass[variant], className)}
@@ -24,4 +24,5 @@ export default function Button({ variant = 'primary', className, children, ...pr
       {children}
     </button>
   );
-}
+});
+export default Button;

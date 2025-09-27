@@ -1,74 +1,21 @@
-  // Offline mode detection
-  const isOffline = typeof window !== 'undefined' && !navigator.onLine;
+
+"use client";
 import Header from '@/components/Header';
-import { FiUsers, FiCalendar, FiMapPin, FiHeart, FiTrendingUp, FiAward, FiGlobe, FiSmile } from 'react-icons/fi';
+import { FiUsers, FiCalendar, FiMapPin } from 'react-icons/fi';
+
+// ...existing code...
 import Link from 'next/link';
 import Button from '@/components/Button';
 import Image from 'next/image';
-import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 
-// Revalidate the page every 60 seconds
-export const revalidate = 60;
+// Removed invalid revalidate export for client component
 
-async function getStats() {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured. Please update your .env.local file with valid Supabase credentials.');
-    return { totalEvents: 0, totalUsers: 0, citiesCovered: 0 };
-  }
 
-  // Fetch events to calculate cities covered
-  const { data: eventsData, error: eventsError } = await supabase
-    .from(TABLES.EVENTS)
-    .select('location');
-
-  if (eventsError) {
-    console.warn('Error fetching events for cities covered:', eventsError.message);
-  }
-
-  const events: EventItem[] = (eventsData || []).map((event: any) => ({
-    ...event,
-    location: event.location || '',
-  }));
-
-  // Fetch total events count
-  const { count: totalEvents, error: totalEventsError } = await supabase
-    .from(TABLES.EVENTS)
-    .select('id', { count: 'exact', head: true });
-
-  if (totalEventsError) {
-    console.error('Error fetching total events:', totalEventsError.message);
-  }
-
-  // Fetch total users count
-  const { count: totalUsers, error: totalUsersError } = await supabase
-    .from(TABLES.USERS)
-    .select('id', { count: 'exact', head: true });
-
-  if (totalUsersError) {
-    console.error('Error fetching total users:', totalUsersError.message);
-  }
-
-  // Calculate cities covered
-  const uniqueCities = new Set<string>();
-  if (events.length > 0) {
-    events.forEach((event: EventItem) => {
-      if (event.location) {
-        const firstPart = event.location.split(',')[0]?.trim();
-        if (firstPart) {
-          uniqueCities.add(firstPart);
-        }
-      }
-    });
-  }
-  const citiesCovered = uniqueCities.size;
-
-  return {
-    totalEvents,
-    totalUsers,
-    citiesCovered,
-  };
-}
 
 const team = [
   {
@@ -79,14 +26,51 @@ const team = [
   }
 ];
 
-export default async function AboutPage() {
-  const { totalEvents, totalUsers, citiesCovered } = await getStats();
+function getStatsFromEvents(events: EventItem[]) {
+  // Calculate stats from cached events
+  const totalEvents = events.length;
+  const uniqueCities = new Set<string>();
+  events.forEach((event) => {
+    if (event.location) {
+      const firstPart = event.location.split(',')[0]?.trim();
+      if (firstPart) uniqueCities.add(firstPart);
+    }
+  });
+  return {
+    totalEvents,
+    totalUsers: null, // Not available offline
+    citiesCovered: uniqueCities.size,
+  };
+}
 
-  const stats = [
-    { icon: FiUsers, number: totalUsers !== null ? totalUsers.toLocaleString() + '+' : '...', label: 'Active Users' },
-    { icon: FiCalendar, number: totalEvents !== null ? totalEvents.toLocaleString() + '+' : '...', label: 'Events Created' },
-    { icon: FiMapPin, number: citiesCovered !== null ? citiesCovered.toLocaleString() + '+' : '...', label: 'Cities Covered' },
-  ];
+export default function AboutPage() {
+  const { isOnline } = useNetworkStatus();
+  const { data: cachedEvents, isLoading: isLoadingEvents } = useOfflineFirstData<EventItem>('events');
+  const [stats, setStats] = useState([
+    { icon: FiUsers, number: '...', label: 'Active Users' },
+    { icon: FiCalendar, number: '...', label: 'Events Created' },
+    { icon: FiMapPin, number: '...', label: 'Cities Covered' },
+  ]);
+  const [hasCache, setHasCache] = useState(false);
+
+  useEffect(() => {
+    if (cachedEvents && cachedEvents.length > 0) {
+      setHasCache(true);
+      const { totalEvents, citiesCovered } = getStatsFromEvents(cachedEvents);
+      setStats([
+        { icon: FiUsers, number: isOnline ? '...' : 'N/A', label: 'Active Users' },
+        { icon: FiCalendar, number: totalEvents.toLocaleString() + '+', label: 'Events Created' },
+        { icon: FiMapPin, number: citiesCovered.toLocaleString() + '+', label: 'Cities Covered' },
+      ]);
+    } else {
+      setHasCache(false);
+      setStats([
+        { icon: FiUsers, number: isOnline ? '...' : 'N/A', label: 'Active Users' },
+        { icon: FiCalendar, number: isOnline ? '...' : 'N/A', label: 'Events Created' },
+        { icon: FiMapPin, number: isOnline ? '...' : 'N/A', label: 'Cities Covered' },
+      ]);
+    }
+  }, [cachedEvents, isOnline]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -104,9 +88,9 @@ export default async function AboutPage() {
             <Link href="/events">
               <Button variant="secondary" className="w-full sm:w-auto">Explore Events</Button>
             </Link>
-            <Button variant="primary" className="w-full sm:w-auto" disabled={isOffline} aria-disabled={isOffline} style={isOffline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>Create Your Event</Button>
+            <Button variant="primary" className="w-full sm:w-auto" disabled={!isOnline} aria-disabled={!isOnline} style={!isOnline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>Create Your Event</Button>
           </div>
-          {isOffline && (
+          {!isOnline && (
             <div className="text-center mt-4">
               <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
             </div>
@@ -115,7 +99,7 @@ export default async function AboutPage() {
       </section>
 
       {/* Mission Section */}
-  <section className="max-w-6xl mx-auto w-full py-24 px-4 sm:px-8">
+      <section className="max-w-6xl mx-auto w-full py-24 px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-4xl font-bold text-gray-900 mb-8">Our Mission</h2>
@@ -129,6 +113,11 @@ export default async function AboutPage() {
               We strive to empower individuals and organizations to share their events with the world, 
               fostering a more connected and engaged society.
             </p>
+            {!isOnline && !hasCache && (
+              <div className="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center font-semibold">
+                Offline: No cached stats available. Connect to the internet to see platform stats.
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-6 md:gap-10">
             {stats.map((stat, index) => {
@@ -176,7 +165,7 @@ export default async function AboutPage() {
       </section>
 
       {/* Our Impact Section */}
-  <section className="w-full py-24 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white">
+      <section className="w-full py-24 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">Our Impact</h2>
@@ -184,7 +173,6 @@ export default async function AboutPage() {
               Numbers that showcase our commitment to fostering vibrant communities and unforgettable events.
             </p>
           </div>
-          
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-10">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
@@ -199,11 +187,16 @@ export default async function AboutPage() {
               );
             })}
           </div>
+          {!isOnline && !hasCache && (
+            <div className="mt-8 p-6 bg-red-100 border border-red-300 rounded-lg text-red-800 text-center font-semibold">
+              Offline: No cached stats available. Connect to the internet to see platform impact.
+            </div>
+          )}
         </div>
       </section>
 
       {/* CTA Section */}
-  <section className="w-full py-24 px-4 sm:px-8 bg-gray-100 border-t border-gray-200">
+      <section className="w-full py-24 px-4 sm:px-8 bg-gray-100 border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-6">Ready to Get Started?</h2>
           <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -211,12 +204,12 @@ export default async function AboutPage() {
             building stronger communities through PNG Events.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="btn-primary text-lg px-10 py-4" disabled={isOffline} aria-disabled={isOffline} style={isOffline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>Sign Up Now</Button>
+            <Button className="btn-primary text-lg px-10 py-4" disabled={!isOnline} aria-disabled={!isOnline} style={!isOnline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>Sign Up Now</Button>
             <Link href="/events" className="btn-secondary text-lg px-10 py-4">
               Browse Events
             </Link>
           </div>
-          {isOffline && (
+          {!isOnline && (
             <div className="text-center mt-4">
               <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
             </div>
@@ -236,6 +229,7 @@ export default async function AboutPage() {
           <div className="flex gap-4">
             <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Terms">Terms</Link>
             <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Privacy">Privacy</Link>
+            <Link href="/settings" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Settings">Settings</Link>
           </div>
         </div>
       </footer>
