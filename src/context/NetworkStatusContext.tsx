@@ -25,6 +25,14 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
   // Function to sync data with the server
+  // Utility to clear service worker cache
+  const clearServiceWorkerCache = async () => {
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+    }
+  };
+
   const syncData = async () => {
     if (!isOnline || isSyncing) return;
 
@@ -77,8 +85,26 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       autoSync = localStorage.getItem('autoSync') !== 'false';
     } catch {}
 
-    const handleOnline = () => {
+    const handleOnline = async () => {
       setIsOnline(true);
+      // Clear caches on reconnect
+      try {
+        await db.clearEventsCache();
+        await clearServiceWorkerCache();
+        toast.success('Cache cleared! Fetching latest events...');
+        // Fetch latest events from server and cache them
+        const { data: eventsData, error: eventsError } = await supabase
+          .from(TABLES.EVENTS)
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (eventsError) throw eventsError;
+        if (eventsData && eventsData.length > 0) {
+          await db.addEvents(eventsData as EventItem[]);
+          toast.success('Latest events cached for offline use!');
+        }
+      } catch (err) {
+        toast.error('Failed to update cache');
+      }
       if (offlineNotif) toast.success('Back online! Syncing data...');
       if (autoSync) syncData();
     };
