@@ -94,88 +94,69 @@ const Header = React.memo(function Header() {
               Events
             </span>
           </Link>
-          {/* Always show mobile menu button */}
+          {/* Centered nav for desktop */}
+          <nav className="hidden md:flex flex-1 justify-center items-center space-x-8">
+            <button onClick={() => router.push('/events')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Events</button>
+            <button onClick={() => router.push('/categories')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Categories</button>
+            <button onClick={() => router.push('/about')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</button>
+          </nav>
+          {/* Right side actions for desktop */}
+          <div className="hidden md:flex items-center space-x-4">
+            <button onClick={() => router.push('/create-event')} className="btn-primary flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Event
+            </button>
+            <button onClick={() => router.push('/settings')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Settings</button>
+            {user ? (
+              <>
+                <button onClick={() => router.push('/dashboard')} className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors">
+                  {userPhotoUrl ? (
+                    <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-2" />
+                  ) : (
+                    <FiUser size={16} className="inline mr-2" />
+                  )}
+                  {userName || 'Dashboard'}
+                </button>
+                <button onClick={handleSignOut} className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                  <FiLogOut size={16} className="inline mr-2" />Sign Out
+                </button>
+              </>
+            ) : (
+              hasMounted && isOnline && (
+                <button onClick={() => router.push('/signin')} className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                  <FiUser size={16} className="inline mr-2" />Sign In
+                </button>
+              )
+            )}
+          </div>
+          {/* Hamburger for mobile */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
+            className="p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 md:hidden"
             aria-label="Open navigation menu"
           >
             {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
-        {/* Dropdown Navigation (always used) */}
+        {/* Dropdown Navigation for mobile only */}
         {isMenuOpen && (
-          <div className="border-t border-gray-200/50 py-6 animate-slide-up">
+          <div className="border-t border-gray-200/50 py-6 animate-slide-up md:hidden">
             <nav className="flex flex-col space-y-4">
-              <button
-                onClick={() => { router.push('/events'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
-              >
-                Events
-              </button>
-              <button
-                onClick={() => { router.push('/categories'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
-              >
-                Categories
-              </button>
-              <button
-                onClick={() => { router.push('/about'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
-              >
-                About
-              </button>
-              <button
-                onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
-                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
-              >
-                Settings
-              </button>
+              <button onClick={() => { router.push('/events'); setIsMenuOpen(false); }} className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium">Events</button>
+              <button onClick={() => { router.push('/categories'); setIsMenuOpen(false); }} className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium">Categories</button>
+              <button onClick={() => { router.push('/about'); setIsMenuOpen(false); }} className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium">About</button>
+              <button onClick={() => { router.push('/settings'); setIsMenuOpen(false); }} className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium">Settings</button>
               {user ? (
                 <>
-                  <button
-                    onClick={() => {
-                      router.push('/create-event');
-                      setIsMenuOpen(false);
-                    }}
-                    className="btn-primary w-full justify-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create Event
-                  </button>
-                  <button
-                    onClick={() => { router.push('/dashboard'); setIsMenuOpen(false); }}
-                    className="text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg border-t border-gray-200 pt-6 mt-4 font-medium"
-                  >
-                    {userPhotoUrl ? (
-                      <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-2" />
-                    ) : (
-                      <FiUser size={16} className="inline mr-2" />
-                    )}
-                    {userName || 'Dashboard'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
-                  >
-                    <FiLogOut size={16} className="inline mr-2" />
-                    Sign Out
-                  </button>
+                  <button onClick={() => { router.push('/create-event'); setIsMenuOpen(false); }} className="btn-primary w-full justify-center"> <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Create Event</button>
+                  <button onClick={() => { router.push('/dashboard'); setIsMenuOpen(false); }} className="text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg border-t border-gray-200 pt-6 mt-4 font-medium">{userPhotoUrl ? (<Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-2" />) : (<FiUser size={16} className="inline mr-2" />)}{userName || 'Dashboard'}</button>
+                  <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"><FiLogOut size={16} className="inline mr-2" />Sign Out</button>
                 </>
               ) : (
                 hasMounted && isOnline && (
-                  <button
-                    onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}
-                    className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg border-t border-gray-200 pt-6 mt-4 font-medium"
-                  >
-                    <FiUser size={16} className="inline mr-2" />
-                    Sign In
-                  </button>
+                  <button onClick={() => { router.push('/signin'); setIsMenuOpen(false); }} className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg border-t border-gray-200 pt-6 mt-4 font-medium"><FiUser size={16} className="inline mr-2" />Sign In</button>
                 )
               )}
             </nav>
