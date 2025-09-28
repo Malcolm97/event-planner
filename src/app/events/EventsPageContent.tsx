@@ -1,59 +1,115 @@
 "use client";
 
-import Link from 'next/link';
+
 import AppFooter from '@/components/AppFooter';
-import { useState } from 'react';
-import { FiSmile } from 'react-icons/fi';
+import { useState, useEffect, useMemo } from 'react';
+import { FiSmile, FiFilter, FiX } from 'react-icons/fi';
 import EventCard from '../../components/EventCard';
+import EventModal from '../../components/EventModal';
 import { useEvents } from '@/hooks/useOfflineFirstData';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { supabase, TABLES, User } from '@/lib/supabase';
+import { EventItem } from '@/lib/types';
 
-const popularPngCities = [
-  "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
-  "Popondetta", "Arawa", "Kavieng", "Daru", "Vanimo", "Kimbe", "Mendi",
-  "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau"
-];
+
 
 export default function EventsPageContent() {
   const { data: events = [], isLoading: loading } = useEvents();
   const { isSyncing, syncError, lastSyncTime } = useNetworkStatus();
-  const [selectedArea, setSelectedArea] = useState('All Areas');
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [host, setHost] = useState<User | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const now = new Date();
 
-  const locationAreas = events.map(event => {
-    const location = event.location;
-    if (!location) return null;
-    const firstPart = location.split(',')[0]?.trim();
-    if (!firstPart) return null;
-    if (popularPngCities.includes(firstPart)) {
-      return firstPart;
-    } else {
-      return "Other Locations";
+  // Extract unique locations from events and group "Other" locations
+  const { availableLocations, otherLocations } = useMemo(() => {
+    const locations = new Set<string>();
+    const otherLocs = new Set<string>();
+
+    events.forEach(event => {
+      if (event.location) {
+        const firstPart = event.location.split(',')[0]?.trim();
+        if (firstPart) {
+          if (firstPart.toLowerCase() === 'other') {
+            // For "Other" locations, extract the actual location after the comma
+            const actualLocation = event.location.split(',')[1]?.trim();
+            if (actualLocation && actualLocation.toLowerCase() !== 'other') {
+              otherLocs.add(actualLocation);
+            }
+          } else {
+            locations.add(firstPart);
+          }
+        }
+      }
+    });
+
+    return {
+      availableLocations: Array.from(locations).sort(),
+      otherLocations: Array.from(otherLocs).sort()
+    };
+  }, [events]);
+
+  // Filter events based on selected location
+  const filteredEvents = useMemo(() => {
+    if (selectedLocation === 'all') {
+      return events;
     }
-  }).filter((location): location is string => !!location);
-  const areas = ['All Areas', ...Array.from(new Set(locationAreas))];
-  const upcomingEvents = events.filter(event => event.date && new Date(event.date) >= now);
-  const previousEvents = events.filter(event => event.date && new Date(event.date) < now);
-  const filteredUpcomingEvents = selectedArea === 'All Areas'
-    ? upcomingEvents
-    : selectedArea === 'Other Locations'
-      ? upcomingEvents.filter(event => {
-          const location = event.location;
-          if (!location) return false;
-          const firstPart = location.split(',')[0]?.trim();
-          return firstPart && !popularPngCities.includes(firstPart);
-        })
-      : upcomingEvents.filter(event => event.location?.includes(selectedArea));
-  const filteredPreviousEvents = selectedArea === 'All Areas'
-    ? previousEvents
-    : selectedArea === 'Other Locations'
-      ? previousEvents.filter(event => {
-          const location = event.location;
-          if (!location) return false;
-          const firstPart = location.split(',')[0]?.trim();
-          return firstPart && !popularPngCities.includes(firstPart);
-        })
-      : previousEvents.filter(event => event.location?.includes(selectedArea));
+
+    return events.filter(event => {
+      if (!event.location) return false;
+
+      // Check if this is an "Other" location selection
+      if (otherLocations.includes(selectedLocation)) {
+        // For "Other" locations, match the full location string
+        return event.location.toLowerCase().includes(selectedLocation.toLowerCase());
+      }
+
+      // For regular locations, match the first part
+      const firstPart = event.location.split(',')[0]?.trim();
+      return firstPart === selectedLocation;
+    });
+  }, [events, selectedLocation, otherLocations]);
+
+  const oneWeekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days ago
+
+  const upcomingEvents = filteredEvents.filter(event => event.date && new Date(event.date) >= now);
+  const previousEvents = filteredEvents.filter(event =>
+    event.date &&
+    new Date(event.date) < now &&
+    new Date(event.date) >= oneWeekAgo
+  );
+
+  const fetchHost = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.USERS)
+        .select('*')
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error fetching host:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setHost(data[0]);
+      } else {
+        setHost(null);
+      }
+    } catch (err: any) {
+      console.error('Error fetching host:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedEvent?.created_by) {
+      fetchHost(selectedEvent.created_by);
+    } else {
+      setHost(null);
+    }
+  }, [selectedEvent]);
 
   return (
     <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
@@ -85,23 +141,67 @@ export default function EventsPageContent() {
         </div>
       </section>
 
-      {/* Area filter (first fold only) */}
-      <section className="py-8 px-4 sm:px-8 bg-white border-b border-gray-200">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center gap-4">
-          <label htmlFor="area-filter" className="text-base font-semibold text-gray-700 mr-2">Area:</label>
-          <select
-            id="area-filter"
-            value={selectedArea}
-            onChange={e => setSelectedArea(e.target.value)}
-            className="rounded-lg border-gray-200 px-4 py-2 bg-white shadow text-gray-700 text-base sm:text-sm min-w-[180px]"
-            aria-label="Filter by area"
-          >
-            {areas.map(area => (
-              <option key={area} value={area}>{area}</option>
-            ))}
-          </select>
-        </div>
-      </section>
+      {/* Location Filter */}
+      {!loading && events.length > 0 && (availableLocations.length > 0 || otherLocations.length > 0) && (
+        <section className="py-6 bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <FiFilter className="text-gray-600" size={20} />
+                <span className="text-sm font-medium text-gray-700">Filter by location:</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 min-w-[150px]"
+                  aria-label="Filter events by location"
+                >
+                  <option value="all">All Locations</option>
+
+                  {/* Regular locations */}
+                  {availableLocations.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+
+                  {/* Other locations section */}
+                  {otherLocations.length > 0 && (
+                    <optgroup label="Other Locations">
+                      {otherLocations.map((location) => (
+                        <option key={`other-${location}`} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+                {selectedLocation !== 'all' && (
+                  <button
+                    onClick={() => setSelectedLocation('all')}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                    aria-label="Clear location filter"
+                  >
+                    <FiX size={16} />
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            {selectedLocation !== 'all' && (
+              <div className="mt-3 text-sm text-gray-600">
+                Showing events in <span className="font-medium text-gray-900">{selectedLocation}</span>
+                {upcomingEvents.length !== filteredEvents.length && (
+                  <span className="ml-2">
+                    ({upcomingEvents.length} upcoming, {filteredEvents.length - upcomingEvents.length} previous)
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Skeleton loader while loading */}
       {loading && (
@@ -118,28 +218,27 @@ export default function EventsPageContent() {
       )}
 
       {/* No events found message */}
-      {!loading && filteredUpcomingEvents.length === 0 && (
+      {!loading && upcomingEvents.length === 0 && (
         <div className="text-center py-16 text-gray-500">
           <FiSmile size={40} className="mx-auto mb-4 text-yellow-400" />
           <h2 className="text-xl sm:text-2xl font-semibold mb-2">No events found</h2>
           <p className="mb-4 text-base sm:text-lg">Check back later for new events.</p>
-          <Link href="/create-event" className="inline-block bg-yellow-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold shadow hover:bg-yellow-600 transition text-base sm:text-lg whitespace-nowrap">Create an Event</Link>
         </div>
       )}
 
       {/* Events grid */}
-      {!loading && filteredUpcomingEvents.length > 0 && (
+      {!loading && upcomingEvents.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
-            {filteredUpcomingEvents.map(event => (
-              <EventCard key={event.id} event={event} />
+            {upcomingEvents.map((event: EventItem) => (
+              <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
             ))}
           </div>
         </div>
       )}
 
       {/* Previous Events */}
-      {filteredPreviousEvents.length > 0 && (
+      {previousEvents.length > 0 && (
         <section className="py-12 bg-gray-50 border-t border-gray-200">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-10">
@@ -147,13 +246,15 @@ export default function EventsPageContent() {
               <p className="text-gray-600">Browse events that have already taken place.</p>
             </div>
             <div className="px-4 sm:px-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
-              {filteredPreviousEvents.map(event => (
-                <EventCard key={event.id} event={event} />
+              {previousEvents.map((event: EventItem) => (
+                <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}
             </div>
           </div>
         </section>
       )}
+
+      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
       <AppFooter />
     </div>

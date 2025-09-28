@@ -1,10 +1,11 @@
 
 'use client';
+import Link from 'next/link';
 import Button from './Button';
 import '../components/EventModal.animations.css';
 import React, { ElementType, useState, useRef, useEffect } from 'react';
 
-import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome, FiEdit } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -186,6 +187,19 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             <FiX size={22} />
             <span className="sr-only">Close (ESC)</span>
           </button>
+
+          {/* Manage button for event creators */}
+          {authUser && selectedEvent?.created_by === authUser.id && (
+            <Link
+              href={`/dashboard/edit-event/${selectedEvent.id}`}
+              className="absolute top-3 right-16 sm:top-4 sm:right-16 p-2 sm:p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 text-white shadow focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20 transition-colors"
+              aria-label="Manage Event"
+              tabIndex={0}
+            >
+              <FiEdit size={18} />
+              <span className="sr-only">Manage Event</span>
+            </Link>
+          )}
 
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">

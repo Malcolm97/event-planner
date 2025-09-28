@@ -1,12 +1,12 @@
 import React from 'react';
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { FiBookmark, FiBookmark as FiBookmarkFilled } from 'react-icons/fi';
 import { getEventPrimaryImage } from '@/lib/utils';
+import { supabase, TABLES } from '@/lib/supabase';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -55,23 +55,101 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
   const Icon = categoryIconMap[categoryLabel] || FiStar;
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saveCount, setSaveCount] = useState(0);
 
-  // Status badge logic
-  const now = new Date();
-  const eventDate = new Date(event.date);
-  let status = 'upcoming';
-  if (eventDate < now) status = 'past';
-  if (eventDate.toDateString() === now.toDateString()) status = 'ongoing';
   // New badge logic (created within last 7 days)
+  const now = new Date();
   const isNew = event.created_at && (now.getTime() - new Date(event.created_at).getTime() < 1000 * 60 * 60 * 24 * 7);
-  // Popular badge logic (placeholder: random or attendee count)
-  const attendees = (event as any).attendees_count || Math.floor(Math.random() * 100 + 1);
-  const isPopular = attendees > 50;
 
-  // Save/Bookmark logic (placeholder, should be replaced with real API)
-  const handleBookmark = (e: React.MouseEvent) => {
+  // Check if event is current (not past)
+  const isCurrentEvent = event.date && new Date(event.date) >= now;
+
+  // Popular badge logic: only show on current events with high save count by logged-in users
+  const isPopular = isCurrentEvent && saveCount >= 5; // Threshold for popular events
+
+  // Fetch save count for popular badge logic
+  useEffect(() => {
+    const fetchSaveCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', event.id);
+
+        if (!error && count !== null) {
+          setSaveCount(count);
+        }
+      } catch (error) {
+        console.error('Error fetching save count:', error);
+      }
+    };
+
+    fetchSaveCount();
+  }, [event.id]);
+
+  // Check if event is saved on component mount
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('event_id', event.id)
+          .single();
+
+        if (data && !error) {
+          setBookmarked(true);
+        }
+      } catch (error) {
+        // Event not saved, that's fine
+      }
+    };
+
+    checkIfSaved();
+  }, [user, event.id]);
+
+  // Save/Bookmark logic
+  const handleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setBookmarked((prev) => !prev);
+    if (!user || loading) return;
+
+    setLoading(true);
+    try {
+      if (bookmarked) {
+        // Remove from saved events
+        const { error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .delete()
+          .eq('user_id', user.id)
+          .eq('event_id', event.id);
+
+        if (!error) {
+          setBookmarked(false);
+          setSaveCount(prev => Math.max(0, prev - 1)); // Update save count
+        }
+      } else {
+        // Add to saved events
+        const { error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .insert({
+            user_id: user.id,
+            event_id: event.id
+          });
+
+        if (!error) {
+          setBookmarked(true);
+          setSaveCount(prev => prev + 1); // Update save count
+        }
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving event:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,8 +165,6 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
     >
       {/* Top Badges Row */}
       <div className="absolute top-3 left-3 z-20 flex flex-row flex-wrap items-center gap-2 min-w-[0]">
-        {/* Status Badge */}
-        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg ${status === 'upcoming' ? 'bg-blue-100 text-blue-700' : status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
         {/* Popular Badge */}
         {isPopular && (
           <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-700 shadow">Popular</span>
@@ -112,12 +188,13 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
         {/* Save/Bookmark button for logged-in users */}
         {user && (
           <button
-            className={`ml-2 p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 text-yellow-600 hover:text-yellow-700 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400`}
+            className={`ml-2 p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'}`}
             aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
             onClick={handleBookmark}
+            disabled={loading}
             tabIndex={0}
           >
-            {bookmarked ? <FiBookmarkFilled size={16} /> : <FiBookmark size={16} />}
+            <FiBookmark size={16} className={bookmarked ? 'fill-current' : ''} />
           </button>
         )}
       </div>
@@ -196,21 +273,7 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
             </>
           )}
 
-          {/* Sharable Website Link */}
-          <div className="flex items-center gap-3 text-sm text-gray-600 pt-2 border-t border-gray-100">
-            <FiLink size={14} className="text-gray-400 flex-shrink-0" />
-            <button
-              className="font-medium text-blue-600 hover:text-blue-700 hover:underline truncate text-left transition-colors whitespace-nowrap min-w-[120px] text-base sm:text-sm"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click when clicking button
-                if (typeof onClick === 'function') {
-                  onClick(); // Trigger the same modal opening logic as the card
-                }
-              }}
-            >
-              View Event Details
-            </button>
-          </div>
+
         </div>
 
         {/* Social Share Feature - positioned in bottom right */}
