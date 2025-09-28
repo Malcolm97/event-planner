@@ -3,6 +3,7 @@ import AppFooter from '@/components/AppFooter';
 import { useState, useEffect } from 'react';
 import { supabase, TABLES, Event, User } from '@/lib/supabase';
 import EventCard from '@/components/EventCard';
+import Button from '@/components/Button';
 import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
 
 // Force dynamic rendering to prevent prerendering issues
@@ -69,9 +70,14 @@ function ProfilePageContent({ uid }: { uid: string }) {
           <div className="text-6xl mb-4">❌</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">User not found</h3>
           <p className="text-gray-500">The user profile you're looking for doesn't exist.</p>
-          <button className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors" onClick={() => window.location.reload()}>
+          <Button
+            variant="secondary"
+            size="lg"
+            className="mt-6"
+            onClick={() => window.location.reload()}
+          >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );

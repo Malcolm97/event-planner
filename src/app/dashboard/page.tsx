@@ -25,14 +25,23 @@ export default function DashboardPage() {
   const fetchUserActivities = async (userId: string) => {
     try {
       console.log('Starting to fetch activities for user:', userId);
+      console.log('Supabase configuration check:', {
+        isConfigured: supabase ? 'Client exists' : 'No client',
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'URL set' : 'No URL',
+        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Key set' : 'No key'
+      });
+
       const activitiesData = await getUserActivities(userId, 10);
       console.log('Successfully fetched activities:', activitiesData.length, 'records');
       setActivities(activitiesData);
     } catch (error) {
       console.error('Error in fetchUserActivities:', {
         error: error instanceof Error ? error.message : String(error),
+        errorType: typeof error,
+        errorStack: error instanceof Error ? error.stack : 'No stack',
         userId: userId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        supabaseClient: supabase ? 'Exists' : 'Missing'
       });
 
       // Set empty activities array to prevent UI issues
@@ -132,6 +141,12 @@ export default function DashboardPage() {
         userId: userId
       });
     }
+  };
+
+  // Function to handle event deletion
+  const handleEventDelete = (deletedEventId: string) => {
+    // Remove the deleted event from the local state
+    setUserEvents(prevEvents => prevEvents.filter(event => event.id !== deletedEventId));
   };
 
   // Function to fetch saved events with improved error handling
@@ -482,7 +497,11 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {upcomingEvents.map(event => (
                     <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
-                      <EventCard event={event} />
+                      <EventCard
+                        event={event}
+                        isOwner={true}
+                        onDelete={handleEventDelete}
+                      />
                     </Link>
                   ))}
                 </div>
@@ -549,7 +568,13 @@ export default function DashboardPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {expiredEvents.map(event => (
-                    <EventCard key={event.id} event={event} onClick={() => { /* Optionally open a modal for expired events if needed */ }} />
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      isOwner={true}
+                      onDelete={handleEventDelete}
+                      onClick={() => { /* Optionally open a modal for expired events if needed */ }}
+                    />
                   ))}
                 </div>
               )}

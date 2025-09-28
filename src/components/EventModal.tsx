@@ -154,7 +154,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-1 sm:p-2 md:p-4 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
@@ -162,29 +162,28 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       aria-describedby="event-modal-desc"
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-[98vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto relative animate-modal-in border border-gray-200 overflow-y-auto focus:outline-none flex flex-col"
+        className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-[99vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden focus:outline-none flex flex-col"
         style={{
-          minHeight: '60vh',
-          maxHeight: '90vh',
+          minHeight: '50vh',
+          maxHeight: '95vh',
           boxSizing: 'border-box',
-          overflowY: 'auto',
         }}
       >
         {/* Header */}
         {isOffline && (
-          <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 rounded-t-3xl font-semibold" role="alert">
+          <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 text-sm sm:text-base font-semibold" role="alert">
             You are offline. Event details may be cached.
           </div>
         )}
-        <div className="p-4 sm:p-6 md:p-8 border-b border-gray-200 relative">
+        <div className="p-3 sm:p-4 md:p-6 lg:p-8 border-b border-gray-200 relative">
           <button
             onClick={() => setDialogOpen(false)}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-3 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20"
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 p-1.5 sm:p-2 md:p-3 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20"
             aria-label="Close Modal"
             tabIndex={0}
             style={{ lineHeight: 0 }}
           >
-            <FiX size={22} />
+            <FiX size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
             <span className="sr-only">Close (ESC)</span>
           </button>
 
@@ -192,45 +191,45 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           {authUser && selectedEvent?.created_by === authUser.id && (
             <Link
               href={`/dashboard/edit-event/${selectedEvent.id}`}
-              className="absolute top-3 right-16 sm:top-4 sm:right-16 p-2 sm:p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 text-white shadow focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20 transition-colors"
+              className="absolute top-2 right-12 sm:top-3 sm:right-12 md:top-4 md:right-16 p-1.5 sm:p-2 md:p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 text-white shadow focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20 transition-colors"
               aria-label="Manage Event"
               tabIndex={0}
             >
-              <FiEdit size={18} />
+              <FiEdit size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="sr-only">Manage Event</span>
             </Link>
           )}
 
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-6 mt-8 sm:mt-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">
               {(() => {
               const category = selectedEvent?.category;
               const IconComponent = getIconComponent(category || 'Other');
 
-                return React.createElement(IconComponent as ElementType, { size: 36, className: "text-yellow-600" });
+                return React.createElement(IconComponent as ElementType, { size: 24, className: "text-yellow-600 sm:w-8 sm:h-8 md:w-10 md:h-10" });
               })()}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl sm:text-4xl font-bold text-gray-900 leading-tight line-clamp-2 break-words text-wrap">{selectedEvent?.name}</h2>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-4">
-                <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 text-yellow-800 font-bold text-xs sm:text-sm shadow-sm">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold text-gray-900 leading-tight line-clamp-2 break-words text-wrap">{selectedEvent?.name}</h2>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 mt-1.5 sm:mt-2 md:mt-4">
+                <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 text-yellow-800 font-bold text-xs sm:text-sm shadow-sm">
                   {selectedEvent?.category || 'Other'}
                 </span>
                 {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-green-100 text-green-700 font-bold text-xs sm:text-sm shadow-sm">
+                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-green-100 text-green-700 font-bold text-xs sm:text-sm shadow-sm">
                     Presale: K{selectedEvent.presale_price.toFixed(0)}
                   </span>
                 ) : (
-                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
+                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
                     Presale: None
                   </span>
                 )}
                 {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
-                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-blue-100 text-blue-700 font-bold text-xs sm:text-sm shadow-sm">
+                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-blue-100 text-blue-700 font-bold text-xs sm:text-sm shadow-sm">
                     Gate: K{selectedEvent.gate_price.toFixed(0)}
                   </span>
                 ) : (
-                  <span className="inline-block px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
+                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
                     Gate: None
                   </span>
                 )}
@@ -242,24 +241,27 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     {/* Content */}
     <div className="p-4 sm:p-6 md:p-8">
           {/* Tab Navigation */}
-          <div className="flex mb-4 sm:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
+          <div className="flex mb-4 sm:mb-6 md:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('event-details')}
-              className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
             >
-              Event Details
+              <span className="hidden sm:inline">Event Details</span>
+              <span className="sm:hidden">Details</span>
             </button>
             <button
               onClick={() => setActiveTab('about-event')}
-              className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
             >
-              About this event
+              <span className="hidden sm:inline">About Event</span>
+              <span className="sm:hidden">About</span>
             </button>
             <button
               onClick={() => setActiveTab('host-details')}
-              className={`flex-1 px-3 py-2 sm:px-6 sm:py-3 font-bold rounded-lg transition-all duration-200 ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
             >
-              Host Details
+              <span className="hidden sm:inline">Host Details</span>
+              <span className="sm:hidden">Host</span>
             </button>
           </div>
 

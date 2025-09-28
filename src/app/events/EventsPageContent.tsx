@@ -130,12 +130,12 @@ export default function EventsPageContent() {
       </div>
 
       {/* Hero section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
+      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-5xl font-extrabold text-white mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight">
             Events by Location
           </h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
             Find events happening in your area. Filter by location to discover what's happening near you.
           </p>
         </div>
@@ -143,62 +143,64 @@ export default function EventsPageContent() {
 
       {/* Location Filter */}
       {!loading && events.length > 0 && (availableLocations.length > 0 || otherLocations.length > 0) && (
-        <section className="py-6 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <FiFilter className="text-gray-600" size={20} />
-                <span className="text-sm font-medium text-gray-700">Filter by location:</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 min-w-[150px]"
-                  aria-label="Filter events by location"
-                >
-                  <option value="all">All Locations</option>
-
-                  {/* Regular locations */}
-                  {availableLocations.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-
-                  {/* Other locations section */}
-                  {otherLocations.length > 0 && (
-                    <optgroup label="Other Locations">
-                      {otherLocations.map((location) => (
-                        <option key={`other-${location}`} value={location}>
-                          {location}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-                {selectedLocation !== 'all' && (
-                  <button
-                    onClick={() => setSelectedLocation('all')}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-                    aria-label="Clear location filter"
+        <section className="py-4 sm:py-6 bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto container-padding">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <FiFilter className="text-gray-600" size={18} />
+                  <span className="text-sm sm:text-base font-medium text-gray-700">Filter by location:</span>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  <select
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="flex-1 sm:flex-none input-field min-w-[140px] sm:min-w-[160px]"
+                    aria-label="Filter events by location"
                   >
-                    <FiX size={16} />
-                    Clear
-                  </button>
-                )}
+                    <option value="all">All Locations</option>
+
+                    {/* Regular locations */}
+                    {availableLocations.map((location) => (
+                      <option key={location} value={location}>
+                        {location}
+                      </option>
+                    ))}
+
+                    {/* Other locations section */}
+                    {otherLocations.length > 0 && (
+                      <optgroup label="Other Locations">
+                        {otherLocations.map((location) => (
+                          <option key={`other-${location}`} value={location}>
+                            {location}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  {selectedLocation !== 'all' && (
+                    <button
+                      onClick={() => setSelectedLocation('all')}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors whitespace-nowrap"
+                      aria-label="Clear location filter"
+                    >
+                      <FiX size={16} />
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
+              {selectedLocation !== 'all' && (
+                <div className="text-sm text-gray-600">
+                  Showing events in <span className="font-medium text-gray-900">{selectedLocation}</span>
+                  {upcomingEvents.length !== filteredEvents.length && (
+                    <span className="ml-2">
+                      ({upcomingEvents.length} upcoming, {filteredEvents.length - upcomingEvents.length} previous)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
-            {selectedLocation !== 'all' && (
-              <div className="mt-3 text-sm text-gray-600">
-                Showing events in <span className="font-medium text-gray-900">{selectedLocation}</span>
-                {upcomingEvents.length !== filteredEvents.length && (
-                  <span className="ml-2">
-                    ({upcomingEvents.length} upcoming, {filteredEvents.length - upcomingEvents.length} previous)
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </section>
       )}
@@ -228,8 +230,8 @@ export default function EventsPageContent() {
 
       {/* Events grid */}
       {!loading && upcomingEvents.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
             {upcomingEvents.map((event: EventItem) => (
               <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
             ))}
@@ -240,12 +242,12 @@ export default function EventsPageContent() {
       {/* Previous Events */}
       {previousEvents.length > 0 && (
         <section className="py-12 bg-gray-50 border-t border-gray-200">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Previous Events</h2>
               <p className="text-gray-600">Browse events that have already taken place.</p>
             </div>
-            <div className="px-4 sm:px-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
               {previousEvents.map((event: EventItem) => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}

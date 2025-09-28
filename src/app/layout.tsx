@@ -35,7 +35,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="PNG Events" />
       </head>
-      <body className={`antialiased ${inter.className}`}>
+      <body className={`antialiased ${inter.className} min-h-screen`}>
         <ClientProviders>
           <Header />
           {children}

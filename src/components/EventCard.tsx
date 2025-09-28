@@ -1,12 +1,12 @@
 import React from 'react';
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark, FiTrash2, FiEdit } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage } from '@/lib/utils';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -49,7 +49,7 @@ const formatDate = (date: Date): string => {
   return `${day}${getOrdinalSuffix(day)} ${month}, ${year}`;
 };
 
-const EventCard = React.memo(function EventCard({ event, onClick }: { event: EventItem; onClick?: () => void }) {
+const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOwner = false }: { event: EventItem; onClick?: () => void; onDelete?: (eventId: string) => void; isOwner?: boolean }) {
   const categoryLabel = event.category?.trim() || 'Other';
   const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700';
   const Icon = categoryIconMap[categoryLabel] || FiStar;
@@ -57,6 +57,7 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
   // New badge logic (created within last 7 days)
   const now = new Date();
@@ -152,6 +153,56 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
     }
   };
 
+  // Delete event logic
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || deleting || !isOwner) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${event.name}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      // Delete the event from Supabase
+      const { error } = await supabase
+        .from(TABLES.EVENTS)
+        .delete()
+        .eq('id', event.id)
+        .eq('created_by', user.id); // Ensure user can only delete their own events
+
+      if (error) {
+        console.error('Error deleting event:', error);
+        alert('Failed to delete event. Please try again.');
+        return;
+      }
+
+      // Call the onDelete callback to refresh the events list
+      if (onDelete) {
+        onDelete(event.id);
+      }
+
+      // Record activity
+      await recordActivity(
+        user.id,
+        'event_completed', // Using existing activity type
+        `Deleted event: ${event.name}`,
+        { event_id: event.id, event_name: event.name },
+        event.id,
+        event.name
+      );
+
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div
       className="group relative card cursor-pointer overflow-hidden card-hover h-full rounded-2xl shadow transition-transform duration-200 hover:scale-[1.025] focus-within:scale-[1.025] focus:outline-none"
@@ -164,37 +215,38 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
       }}
     >
       {/* Top Badges Row */}
-      <div className="absolute top-3 left-3 z-20 flex flex-row flex-wrap items-center gap-2 min-w-[0]">
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-row flex-wrap items-center gap-1 sm:gap-2 min-w-[0]">
         {/* Popular Badge */}
         {isPopular && (
-          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-700 shadow">Popular</span>
+          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-700 shadow">Popular</span>
         )}
         {/* Featured Badge */}
         {event.featured && (
-          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
+          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
         )}
         {/* New Badge */}
         {isNew && (
-          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
+          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
         )}
       </div>
 
       {/* Category Badge & Bookmark - Top Right */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
-          <Icon size={12} />
-          {categoryLabel}
+      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1 sm:gap-2">
+        <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
+          <Icon size={10} className="sm:w-3 sm:h-3" />
+          <span className="hidden sm:inline">{categoryLabel}</span>
+          <span className="sm:hidden">{categoryLabel.slice(0, 4)}</span>
         </span>
         {/* Save/Bookmark button for logged-in users */}
         {user && (
           <button
-            className={`ml-2 p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'}`}
+            className={`ml-1 sm:ml-2 p-1 sm:p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'}`}
             aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
             onClick={handleBookmark}
             disabled={loading}
             tabIndex={0}
           >
-            <FiBookmark size={16} className={bookmarked ? 'fill-current' : ''} />
+            <FiBookmark size={14} className="sm:w-4 sm:h-4" />
           </button>
         )}
       </div>
@@ -234,50 +286,62 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-        <div className="p-6 flex flex-col gap-4">
+        <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
           {/* Event Title */}
-          <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
             {event.name}
           </h3>
 
           {/* Location and Date */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <FiMapPin size={14} className="text-gray-400 flex-shrink-0" />
-              <span className="font-medium text-gray-700 text-sm">{event.location}</span>
+          <div className="space-y-1.5 sm:space-y-2">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <FiMapPin size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+              <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">{event.location}</span>
             </div>
             {event.venue && (
-              <div className="flex items-center gap-3">
-                <FiHome size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700 text-sm">{event.venue}</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <FiHome size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">{event.venue}</span>
               </div>
             )}
           </div>
 
           {event.date && (
             <>
-              <div className="flex items-center gap-3">
-                <FiCalendar size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700 text-sm">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <FiCalendar size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">
                   {formatDate(new Date(event.date))}
                   {event.end_date ? ` - ${formatDate(new Date(event.end_date))}` : ''}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
-                <FiClock size={14} className="text-gray-400 flex-shrink-0" />
-                <span className="font-medium text-gray-700 text-sm">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <FiClock size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">
                   {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                   {event.end_date ? ` - ${new Date(event.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}` : ''}
                 </span>
               </div>
             </>
           )}
-
-
         </div>
 
-        {/* Social Share Feature - positioned in bottom right */}
-        <div className="absolute bottom-4 right-4 z-10">
+        {/* Action Buttons - positioned in bottom area */}
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 flex items-center gap-2">
+          {/* Delete button for event owners */}
+          {isOwner && (
+            <button
+              className={`p-2.5 rounded-full bg-red-50 hover:bg-red-100 shadow border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 ${deleting ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}`}
+              aria-label="Delete Event"
+              onClick={handleDelete}
+              disabled={deleting}
+              tabIndex={0}
+            >
+              <FiTrash2 size={18} />
+            </button>
+          )}
+
+          {/* Social Share Feature */}
           <ShareButtons event={event} />
         </div>
 

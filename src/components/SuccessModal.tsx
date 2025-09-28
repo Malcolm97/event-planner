@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 interface SuccessModalProps {
   message: string;
@@ -12,12 +13,12 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ message, onClose }) => {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Success!</h3>
         <p className="text-gray-700 mb-6">{message}</p>
         <div className="flex justify-end">
-          <button
+          <Button
             onClick={onClose}
-            className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition whitespace-nowrap min-w-[80px] text-base sm:text-sm truncate"
+            size="sm"
           >
             OK
-          </button>
+          </Button>
         </div>
       </div>
     </div>

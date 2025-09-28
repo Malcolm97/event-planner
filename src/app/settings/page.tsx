@@ -127,13 +127,15 @@ export default function SettingsPage() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-100 to-yellow-300 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-2xl mx-auto w-full flex-1 py-10 px-2 sm:px-4 flex flex-col">
         {/* Back Button */}
-        <button
+        <Button
           onClick={() => router.back()}
-          className="mb-6 px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition whitespace-nowrap min-w-[80px] text-base sm:text-sm truncate shadow self-start"
+          variant="ghost"
+          size="sm"
+          className="mb-6 self-start"
           aria-label="Back"
         >
           ← Back
-        </button>
+        </Button>
         <h1 className="text-3xl sm:text-4xl font-bold mb-8 text-center">Settings</h1>
         <div className="grid gap-8">
         {/* Cache Management */}

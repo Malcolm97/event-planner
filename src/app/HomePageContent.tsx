@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import EventCard from '@/components/EventCard';
+import Button from '@/components/Button';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { getEvents as getCachedEvents } from '@/lib/indexedDB';
 import { EventItem } from '@/lib/types';
@@ -289,88 +290,89 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   }, [events, upcomingEvents]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <section className="w-full py-12 px-4 sm:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
+    <div className="min-h-screen flex flex-col bg-white text-gray-900">
+      <section className="w-full py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
         {/* Sync indicator */}
         {isSyncing && (
           <div className="w-full text-center py-2 bg-yellow-50 text-yellow-800 font-semibold text-sm animate-pulse">Syncing events...</div>
         )}
-        <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-8">
-          <h1 className="text-6xl md:text-7xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+        <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-2 sm:mb-4 tracking-tight leading-tight">
             Local Events Near You
           </h1>
-          <p className="text-xl md:text-2xl text-gray-100 max-w-4xl leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-100 max-w-4xl leading-relaxed px-4">
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-4xl justify-center mt-4">
-            <input
-              className="w-full min-w-[120px] flex-1 md:flex-auto rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
-              placeholder="Search events, locations, or venues..."
-              aria-label="Search events, locations, or venues"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ color: 'black' }}
-            />
-            <select
-              className="w-full min-w-[120px] md:w-48 max-w-md rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
-              aria-label="Filter by location"
-              value={selectedLocationFilter}
-              onChange={(e) => setSelectedLocationFilter(e.target.value)}
-              style={{ color: 'black' }}
-            >
-              {displayedLocations.map(location => (
-                <option key={location} value={location}>{location}</option>
-              ))}
-            </select>
-            <select
-              className="w-full min-w-[120px] md:w-48 max-w-md rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              style={{ color: 'black' }}
-            >
-              {displayedDates.map(dateOption => (
-                <option key={dateOption} value={dateOption}>{dateOption}</option>
-              ))}
-            </select>
-            <button className="btn-primary shadow-lg focus:ring-2 focus:ring-yellow-400" aria-label="Find Events">Find Events</button>
+          <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-4xl mt-2 sm:mt-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <input
+                className="flex-1 input-field text-base sm:text-lg"
+                placeholder="Search events, locations, or venues..."
+                aria-label="Search events, locations, or venues"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select
+                className="input-field w-full sm:w-auto sm:min-w-[140px] text-base sm:text-lg"
+                aria-label="Filter by location"
+                value={selectedLocationFilter}
+                onChange={(e) => setSelectedLocationFilter(e.target.value)}
+              >
+                {displayedLocations.map(location => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <select
+                className="input-field flex-1 text-base sm:text-lg"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              >
+                {displayedDates.map(dateOption => (
+                  <option key={dateOption} value={dateOption}>{dateOption}</option>
+                ))}
+              </select>
+              <Button size="lg" aria-label="Find Events">Find Events</Button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-6 mt-8 w-full max-w-2xl sm:grid-cols-3 sm:gap-8">
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-white">{totalEvents !== null ? totalEvents : '...'}</div>
-              <div className="text-sm md:text-base text-gray-200 font-medium">Total Events</div>
+          <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8 w-full max-w-2xl">
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{totalEvents !== null ? totalEvents : '...'}</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-200 font-medium">Total Events</div>
             </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-white">{totalUsers !== null ? totalUsers : '...'}</div>
-              <div className="text-sm md:text-base text-gray-200 font-medium">Total Users</div>
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{totalUsers !== null ? totalUsers : '...'}</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-200 font-medium">Total Users</div>
             </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-white">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
-              <div className="text-sm md:text-base text-gray-200 font-medium">Cities Covered</div>
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-200 font-medium">Cities Covered</div>
             </div>
           </div>
         </div>
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="max-w-7xl mx-auto w-full section-padding">
+      <section className="max-w-7xl mx-auto w-full section-padding bg-white dark:bg-gray-900">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">📅</span> Upcoming Events
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Discover all upcoming events happening near you.</p>
+          <p className="text-gray-600 dark:text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed">Discover all upcoming events happening near you.</p>
         </div>
 
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-            <p className="text-gray-500 mt-8 text-xl">Loading events...</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-8 text-xl">Loading events...</p>
           </div>
         ) : !isOnline && events.length === 0 ? (
           <div className="col-span-full text-center py-20">
             <div className="text-8xl mb-6">📴</div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">No cached events available offline</h3>
-            <p className="text-gray-500 text-lg">Connect to the internet to load events for offline use.</p>
+            <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">No cached events available offline</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">Connect to the internet to load events for offline use.</p>
           </div>
         ) : (
           <>
@@ -383,41 +385,45 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             ) : (
               <div className="col-span-full text-center py-20">
                 <div className="text-8xl mb-6">📅</div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">No upcoming events</h3>
-                <p className="text-gray-500 text-lg">Check back later for new events.</p>
-                <button
-                  className="mt-8 px-8 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all duration-150 text-lg"
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">No upcoming events</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-lg">Check back later for new events.</p>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="mt-8"
                   aria-label="Retry loading events"
                   onClick={() => window.location.reload()}
                 >
                   Retry
-                </button>
+                </Button>
               </div>
             )}
           </>
         )}
 
           <div className="flex justify-center mt-16">
-            <Link href="/events" className="btn-primary text-lg px-10 py-4">
-              View all Events
-            </Link>
+            <Button asChild size="lg">
+              <Link href="/events">
+                View all Events
+              </Link>
+            </Button>
           </div>
       </section>
 
-      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50">
+      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50 dark:bg-gray-800">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">✨</span> Featured Events
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Featured events will appear here soon!</p>
+          <p className="text-gray-600 dark:text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed">Featured events will appear here soon!</p>
         </div>
       </section>
 
-      <section className="w-full section-padding bg-white border-t border-gray-200">
+      <section className="w-full section-padding bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Explore by Category</h3>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">Explore by Category</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {allCategories
@@ -436,9 +442,9 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   <Link
                     href={`/categories?category=${encodeURIComponent(cat.name)}`}
                     key={cat.name}
-                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-gray-200 font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${categoryColor} group`}
+                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${categoryColor} group`}
                   >
-                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white border-2 border-gray-200 group-hover:border-yellow-400 transition-all duration-300 shadow-md">
+                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
                       <Icon size={28} />
                     </span>
                     <span className="text-base font-bold text-center">{cat.name}</span>

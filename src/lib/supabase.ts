@@ -119,6 +119,11 @@ export const getUserActivities = async (userId: string, limit: number = 10): Pro
     }
 
     console.log('Fetching activities for user:', userId);
+    console.log('Supabase client status:', {
+      configured: isSupabaseConfigured(),
+      url: supabaseUrl ? 'URL available' : 'No URL',
+      hasKey: supabaseAnonKey ? 'Key available' : 'No key'
+    });
 
     const { data, error } = await supabase
       .from(TABLES.ACTIVITIES)
@@ -129,11 +134,14 @@ export const getUserActivities = async (userId: string, limit: number = 10): Pro
 
     if (error) {
       console.error('Supabase error details:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        userId: userId
+        message: error?.message || 'Unknown error',
+        details: error?.details || 'No details available',
+        hint: error?.hint || 'No hint available',
+        code: error?.code || 'Unknown code',
+        userId: userId,
+        fullError: error, // Log the full error object for debugging
+        errorType: typeof error,
+        errorKeys: error ? Object.keys(error) : 'No error object'
       });
 
       // Provide more specific error messages based on error codes

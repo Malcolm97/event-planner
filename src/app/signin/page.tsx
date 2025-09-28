@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase, TABLES } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Button from "@/components/Button";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import SuccessModal from '@/components/SuccessModal';
@@ -20,10 +21,12 @@ export default function SignInPage() {
   {/* Header removed, now rendered globally in layout */}
         <div className="relative flex flex-1 items-center justify-center p-4">
           <div className="absolute top-6 left-6">
-            <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/" className="flex items-center gap-2">
               <FiArrowLeft className="text-lg" />
               Back to Events
             </Link>
+          </Button>
           </div>
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
             <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
@@ -182,10 +185,12 @@ export default function SignInPage() {
   {/* Header removed, now rendered globally in layout */}
       <div className="relative flex flex-1 items-center justify-center p-4">
         <div className="absolute top-6 left-6">
-          <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
-            <FiArrowLeft className="text-lg" />
-            Back to Events
-          </Link>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/" className="flex items-center gap-2">
+              <FiArrowLeft className="text-lg" />
+              Back to Events
+            </Link>
+          </Button>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
         <div className="text-center mb-6">
@@ -200,22 +205,26 @@ export default function SignInPage() {
         
         {/* Tabs */}
         <div className="flex mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-1">
-          <button
+          <Button
             type="button"
-            className={`flex-1 py-3 text-base font-semibold transition-all duration-200 rounded-lg ${!isRegister && !isForgotPassword ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            variant={!isRegister && !isForgotPassword ? "secondary" : "ghost"}
+            size="sm"
+            className="flex-1"
             onClick={() => { setIsRegister(false); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
             Sign In
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`flex-1 py-3 text-base font-semibold transition-all duration-200 rounded-lg ${isRegister ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            variant={isRegister ? "secondary" : "ghost"}
+            size="sm"
+            className="flex-1"
             onClick={() => { setIsRegister(true); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
             Register
-          </button>
+          </Button>
         </div>
         
         <div className="flex flex-col gap-5">
@@ -306,13 +315,15 @@ export default function SignInPage() {
                 className="input-field"
                 required
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
-                className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium hover:underline transition-colors"
+                className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium p-0 h-auto"
               >
                 Forgot Password?
-              </button>
+              </Button>
               </div>
             </>
           )}
@@ -324,13 +335,14 @@ export default function SignInPage() {
           </div>
         )}
         
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          size="lg"
+          fullWidth
         >
           {loading ? "Loading..." : isForgotPassword ? "Send Reset Link" : (isRegister ? "Create Account" : "Sign In")}
-        </button>
+        </Button>
       </form>
       </div>
       {showSuccessModal && (

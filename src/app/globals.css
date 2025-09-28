@@ -8,16 +8,29 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--card-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--muted-color);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--primary-color);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: var(--card-background);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--muted-color);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
 }
 
 @layer utilities {
@@ -62,59 +75,156 @@
   --foreground: #171717;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --primary-color: #f59e0b;
+  --secondary-color: #d97706;
+  --accent-color: #fbbf24;
+  --muted-color: #6b7280;
+  --border-color: #e5e7eb;
+  --card-background: #ffffff;
+  --input-background: #ffffff;
+  --glass-background: rgba(255, 255, 255, 0.9);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark mode variables - only applied when .dark class is present */
+.dark {
+  --background: #111827;
+  --foreground: #f9fafb;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --primary-color: #fbbf24;
+  --secondary-color: #f59e0b;
+  --accent-color: #fde047;
+  --muted-color: #9ca3af;
+  --border-color: #374151;
+  --card-background: #1f2937;
+  --input-background: #374151;
+  --glass-background: rgba(17, 24, 39, 0.9);
 }
+
+/* Remove automatic dark mode - only apply when explicitly toggled */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Dark mode body styles - only when .dark class is present */
+.dark body {
+  background: #111827;
+  color: #f9fafb;
 }
 
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center;
-    @apply px-6 py-3 rounded-xl;
+    @apply px-4 py-2 sm:px-6 sm:py-3 rounded-xl;
     @apply font-semibold transition-all duration-200;
     @apply whitespace-nowrap min-w-max;
     @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
     @apply shadow-sm hover:shadow-md;
+    @apply text-sm sm:text-base;
   }
 
   .btn-primary {
-    @apply btn bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-500 hover:to-orange-600;
-    @apply focus:ring-yellow-300 transform hover:scale-105 active:scale-95;
+    @apply btn;
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    color: var(--background);
+    @apply hover:scale-105 active:scale-95;
+    @apply focus:ring-2 focus:ring-offset-2;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+  }
+
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
   }
 
   .btn-secondary {
-    @apply btn bg-white text-gray-900 hover:bg-gray-50 border border-gray-300;
-    @apply focus:ring-gray-300 hover:border-gray-400;
+    @apply btn;
+    background-color: var(--card-background);
+    color: var(--foreground);
+    border: 1px solid var(--border-color);
+    @apply hover:bg-opacity-80;
   }
-  
+
+  .btn-secondary:hover {
+    background-color: var(--input-background);
+    border-color: var(--muted-color);
+  }
+
+  .btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3);
+  }
+
   .btn-ghost {
-    @apply btn bg-transparent text-gray-700 hover:bg-gray-100;
-    @apply focus:ring-gray-300;
+    @apply btn bg-transparent;
+    color: var(--muted-color);
+    @apply hover:bg-opacity-10;
   }
-  
+
+  .btn-ghost:hover {
+    background-color: var(--muted-color);
+    color: var(--foreground);
+  }
+
+  .btn-ghost:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.3);
+  }
+
   .input-field {
-    @apply w-full rounded-xl border border-gray-300 px-4 py-3 bg-white text-gray-900;
-    @apply focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent;
-    @apply transition-all duration-200 placeholder-gray-500;
+    @apply w-full rounded-xl px-3 py-2 sm:px-4 sm:py-3;
+    background-color: var(--input-background);
+    color: var(--foreground);
+    border: 1px solid var(--border-color);
+    @apply focus:outline-none focus:ring-2 focus:border-transparent;
+    @apply transition-all duration-200;
+    @apply text-sm sm:text-base;
+    @apply placeholder-gray-500;
   }
-  
+
+  .input-field:focus {
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3);
+  }
+
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-200;
+    background-color: var(--card-background);
+    color: var(--foreground);
+    @apply rounded-2xl shadow-sm;
+    border: 1px solid var(--border-color);
     @apply transition-all duration-300 hover:shadow-lg;
   }
-  
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: var(--glass-background);
+    border: 1px solid var(--border-color);
+  }
+
   .section-padding {
-    @apply py-16 px-4 sm:px-6 lg:px-8;
+    @apply py-8 px-4 sm:py-12 sm:px-6 lg:py-16 lg:px-8;
+  }
+
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .responsive-grid-2 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .responsive-grid-3 {
+    @apply grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6 lg:gap-6;
   }
   
   .animate-fade-in {

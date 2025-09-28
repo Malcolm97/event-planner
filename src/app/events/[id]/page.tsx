@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase, TABLES, Event, User } from "@/lib/supabase";
 import EventModal from "@/components/EventModal";
+import Button from "@/components/Button";
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -57,9 +58,14 @@ export default function EventDetailsPage() {
         <div className="text-6xl mb-4">😔</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
         <p className="text-gray-600">The event you are looking for does not exist or has been removed.</p>
-        <button className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors" onClick={() => window.location.reload()}>
+        <Button
+          variant="secondary"
+          size="lg"
+          className="mt-6"
+          onClick={() => window.location.reload()}
+        >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -69,9 +75,13 @@ export default function EventDetailsPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.name}</h1>
           <p className="text-gray-600">{event.description}</p>
-          <button onClick={() => setDialogOpen(true)} className="mt-4 px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+          <Button
+            size="lg"
+            className="mt-4"
+            onClick={() => setDialogOpen(true)}
+          >
             View Event Details
-          </button>
+          </Button>
         </div>
       </div>
       <EventModal selectedEvent={event} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
