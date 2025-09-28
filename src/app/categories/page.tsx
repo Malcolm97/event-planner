@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import { Suspense } from 'react';
 import CategoriesPageContent from './CategoriesPageContent';
 import Loading from './loading'; // Import the Loading component
@@ -99,11 +98,8 @@ export default async function CategoriesPage() {
   const { events, displayCategories, totalEvents, totalUsers, citiesCovered } = await getEvents();
 
   return (
-    <>
-      <Header />
-      <Suspense fallback={<Loading />}>
-        <CategoriesPageContent initialEvents={events} initialDisplayCategories={displayCategories} initialTotalEvents={totalEvents} initialTotalUsers={totalUsers} initialCitiesCovered={citiesCovered} />
-      </Suspense>
-    </>
+    <Suspense fallback={<Loading />}>
+      <CategoriesPageContent initialEvents={events} initialDisplayCategories={displayCategories} initialTotalEvents={totalEvents} initialTotalUsers={totalUsers} initialCitiesCovered={citiesCovered} />
+    </Suspense>
   );
 }

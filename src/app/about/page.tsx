@@ -1,6 +1,6 @@
 
 "use client";
-import Header from '@/components/Header';
+import AppFooter from '@/components/AppFooter';
 import { FiUsers, FiCalendar, FiMapPin } from 'react-icons/fi';
 
 // ...existing code...
@@ -74,7 +74,6 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header />
       {/* Hero Section */}
       <section className="w-full py-24 px-4 sm:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
@@ -217,22 +216,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="w-full py-12 px-4 sm:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
-          <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Events">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Categories">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="About">About</Link>
-          </div>
-          <div className="text-center text-gray-300 font-medium">© 2025 PNG Events. All rights reserved.</div>
-          <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Terms">Terms</Link>
-            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Privacy">Privacy</Link>
-            <Link href="/settings" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium" aria-label="Settings">Settings</Link>
-          </div>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

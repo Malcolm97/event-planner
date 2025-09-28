@@ -1,6 +1,5 @@
 'use client';
 
-import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
@@ -182,7 +181,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-      <Header />
+  {/* Header removed, now rendered globally in layout */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link

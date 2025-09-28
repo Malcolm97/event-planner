@@ -82,7 +82,7 @@ const Header = React.memo(function Header() {
   };
 
   return (
-<header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md">
+    <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -94,85 +94,18 @@ const Header = React.memo(function Header() {
               Events
             </span>
           </Link>
-
-          {/* Desktop Navigation */}
-            <nav className="flex flex-nowrap gap-x-4 sm:gap-x-6 items-center overflow-x-auto py-1 bg-white/80 rounded-xl shadow-sm px-2">
-              <Link href="/events" className="whitespace-nowrap min-w-[90px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">Events</Link>
-              <Link href="/categories" className="whitespace-nowrap min-w-[110px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">Categories</Link>
-              <Link href="/about" className="whitespace-nowrap min-w-[80px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">About</Link>
-              <Link href="/settings" className="whitespace-nowrap min-w-[100px] px-4 py-2 font-bold text-yellow-600 hover:text-white hover:bg-yellow-500 focus:bg-yellow-600 focus:text-white rounded-lg transition-colors text-base sm:text-sm shadow-sm outline-none">Settings</Link>
-            </nav>
-
-          {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-3">
-            {user ? (
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => router.push('/create-event')}
-                  className="btn-primary gap-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create Event
-                </button>
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                >
-                  {userPhotoUrl ? (
-                    <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full" />
-                  ) : (
-                    <FiUser size={16} />
-                  )}
-                  {userName || 'Dashboard'}
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                >
-                  <FiLogOut size={16} />
-                  Sign Out
-                </button>
-              </div>
-              ) : (
-                // Conditionally render Sign In and Create Event buttons only after client-side mount
-                hasMounted && isOnline && (
-                  <div className="flex items-center space-x-3">
-                    <Link
-                      onClick={() => router.push('/signin')}
-                      href="/signin"
-                      className="btn-secondary gap-2"
-                    >
-                      <FiUser size={16} />
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/signin"
-                      className="btn-primary gap-2"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Create Event
-                    </Link>
-                  </div>
-                )
-              )}
-          </div>
-
-          {/* Mobile menu button */}
+          {/* Always show mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
+            className="p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
+            aria-label="Open navigation menu"
           >
             {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
-
-        {/* Mobile Navigation */}
+        {/* Dropdown Navigation (always used) */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200/50 py-6 animate-slide-up">
+          <div className="border-t border-gray-200/50 py-6 animate-slide-up">
             <nav className="flex flex-col space-y-4">
               <button
                 onClick={() => { router.push('/events'); setIsMenuOpen(false); }}
@@ -192,17 +125,18 @@ const Header = React.memo(function Header() {
               >
                 About
               </button>
-              
+              <button
+                onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
+                className="text-left text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-lg font-medium"
+              >
+                Settings
+              </button>
               {user ? (
                 <>
                   <button
                     onClick={() => {
-                      if (!user) {
-                        router.push('/signin');
-                      } else {
-                        router.push('/create-event');
-                      }
-                      setIsMenuOpen(false); // Close mobile menu after click
+                      router.push('/create-event');
+                      setIsMenuOpen(false);
                     }}
                     className="btn-primary w-full justify-center"
                   >
@@ -234,7 +168,6 @@ const Header = React.memo(function Header() {
                   </button>
                 </>
               ) : (
-                // Conditionally render Sign In link for mobile only after client-side mount
                 hasMounted && isOnline && (
                   <button
                     onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}

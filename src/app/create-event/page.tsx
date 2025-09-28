@@ -1,6 +1,5 @@
 'use client';
 
-import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
@@ -45,7 +44,7 @@ export default function CreateEventPage() {
   if (!isOnline) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-        <Header />
+  {/* Header removed, now rendered globally in layout */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Offline Mode</h1>
           <p className="text-gray-600">Event creation is not available when offline.</p>
@@ -179,7 +178,7 @@ export default function CreateEventPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-      <Header />
+  {/* Header removed, now rendered globally in layout */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link

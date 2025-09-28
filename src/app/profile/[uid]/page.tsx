@@ -1,6 +1,5 @@
-'use client';
-
-import Header from '@/components/Header';
+"use client";
+import AppFooter from '@/components/AppFooter';
 import { useState, useEffect } from 'react';
 import { supabase, TABLES, Event, User } from '@/lib/supabase';
 import EventCard from '@/components/EventCard';
@@ -8,8 +7,6 @@ import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
-
-
 
 export default async function ProfilePage({ params }: { params: any }) {
   const resolvedParams = await params;
@@ -26,47 +23,38 @@ function ProfilePageContent({ uid }: { uid: string }) {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        
         // Fetch user profile
         const { data: userData, error: userError } = await supabase
           .from(TABLES.USERS)
           .select('*')
           .eq('id', uid)
           .single();
-
-        if (userError) {
-          console.error('Error fetching user:', userError);
+        if (userError || !userData) {
+          setUser(null);
+          setUserEvents([]);
+          setLoading(false);
           return;
         }
-
         setUser(userData);
-
-        // Fetch user's events
-        const { data: eventsData, error: eventsError } = await supabase
+        const { data: eventsData } = await supabase
           .from(TABLES.EVENTS)
-          .select('id, name, date, location, venue, category, presale_price, gate_price, image_urls, featured, created_by, description, created_at')
+          .select('*')
           .eq('created_by', uid)
           .order('date', { ascending: true });
-
-        if (eventsError) {
-          console.error('Error fetching events:', eventsError);
-          return;
-        }
-
         setUserEvents(eventsData || []);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
+        setLoading(false);
+      } catch (err) {
+        setUser(null);
+        setUserEvents([]);
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, [uid]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
           <p className="text-gray-500 mt-6 text-lg">Loading profile...</p>
@@ -74,141 +62,53 @@ function ProfilePageContent({ uid }: { uid: string }) {
       </div>
     );
   }
-
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">User not found</h3>
           <p className="text-gray-500">The user profile you're looking for doesn't exist.</p>
-          <button
-            className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-            onClick={() => window.location.reload()}
-          >
+          <button className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors" onClick={() => window.location.reload()}>
             Retry
           </button>
         </div>
       </div>
     );
   }
-
-  const now = new Date();
-  const upcomingEvents = userEvents.filter(event => event.date && new Date(event.date) >= now);
-  const previousEvents = userEvents.filter(event => event.date && new Date(event.date) < now);
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      {/* Profile Header */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6">
-              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{user.name || 'Unnamed User'}</h1>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-gray-600 mb-6">
-              {user.email && (
-                <div className="flex items-center gap-2">
-                  <FiMail size={16} />
-                  <span>{user.email}</span>
-                </div>
-              )}
-              {user.company && (
-                <div className="flex items-center gap-2">
-                  <FiUser size={16} />
-                  <span>{user.company}</span>
-                </div>
-              )}
-              {user.phone && (
-                <div className="flex items-center gap-2">
-                  <FiMapPin size={16} />
-                  <span>{user.phone}</span>
-                </div>
-              )}
-            </div>
-
-            {user.about && (
-              <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                {user.about}
-              </p>
+    <div className="min-h-screen bg-white flex flex-col">
+      <main className="flex-1">
+        <section className="max-w-3xl mx-auto py-12 px-4">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">{user.name || 'User Profile'}</h1>
+            <p className="text-gray-600">{user.about}</p>
+          </div>
+          <div className="space-y-4">
+            {user.email && (
+              <div className="flex items-center gap-2 text-gray-700"><FiMail size={16} /> {user.email}</div>
+            )}
+            {user.company && (
+              <div className="flex items-center gap-2 text-gray-700"><FiUser size={16} /> {user.company}</div>
+            )}
+            {user.phone && (
+              <div className="flex items-center gap-2 text-gray-700"><FiMapPin size={16} /> {user.phone}</div>
             )}
           </div>
-        </div>
-      </section>
-
-      {/* Events Section */}
-      <section className="py-16 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Events by {user.name || 'this user'}
-            </h2>
-            <p className="text-gray-600 text-lg">
-              {userEvents.length} total event{userEvents.length !== 1 ? 's' : ''} created
-            </p>
-          </div>
-
-          {/* Upcoming Events */}
-          {upcomingEvents.length > 0 && (
-            <div className="mb-16">
-              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Upcoming Events</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {upcomingEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+        </section>
+        <section className="max-w-5xl mx-auto py-8 px-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Events by {user.name || 'this user'}</h2>
+          {userEvents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {userEvents.map(event => (
+                <EventCard key={event.id} event={event} />
+              ))}
             </div>
+          ) : (
+            <div className="text-gray-500 text-center py-12">No events yet.</div>
           )}
-
-          {/* Previous Events */}
-          {previousEvents.length > 0 && (
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Previous Events</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {previousEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* No Events */}
-          {userEvents.length === 0 && (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">📅</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No events yet</h3>
-              <p className="text-gray-500">
-                {user.name || 'This user'} hasn't created any events yet.
-              </p>
-              <button
-                className="mt-6 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-          <div className="flex gap-6 mb-2 md:mb-0">
-            <a href="/events" className="hover:text-yellow-300 text-white">Events</a>
-            <a href="/categories" className="hover:text-yellow-300 text-white">Categories</a>
-            <a href="/about" className="hover:text-yellow-300 text-white">About</a>
-          </div>
-          <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
-          <div className="flex gap-4">
-            <a href="/terms" className="hover:text-yellow-300 text-white">Terms</a>
-            <a href="/privacy" className="hover:text-yellow-300 text-white">Privacy</a>
-          </div>
-        </div>
-      </footer>
+        </section>
+      </main>
     </div>
   );
 }

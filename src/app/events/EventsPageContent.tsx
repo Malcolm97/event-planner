@@ -1,7 +1,7 @@
 'use client';
 
-import Header from '../../components/Header';
 import Link from 'next/link';
+import AppFooter from '@/components/AppFooter';
 import { useState, useEffect, useRef } from 'react';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import EventCard from '../../components/EventCard';
@@ -201,8 +201,7 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
 
   return (
   <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
-      <Header />
-      {/* Sync status indicator */}
+    {/* Sync status indicator */}
   <div className="w-full bg-yellow-50 border-b border-yellow-200 py-2 flex flex-col items-center text-sm" role="status" aria-live="polite" tabIndex={0} id="sync-indicator">
         {isSyncing && (
           <span className="flex items-center gap-2 text-yellow-700">
@@ -468,31 +467,7 @@ export default function EventsPageContent({ initialEvents, initialTotalEvents, i
         </section>
       )}
 
-      <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-          <div className="flex flex-nowrap gap-x-4 sm:gap-x-6 mb-2 md:mb-0 overflow-x-auto">
-            <Link href="/events" className="whitespace-nowrap min-w-[90px] px-3 py-2 hover:text-yellow-300 text-white text-base sm:text-sm" aria-label="Events">Events</Link>
-            <Link href="/categories" className="whitespace-nowrap min-w-[110px] px-3 py-2 hover:text-yellow-300 text-white text-base sm:text-sm" aria-label="Categories">Categories</Link>
-            <Link href="/about" className="whitespace-nowrap min-w-[80px] px-3 py-2 hover:text-yellow-300 text-white text-base sm:text-sm" aria-label="About">About</Link>
-          </div>
-          <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
-          <div className="flex gap-4 items-center">
-            <Link href="/terms" className="hover:text-yellow-300 text-white" aria-label="Terms">Terms</Link>
-            <Link href="/privacy" className="hover:text-yellow-300 text-white" aria-label="Privacy">Privacy</Link>
-            <button
-              className="ml-4 px-3 py-1 rounded bg-yellow-600 text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              aria-label="Clear cached events"
-              onClick={async () => {
-                const { clearEventsCache } = await import('@/lib/indexedDB');
-                await clearEventsCache();
-                window.location.reload();
-              }}
-            >
-              Clear Cache
-            </button>
-          </div>
-        </div>
-      </footer>
+      <AppFooter />
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
     </div>
   );

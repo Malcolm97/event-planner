@@ -1,4 +1,5 @@
 "use client";
+import AppFooter from '@/components/AppFooter';
 
 // Offline mode detection
 const isOffline = typeof window !== 'undefined' && !navigator.onLine;
@@ -226,24 +227,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       </section>
 <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      {/* Footer */}
-      <footer className="w-full py-8 px-4 sm:px-8 bg-black border-t border-red-600">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-          <div className="flex gap-6 mb-2 md:mb-0">
-            <Link href="/events" className="hover:text-yellow-300 text-white" aria-label="Events">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-300 text-white" aria-label="Categories">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-300 text-white" aria-label="About">About</Link>
-            {isOffline && (
-              <span className="text-yellow-300 font-semibold ml-4">Offline: Registration/Login/Event Creation Disabled</span>
-            )}
-          </div>
-          <div className="text-center text-white">© 2025 PNG Events. All rights reserved.</div>
-          <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-yellow-300 text-white" aria-label="Terms">Terms</Link>
-            <Link href="/privacy" className="hover:text-yellow-300 text-white" aria-label="Privacy">Privacy</Link>
-          </div>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

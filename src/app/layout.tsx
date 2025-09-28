@@ -3,6 +3,8 @@ import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import ClientProviders from './ClientProviders';
 
+import Header from '@/components/Header';
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
@@ -35,6 +37,7 @@ export default function RootLayout({
       </head>
       <body className={`antialiased ${inter.className}`}>
         <ClientProviders>
+          <Header />
           {children}
         </ClientProviders>
         <Script id="service-worker-script">

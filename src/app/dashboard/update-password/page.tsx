@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { AuthChangeEvent } from '@supabase/supabase-js';
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
 import SuccessModal from '@/components/SuccessModal';
@@ -69,7 +68,7 @@ export default function UpdatePasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-      <Header />
+  {/* Header removed, now rendered globally in layout */}
       <div className="relative flex flex-1 items-center justify-center p-4">
         <div className="absolute top-6 left-6">
           <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
