@@ -305,7 +305,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-4xl justify-center mt-4">
             <input
-              className="w-full min-w-[120px] max-w-md flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
+              className="w-full min-w-[120px] flex-1 md:flex-auto rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               placeholder="Search events, locations, or venues..."
               aria-label="Search events, locations, or venues"
               value={searchTerm}
@@ -313,7 +313,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               style={{ color: 'black' }}
             />
             <select
-              className="w-full min-w-[120px] max-w-md flex-1 rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
+              className="w-full min-w-[120px] md:w-48 max-w-md rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               aria-label="Filter by location"
               value={selectedLocationFilter}
               onChange={(e) => setSelectedLocationFilter(e.target.value)}
@@ -324,7 +324,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               ))}
             </select>
             <select
-              className="w-full min-w-[120px] max-w-xs rounded-xl border border-gray-300 bg-white px-4 py-2 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
+              className="w-full min-w-[120px] md:w-48 max-w-md rounded-xl border border-gray-300 bg-white px-5 py-3 text-base shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 placeholder-black text-black"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               style={{ color: 'black' }}

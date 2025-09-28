@@ -81,7 +81,7 @@ export default async function EventsPage() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <EventsPageContent initialEvents={events} initialTotalEvents={totalEvents} initialTotalUsers={totalUsers} initialCitiesCovered={citiesCovered} />
+      <EventsPageContent />
     </Suspense>
   );
 }

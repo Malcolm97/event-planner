@@ -85,21 +85,25 @@ const EventCard = React.memo(function EventCard({ event, onClick }: { event: Eve
         }
       }}
     >
-      {/* Status Badge - Top Left */}
-      <span className={`absolute top-3 left-3 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg ${status === 'upcoming' ? 'bg-blue-100 text-blue-700' : status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
-      {/* Featured Badge */}
-      {event.featured && (
-        <span className="absolute top-3 left-20 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
-      )}
-      {/* New Badge */}
-      {isNew && (
-        <span className="absolute bottom-3 left-3 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
-      )}
-      {/* Popular Badge */}
-      {isPopular && (
-        <span className="absolute bottom-3 right-3 z-20 px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-pink-200 text-pink-800 shadow">Popular</span>
-      )}
-      {/* Category Badge - Top Right */}
+      {/* Top Badges Row */}
+      <div className="absolute top-3 left-3 z-20 flex flex-row flex-wrap items-center gap-2 min-w-[0]">
+        {/* Status Badge */}
+        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg ${status === 'upcoming' ? 'bg-blue-100 text-blue-700' : status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        {/* Popular Badge */}
+        {isPopular && (
+          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-700 shadow">Popular</span>
+        )}
+        {/* Featured Badge */}
+        {event.featured && (
+          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
+        )}
+        {/* New Badge */}
+        {isNew && (
+          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
+        )}
+      </div>
+
+      {/* Category Badge & Bookmark - Top Right */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
           <Icon size={12} />
