@@ -7,7 +7,7 @@ import { FiUsers, FiCalendar, FiMapPin, FiWifi, FiWifiOff, FiSmartphone, FiDownl
 import Link from 'next/link';
 import Button from '@/components/Button';
 import Image from 'next/image';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, TABLES, getUserCount, getEventsCount, getCategoriesCount, getRecentActivitiesCount, getSavedEventsCount } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
@@ -52,25 +52,117 @@ export default function AboutPage() {
     { icon: FiMapPin, number: '...', label: 'Cities Covered' },
   ]);
   const [hasCache, setHasCache] = useState(false);
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const [isLoadingUserCount, setIsLoadingUserCount] = useState(false);
+  const [eventsCount, setEventsCount] = useState<number | null>(null);
+  const [categoriesCount, setCategoriesCount] = useState<number | null>(null);
+  const [recentActivitiesCount, setRecentActivitiesCount] = useState<number | null>(null);
+  const [savedEventsCount, setSavedEventsCount] = useState<number | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  // Fetch user count when online
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      if (!isOnline) {
+        setUserCount(null);
+        return;
+      }
+
+      setIsLoadingUserCount(true);
+      try {
+        const count = await getUserCount();
+        setUserCount(count);
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+        setUserCount(null);
+      } finally {
+        setIsLoadingUserCount(false);
+      }
+    };
+
+    fetchUserCount();
+  }, [isOnline]);
+
+  // Fetch additional statistics when online
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      if (!isOnline) {
+        setEventsCount(null);
+        setCategoriesCount(null);
+        setRecentActivitiesCount(null);
+        setSavedEventsCount(null);
+        return;
+      }
+
+      setIsLoadingStats(true);
+      try {
+        const [events, categories, activities, saved] = await Promise.all([
+          getEventsCount(),
+          getCategoriesCount(),
+          getRecentActivitiesCount(),
+          getSavedEventsCount()
+        ]);
+
+        setEventsCount(events);
+        setCategoriesCount(categories);
+        setRecentActivitiesCount(activities);
+        setSavedEventsCount(saved);
+      } catch (error) {
+        console.error('Failed to fetch statistics:', error);
+        setEventsCount(null);
+        setCategoriesCount(null);
+        setRecentActivitiesCount(null);
+        setSavedEventsCount(null);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStatistics();
+  }, [isOnline]);
 
   useEffect(() => {
     if (cachedEvents && cachedEvents.length > 0) {
       setHasCache(true);
       const { totalEvents, citiesCovered } = getStatsFromEvents(cachedEvents);
       setStats([
-        { icon: FiUsers, number: isOnline ? '...' : 'N/A', label: 'Active Users' },
-        { icon: FiCalendar, number: totalEvents.toLocaleString() + '+', label: 'Events Created' },
+        {
+          icon: FiUsers,
+          number: isOnline
+            ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'N/A'))
+            : 'N/A',
+          label: 'Active Users'
+        },
+        {
+          icon: FiCalendar,
+          number: isOnline
+            ? (isLoadingStats ? '...' : (eventsCount !== null ? eventsCount.toLocaleString() + '+' : totalEvents.toLocaleString() + '+'))
+            : totalEvents.toLocaleString() + '+',
+          label: 'Events Created'
+        },
         { icon: FiMapPin, number: citiesCovered.toLocaleString() + '+', label: 'Cities Covered' },
       ]);
     } else {
       setHasCache(false);
       setStats([
-        { icon: FiUsers, number: isOnline ? '...' : 'N/A', label: 'Active Users' },
-        { icon: FiCalendar, number: isOnline ? '...' : 'N/A', label: 'Events Created' },
+        {
+          icon: FiUsers,
+          number: isOnline
+            ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'N/A'))
+            : 'N/A',
+          label: 'Active Users'
+        },
+        {
+          icon: FiCalendar,
+          number: isOnline
+            ? (isLoadingStats ? '...' : (eventsCount !== null ? eventsCount.toLocaleString() + '+' : 'N/A'))
+            : 'N/A',
+          label: 'Events Created'
+        },
         { icon: FiMapPin, number: isOnline ? '...' : 'N/A', label: 'Cities Covered' },
       ]);
     }
-  }, [cachedEvents, isOnline]);
+  }, [cachedEvents, isOnline, userCount, isLoadingUserCount, eventsCount, isLoadingStats]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -302,7 +394,11 @@ export default function AboutPage() {
                 </div>
                 <div className="text-center p-4 bg-white rounded-xl shadow-sm">
                   <FiUsers className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">1000+</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {isOnline
+                      ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : '1000+'))
+                      : '1000+'}
+                  </div>
                   <div className="text-sm text-gray-600">Communities</div>
                 </div>
               </div>
@@ -386,7 +482,11 @@ export default function AboutPage() {
               <div className="flex flex-col items-center p-4 rounded-xl bg-white bg-opacity-10">
                 <FiStar className="w-10 sm:w-12 h-10 sm:h-12 mb-3 sm:mb-4 text-white" />
                 <h4 className="text-lg sm:text-xl font-semibold mb-2">Award Winning</h4>
-                <p className="text-sm sm:text-base text-gray-100 leading-relaxed">Trusted by thousands of event organizers</p>
+                <p className="text-sm sm:text-base text-gray-100 leading-relaxed">
+                  Trusted by {isOnline
+                    ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'thousands of'))
+                    : 'thousands of'} event organizers
+                </p>
               </div>
             </div>
           </div>
@@ -463,7 +563,9 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">Ready to Get Started?</h2>
           <p className="text-lg sm:text-xl text-gray-700 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
-            Join thousands of Papua New Guineans who are already discovering amazing events and
+            Join {isOnline
+              ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'thousands of'))
+              : 'thousands of'} Papua New Guineans who are already discovering amazing events and
             building stronger communities through PNG Events.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">

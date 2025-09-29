@@ -286,14 +286,14 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-        <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
+        <div className="event-card-container event-card-content">
           {/* Event Title */}
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
             {event.name}
           </h3>
 
           {/* Location and Date */}
-          <div className="space-y-1.5 sm:space-y-2">
+          <div className="event-card-section">
             <div className="flex items-start gap-2 sm:gap-3">
               <FiMapPin size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
               <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">{event.location}</span>

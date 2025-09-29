@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiBell, FiSettings, FiSun, FiMoon, FiHeart } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiMenu, FiX, FiBell, FiSettings } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
@@ -16,10 +16,9 @@ const Header = React.memo(function Header() {
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+
   const [notifications] = useState(3); // Mock notification count
   const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false); // New state for client-side check
@@ -34,8 +33,7 @@ const Header = React.memo(function Header() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('.search-dropdown') && !target.closest('.profile-dropdown')) {
-        setIsSearchOpen(false);
+      if (!target.closest('.profile-dropdown')) {
         setIsProfileDropdownOpen(false);
       }
     };
@@ -101,46 +99,7 @@ const Header = React.memo(function Header() {
     router.push('/');
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/events?search=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
-      setSearchQuery('');
-    }
-  };
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setIsSearchOpen(false);
-      setSearchQuery('');
-    }
-  };
-
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-
-    // Apply theme to document - this controls the CSS variables
-    if (newTheme) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
-  // Initialize theme from localStorage only - no automatic dark mode
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === 'dark');
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    }
-    // If no saved theme, default to light mode (no dark class applied)
-  }, []);
 
   const handleNotificationClick = () => {
     // Enhanced notification handler - in real app would open notifications panel
@@ -170,43 +129,6 @@ const Header = React.memo(function Header() {
           </nav>
           {/* Right side actions for desktop */}
           <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
-            {/* Search Button */}
-            <div className="relative search-dropdown">
-              <Button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                variant="ghost"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                aria-label="Search events"
-              >
-                <FiSearch size={18} />
-              </Button>
-              {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-2 px-3 z-50">
-                  <form onSubmit={handleSearch}>
-                    <input
-                      type="text"
-                      placeholder="Search events..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={handleSearchKeyDown}
-                      className="w-full text-sm border-none outline-none focus:ring-2 focus:ring-yellow-400 rounded px-2 py-1 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                      autoFocus
-                    />
-                  </form>
-                </div>
-              )}
-            </div>
-
-            {/* Theme Toggle */}
-            <Button
-              onClick={toggleTheme}
-              variant="ghost"
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
-            </Button>
-
             {/* Notifications */}
             {user && (
               <div className="relative">

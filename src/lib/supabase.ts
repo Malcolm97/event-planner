@@ -176,3 +176,135 @@ export const getUserActivities = async (userId: string, limit: number = 10): Pro
     return [];
   }
 };
+
+// Get total user count from database
+export const getUserCount = async (): Promise<number> => {
+  try {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.warn('getUserCount: Supabase is not properly configured. Please check your environment variables.');
+      return 0;
+    }
+
+    const { count, error } = await supabase
+      .from(TABLES.USERS)
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching user count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Failed to fetch user count:', error);
+    return 0;
+  }
+};
+
+// Get total events count from database
+export const getEventsCount = async (): Promise<number> => {
+  try {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.warn('getEventsCount: Supabase is not properly configured. Please check your environment variables.');
+      return 0;
+    }
+
+    const { count, error } = await supabase
+      .from(TABLES.EVENTS)
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching events count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Failed to fetch events count:', error);
+    return 0;
+  }
+};
+
+// Get unique categories count from events
+export const getCategoriesCount = async (): Promise<number> => {
+  try {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.warn('getCategoriesCount: Supabase is not properly configured. Please check your environment variables.');
+      return 0;
+    }
+
+    const { data, error } = await supabase
+      .from(TABLES.EVENTS)
+      .select('category')
+      .not('category', 'is', null);
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return 0;
+    }
+
+    // Get unique categories
+    const uniqueCategories = new Set(data?.map(event => event.category).filter(Boolean) || []);
+    return uniqueCategories.size;
+  } catch (error) {
+    console.error('Failed to fetch categories count:', error);
+    return 0;
+  }
+};
+
+// Get recent activities count (last 30 days)
+export const getRecentActivitiesCount = async (): Promise<number> => {
+  try {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.warn('getRecentActivitiesCount: Supabase is not properly configured. Please check your environment variables.');
+      return 0;
+    }
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { count, error } = await supabase
+      .from(TABLES.ACTIVITIES)
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    if (error) {
+      console.error('Error fetching recent activities count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Failed to fetch recent activities count:', error);
+    return 0;
+  }
+};
+
+// Get saved events count
+export const getSavedEventsCount = async (): Promise<number> => {
+  try {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.warn('getSavedEventsCount: Supabase is not properly configured. Please check your environment variables.');
+      return 0;
+    }
+
+    const { count, error } = await supabase
+      .from(TABLES.SAVED_EVENTS)
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching saved events count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error('Failed to fetch saved events count:', error);
+    return 0;
+  }
+};

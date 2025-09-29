@@ -225,14 +225,19 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   }, [events, searchTerm, selectedDate, selectedLocationFilter]);
 
   useEffect(() => {
-    const otherLocationEvents = upcomingEvents.filter((event: EventItem) => {
+    // Only consider current and upcoming events for available locations
+    const currentUpcomingEvents = events.filter(event =>
+      event.date && new Date(event.date) >= new Date()
+    );
+
+    const otherLocationEvents = currentUpcomingEvents.filter((event: EventItem) => {
       const firstPart = event.location?.split(',')[0]?.trim();
       return firstPart && !popularPngCities.includes(firstPart);
     });
 
     const newAvailableLocations = ['All Areas'];
     popularPngCities.forEach(city => {
-      if (upcomingEvents.some(event => event.location?.includes(city))) {
+      if (currentUpcomingEvents.some(event => event.location?.includes(city))) {
         newAvailableLocations.push(city);
       }
     });
@@ -323,10 +328,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   <option key={location} value={location}>{location}</option>
                 ))}
               </select>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <select
-                className="input-field flex-1 text-base sm:text-lg"
+                className="input-field w-full sm:w-auto sm:min-w-[140px] text-base sm:text-lg"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
               >
@@ -355,24 +358,24 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="max-w-7xl mx-auto w-full section-padding bg-white dark:bg-gray-900">
+      <section className="max-w-7xl mx-auto w-full section-padding bg-white">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-4 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">📅</span> Upcoming Events
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed">Discover all upcoming events happening near you.</p>
+          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Discover all upcoming events happening near you.</p>
         </div>
 
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-            <p className="text-gray-500 dark:text-gray-400 mt-8 text-xl">Loading events...</p>
+            <p className="text-gray-500 mt-8 text-xl">Loading events...</p>
           </div>
         ) : !isOnline && events.length === 0 ? (
           <div className="col-span-full text-center py-20">
             <div className="text-8xl mb-6">📴</div>
-            <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">No cached events available offline</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-lg">Connect to the internet to load events for offline use.</p>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">No cached events available offline</h3>
+            <p className="text-gray-500 text-lg">Connect to the internet to load events for offline use.</p>
           </div>
         ) : (
           <>
@@ -385,8 +388,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             ) : (
               <div className="col-span-full text-center py-20">
                 <div className="text-8xl mb-6">📅</div>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">No upcoming events</h3>
-                <p className="text-gray-500 dark:text-gray-400 text-lg">Check back later for new events.</p>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">No upcoming events</h3>
+                <p className="text-gray-500 text-lg">Check back later for new events.</p>
                 <Button
                   variant="secondary"
                   size="lg"
@@ -410,20 +413,20 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </div>
       </section>
 
-      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50 dark:bg-gray-800">
+      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-4 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">✨</span> Featured Events
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed">Featured events will appear here soon!</p>
+          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Featured events will appear here soon!</p>
         </div>
       </section>
 
-      <section className="w-full section-padding bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+      <section className="w-full section-padding bg-white border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">Explore by Category</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Explore by Category</h3>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {allCategories

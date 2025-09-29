@@ -157,19 +157,34 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
               <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
             </div>
           )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-6 sm:gap-2 md:gap-4">
-            {displayCategories.map((cat) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+            {displayCategories
+              .filter(cat => {
+                // Only show categories that have upcoming events
+                const upcomingEvents = events.filter(event => {
+                  if (!event.date) return false;
+                  return new Date(event.date) >= new Date();
+                });
+
+                if (cat.name === 'Other') {
+                  const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
+                  return upcomingEvents.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
+                } else {
+                  return upcomingEvents.some(ev => ev.category === cat.name);
+                }
+              })
+              .map((cat) => {
               const CategoryIcon = categoryIconMap[cat.icon];
               return (
                   <Link
                     key={cat.name}
                     href={`/categories?category=${encodeURIComponent(cat.name)}`}
-                    className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-black font-bold shadow-lg hover:bg-yellow-400 hover:text-black transition min-h-[140px] ${cat.color} ${queryCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
+                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${cat.color} group ${queryCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
                   >
-                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white border border-yellow-400">
-                      <CategoryIcon size={24} />
+                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
+                      <CategoryIcon size={28} />
                     </span>
-                    <span className="text-sm text-center">{cat.name}</span>
+                    <span className="text-base font-bold text-center">{cat.name}</span>
                   </Link>
               );
             })}

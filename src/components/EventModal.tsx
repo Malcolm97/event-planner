@@ -175,7 +175,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             You are offline. Event details may be cached.
           </div>
         )}
-        <div className="p-3 sm:p-4 md:p-6 lg:p-8 border-b border-gray-200 relative">
+        <div className="event-card-modal-header border-b border-gray-200 relative">
           <button
             onClick={() => setDialogOpen(false)}
             className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 p-1.5 sm:p-2 md:p-3 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20"
@@ -239,9 +239,9 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         </div>
 
     {/* Content */}
-    <div className="p-4 sm:p-6 md:p-8">
+    <div className="event-card-modal-content flex-1 overflow-y-auto">
           {/* Tab Navigation */}
-          <div className="flex mb-4 sm:mb-6 md:mb-8 border-b border-gray-200 bg-gray-50 rounded-xl p-1">
+          <div className="flex mb-3 sm:mb-4 border-b border-gray-200 bg-gray-50 rounded-lg p-1 mx-1 sm:mx-2 mt-2 sm:mt-3">
             <button
               onClick={() => setActiveTab('event-details')}
               className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
@@ -265,13 +265,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
             </button>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-4 sm:space-y-5 px-2 sm:px-3 md:px-4 pb-4 sm:pb-5">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
-              <div className="space-y-8">
-
+              <div className="space-y-4 sm:space-y-5">
                 {/* Event Image and Details Grid */}
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
+                <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
                   {/* On mobile, stack columns vertically. On tablet/desktop, use side-by-side layout. */}
                   {/* Responsive image sizing and spacing */}
                   {/* Left Column: Event Images */}
@@ -374,35 +373,35 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   </div>
 
                   {/* Right Column: Location and Date/Time */}
-                  <div className="order-1 md:order-2 space-y-6 w-full">
-                    <div className="flex flex-col sm:flex-row items-start gap-4 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
-                      <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div className="space-y-2 sm:space-y-4 w-full">
+                  <div className="order-1 md:order-2 space-y-4 sm:space-y-5 w-full">
+                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                      <FiMapPin size={18} className="text-gray-500 mt-1 flex-shrink-0" />
+                      <div className="space-y-2 sm:space-y-3 w-full">
                         <div>
-                          <h4 className="font-bold text-gray-900 text-lg">Location</h4>
-                          <p className="text-gray-700 text-base">{selectedEvent?.location || 'Not specified'}</p>
+                          <h4 className="font-semibold text-gray-900 text-base sm:text-lg">Location</h4>
+                          <p className="text-gray-700 text-sm sm:text-base">{selectedEvent?.location || 'Not specified'}</p>
                         </div>
                         {selectedEvent?.venue && (
                           <div>
-                            <h4 className="font-bold text-gray-900 text-lg">Venue</h4>
-                            <p className="text-gray-700 text-base">{selectedEvent.venue}</p>
+                            <h4 className="font-semibold text-gray-900 text-base sm:text-lg">Venue</h4>
+                            <p className="text-gray-700 text-sm sm:text-base">{selectedEvent.venue}</p>
                           </div>
                         )}
                       </div>
                     </div>
 
                     {selectedEvent?.date && (
-                      <div className="flex flex-col sm:flex-row items-start gap-4 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
-                        <FiCalendar size={20} className="text-blue-500 mt-1 flex-shrink-0" />
+                      <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                        <FiCalendar size={18} className="text-blue-500 mt-1 flex-shrink-0" />
                         <div className="w-full">
-                          <h4 className="font-bold text-gray-900 text-lg">Date & Time</h4>
-                          <p className="text-gray-700 text-base font-medium break-words">
+                          <h4 className="font-semibold text-gray-900 text-base sm:text-lg">Date & Time</h4>
+                          <p className="text-gray-700 text-sm sm:text-base font-medium break-words">
                             {new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             {selectedEvent.end_date ?
                               ` - ${new Date(selectedEvent.end_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
                               : ''}
                           </p>
-                          <p className="text-gray-700 text-base break-words">
+                          <p className="text-gray-700 text-sm sm:text-base break-words">
                             {new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                             {selectedEvent.end_date ?
                               ` - ${new Date(selectedEvent.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
@@ -415,7 +414,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 </div>
 
                 {/* Social Share Feature */}
-                <div className="pt-6 border-t border-gray-200 flex justify-end">
+                <div className="pt-4 mt-4 border-t border-gray-200 flex justify-end">
                   <ShareButtons event={selectedEvent} />
                 </div>
               </div>
@@ -423,98 +422,98 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
             {/* About Event Section */}
             {activeTab === 'about-event' && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-5">
                 {selectedEvent?.description ? (
-                  <div className="flex items-start gap-4 p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                  <div className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
                     <div className="flex-shrink-0 mt-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">{selectedEvent.description}</p>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">{selectedEvent.description}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 text-gray-600 px-8 py-6 rounded-2xl text-center">
-                    <p className="text-lg">No description available for this event.</p>
+                  <div className="bg-gray-50 border border-gray-200 text-gray-600 px-4 sm:px-5 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-center">
+                    <p className="text-sm sm:text-base">No description available for this event.</p>
                   </div>
                 )}
               </div>
             )}
 
             {activeTab === 'host-details' && (
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Event Host</h3>
+              <div className="space-y-4 sm:space-y-5">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-5">Event Host</h3>
                 {host ? (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
                         {host?.photo_url ? (
-                          <Image src={host.photo_url} alt={host.name || 'Host'} width={64} height={64} className="w-full h-full object-cover" />
+                          <Image src={host.photo_url} alt={host.name || 'Host'} width={56} height={56} className="w-full h-full object-cover" />
                         ) : (
-                          <FiUser size={28} className="text-gray-500" />
+                          <FiUser size={24} className="text-gray-500" />
                         )}
                       </div>
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 space-y-1 sm:space-y-2">
                         {host?.name && (
-                          <div className="flex items-center gap-3">
-                            <FiUser size={18} className="text-gray-500" />
-                            <span className="font-bold text-xl text-gray-900">{host.name}</span>
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <FiUser size={16} className="text-gray-500" />
+                            <span className="font-bold text-lg sm:text-xl text-gray-900">{host.name}</span>
                           </div>
                         )}
                         {host?.company && (
-                          <div className="flex items-center gap-3">
-                            <FiBriefcase size={18} className="text-gray-500" />
-                            <span className="text-gray-700 text-lg">{host.company}</span>
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <FiBriefcase size={16} className="text-gray-500" />
+                            <span className="text-gray-700 text-sm sm:text-base">{host.company}</span>
                           </div>
                         )}
                       </div>
                     </div>
                     {host?.about && (
-                      <div className="mb-6">
-                        <p className="text-gray-700 text-base leading-relaxed">{host.about}</p>
+                      <div className="mb-4 sm:mb-5">
+                        <p className="text-gray-700 text-sm sm:text-base leading-relaxed">{host.about}</p>
                       </div>
                     )}
-                    <div className="flex flex-col gap-3 sm:flex-row items-center sm:gap-4 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row items-center sm:gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
                       {authUser ? (
                         <>
                           {host?.email ? (
-                            <div className="flex items-center gap-3 text-blue-600 rounded-lg px-4 py-3 bg-blue-50 font-medium">
-                              <FiMail size={18} />
+                            <div className="flex items-center gap-2 sm:gap-3 text-blue-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 bg-blue-50 font-medium">
+                              <FiMail size={16} />
                               <span>{host.email}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-3 text-red-600 font-semibold">
-                              <FiMail size={18} />
+                            <div className="flex items-center gap-2 sm:gap-3 text-red-600 font-semibold">
+                              <FiMail size={16} />
                               <span>Email not available</span>
                             </div>
                           )}
                           {host?.phone ? (
-                            <div className="flex items-center gap-3 text-green-600 rounded-lg px-4 py-3 bg-green-50 font-medium">
-                              <FiPhone size={18} />
+                            <div className="flex items-center gap-2 sm:gap-3 text-green-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 bg-green-50 font-medium">
+                              <FiPhone size={16} />
                               <span>{host.phone}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-3 text-red-600 font-semibold">
-                              <FiPhone size={18} />
+                            <div className="flex items-center gap-2 sm:gap-3 text-red-600 font-semibold">
+                              <FiPhone size={16} />
                               <span>Phone not available</span>
                             </div>
                           )}
                         </>
                       ) : (
-                        <div className="w-full text-center py-4 px-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
-                          <p>To view the host's email and phone number, please <span className="font-bold">log in</span> to your account.</p>
+                        <div className="w-full text-center py-3 sm:py-4 px-3 sm:px-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
+                          <p className="text-sm">To view the host's email and phone number, please <span className="font-bold">log in</span> to your account.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-xl text-center">
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 sm:px-5 py-3 sm:py-4 rounded-lg sm:rounded-xl text-center">
                     {selectedEvent?.created_by ? (
-                      <p className="font-medium">Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
+                      <p className="font-medium text-sm">Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
                     ) : (
-                      <p className="font-medium">Host details are not available for this event.</p>
+                      <p className="font-medium text-sm">Host details are not available for this event.</p>
                     )}
                   </div>
                 )}

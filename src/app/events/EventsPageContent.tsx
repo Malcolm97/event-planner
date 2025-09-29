@@ -23,21 +23,22 @@ export default function EventsPageContent() {
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const now = new Date();
 
-  // Extract unique locations from events and group "Other" locations
-  const { availableLocations, otherLocations } = useMemo(() => {
+  // Extract unique locations from CURRENT/UPCOMING events only
+  const { availableLocations, hasOtherLocations } = useMemo(() => {
     const locations = new Set<string>();
-    const otherLocs = new Set<string>();
+    let otherLocsCount = 0;
 
-    events.forEach(event => {
+    // Only consider current and upcoming events for available locations
+    const currentEvents = events.filter(event =>
+      event.date && new Date(event.date) >= new Date()
+    );
+
+    currentEvents.forEach(event => {
       if (event.location) {
         const firstPart = event.location.split(',')[0]?.trim();
         if (firstPart) {
           if (firstPart.toLowerCase() === 'other') {
-            // For "Other" locations, extract the actual location after the comma
-            const actualLocation = event.location.split(',')[1]?.trim();
-            if (actualLocation && actualLocation.toLowerCase() !== 'other') {
-              otherLocs.add(actualLocation);
-            }
+            otherLocsCount++;
           } else {
             locations.add(firstPart);
           }
@@ -47,7 +48,7 @@ export default function EventsPageContent() {
 
     return {
       availableLocations: Array.from(locations).sort(),
-      otherLocations: Array.from(otherLocs).sort()
+      hasOtherLocations: otherLocsCount > 0
     };
   }, [events]);
 
@@ -61,16 +62,17 @@ export default function EventsPageContent() {
       if (!event.location) return false;
 
       // Check if this is an "Other" location selection
-      if (otherLocations.includes(selectedLocation)) {
-        // For "Other" locations, match the full location string
-        return event.location.toLowerCase().includes(selectedLocation.toLowerCase());
+      if (selectedLocation === 'other') {
+        // For "Other" locations, match events that start with "other"
+        const firstPart = event.location.split(',')[0]?.trim();
+        return firstPart?.toLowerCase() === 'other';
       }
 
       // For regular locations, match the first part
       const firstPart = event.location.split(',')[0]?.trim();
       return firstPart === selectedLocation;
     });
-  }, [events, selectedLocation, otherLocations]);
+  }, [events, selectedLocation]);
 
   const oneWeekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days ago
 
@@ -142,12 +144,12 @@ export default function EventsPageContent() {
       </section>
 
       {/* Location Filter */}
-      {!loading && events.length > 0 && (availableLocations.length > 0 || otherLocations.length > 0) && (
+      {!loading && events.length > 0 && (availableLocations.length > 0 || hasOtherLocations) && (
         <section className="py-4 sm:py-6 bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto container-padding">
-            <div className="flex flex-col gap-3 sm:gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex flex-col gap-3 sm:gap-4 items-center text-center">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full max-w-md mx-auto">
+                <div className="flex items-center gap-2 sm:gap-3 justify-center">
                   <FiFilter className="text-gray-600" size={18} />
                   <span className="text-sm sm:text-base font-medium text-gray-700">Filter by location:</span>
                 </div>
@@ -167,15 +169,9 @@ export default function EventsPageContent() {
                       </option>
                     ))}
 
-                    {/* Other locations section */}
-                    {otherLocations.length > 0 && (
-                      <optgroup label="Other Locations">
-                        {otherLocations.map((location) => (
-                          <option key={`other-${location}`} value={location}>
-                            {location}
-                          </option>
-                        ))}
-                      </optgroup>
+                    {/* Other locations option */}
+                    {hasOtherLocations && (
+                      <option value="other">Other Locations</option>
                     )}
                   </select>
                   {selectedLocation !== 'all' && (
@@ -191,8 +187,8 @@ export default function EventsPageContent() {
                 </div>
               </div>
               {selectedLocation !== 'all' && (
-                <div className="text-sm text-gray-600">
-                  Showing events in <span className="font-medium text-gray-900">{selectedLocation}</span>
+                <div className="text-sm text-gray-600 text-center">
+                  Showing events in <span className="font-medium text-gray-900">{selectedLocation === 'other' ? 'Other Locations' : selectedLocation}</span>
                   {upcomingEvents.length !== filteredEvents.length && (
                     <span className="ml-2">
                       ({upcomingEvents.length} upcoming, {filteredEvents.length - upcomingEvents.length} previous)
