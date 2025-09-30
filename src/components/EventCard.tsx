@@ -215,41 +215,41 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       }}
     >
       {/* Top Badges Row */}
-      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-row flex-wrap items-center gap-1 sm:gap-2 min-w-[0]">
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex flex-row flex-wrap items-center gap-2 sm:gap-3 min-w-[0]">
         {/* Popular Badge */}
         {isPopular && (
-          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-700 shadow">Popular</span>
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
         )}
         {/* Featured Badge */}
         {event.featured && (
-          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
         )}
         {/* New Badge */}
         {isNew && (
-          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold bg-green-200 text-green-800 shadow">New</span>
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-green-200 text-green-800 shadow-md">New</span>
         )}
       </div>
 
       {/* Category Badge & Bookmark - Top Right */}
-      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1 sm:gap-2">
-        <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
-          <Icon size={10} className="sm:w-3 sm:h-3" />
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center gap-2 sm:gap-3">
+        <span className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
+          <Icon size={12} className="sm:w-4 sm:h-4" />
           <span className="hidden sm:inline">{categoryLabel}</span>
           <span className="sm:hidden sr-only">{categoryLabel}</span>
         </span>
         {/* Save/Bookmark button for logged-in users */}
         {user && (
           <button
-            className={`ml-1 sm:ml-2 p-1 sm:p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`p-2 sm:p-2.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow-md border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
             onClick={handleBookmark}
             disabled={loading}
             tabIndex={0}
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-yellow-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-yellow-600"></div>
             ) : (
-              <FiBookmark size={14} className="sm:w-4 sm:h-4" />
+              <FiBookmark size={16} className="sm:w-5 sm:h-5" />
             )}
           </button>
         )}
@@ -296,41 +296,41 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       <div className="flex flex-col h-full">
         <div className="event-card-container event-card-content">
           {/* Event Title */}
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 text-left">
             {event.name}
           </h3>
 
           {/* Location and Date */}
-          <div className="event-card-section">
+          <div className="event-card-section space-y-1 sm:space-y-1.5 text-left">
             <div className="flex items-start gap-2 sm:gap-3">
               <FiMapPin size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-              <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">{event.location}</span>
+              <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">{event.location}</span>
             </div>
             {event.venue && (
               <div className="flex items-start gap-2 sm:gap-3">
                 <FiHome size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">{event.venue}</span>
+                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">{event.venue}</span>
               </div>
             )}
           </div>
 
           {event.date && (
-            <>
+            <div className="event-card-section space-y-1 sm:space-y-1.5 text-left">
               <div className="flex items-start gap-2 sm:gap-3">
                 <FiCalendar size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">
+                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">
                   {formatDate(new Date(event.date))}
                   {event.end_date ? ` - ${formatDate(new Date(event.end_date))}` : ''}
                 </span>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <FiClock size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-tight">
+                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">
                   {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                   {event.end_date ? ` - ${new Date(event.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}` : ''}
                 </span>
               </div>
-            </>
+            </div>
           )}
         </div>
 

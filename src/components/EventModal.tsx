@@ -154,7 +154,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-1 sm:p-2 md:p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 md:p-6 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
@@ -162,10 +162,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       aria-describedby="event-modal-desc"
     >
       <div
-        className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-[99vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden focus:outline-none flex flex-col"
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden focus:outline-none flex flex-col"
         style={{
-          minHeight: '50vh',
-          maxHeight: '95vh',
+          minHeight: '60vh',
+          maxHeight: '90vh',
           boxSizing: 'border-box',
         }}
       >
@@ -241,36 +241,36 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     {/* Content */}
     <div className="event-card-modal-content flex-1 overflow-y-auto">
           {/* Tab Navigation */}
-          <div className="flex mb-3 sm:mb-4 border-b border-gray-200 bg-gray-50 rounded-lg p-1 mx-1 sm:mx-2 mt-2 sm:mt-3">
+          <div className="flex mb-4 sm:mb-6 border-b border-gray-200 bg-gray-50 rounded-xl p-1.5 mx-2 sm:mx-4 mt-3 sm:mt-4">
             <button
               onClick={() => setActiveTab('event-details')}
-              className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-3 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base md:text-lg touch-manipulation ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-md border border-gray-200' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
             >
               <span className="hidden sm:inline">Event Details</span>
               <span className="sm:hidden">Details</span>
             </button>
             <button
               onClick={() => setActiveTab('about-event')}
-              className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-3 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base md:text-lg touch-manipulation ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-md border border-gray-200' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
             >
               <span className="hidden sm:inline">About Event</span>
               <span className="sm:hidden">About</span>
             </button>
             <button
               onClick={() => setActiveTab('host-details')}
-              className={`flex-1 px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 font-bold rounded-lg transition-all duration-200 text-xs sm:text-sm md:text-base ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              className={`flex-1 px-3 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base md:text-lg touch-manipulation ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-md border border-gray-200' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
             >
               <span className="hidden sm:inline">Host Details</span>
               <span className="sm:hidden">Host</span>
             </button>
           </div>
 
-          <div className="space-y-4 sm:space-y-5 px-2 sm:px-3 md:px-4 pb-4 sm:pb-5">
+          <div className="space-y-6 sm:space-y-8 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
-              <div className="space-y-4 sm:space-y-5">
+              <div className="space-y-6 sm:space-y-8">
                 {/* Event Image and Details Grid */}
-                <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
+                <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 md:gap-8">
                   {/* On mobile, stack columns vertically. On tablet/desktop, use side-by-side layout. */}
                   {/* Responsive image sizing and spacing */}
                   {/* Left Column: Event Images */}
@@ -284,30 +284,30 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                         <div className="space-y-6">
                           {/* Primary Image */}
                           <div
-                            className="relative group rounded-2xl overflow-hidden shadow-lg w-full h-56 sm:h-72 md:h-96"
+                            className="relative group rounded-2xl overflow-hidden shadow-lg w-full h-64 sm:h-80 md:h-96"
                           >
                             {/* Navigation arrows for multiple images */}
                             {currentHasImages && allImageUrls.length > 1 && (
                               <>
                                 <button
-                                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow transition z-10"
+                                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200 z-10"
                                   onClick={e => { e.stopPropagation(); setActiveImageIndex((prev) => (prev - 1 + allImageUrls.length) % allImageUrls.length); }}
                                   aria-label="Previous image"
                                 >
-                                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
                                 </button>
                                 <button
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow transition z-10"
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200 z-10"
                                   onClick={e => { e.stopPropagation(); setActiveImageIndex((prev) => (prev + 1) % allImageUrls.length); }}
                                   aria-label="Next image"
                                 >
-                                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                                 </button>
                               </>
                             )}
                             {/* Loading spinner */}
                             <div id="event-image-spinner" className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                              <span className="animate-spin h-8 w-8 border-4 border-yellow-400 border-t-transparent rounded-full opacity-70"></span>
+                              <span className="animate-spin h-10 w-10 border-4 border-yellow-400 border-t-transparent rounded-full opacity-70"></span>
                             </div>
                             <Zoom>
                               <Image
@@ -315,7 +315,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                                 alt={selectedEvent?.name ? `${selectedEvent.name} image ${activeImageIndex + 1}` : 'Event Image'}
                                 width={400}
                                 height={300}
-                                className="w-full h-72 md:h-96 object-cover transition-transform duration-500 group-hover:scale-110"
+                                className="w-full h-64 sm:h-80 md:h-96 object-cover transition-transform duration-500 group-hover:scale-110"
                                 loading="eager"
                                 onLoad={() => {
                                   const spinner = document.getElementById('event-image-spinner');
@@ -328,14 +328,14 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                             </Zoom>
                             {/* Image count indicator */}
                             {currentHasImages && allImageUrls.length > 1 && (
-                              <span className="absolute bottom-2 right-4 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-10">
+                              <span className="absolute bottom-3 right-3 bg-black/70 text-white text-sm px-3 py-1.5 rounded-full z-10 font-medium">
                                 {activeImageIndex + 1} / {allImageUrls.length}
                               </span>
                             )}
                             {currentHasImages && (
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-3 shadow-lg">
-                                  <FiImage size={24} className="text-gray-700" />
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-4 shadow-lg">
+                                  <FiImage size={28} className="text-gray-700" />
                                 </div>
                               </div>
                             )}
@@ -343,11 +343,11 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
                           {/* Additional Images */}
                           {currentHasImages && allImageUrls.length > 1 && (
-                            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                               {allImageUrls.slice(1).map((imageUrl: string, index: number) => (
                                 <div
                                   key={index}
-                                  className="relative cursor-pointer group rounded-xl overflow-hidden shadow-md"
+                                  className="relative cursor-pointer group rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
                                   onClick={() => { setActiveImageIndex(index + 1); setImageExpanded(true); }}
                                 >
                                   <Image
@@ -355,12 +355,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                                     alt={selectedEvent?.name ? `${selectedEvent.name} image ${index + 2}` : `Event image ${index + 2}`}
                                     width={200}
                                     height={150}
-                                    className="w-full h-24 sm:h-36 object-cover transition-transform duration-300 group-hover:scale-110"
+                                    className="w-full h-28 sm:h-40 object-cover transition-transform duration-300 group-hover:scale-105"
                                     loading="lazy"
                                   />
                                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-2 shadow-lg">
-                                      <FiImage size={16} className="text-gray-700" />
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-3 shadow-lg">
+                                      <FiImage size={20} className="text-gray-700" />
                                     </div>
                                   </div>
                                 </div>
@@ -373,35 +373,35 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                   </div>
 
                   {/* Right Column: Location and Date/Time */}
-                  <div className="order-1 md:order-2 space-y-4 sm:space-y-5 w-full">
-                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
-                      <FiMapPin size={18} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div className="space-y-2 sm:space-y-3 w-full">
+                  <div className="order-1 md:order-2 space-y-6 sm:space-y-8 w-full">
+                    <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
+                      <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
+                      <div className="space-y-3 sm:space-y-4 w-full">
                         <div>
-                          <h4 className="font-semibold text-gray-900 text-base sm:text-lg">Location</h4>
-                          <p className="text-gray-700 text-sm sm:text-base">{selectedEvent?.location || 'Not specified'}</p>
+                          <h4 className="font-semibold text-gray-900 text-lg sm:text-xl">Location</h4>
+                          <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{selectedEvent?.location || 'Not specified'}</p>
                         </div>
                         {selectedEvent?.venue && (
                           <div>
-                            <h4 className="font-semibold text-gray-900 text-base sm:text-lg">Venue</h4>
-                            <p className="text-gray-700 text-sm sm:text-base">{selectedEvent.venue}</p>
+                            <h4 className="font-semibold text-gray-900 text-lg sm:text-xl">Venue</h4>
+                            <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{selectedEvent.venue}</p>
                           </div>
                         )}
                       </div>
                     </div>
 
                     {selectedEvent?.date && (
-                      <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
-                        <FiCalendar size={18} className="text-blue-500 mt-1 flex-shrink-0" />
+                      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm">
+                        <FiCalendar size={20} className="text-blue-500 mt-1 flex-shrink-0" />
                         <div className="w-full">
-                          <h4 className="font-semibold text-gray-900 text-base sm:text-lg">Date & Time</h4>
-                          <p className="text-gray-700 text-sm sm:text-base font-medium break-words">
+                          <h4 className="font-semibold text-gray-900 text-lg sm:text-xl">Date & Time</h4>
+                          <p className="text-gray-700 text-base sm:text-lg font-medium leading-relaxed break-words">
                             {new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             {selectedEvent.end_date ?
                               ` - ${new Date(selectedEvent.end_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
                               : ''}
                           </p>
-                          <p className="text-gray-700 text-sm sm:text-base break-words">
+                          <p className="text-gray-700 text-base sm:text-lg leading-relaxed break-words">
                             {new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                             {selectedEvent.end_date ?
                               ` - ${new Date(selectedEvent.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
@@ -414,7 +414,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
                 </div>
 
                 {/* Social Share Feature */}
-                <div className="pt-4 mt-4 border-t border-gray-200 flex justify-end">
+                <div className="pt-6 mt-6 border-t border-gray-200 flex justify-end">
                   <ShareButtons event={selectedEvent} />
                 </div>
               </div>
@@ -422,98 +422,98 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
             {/* About Event Section */}
             {activeTab === 'about-event' && (
-              <div className="space-y-4 sm:space-y-5">
+              <div className="space-y-6 sm:space-y-8">
                 {selectedEvent?.description ? (
-                  <div className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                  <div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
                     <div className="flex-shrink-0 mt-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">{selectedEvent.description}</p>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base sm:text-lg">{selectedEvent.description}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 text-gray-600 px-4 sm:px-5 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-center">
-                    <p className="text-sm sm:text-base">No description available for this event.</p>
+                  <div className="bg-gray-50 border border-gray-200 text-gray-600 px-5 sm:px-6 py-5 sm:py-6 rounded-2xl text-center shadow-sm">
+                    <p className="text-base sm:text-lg">No description available for this event.</p>
                   </div>
                 )}
               </div>
             )}
 
             {activeTab === 'host-details' && (
-              <div className="space-y-4 sm:space-y-5">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-5">Event Host</h3>
+              <div className="space-y-6 sm:space-y-8">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-5 sm:mb-6">Event Host</h3>
                 {host ? (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mb-5 sm:mb-6">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
                         {host?.photo_url ? (
-                          <Image src={host.photo_url} alt={host.name || 'Host'} width={56} height={56} className="w-full h-full object-cover" />
+                          <Image src={host.photo_url} alt={host.name || 'Host'} width={80} height={80} className="w-full h-full object-cover" />
                         ) : (
-                          <FiUser size={24} className="text-gray-500" />
+                          <FiUser size={32} className="text-gray-500" />
                         )}
                       </div>
-                      <div className="flex-1 space-y-1 sm:space-y-2">
+                      <div className="flex-1 space-y-2 sm:space-y-3">
                         {host?.name && (
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <FiUser size={16} className="text-gray-500" />
-                            <span className="font-bold text-lg sm:text-xl text-gray-900">{host.name}</span>
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <FiUser size={18} className="text-gray-500" />
+                            <span className="font-bold text-xl sm:text-2xl text-gray-900">{host.name}</span>
                           </div>
                         )}
                         {host?.company && (
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <FiBriefcase size={16} className="text-gray-500" />
-                            <span className="text-gray-700 text-sm sm:text-base">{host.company}</span>
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <FiBriefcase size={18} className="text-gray-500" />
+                            <span className="text-gray-700 text-base sm:text-lg">{host.company}</span>
                           </div>
                         )}
                       </div>
                     </div>
                     {host?.about && (
-                      <div className="mb-4 sm:mb-5">
-                        <p className="text-gray-700 text-sm sm:text-base leading-relaxed">{host.about}</p>
+                      <div className="mb-5 sm:mb-6">
+                        <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{host.about}</p>
                       </div>
                     )}
-                    <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row items-center sm:gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row items-center sm:gap-4 sm:gap-5 bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
                       {authUser ? (
                         <>
                           {host?.email ? (
-                            <div className="flex items-center gap-2 sm:gap-3 text-blue-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 bg-blue-50 font-medium">
-                              <FiMail size={16} />
-                              <span>{host.email}</span>
+                            <div className="flex items-center gap-3 sm:gap-4 text-blue-600 rounded-lg px-4 sm:px-5 py-3 sm:py-4 bg-blue-50 font-medium w-full sm:w-auto">
+                              <FiMail size={18} />
+                              <span className="text-base sm:text-lg">{host.email}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 sm:gap-3 text-red-600 font-semibold">
-                              <FiMail size={16} />
-                              <span>Email not available</span>
+                            <div className="flex items-center gap-3 sm:gap-4 text-red-600 font-semibold w-full sm:w-auto">
+                              <FiMail size={18} />
+                              <span className="text-base sm:text-lg">Email not available</span>
                             </div>
                           )}
                           {host?.phone ? (
-                            <div className="flex items-center gap-2 sm:gap-3 text-green-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 bg-green-50 font-medium">
-                              <FiPhone size={16} />
-                              <span>{host.phone}</span>
+                            <div className="flex items-center gap-3 sm:gap-4 text-green-600 rounded-lg px-4 sm:px-5 py-3 sm:py-4 bg-green-50 font-medium w-full sm:w-auto">
+                              <FiPhone size={18} />
+                              <span className="text-base sm:text-lg">{host.phone}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 sm:gap-3 text-red-600 font-semibold">
-                              <FiPhone size={16} />
-                              <span>Phone not available</span>
+                            <div className="flex items-center gap-3 sm:gap-4 text-red-600 font-semibold w-full sm:w-auto">
+                              <FiPhone size={18} />
+                              <span className="text-base sm:text-lg">Phone not available</span>
                             </div>
                           )}
                         </>
                       ) : (
-                        <div className="w-full text-center py-3 sm:py-4 px-3 sm:px-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
-                          <p className="text-sm">To view the host's email and phone number, please <span className="font-bold">log in</span> to your account.</p>
+                        <div className="w-full text-center py-4 sm:py-5 px-4 sm:px-5 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
+                          <p className="text-base sm:text-lg">To view the host's email and phone number, please <span className="font-bold">log in</span> to your account.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 sm:px-5 py-3 sm:py-4 rounded-lg sm:rounded-xl text-center">
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-5 sm:px-6 py-4 sm:py-5 rounded-2xl text-center shadow-sm">
                     {selectedEvent?.created_by ? (
-                      <p className="font-medium text-sm">Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
+                      <p className="font-medium text-base sm:text-lg">Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
                     ) : (
-                      <p className="font-medium text-sm">Host details are not available for this event.</p>
+                      <p className="font-medium text-base sm:text-lg">Host details are not available for this event.</p>
                     )}
                   </div>
                 )}
@@ -652,9 +652,9 @@ function ShareButtons({ event }: { event: EventItem }) {
           text: shareText,
           url: eventUrl,
         });
-  // ...existing code...
+        // ...existing code...
       } catch (error) {
-  // ...existing code...
+        // ...existing code...
       }
     } else {
       setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons
@@ -692,25 +692,25 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation(); // Prevent modal close if clicked directly
           handleShare();
         }}
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+        className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 shadow-sm"
         aria-label="Share Event"
       >
-        <FiShare2 size={18} />
+        <FiShare2 size={20} />
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-lg p-2 flex gap-2 z-20">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-600" aria-label="Share on Facebook">
-            <FaFacebook size={20} />
+        <div className="absolute bottom-full right-0 mb-3 w-auto bg-white rounded-xl shadow-xl border border-gray-200 p-3 flex gap-3 z-20">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-3 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
+            <FaFacebook size={22} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-400" aria-label="Share on Twitter">
-            <FaTwitter size={20} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-3 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
+            <FaTwitter size={22} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-full hover:bg-blue-100 text-blue-700" aria-label="Share on LinkedIn">
-            <FaLinkedin size={20} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-3 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
+            <FaLinkedin size={22} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-full hover:bg-green-100 text-green-500" aria-label="Share on WhatsApp">
-            <FaWhatsapp size={20} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-3 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
+            <FaWhatsapp size={22} />
           </button>
         </div>
       )}

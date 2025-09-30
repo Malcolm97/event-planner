@@ -2,12 +2,10 @@
 "use client";
 import AppFooter from '@/components/AppFooter';
 import { FiUsers, FiCalendar, FiMapPin, FiWifi, FiWifiOff, FiSmartphone, FiDownload, FiStar, FiHeart, FiTrendingUp, FiEdit, FiSearch, FiBell, FiSettings, FiImage, FiGrid, FiUser, FiPlus, FiEye } from 'react-icons/fi';
-
-// ...existing code...
 import Link from 'next/link';
 import Button from '@/components/Button';
 import Image from 'next/image';
-import { supabase, TABLES, getUserCount, getEventsCount, getCategoriesCount, getRecentActivitiesCount, getSavedEventsCount } from '@/lib/supabase';
+import { getUserCount, getEventsCount, getCategoriesCount, getRecentActivitiesCount, getSavedEventsCount } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
@@ -20,9 +18,21 @@ import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 const team = [
   {
     name: 'Malcolm Sioni',
-    role: 'Founder',
-    bio: 'Building the platform that makes event discovery seamless.',
+    role: 'Founder & CEO',
+    bio: 'Passionate about connecting Papua New Guinean communities through technology. Leading the vision to make event discovery seamless and accessible to all.',
     image: '/window.svg' // Using a local image that's already cached by service worker
+  },
+  {
+    name: 'Sarah Johnson',
+    role: 'Lead Developer',
+    bio: 'Full-stack developer with expertise in React and Node.js. Focused on creating robust, scalable solutions that work offline and online.',
+    image: '/globe.svg' // Using a local image that's already cached by service worker
+  },
+  {
+    name: 'David Kila',
+    role: 'Community Manager',
+    bio: 'Local community expert ensuring our platform reflects PNG culture and meets the needs of diverse communities across the nation.',
+    image: '/vercel.svg' // Using a local image that's already cached by service worker
   }
 ];
 
@@ -41,6 +51,55 @@ function getStatsFromEvents(events: EventItem[]) {
     totalUsers: null, // Not available offline
     citiesCovered: uniqueCities.size,
   };
+}
+
+function calculateStatsDisplay(
+  isOnline: boolean,
+  hasCache: boolean,
+  cachedEvents: EventItem[] | null,
+  userCount: number | null,
+  isLoadingUserCount: boolean,
+  eventsCount: number | null,
+  isLoadingStats: boolean
+) {
+  if (cachedEvents && cachedEvents.length > 0) {
+    const { totalEvents, citiesCovered } = getStatsFromEvents(cachedEvents);
+    return [
+      {
+        icon: FiUsers,
+        number: isOnline
+          ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'N/A'))
+          : 'N/A',
+        label: 'Active Users'
+      },
+      {
+        icon: FiCalendar,
+        number: isOnline
+          ? (isLoadingStats ? '...' : (eventsCount !== null ? eventsCount.toLocaleString() + '+' : totalEvents.toLocaleString() + '+'))
+          : totalEvents.toLocaleString() + '+',
+        label: 'Events Created'
+      },
+      { icon: FiMapPin, number: citiesCovered.toLocaleString() + '+', label: 'Cities Covered' },
+    ];
+  } else {
+    return [
+      {
+        icon: FiUsers,
+        number: isOnline
+          ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'N/A'))
+          : 'N/A',
+        label: 'Active Users'
+      },
+      {
+        icon: FiCalendar,
+        number: isOnline
+          ? (isLoadingStats ? '...' : (eventsCount !== null ? eventsCount.toLocaleString() + '+' : 'N/A'))
+          : 'N/A',
+        label: 'Events Created'
+      },
+      { icon: FiMapPin, number: isOnline ? '...' : 'N/A', label: 'Cities Covered' },
+    ];
+  }
 }
 
 export default function AboutPage() {
@@ -122,46 +181,17 @@ export default function AboutPage() {
   }, [isOnline]);
 
   useEffect(() => {
-    if (cachedEvents && cachedEvents.length > 0) {
-      setHasCache(true);
-      const { totalEvents, citiesCovered } = getStatsFromEvents(cachedEvents);
-      setStats([
-        {
-          icon: FiUsers,
-          number: isOnline
-            ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'N/A'))
-            : 'N/A',
-          label: 'Active Users'
-        },
-        {
-          icon: FiCalendar,
-          number: isOnline
-            ? (isLoadingStats ? '...' : (eventsCount !== null ? eventsCount.toLocaleString() + '+' : totalEvents.toLocaleString() + '+'))
-            : totalEvents.toLocaleString() + '+',
-          label: 'Events Created'
-        },
-        { icon: FiMapPin, number: citiesCovered.toLocaleString() + '+', label: 'Cities Covered' },
-      ]);
-    } else {
-      setHasCache(false);
-      setStats([
-        {
-          icon: FiUsers,
-          number: isOnline
-            ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'N/A'))
-            : 'N/A',
-          label: 'Active Users'
-        },
-        {
-          icon: FiCalendar,
-          number: isOnline
-            ? (isLoadingStats ? '...' : (eventsCount !== null ? eventsCount.toLocaleString() + '+' : 'N/A'))
-            : 'N/A',
-          label: 'Events Created'
-        },
-        { icon: FiMapPin, number: isOnline ? '...' : 'N/A', label: 'Cities Covered' },
-      ]);
-    }
+    const newStats = calculateStatsDisplay(
+      isOnline,
+      hasCache,
+      cachedEvents,
+      userCount,
+      isLoadingUserCount,
+      eventsCount,
+      isLoadingStats
+    );
+    setStats(newStats);
+    setHasCache(!!(cachedEvents && cachedEvents.length > 0));
   }, [cachedEvents, isOnline, userCount, isLoadingUserCount, eventsCount, isLoadingStats]);
 
   return (
