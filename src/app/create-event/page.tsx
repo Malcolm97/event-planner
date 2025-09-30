@@ -154,7 +154,6 @@ export default function CreateEventPage() {
               name,
               description,
               date,
-              end_date: endDate || null,
               location: finalLocation, // Use the selected or custom location
               venue, // Add venue field
               presale_price, // Use the new state variable

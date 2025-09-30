@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiUser, FiLogOut, FiMenu, FiX, FiBell, FiSettings } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiMenu, FiX, FiSettings } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
@@ -19,7 +19,7 @@ const Header = React.memo(function Header() {
 
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
-  const [notifications] = useState(3); // Mock notification count
+
   const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false); // New state for client-side check
   const [isClient, setIsClient] = useState(false);
@@ -101,12 +101,7 @@ const Header = React.memo(function Header() {
 
 
 
-  const handleNotificationClick = () => {
-    // Enhanced notification handler - in real app would open notifications panel
-    console.log('Notifications clicked - would open notifications panel');
-    // For now, show an alert to demonstrate functionality
-    alert(`You have ${notifications} notifications waiting!`);
-  };
+
 
   return (
     <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md">
@@ -129,24 +124,7 @@ const Header = React.memo(function Header() {
           </nav>
           {/* Right side actions for desktop */}
           <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
-            {/* Notifications */}
-            {user && (
-              <div className="relative">
-                <Button
-                  onClick={handleNotificationClick}
-                  variant="ghost"
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                  aria-label="Notifications"
-                >
-                  <FiBell size={18} />
-                  {notifications > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {notifications}
-                    </span>
-                  )}
-                </Button>
-              </div>
-            )}
+
 
             <Button onClick={() => router.push('/create-event')} variant="primary" size="sm" className="flex items-center text-sm xl:text-base">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 inline mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

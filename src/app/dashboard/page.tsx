@@ -494,7 +494,7 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {upcomingEvents.map(event => (
                     <Link key={event.id} href={`/dashboard/edit-event/${event.id}`}>
                       <EventCard
@@ -539,7 +539,7 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {savedEvents.map(event => (
                     <EventCard key={event.id} event={event} />
                   ))}
@@ -566,7 +566,7 @@ export default function DashboardPage() {
                   <p className="text-gray-500 mb-8 text-lg">Your past events will appear here.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {expiredEvents.map(event => (
                     <EventCard
                       key={event.id}
