@@ -19,9 +19,15 @@ export default function AppFooter() {
 
           {/* Legal Links */}
           <div className="flex items-center justify-center md:justify-end gap-4 sm:gap-6">
-            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Terms">Terms</Link>
-            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Privacy">Privacy</Link>
-            <Link href="/download" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Download">Download</Link>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Terms">Terms</Link>
+              <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Privacy">Privacy</Link>
+            </div>
+            <div className="w-px h-6 bg-gray-600"></div>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <Link href="/settings" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Settings">Settings</Link>
+              <Link href="/download" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Download">Download</Link>
+            </div>
           </div>
         </div>
       </div>

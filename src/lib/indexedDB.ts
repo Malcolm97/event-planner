@@ -1,7 +1,7 @@
 import { EventItem } from './types';
 
 const DB_NAME = 'event-planner-db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 // Store names
 const STORES = {
@@ -35,7 +35,7 @@ export const openDatabase = (): Promise<IDBDatabase> => {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      
+
       // Create or update stores
       if (!db.objectStoreNames.contains(STORES.EVENTS)) {
         const eventsStore = db.createObjectStore(STORES.EVENTS, { keyPath: 'id' });
@@ -65,8 +65,48 @@ export const openDatabase = (): Promise<IDBDatabase> => {
     };
 
     request.onerror = (event) => {
-      console.error('IndexedDB error:', (event.target as IDBOpenDBRequest).error);
-      reject((event.target as IDBOpenDBRequest).error);
+      const error = (event.target as IDBOpenDBRequest).error;
+      console.error('IndexedDB error:', error);
+
+      // If version error (database version is higher than requested), delete and recreate
+      if (error && error.name === 'VersionError') {
+        console.warn('IndexedDB version mismatch, deleting and recreating database');
+        const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+        deleteRequest.onsuccess = () => {
+          console.log('Database deleted, retrying open');
+          // Retry opening the database
+          const retryRequest = indexedDB.open(DB_NAME, DB_VERSION);
+          retryRequest.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result;
+
+            // Create all stores
+            const eventsStore = db.createObjectStore(STORES.EVENTS, { keyPath: 'id' });
+            eventsStore.createIndex('date', 'date', { unique: false });
+            eventsStore.createIndex('category', 'category', { unique: false });
+            eventsStore.createIndex('location', 'location', { unique: false });
+
+            db.createObjectStore(STORES.USERS, { keyPath: 'id' });
+            db.createObjectStore(STORES.SYNC_STATUS, { keyPath: 'id' });
+            db.createObjectStore(STORES.CATEGORIES, { keyPath: 'name' });
+
+            const queueStore = db.createObjectStore(STORES.OFFLINE_QUEUE, { keyPath: 'id', autoIncrement: true });
+            queueStore.createIndex('timestamp', 'timestamp', { unique: false });
+            queueStore.createIndex('operation', 'operation', { unique: false });
+            queueStore.createIndex('status', 'status', { unique: false });
+          };
+          retryRequest.onsuccess = (event) => {
+            resolve((event.target as IDBOpenDBRequest).result);
+          };
+          retryRequest.onerror = (event) => {
+            reject((event.target as IDBOpenDBRequest).error);
+          };
+        };
+        deleteRequest.onerror = () => {
+          reject(error);
+        };
+      } else {
+        reject(error);
+      }
     };
   });
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import * as db from '@/lib/indexedDB';
@@ -14,6 +14,7 @@ interface NetworkStatusContextType {
   lastSyncTime: Date | null;
   setLastSyncTime: (time: Date) => void;
   setIsSyncing: (syncing: boolean) => void;
+  refreshEventsCache: () => Promise<void>;
 }
 
 export const NetworkStatusContext = createContext<NetworkStatusContextType | undefined>(undefined);
@@ -25,95 +26,104 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  // Function to sync data with the server
+  // Debounce network status changes to prevent flickering
+  const networkStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Utility to clear service worker cache
-  const clearServiceWorkerCache = async () => {
+  const clearServiceWorkerCache = useCallback(async () => {
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
     }
-  };
+  }, []);
 
-  const syncData = async () => {
-    if (!isOnline || isSyncing) return;
-
-    setIsSyncing(true);
-    setSyncError(null);
-
+  // Refresh events cache from server
+  const refreshEventsCache = useCallback(async () => {
     try {
-      // Get current sync status
-      const syncStatus = await db.getSyncStatus();
-      const lastSync = syncStatus?.lastSync || 0;
+      await db.clearEventsCache();
+      await clearServiceWorkerCache();
 
-      // Fetch new events from server
+      // Fetch latest events from server and cache them
       const { data: eventsData, error: eventsError } = await supabase
         .from(TABLES.EVENTS)
         .select('*')
-        .gte('created_at', new Date(lastSync).toISOString())
         .order('created_at', { ascending: false });
 
       if (eventsError) throw eventsError;
 
-      // Update local database
       if (eventsData && eventsData.length > 0) {
         await db.addEvents(eventsData as EventItem[]);
-        toast.success(`Updated ${eventsData.length} events`);
+        console.log(`Cached ${eventsData.length} events for offline use`);
       }
-
-      // Update sync status
-      await db.updateSyncStatus({
-        lastSync: Date.now(),
-        inProgress: false
-      });
-
-      setLastSyncTime(new Date());
     } catch (error) {
-      console.error('Sync error:', error);
-      setSyncError(error instanceof Error ? error.message : 'Unknown sync error');
-      toast.error('Failed to sync data');
-    } finally {
-      setIsSyncing(false);
+      console.error('Failed to refresh events cache:', error);
+      throw error;
     }
-  };
+  }, [clearServiceWorkerCache]);
+
+  // Test actual connectivity (not just navigator.onLine)
+  const testConnectivity = useCallback(async (): Promise<boolean> => {
+    try {
+      // Try to fetch a small resource from the server
+      const response = await fetch('/api/health', {
+        method: 'HEAD',
+        cache: 'no-cache',
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Update network status with debouncing
+  const updateNetworkStatus = useCallback(async (online: boolean) => {
+    if (networkStatusTimeoutRef.current) {
+      clearTimeout(networkStatusTimeoutRef.current);
+    }
+
+    const timeout = setTimeout(async () => {
+      const wasOnline = isOnline;
+      const actuallyOnline = online ? await testConnectivity() : false;
+
+      setIsOnline(actuallyOnline);
+
+      // Read offlineNotif from localStorage
+      let offlineNotif = true;
+      try {
+        offlineNotif = localStorage.getItem('offlineNotif') !== 'false';
+      } catch {}
+
+      if (actuallyOnline && !wasOnline) {
+        // Came back online
+        try {
+          await refreshEventsCache();
+          if (offlineNotif) {
+            toast.success('Back online! Events cache updated.');
+          }
+        } catch (error) {
+          console.error('Failed to refresh cache on reconnect:', error);
+          if (offlineNotif) {
+            toast.error('Back online, but failed to update cache.');
+          }
+        }
+      } else if (!actuallyOnline && wasOnline) {
+        // Went offline
+        if (offlineNotif) {
+          toast.error('You are now offline');
+        }
+      }
+    }, 1000); // 1 second debounce
+
+    networkStatusTimeoutRef.current = timeout;
+  }, [isOnline, testConnectivity, refreshEventsCache]);
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-    // Read offlineNotif and autoSync from localStorage
-    let offlineNotif = true;
-    let autoSync = true;
-    try {
-      offlineNotif = localStorage.getItem('offlineNotif') !== 'false';
-      autoSync = localStorage.getItem('autoSync') !== 'false';
-    } catch {}
+    // Initialize network status
+    updateNetworkStatus(navigator.onLine);
 
-    const handleOnline = async () => {
-      setIsOnline(true);
-      // Clear caches on reconnect
-      try {
-        await db.clearEventsCache();
-        await clearServiceWorkerCache();
-        toast.success('Cache cleared! Fetching latest events...');
-        // Fetch latest events from server and cache them
-        const { data: eventsData, error: eventsError } = await supabase
-          .from(TABLES.EVENTS)
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (eventsError) throw eventsError;
-        if (eventsData && eventsData.length > 0) {
-          await db.addEvents(eventsData as EventItem[]);
-          toast.success('Latest events cached for offline use!');
-        }
-      } catch (err) {
-        toast.error('Failed to update cache');
-      }
-      if (offlineNotif) toast.success('Back online! Syncing data...');
-      if (autoSync) syncData();
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      if (offlineNotif) toast.error('You are now offline');
-    };
+    const handleOnline = () => updateNetworkStatus(true);
+    const handleOffline = () => updateNetworkStatus(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -123,24 +133,14 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     setIsPwaOnMobile(isMobile && isStandalone);
 
-    // Initial sync
-    if (navigator.onLine && autoSync) {
-      syncData();
-    }
-
-    // Set up periodic sync when online and autoSync enabled
-    const syncInterval = setInterval(() => {
-      if (navigator.onLine && autoSync) {
-        syncData();
-      }
-    }, 5 * 60 * 1000);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(syncInterval);
+      if (networkStatusTimeoutRef.current) {
+        clearTimeout(networkStatusTimeoutRef.current);
+      }
     };
-  }, []);
+  }, [updateNetworkStatus]);
 
   const contextValue = {
     isOnline,
@@ -150,6 +150,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     lastSyncTime,
     setLastSyncTime,
     setIsSyncing,
+    refreshEventsCache,
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import {
@@ -6,15 +6,22 @@ import {
   getQueuedOperations,
   updateQueuedOperation,
   removeFromQueue,
+  getSyncStatus,
+  updateSyncStatus,
   QueuedOperation
 } from '@/lib/indexedDB';
 import { EventItem } from '@/lib/types';
 import { toast } from 'react-hot-toast';
 
 export function useOfflineSync() {
-  const { isOnline, isSyncing, setIsSyncing } = useNetworkStatus();
+  const { isOnline, setIsSyncing, setLastSyncTime, refreshEventsCache } = useNetworkStatus();
   const [queueLength, setQueueLength] = useState(0);
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  // Use refs to prevent race conditions
+  const isSyncingRef = useRef(false);
+  const processingQueueRef = useRef(false);
 
   // Update queue length when operations are added/removed
   const updateQueueLength = async () => {
@@ -23,16 +30,22 @@ export function useOfflineSync() {
   };
 
   // Process queued operations when coming back online
-  const processQueue = async () => {
-    if (!isOnline || isSyncing || isProcessingQueue) return;
+  const processQueue = useCallback(async () => {
+    // Prevent multiple simultaneous sync operations
+    if (!isOnline || isSyncingRef.current || processingQueueRef.current) return;
 
+    processingQueueRef.current = true;
+    isSyncingRef.current = true;
     setIsProcessingQueue(true);
     setIsSyncing(true);
+    setSyncError(null);
 
     try {
       const pendingOperations = await getQueuedOperations('pending');
 
       if (pendingOperations.length === 0) {
+        processingQueueRef.current = false;
+        isSyncingRef.current = false;
         setIsProcessingQueue(false);
         setIsSyncing(false);
         return;
@@ -70,21 +83,27 @@ export function useOfflineSync() {
 
       const remainingFailed = await getQueuedOperations('failed');
       if (remainingFailed.length > 0) {
+        setSyncError(`${remainingFailed.length} operations failed to sync`);
         toast.error(`${remainingFailed.length} operations failed to sync`);
       } else {
         toast.success('All offline operations synced successfully!');
+        setLastSyncTime(new Date());
       }
 
       await updateQueueLength();
 
     } catch (error) {
       console.error('Queue processing error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
+      setSyncError(errorMessage);
       toast.error('Failed to sync offline operations');
     } finally {
+      processingQueueRef.current = false;
+      isSyncingRef.current = false;
       setIsProcessingQueue(false);
       setIsSyncing(false);
     }
-  };
+  }, [isOnline, setIsSyncing, setLastSyncTime]);
 
   // Process a single operation
   const processOperation = async (operation: QueuedOperation) => {
@@ -165,17 +184,22 @@ export function useOfflineSync() {
     updateQueueLength();
   }, []);
 
-  // Process queue when coming back online
+  // Process queue when coming back online (if auto sync is enabled)
   useEffect(() => {
-    if (isOnline && !isSyncing) {
-      // Small delay to ensure connection is stable
-      const timeoutId = setTimeout(() => {
-        processQueue();
-      }, 2000);
+    if (isOnline && !isSyncingRef.current) {
+      // Check auto sync preference
+      const autoSyncEnabled = localStorage.getItem('autoSync') !== 'false';
 
-      return () => clearTimeout(timeoutId);
+      if (autoSyncEnabled) {
+        // Small delay to ensure connection is stable
+        const timeoutId = setTimeout(() => {
+          processQueue();
+        }, 2000);
+
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, [isOnline, isSyncing]);
+  }, [isOnline, processQueue]);
 
   return {
     queueLength,
