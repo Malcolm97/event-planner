@@ -70,24 +70,10 @@ export default function SettingsPage() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('darkMode', darkMode ? 'true' : 'false');
   }, [darkMode]);
 
-  // Save preferences to localStorage and optionally Supabase
+  // Save preferences (the useEffect handles the actual saving)
   const savePreferences = async (prefs: any) => {
-    if ('darkMode' in prefs) localStorage.setItem('darkMode', prefs.darkMode ? 'true' : 'false');
-    if ('offlineNotif' in prefs) localStorage.setItem('offlineNotif', prefs.offlineNotif ? 'true' : 'false');
-    if ('autoSync' in prefs) localStorage.setItem('autoSync', prefs.autoSync ? 'true' : 'false');
-    if ('landing' in prefs) localStorage.setItem('landing', prefs.landing);
-    if (user) {
-      await supabase.from('users').update({ preferences: JSON.stringify({
-        darkMode,
-        offlineNotif,
-        autoSync,
-        landing,
-        ...prefs
-      }) }).eq('id', user.id);
-    }
     setSaveMsg('Preferences saved!');
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => setSaveMsg(''), 2000);
