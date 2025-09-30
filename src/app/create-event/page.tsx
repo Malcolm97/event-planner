@@ -6,10 +6,12 @@ import { supabase, TABLES } from '@/lib/supabase';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 
 export default function CreateEventPage() {
   const router = useRouter();
   const { isOnline } = useNetworkStatus(); // Get the network status
+  const { queueOperation } = useOfflineSync();
   const [user, setUser] = useState<any>(null);
   const [loadingPage, setLoadingPage] = useState<boolean>(true);
   const [name, setName] = useState<string>('');
@@ -40,25 +42,7 @@ export default function CreateEventPage() {
     checkUser();
   }, [router]);
 
-  // If offline, show a message and a back button
-  if (!isOnline) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-  {/* Header removed, now rendered globally in layout */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Offline Mode</h1>
-          <p className="text-gray-600">Event creation is not available when offline.</p>
-          <Link
-            href="/dashboard"
-            className="mt-6 inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors"
-          >
-            <FiArrowLeft size={16} />
-            Back to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
+
 
   if (loadingPage) {
     return (
@@ -120,15 +104,20 @@ export default function CreateEventPage() {
         return;
       }
 
+      // For offline mode, skip image uploads for now
+      if (!isOnline && imageFiles.length > 0) {
+        setError('Image uploads are not available offline. Images will be uploaded when you reconnect.');
+      }
+
       let imageUrls: string[] = [];
-      if (imageFiles.length > 0) {
+      if (isOnline && imageFiles.length > 0) {
         for (const imageFile of imageFiles) {
           const fileExt = imageFile.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
           const filePath = `${user.id}/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
-            .from('event-images') // Ensure you have a bucket named 'event-images' in Supabase Storage
+            .from('event-images')
             .upload(filePath, imageFile, {
               cacheControl: '3600',
               upsert: false,
@@ -148,26 +137,38 @@ export default function CreateEventPage() {
         }
       }
 
-          const { error: insertError } = await supabase
-            .from(TABLES.EVENTS)
-            .insert({
-              name,
-              description,
-              date,
-              location: finalLocation, // Use the selected or custom location
-              venue, // Add venue field
-              presale_price, // Use the new state variable
-              gate_price,    // Use the new state variable
-              category,
-              image_urls: imageUrls.length > 0 ? imageUrls : null, // Save the image URLs array
-              created_by: user.id,
-            });
+      const eventData = {
+        name,
+        description,
+        date,
+        end_date: endDate || null,
+        location: finalLocation,
+        venue,
+        presale_price,
+        gate_price,
+        category,
+        image_urls: imageUrls.length > 0 ? imageUrls : null,
+        created_by: user.id,
+      };
 
-      if (insertError) {
-        setError(insertError.message);
-      } else {
-        router.push('/dashboard');
-      }
+      // Use queueOperation which handles both online and offline cases
+      await queueOperation('create', TABLES.EVENTS, eventData);
+
+      // Clear form and redirect
+      setName('');
+      setDescription('');
+      setDate('');
+      setEndDate('');
+      setLocation('');
+      setVenue('');
+      setSelectedLocationType('Port Moresby');
+      setCustomLocation('');
+      setPresale_price(0);
+      setGate_price(0);
+      setCategory('');
+      setImageFiles([]);
+
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -271,6 +272,17 @@ export default function CreateEventPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   ></textarea>
+                </div>
+                <div>
+                  <label htmlFor="venue" className="block text-sm font-semibold text-gray-700 mb-3">Venue (optional)</label>
+                  <input
+                    type="text"
+                    id="venue"
+                    className="input-field"
+                    value={venue}
+                    onChange={(e) => setVenue(e.target.value)}
+                    placeholder="e.g. Grand Papua Hotel Ballroom"
+                  />
                 </div>
                 <div>
                   <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">

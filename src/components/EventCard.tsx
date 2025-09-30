@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark, FiTrash2, FiEdit } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark, FiTrash2, FiEdit, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
@@ -20,12 +20,12 @@ const categoryColorMap: { [key: string]: string } = {
 };
 
 const categoryIconMap: { [key: string]: any } = {
-  'Music': FiStar,
-  'Art': FiStar,
-  'Food': FiStar,
-  'Technology': FiStar,
-  'Wellness': FiStar,
-  'Comedy': FiStar,
+  'Music': FiMusic,
+  'Art': FiImage,
+  'Food': FiCoffee,
+  'Technology': FiCpu,
+  'Wellness': FiHeart,
+  'Comedy': FiSmile,
   'Other': FiStar,
 };
 
@@ -235,18 +235,22 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
           <Icon size={10} className="sm:w-3 sm:h-3" />
           <span className="hidden sm:inline">{categoryLabel}</span>
-          <span className="sm:hidden">{categoryLabel.slice(0, 4)}</span>
+          <span className="sm:hidden sr-only">{categoryLabel}</span>
         </span>
         {/* Save/Bookmark button for logged-in users */}
         {user && (
           <button
-            className={`ml-1 sm:ml-2 p-1 sm:p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'}`}
+            className={`ml-1 sm:ml-2 p-1 sm:p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 ${bookmarked ? 'text-yellow-700' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
             onClick={handleBookmark}
             disabled={loading}
             tabIndex={0}
           >
-            <FiBookmark size={14} className="sm:w-4 sm:h-4" />
+            {loading ? (
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-yellow-600"></div>
+            ) : (
+              <FiBookmark size={14} className="sm:w-4 sm:h-4" />
+            )}
           </button>
         )}
       </div>
@@ -255,7 +259,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
         <Image
           src={getEventPrimaryImage(event)}
-          alt={event.name || 'Event Image'}
+          alt={`Event image for ${event.name}`}
           fill={true}
           priority={true}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -263,24 +267,28 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         />
         {/* Price Badges - Bottom Left */}
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
-          {event.presale_price !== undefined && event.presale_price !== null && event.presale_price > 0 ? (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
-              Presale: K{event.presale_price.toFixed(0)}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-500/80 backdrop-blur-md text-white shadow-lg">
-              Presale: None
-            </span>
-          )}
-          {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 ? (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
-              Gate: K{event.gate_price.toFixed(0)}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-500/80 backdrop-blur-md text-white shadow-lg">
-              Gate: None
-            </span>
-          )}
+          {event.presale_price !== undefined && event.presale_price !== null ? (
+            event.presale_price === 0 ? (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-green-500/80 backdrop-blur-md text-white shadow-lg">
+                Presale: Free
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
+                Presale: K{event.presale_price.toFixed(0)}
+              </span>
+            )
+          ) : null}
+          {event.gate_price !== undefined && event.gate_price !== null ? (
+            event.gate_price === 0 ? (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-green-500/80 backdrop-blur-md text-white shadow-lg">
+                Gate: Free
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
+                Gate: K{event.gate_price.toFixed(0)}
+              </span>
+            )
+          ) : null}
         </div>
       </div>
 

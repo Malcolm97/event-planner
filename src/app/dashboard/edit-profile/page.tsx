@@ -6,11 +6,15 @@ import { supabase, TABLES } from '@/lib/supabase';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 import Image from 'next/image';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
 
 export default function EditProfilePage() {
+  const { isOnline } = useNetworkStatus();
+  const { queueOperation } = useOfflineSync();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -94,8 +98,15 @@ export default function EditProfilePage() {
         return;
       }
 
+      // Check for online-only operations
+      if (!isOnline && (photoFile || formData.email !== user.email)) {
+        setError('Photo uploads and email changes require an internet connection. Please try again when online.');
+        setSubmitting(false);
+        return;
+      }
+
       let newPhotoUrl: string | null = photoUrl;
-      if (photoFile) {
+      if (photoFile && isOnline) {
         const fileExt = photoFile.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const filePath = `user-photos/${fileName}`; // Store in a 'user-photos' bucket
@@ -116,11 +127,13 @@ export default function EditProfilePage() {
         const { data: publicUrlData } = supabase.storage
           .from('user-photos')
           .getPublicUrl(filePath);
-        
+
         newPhotoUrl = publicUrlData.publicUrl;
       }
 
       const updateData = {
+        id: user.id,
+        email: formData.email,
         name: formData.name,
         company: formData.company,
         phone: formData.phone,
@@ -129,8 +142,8 @@ export default function EditProfilePage() {
         updated_at: new Date().toISOString(),
       };
 
-      // Update user email if it has changed
-      if (formData.email !== user.email) {
+      // Update user email if it has changed (online only)
+      if (formData.email !== user.email && isOnline) {
         const { error: emailUpdateError } = await supabase.auth.updateUser({
           email: formData.email
         });
@@ -139,15 +152,8 @@ export default function EditProfilePage() {
         }
       }
 
-      const { error } = await supabase
-        .from(TABLES.USERS)
-        .upsert({
-          id: user.id,
-          email: formData.email, // Use formData.email for the user table
-          ...updateData
-        });
-
-      if (error) throw error;
+      // Use queueOperation for database update (works online and offline)
+      await queueOperation('update', TABLES.USERS, updateData);
 
       setSuccess('Profile updated successfully!');
       setPhotoUrl(newPhotoUrl); // Update state with new photo URL

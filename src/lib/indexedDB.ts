@@ -1,19 +1,31 @@
 import { EventItem } from './types';
 
 const DB_NAME = 'event-planner-db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 // Store names
 const STORES = {
   EVENTS: 'events',
   USERS: 'users',
   SYNC_STATUS: 'syncStatus',
-  CATEGORIES: 'categories'
+  CATEGORIES: 'categories',
+  OFFLINE_QUEUE: 'offlineQueue'
 };
 
 interface SyncStatus {
   lastSync: number;
   inProgress: boolean;
+  error?: string;
+}
+
+export interface QueuedOperation {
+  id?: number;
+  operation: 'create' | 'update' | 'delete';
+  table: string;
+  data: any;
+  timestamp: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  retryCount?: number;
   error?: string;
 }
 
@@ -39,6 +51,12 @@ export const openDatabase = (): Promise<IDBDatabase> => {
       }
       if (!db.objectStoreNames.contains(STORES.CATEGORIES)) {
         db.createObjectStore(STORES.CATEGORIES, { keyPath: 'name' });
+      }
+      if (!db.objectStoreNames.contains(STORES.OFFLINE_QUEUE)) {
+        const queueStore = db.createObjectStore(STORES.OFFLINE_QUEUE, { keyPath: 'id', autoIncrement: true });
+        queueStore.createIndex('timestamp', 'timestamp', { unique: false });
+        queueStore.createIndex('operation', 'operation', { unique: false });
+        queueStore.createIndex('status', 'status', { unique: false });
       }
     };
 
@@ -174,4 +192,76 @@ export const clearAllData = async (): Promise<void> => {
   const db = await openDatabase();
   const storeNames = Array.from(db.objectStoreNames);
   await Promise.all(storeNames.map(storeName => clearStore(storeName)));
+};
+
+// Offline Queue Management
+export const addToQueue = async (operation: Omit<QueuedOperation, 'id' | 'timestamp' | 'status'>): Promise<number> => {
+  const queuedOp: QueuedOperation = {
+    ...operation,
+    timestamp: Date.now(),
+    status: 'pending',
+    retryCount: 0
+  };
+
+  const db = await openDatabase();
+  const transaction = db.transaction(STORES.OFFLINE_QUEUE, 'readwrite');
+  const store = transaction.objectStore(STORES.OFFLINE_QUEUE);
+  const request = store.add(queuedOp);
+
+  return new Promise((resolve, reject) => {
+    request.onsuccess = (event) => resolve((event.target as IDBRequest).result as number);
+    request.onerror = (event) => {
+      console.error('Add to queue error:', (event.target as IDBRequest).error);
+      reject((event.target as IDBRequest).error);
+    };
+  });
+};
+
+export const getQueuedOperations = async (status?: string): Promise<QueuedOperation[]> => {
+  if (status) {
+    return getItemsByIndex<QueuedOperation>(STORES.OFFLINE_QUEUE, 'status', status);
+  }
+  return getItems<QueuedOperation>(STORES.OFFLINE_QUEUE);
+};
+
+export const updateQueuedOperation = async (id: number, updates: Partial<QueuedOperation>): Promise<void> => {
+  const db = await openDatabase();
+  const transaction = db.transaction(STORES.OFFLINE_QUEUE, 'readwrite');
+  const store = transaction.objectStore(STORES.OFFLINE_QUEUE);
+  const getRequest = store.get(id);
+
+  return new Promise((resolve, reject) => {
+    getRequest.onsuccess = (event) => {
+      const operation = (event.target as IDBRequest).result as QueuedOperation;
+      if (operation) {
+        const updatedOperation = { ...operation, ...updates };
+        const putRequest = store.put(updatedOperation);
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = (event) => reject((event.target as IDBRequest).error);
+      } else {
+        reject(new Error('Operation not found'));
+      }
+    };
+    getRequest.onerror = (event) => reject((event.target as IDBRequest).error);
+  });
+};
+
+export const removeFromQueue = async (id: number): Promise<void> => {
+  const db = await openDatabase();
+  const transaction = db.transaction(STORES.OFFLINE_QUEUE, 'readwrite');
+  const store = transaction.objectStore(STORES.OFFLINE_QUEUE);
+  const request = store.delete(id);
+
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve();
+    request.onerror = (event) => {
+      console.error('Remove from queue error:', (event.target as IDBRequest).error);
+      reject((event.target as IDBRequest).error);
+    };
+  });
+};
+
+export const clearCompletedOperations = async (): Promise<void> => {
+  const operations = await getQueuedOperations('completed');
+  await Promise.all(operations.map(op => op.id && removeFromQueue(op.id)));
 };

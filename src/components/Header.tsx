@@ -140,6 +140,8 @@ const Header = React.memo(function Header() {
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   variant="ghost"
                   className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100"
+                  aria-expanded={isProfileDropdownOpen}
+                  aria-haspopup="menu"
                 >
                   {userPhotoUrl ? (
                     <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-1 sm:mr-2" />

@@ -24,32 +24,11 @@ export default function DashboardPage() {
   // Function to fetch user activities
   const fetchUserActivities = async (userId: string) => {
     try {
-      console.log('Starting to fetch activities for user:', userId);
-      console.log('Supabase configuration check:', {
-        isConfigured: supabase ? 'Client exists' : 'No client',
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'URL set' : 'No URL',
-        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Key set' : 'No key'
-      });
-
       const activitiesData = await getUserActivities(userId, 10);
-      console.log('Successfully fetched activities:', activitiesData.length, 'records');
       setActivities(activitiesData);
     } catch (error) {
-      console.error('Error in fetchUserActivities:', {
-        error: error instanceof Error ? error.message : String(error),
-        errorType: typeof error,
-        errorStack: error instanceof Error ? error.stack : 'No stack',
-        userId: userId,
-        timestamp: new Date().toISOString(),
-        supabaseClient: supabase ? 'Exists' : 'Missing'
-      });
-
       // Set empty activities array to prevent UI issues
       setActivities([]);
-
-      // Optionally show user-friendly error message
-      // You could set an error state here if you want to show the error to users
-      // setActivitiesError(error instanceof Error ? error.message : 'Failed to load activities');
     }
   };
 
@@ -81,8 +60,6 @@ export default function DashboardPage() {
   // Function to fetch user events with improved error handling
   const fetchUserEvents = async (userId: string) => {
     try {
-      console.log('Fetching user events for user:', userId);
-
       const { data, error } = await supabase
         .from(TABLES.EVENTS)
         .select('*')
@@ -93,24 +70,11 @@ export default function DashboardPage() {
         // Use the error handler to get more meaningful error information
         const appError = handleSupabaseError(error);
         logError(appError, 'fetchUserEvents');
-
-        console.error('Supabase error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          status: appError.statusCode
-        });
-
-        console.error('Error fetching user events:', appError.message);
         return;
       }
 
-      console.log('Raw user events data:', data);
-
       // Validate the data
       if (!data || !Array.isArray(data)) {
-        console.warn('No user events data or invalid format:', data);
         setUserEvents([]);
         return;
       }
@@ -118,28 +82,19 @@ export default function DashboardPage() {
       // Validate each event has required fields
       const validEvents = data.filter(event => {
         if (!event || typeof event !== 'object') {
-          console.warn('Invalid event object:', event);
           return false;
         }
         if (!event.id || !event.name) {
-          console.warn('Event missing required fields:', event);
           return false;
         }
         return true;
       });
 
-      console.log('Processed user events:', validEvents);
       setUserEvents(validEvents as Event[]);
 
     } catch (error) {
       const appError = error instanceof Error ? error : new Error(String(error));
       logError(appError, 'fetchUserEvents');
-
-      console.error('Unexpected error fetching user events:', {
-        message: appError.message,
-        stack: appError.stack,
-        userId: userId
-      });
     }
   };
 
@@ -152,18 +107,14 @@ export default function DashboardPage() {
   // Function to fetch saved events with improved error handling
   const fetchSavedEvents = async (userId: string) => {
     try {
-      console.log('🔍 Starting fetchSavedEvents for user:', userId);
-
       // First, check if Supabase is properly configured
       if (!supabase) {
         const errorMsg = 'Supabase client is not initialized';
         logError(new Error(errorMsg), 'fetchSavedEvents');
-        console.error('❌ Error: Supabase client not initialized');
         return;
       }
 
       // Step 1: Get the saved event IDs for this user
-      console.log('📋 Fetching saved event IDs...');
       const { data: savedEventsData, error: savedError } = await supabase
         .from(TABLES.SAVED_EVENTS)
         .select('event_id, created_at')
@@ -171,25 +122,19 @@ export default function DashboardPage() {
         .order('created_at', { ascending: false });
 
       if (savedError) {
-        console.error('❌ Error fetching saved events:', savedError);
         logError(savedError, 'fetchSavedEvents');
         return;
       }
 
-      console.log('✅ Raw saved events data:', savedEventsData);
-
       if (!savedEventsData || savedEventsData.length === 0) {
-        console.log('⚠️ No saved events found for user');
         setSavedEvents([]);
         return;
       }
 
       // Step 2: Extract event IDs
       const eventIds = savedEventsData.map(item => item.event_id);
-      console.log('🔍 Event IDs to fetch:', eventIds);
 
       // Step 3: Get the full event details
-      console.log('📖 Fetching full event details...');
       const { data: eventsData, error: eventsError } = await supabase
         .from(TABLES.EVENTS)
         .select('*')
@@ -197,15 +142,11 @@ export default function DashboardPage() {
         .order('date', { ascending: true });
 
       if (eventsError) {
-        console.error('❌ Error fetching events details:', eventsError);
         logError(eventsError, 'fetchSavedEvents');
         return;
       }
 
-      console.log('✅ Full events data:', eventsData);
-
       if (!eventsData || eventsData.length === 0) {
-        console.log('⚠️ No event details found');
         setSavedEvents([]);
         return;
       }
@@ -213,21 +154,17 @@ export default function DashboardPage() {
       // Step 4: Validate and set the events
       const validEvents = eventsData.filter(event => {
         if (!event || typeof event !== 'object') {
-          console.warn('⚠️ Invalid event object:', event);
           return false;
         }
         if (!event.id || !event.name) {
-          console.warn('⚠️ Event missing required fields:', event);
           return false;
         }
         return true;
       });
 
-      console.log('🎯 Final valid events:', validEvents);
       setSavedEvents(validEvents as Event[]);
 
     } catch (error) {
-      console.error('💥 Unexpected error in fetchSavedEvents:', error);
       const appError = error instanceof Error ? error : new Error(String(error));
       logError(appError, 'fetchSavedEvents');
     }
