@@ -199,6 +199,7 @@
 }
 
 :root {
+  /* Color System */
   --background: #ffffff;
   --foreground: #171717;
   --color-background: var(--background);
@@ -211,6 +212,24 @@
   --card-background: #ffffff;
   --input-background: #ffffff;
   --glass-background: rgba(255, 255, 255, 0.9);
+
+  /* Semantic Colors */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+
+  /* Surface Colors */
+  --surface-50: #fafafa;
+  --surface-100: #f5f5f5;
+  --surface-200: #e5e5e5;
+  --surface-300: #d4d4d4;
+  --surface-400: #a3a3a3;
+  --surface-500: #737373;
+  --surface-600: #525252;
+  --surface-700: #404040;
+  --surface-800: #262626;
+  --surface-900: #171717;
 }
 
 
@@ -222,6 +241,63 @@ body {
 }
 
 @layer components {
+  /* Typography Scale */
+  .text-display-2xl {
+    @apply text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight;
+  }
+
+  .text-display-xl {
+    @apply text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight;
+  }
+
+  .text-display-lg {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight;
+  }
+
+  .text-display-md {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+  }
+
+  .text-display-sm {
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+  }
+
+  .text-heading-2xl {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight;
+  }
+
+  .text-heading-xl {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+  }
+
+  .text-heading-lg {
+    @apply text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight;
+  }
+
+  .text-heading-md {
+    @apply text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight;
+  }
+
+  .text-heading-sm {
+    @apply text-base sm:text-lg lg:text-xl font-semibold tracking-tight;
+  }
+
+  .text-body-lg {
+    @apply text-lg sm:text-xl leading-relaxed;
+  }
+
+  .text-body-md {
+    @apply text-base sm:text-lg leading-relaxed;
+  }
+
+  .text-body-sm {
+    @apply text-sm sm:text-base leading-relaxed;
+  }
+
+  .text-caption {
+    @apply text-xs sm:text-sm text-muted-color leading-normal;
+  }
+
   .btn {
     @apply inline-flex items-center justify-center;
     @apply px-4 py-2 sm:px-6 sm:py-3 rounded-xl;
@@ -366,7 +442,7 @@ body {
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -377,11 +453,11 @@ body {
       transform: translateY(0);
     }
   }
-  
+
   .animate-slide-up {
     animation: slideUp 0.5s ease-out;
   }
-  
+
   @keyframes slideUp {
     from {
       opacity: 0;
@@ -390,6 +466,55 @@ body {
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  /* Accessibility: Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up,
+    .card-hover,
+    .animate-pulse {
+      animation: none;
+      transition: none;
+    }
+
+    .card-hover:hover {
+      transform: none;
+    }
+  }
+
+  /* Focus management */
+  .focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  /* Skip links for keyboard navigation */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+  }
+
+  .skip-link:focus {
+    top: 6px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .card {
+      border: 2px solid var(--foreground);
+    }
+
+    .btn {
+      border: 2px solid var(--foreground);
     }
   }
 }

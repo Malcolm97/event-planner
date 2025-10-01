@@ -21,18 +21,6 @@ const team = [
     role: 'Founder & CEO',
     bio: 'Passionate about connecting Papua New Guinean communities through technology. Leading the vision to make event discovery seamless and accessible to all.',
     image: '/window.svg' // Using a local image that's already cached by service worker
-  },
-  {
-    name: 'Sarah Johnson',
-    role: 'Lead Developer',
-    bio: 'Full-stack developer with expertise in React and Node.js. Focused on creating robust, scalable solutions that work offline and online.',
-    image: '/globe.svg' // Using a local image that's already cached by service worker
-  },
-  {
-    name: 'David Kila',
-    role: 'Community Manager',
-    bio: 'Local community expert ensuring our platform reflects PNG culture and meets the needs of diverse communities across the nation.',
-    image: '/vercel.svg' // Using a local image that's already cached by service worker
   }
 ];
 
@@ -494,10 +482,14 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Marketing Benefits */}
-          <div className="bg-gradient-to-r from-yellow-400 to-red-500 rounded-2xl p-6 sm:p-8 text-white text-center shadow-lg">
-            <h3 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Why Choose PNG Events?</h3>
+      {/* Why Choose PNG Events Section - Full Width */}
+      <section className="w-full py-16 sm:py-20 lg:py-24 bg-gradient-to-r from-yellow-400 to-red-500">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Why Choose PNG Events?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
               <div className="flex flex-col items-center p-4 rounded-xl bg-white bg-opacity-10">
                 <FiHeart className="w-10 sm:w-12 h-10 sm:h-12 mb-3 sm:mb-4 text-white" />
@@ -524,32 +516,42 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="max-w-6xl mx-auto w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Meet Our Team</h2>
-          <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto font-light leading-relaxed">
-            Passionate people dedicated to building a connected PNG through memorable events and experiences.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-6 sm:gap-8 lg:gap-12">
-          {team.map((member, index) => (
-            <div key={index} className="bg-white rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 border border-gray-200 w-full max-w-xs flex flex-col">
-              <div className="relative w-full h-48 sm:h-64">
+      <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="mb-12 sm:mb-16">
+            <h2 className="text-heading-2xl mb-4 sm:mb-6">Meet Our Founder</h2>
+            <p className="text-body-md text-gray-700 max-w-2xl mx-auto">
+              The visionary behind PNG Events, dedicated to connecting communities through technology and memorable experiences.
+            </p>
+          </div>
+
+          <div className="flex justify-center">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-500 border border-gray-200 max-w-md w-full">
+              <div className="relative w-full h-64 sm:h-80 bg-gradient-to-br from-yellow-400 to-red-500">
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                 <Image
-                  src={member.image}
-                  alt={member.name}
+                  src={team[0].image}
+                  alt={team[0].name}
                   fill={true}
                   style={{objectFit: "cover"}}
-                  className="object-center sm:object-top"
+                  className="object-center"
                 />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-1">{team[0].name}</h3>
+                </div>
               </div>
               <div className="p-6 sm:p-8 text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{member.name}</h3>
-                <p className="text-yellow-600 font-semibold mb-3 sm:mb-4 text-base sm:text-lg">{member.role}</p>
-                <p className="text-gray-600 leading-relaxed font-light text-sm sm:text-base">{member.bio}</p>
+                <p className="text-gray-700 leading-relaxed text-base sm:text-lg font-light">
+                  {team[0].bio}
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <div className="bg-gradient-to-r from-yellow-400 to-red-500 text-white px-6 py-3 rounded-full font-semibold text-sm sm:text-base shadow-lg">
+                    Founder
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
@@ -562,19 +564,21 @@ export default function AboutPage() {
               Numbers that showcase our commitment to fostering vibrant communities and unforgettable events.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="text-center p-4 sm:p-6 bg-white bg-opacity-10 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <Icon className="text-white w-7 h-7 sm:w-8 sm:h-8" />
+          <div className="flex justify-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 max-w-4xl">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={index} className="text-center p-4 sm:p-6 bg-white bg-opacity-10 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                      <Icon className="text-white w-7 h-7 sm:w-8 sm:h-8" />
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{stat.number}</div>
+                    <div className="text-gray-100 text-base sm:text-lg font-medium">{stat.label}</div>
                   </div>
-                  <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{stat.number}</div>
-                  <div className="text-gray-100 text-base sm:text-lg font-medium">{stat.label}</div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           {!isOnline && !hasCache && (
             <div className="mt-8 p-6 bg-red-100 border border-red-300 rounded-xl text-red-800 text-center font-semibold shadow-sm">

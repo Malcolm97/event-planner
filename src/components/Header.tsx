@@ -8,6 +8,7 @@ import { supabase, TABLES } from '@/lib/supabase';
 import { FiUser, FiLogOut, FiMenu, FiX, FiSettings } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { toast } from 'react-hot-toast';
 
 import React from 'react';
 const Header = React.memo(function Header() {
@@ -99,17 +100,33 @@ const Header = React.memo(function Header() {
     router.push('/');
   };
 
+  // Offline-aware navigation helper
+  const navigateWithOfflineCheck = (path: string, description: string) => {
+    // Always allow navigation to home, settings, and about (static-ish pages)
+    const alwaysAllowedPaths = ['/', '/settings', '/about'];
+
+    if (isOnline || alwaysAllowedPaths.includes(path)) {
+      router.push(path);
+      return;
+    }
+
+    // For dynamic pages when offline, show a message
+    toast.error(`"${description}" is not available offline. Please connect to the internet and try again.`, {
+      duration: 4000,
+    });
+  };
+
 
 
 
 
   return (
-    <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md">
+    <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md safe-area-inset">
       <div className="max-w-7xl mx-auto container-padding">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+          <Link href="/" className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 rounded-lg p-1">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">
               <span className="text-white font-bold text-sm sm:text-base">PNG</span>
             </div>
             <span className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
@@ -118,15 +135,15 @@ const Header = React.memo(function Header() {
           </Link>
           {/* Centered nav for desktop */}
           <nav className="hidden lg:flex flex-1 justify-center items-center space-x-4 xl:space-x-6">
-            <Button onClick={() => router.push('/events')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Events</Button>
-            <Button onClick={() => router.push('/categories')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Categories</Button>
+            <Button onClick={() => navigateWithOfflineCheck('/events', 'Events')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Events</Button>
+            <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Categories</Button>
             <Button onClick={() => router.push('/about')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">About</Button>
           </nav>
           {/* Right side actions for desktop */}
           <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
 
 
-            <Button onClick={() => router.push('/create-event')} variant="primary" size="sm" className="flex items-center text-sm xl:text-base">
+            <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="flex items-center text-sm xl:text-base">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 inline mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -157,7 +174,7 @@ const Header = React.memo(function Header() {
 
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-2 z-50">
-                    <Button onClick={() => { router.push('/dashboard'); setIsProfileDropdownOpen(false); }} variant="ghost" className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <Button onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsProfileDropdownOpen(false); }} variant="ghost" className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                       <FiUser size={16} className="inline mr-2" />
                       Dashboard
                     </Button>
@@ -191,47 +208,120 @@ const Header = React.memo(function Header() {
             {isMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
           </Button>
         </div>
-        {/* Dropdown Navigation for mobile only */}
+        {/* Mobile Navigation Overlay */}
         {isMenuOpen && (
-          <div className="border-t border-gray-200/50 dark:border-gray-700/50 py-4 sm:py-6 animate-slide-up lg:hidden">
-            <nav className="flex flex-col space-y-2 sm:space-y-4">
-              <Button onClick={() => { router.push('/events'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Events</Button>
-              <Button onClick={() => { router.push('/categories'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Categories</Button>
-              <Button onClick={() => { router.push('/about'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">About</Button>
-              <Button onClick={() => { router.push('/settings'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Settings</Button>
-              {user ? (
-                <>
-                  <Button onClick={() => { router.push('/create-event'); setIsMenuOpen(false); }} variant="primary" className="w-full justify-center mt-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create Event
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
+              onClick={() => setIsMenuOpen(false)}
+              aria-hidden="true"
+            />
+            {/* Slide-out Menu */}
+            <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-out animate-slide-up">
+              <div className="flex flex-col h-full">
+                {/* Mobile Menu Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <span className="text-lg font-semibold text-gray-900">Menu</span>
+                  <Button
+                    onClick={() => setIsMenuOpen(false)}
+                    variant="ghost"
+                    className="p-2 h-auto w-auto"
+                    aria-label="Close menu"
+                  >
+                    <FiX size={24} />
                   </Button>
-                  <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4 space-y-2 sm:space-y-4">
-                    <Button onClick={() => { router.push('/dashboard'); setIsMenuOpen(false); }} variant="ghost" className="flex items-center text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">
-                      {userPhotoUrl ? (
-                        <Image src={userPhotoUrl} alt="User Photo" width={20} height={20} className="rounded-full inline mr-2" />
-                      ) : (
-                        <FiUser size={14} className="inline mr-2" />
-                      )}
-                      {userName || 'Dashboard'}
+                </div>
+
+                {/* Mobile Menu Content */}
+                <div className="flex-1 overflow-y-auto py-4">
+                  <nav className="px-4 space-y-1">
+                    <Button
+                      onClick={() => { navigateWithOfflineCheck('/events', 'Events'); setIsMenuOpen(false); }}
+                      variant="ghost"
+                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                    >
+                      📅 Events
                     </Button>
-                    <Button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} variant="ghost" className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">
-                      <FiLogOut size={14} className="inline mr-2" />Sign Out
+                    <Button
+                      onClick={() => { navigateWithOfflineCheck('/categories', 'Categories'); setIsMenuOpen(false); }}
+                      variant="ghost"
+                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                    >
+                      🏷️ Categories
                     </Button>
+                    <Button
+                      onClick={() => { router.push('/about'); setIsMenuOpen(false); }}
+                      variant="ghost"
+                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                    >
+                      ℹ️ About
+                    </Button>
+                    <Button
+                      onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
+                      variant="ghost"
+                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                    >
+                      ⚙️ Settings
+                    </Button>
+                  </nav>
+
+                  {/* User Section */}
+                  <div className="px-4 mt-6">
+                    {user ? (
+                      <>
+                        <Button
+                          onClick={() => { navigateWithOfflineCheck('/create-event', 'Create Event'); setIsMenuOpen(false); }}
+                          variant="primary"
+                          className="w-full mb-4"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          Create Event
+                        </Button>
+                        <div className="border-t border-gray-200 pt-4 space-y-1">
+                          <Button
+                            onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsMenuOpen(false); }}
+                            variant="ghost"
+                            className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                          >
+                            {userPhotoUrl ? (
+                              <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-3" />
+                            ) : (
+                              <FiUser size={16} className="inline mr-3" />
+                            )}
+                            {userName || 'Dashboard'}
+                          </Button>
+                          <Button
+                            onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
+                            variant="ghost"
+                            className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                          >
+                            <FiLogOut size={16} className="inline mr-3" />
+                            Sign Out
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      hasMounted && isOnline && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <Button
+                            onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}
+                            variant="ghost"
+                            className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                          >
+                            <FiUser size={16} className="inline mr-3" />
+                            Sign In
+                          </Button>
+                        </div>
+                      )
+                    )}
                   </div>
-                </>
-              ) : (
-                hasMounted && isOnline && (
-                  <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
-                    <Button onClick={() => { router.push('/signin'); setIsMenuOpen(false); }} variant="ghost" className="flex items-center text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">
-                      <FiUser size={14} className="inline mr-2" />Sign In
-                    </Button>
-                  </div>
-                )
-              )}
-            </nav>
-          </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </header>

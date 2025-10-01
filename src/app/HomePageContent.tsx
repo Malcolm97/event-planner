@@ -14,6 +14,7 @@ import AppFooter from '@/components/AppFooter';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import CustomSelect, { SelectOption } from '@/components/CustomSelect';
+import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 
 const EventModal = dynamic(() => import('@/components/EventModal'), { ssr: false });
 
@@ -303,17 +304,17 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           <div className="w-full text-center py-2 bg-yellow-50 text-yellow-800 font-semibold text-sm animate-pulse">Syncing events...</div>
         )}
         <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-2 sm:mb-4 tracking-tight leading-tight">
+          <h1 className="text-display-lg text-white mb-2 sm:mb-4">
             Local Events Near You
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-100 max-w-4xl leading-relaxed px-4">
+          <p className="text-body-lg text-gray-100 max-w-4xl px-4">
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>
           <div className="flex flex-col gap-4 w-full max-w-4xl mt-4 sm:mt-6">
             {/* Search and Filter Controls - Single Line */}
             <div className="flex flex-col lg:flex-row gap-3 items-end">
-              <div className="flex-1">
+              <div className="w-full sm:w-auto sm:min-w-[160px]">
                 <input
                   className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg bg-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-colors"
                   placeholder="Search events, locations, or venues..."
@@ -359,22 +360,21 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
       <section className="max-w-7xl mx-auto w-full section-padding bg-white">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
+          <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">📅</span> Upcoming Events
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Discover all upcoming events happening near you.</p>
+          <p className="text-body-md text-gray-600 max-w-3xl mx-auto">Discover all upcoming events happening near you.</p>
         </div>
 
         {loading ? (
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-            <p className="text-gray-500 mt-8 text-xl">Loading events...</p>
-          </div>
+          <SkeletonGrid count={4}>
+            <SkeletonEventCard />
+          </SkeletonGrid>
         ) : !isOnline && events.length === 0 ? (
           <div className="col-span-full text-center py-20">
             <div className="text-8xl mb-6">📴</div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">No cached events available offline</h3>
-            <p className="text-gray-500 text-lg">Connect to the internet to load events for offline use.</p>
+            <h3 className="text-heading-lg mb-4">No cached events available offline</h3>
+            <p className="text-body-sm text-gray-500">Connect to the internet to load events for offline use.</p>
           </div>
         ) : (
           <>
@@ -387,8 +387,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             ) : (
               <div className="col-span-full text-center py-20">
                 <div className="text-8xl mb-6">📅</div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">No upcoming events</h3>
-                <p className="text-gray-500 text-lg">Check back later for new events.</p>
+                <h3 className="text-heading-lg mb-4">No upcoming events</h3>
+                <p className="text-body-sm text-gray-500">Check back later for new events.</p>
                 <Button
                   variant="secondary"
                   size="lg"
@@ -414,18 +414,18 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
       <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-4 mb-6">
+          <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">✨</span> Featured Events
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">Featured events will appear here soon!</p>
+          <p className="text-body-md text-gray-600 max-w-3xl mx-auto">Featured events will appear here soon!</p>
         </div>
       </section>
 
       <section className="w-full section-padding bg-white border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Explore by Category</h3>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover events that match your interests</p>
+            <h3 className="text-heading-xl mb-4">Explore by Category</h3>
+            <p className="text-body-sm text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {allCategories

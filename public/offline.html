@@ -10,7 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             min-height: 100vh;
@@ -123,6 +123,54 @@
             background-color: #FBBF24;
         }
 
+        .cached-events {
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .event-item {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .event-item:hover {
+            background: #F3F4F6;
+            border-color: #D1D5DB;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-meta {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .event-category {
+            display: inline-block;
+            background: #FEF3C7;
+            color: #92400E;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .no-events {
+            text-align: center;
+            color: #6B7280;
+            font-style: italic;
+            margin-top: 2rem;
+        }
+
         @media (max-width: 640px) {
             .container {
                 padding: 1rem;
@@ -130,6 +178,10 @@
 
             h1 {
                 font-size: 1.5rem;
+            }
+
+            .event-item {
+                padding: 0.75rem;
             }
         }
     </style>
@@ -148,8 +200,80 @@
         <div class="offline-card">
             <h1>Unable to Connect</h1>
             <p>PNG Events is temporarily unavailable. Some features may be limited while offline.</p>
+
+            <div class="features">
+                <div class="feature">Browse cached events below</div>
+                <div class="feature">Create events (will sync when online)</div>
+                <div class="feature">View your dashboard (if logged in)</div>
+            </div>
+
             <a href="/" class="retry-button">Retry Connection</a>
+
+            <div class="cached-events" id="cached-events">
+                <h2 style="margin-top: 2rem; margin-bottom: 1rem; color: #374151; font-size: 1.25rem;">Cached Events</h2>
+                <div id="events-list">
+                    <p class="no-events">Loading cached events...</p>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Load cached events from IndexedDB
+        async function loadCachedEvents() {
+            try {
+                const eventsList = document.getElementById('events-list');
+
+                // Open IndexedDB
+                const db = await new Promise((resolve, reject) => {
+                    const request = indexedDB.open('event-planner-db', 5);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+
+                // Get events from store
+                const transaction = db.transaction(['events'], 'readonly');
+                const store = transaction.objectStore('events');
+                const request = store.getAll();
+
+                const events = await new Promise((resolve, reject) => {
+                    request.onsuccess = () => {
+                        const allItems = request.result;
+                        // Filter out metadata and return events
+                        const events = allItems.filter(item => item.id !== 'cache-meta').slice(0, 10); // Show max 10
+                        resolve(events);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+
+                if (events.length === 0) {
+                    eventsList.innerHTML = '<p class="no-events">No cached events available. Connect to the internet to load events.</p>';
+                    return;
+                }
+
+                // Display events
+                const eventsHtml = events.map(event => `
+                    <div class="event-item">
+                        <div class="event-title">${event.title || 'Untitled Event'}</div>
+                        <div class="event-meta">
+                            ${event.location ? `📍 ${event.location}` : ''}
+                            ${event.date ? `📅 ${new Date(event.date).toLocaleDateString()}` : ''}
+                        </div>
+                        ${event.category ? `<span class="event-category">${event.category}</span>` : ''}
+                    </div>
+                `).join('');
+
+                eventsList.innerHTML = eventsHtml;
+
+            } catch (error) {
+                console.error('Failed to load cached events:', error);
+                document.getElementById('events-list').innerHTML =
+                    '<p class="no-events">Unable to load cached events. Please try refreshing the page.</p>';
+            }
+        }
+
+        // Load events when page loads
+        loadCachedEvents();
+    </script>
 </body>
 </html>

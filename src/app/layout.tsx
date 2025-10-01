@@ -37,9 +37,12 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="PNG Events" />
       </head>
       <body className={`antialiased ${inter.className} min-h-screen safe-area-inset`}>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <ClientProviders>
           <Header />
-          {children}
+          <main id="main-content" role="main">
+            {children}
+          </main>
         </ClientProviders>
         <Script id="service-worker-script">
           {`

@@ -37,11 +37,46 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   }, []);
 
+  // Pre-cache essential content for offline use
+  const preCacheEssentialContent = useCallback(async () => {
+    try {
+      // Pre-cache key pages by making HEAD requests to warm up the cache
+      const essentialUrls = [
+        '/',
+        '/about',
+        '/settings',
+        '/api/events',
+        '/api/health'
+      ];
+
+      // Use service worker to cache these URLs
+      if ('serviceWorker' in navigator && 'caches' in window) {
+        const cache = await caches.open('event-planner-cache-v4');
+        for (const url of essentialUrls) {
+          try {
+            const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+            if (response.ok) {
+              // Cache the successful response
+              await cache.put(url, response);
+            }
+          } catch (error) {
+            console.warn(`Failed to pre-cache ${url}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Pre-caching failed:', error);
+    }
+  }, []);
+
   // Refresh events cache from server
   const refreshEventsCache = useCallback(async () => {
     try {
       await db.clearEventsCache();
       await clearServiceWorkerCache();
+
+      // Pre-cache essential content
+      await preCacheEssentialContent();
 
       // Fetch latest events from server and cache them
       const { data: eventsData, error: eventsError } = await supabase
@@ -59,7 +94,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       console.error('Failed to refresh events cache:', error);
       throw error;
     }
-  }, [clearServiceWorkerCache]);
+  }, [clearServiceWorkerCache, preCacheEssentialContent]);
 
   // Test actual connectivity (not just navigator.onLine)
   const testConnectivity = useCallback(async (): Promise<boolean> => {

@@ -2,11 +2,34 @@
 
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { FiCloudOff, FiRefreshCw, FiClock, FiWifi, FiWifiOff, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
+import { FiCloudOff, FiRefreshCw, FiClock, FiWifi, FiWifiOff, FiCheckCircle, FiAlertTriangle, FiDatabase } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import * as db from '@/lib/indexedDB';
 
 export default function SyncIndicator() {
   const { isOnline, isSyncing, lastSyncTime, syncError } = useNetworkStatus();
   const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
+  const [cachedEventsCount, setCachedEventsCount] = useState(0);
+
+  // Check cached events count
+  useEffect(() => {
+    const checkCachedEvents = async () => {
+      try {
+        const events = await db.getEvents();
+        setCachedEventsCount(events.length);
+      } catch (error) {
+        console.warn('Failed to check cached events:', error);
+        setCachedEventsCount(0);
+      }
+    };
+
+    checkCachedEvents();
+    // Check periodically when offline
+    if (!isOnline) {
+      const interval = setInterval(checkCachedEvents, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isOnline]);
 
   // Determine the current sync state
   const getSyncState = () => {
@@ -21,6 +44,14 @@ export default function SyncIndicator() {
 
   return (
     <div className="fixed bottom-6 right-6 flex flex-col gap-3 items-end z-50">
+      {/* Cached events indicator - show when offline and have cached events */}
+      {!isOnline && cachedEventsCount > 0 && (
+        <div className="bg-blue-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-xl shadow-xl border border-blue-400 flex items-center gap-2">
+          <FiDatabase className="h-4 w-4" />
+          <span className="text-sm font-medium">{cachedEventsCount} cached events</span>
+        </div>
+      )}
+
       {/* Queue indicator - always show if there are pending operations */}
       {queueLength > 0 && (
         <div className="bg-orange-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-xl shadow-xl border border-orange-400 flex items-center gap-2 animate-pulse">

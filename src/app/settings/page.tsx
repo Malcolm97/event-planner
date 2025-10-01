@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Link from "next/link";
 import { clearAllData, getSyncStatus } from "@/lib/indexedDB";
 import { useNetworkStatus } from "@/context/NetworkStatusContext";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun, Wifi, WifiOff, RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
@@ -26,8 +27,11 @@ export default function SettingsPage() {
   const [saveMsg, setSaveMsg] = useState('');
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
   const [user, setUser] = useState<any>(null);
-  const { isOnline } = useNetworkStatus();
+  const { isOnline, refreshEventsCache } = useNetworkStatus();
+  const { syncNow, queueLength, isProcessingQueue } = useOfflineSync();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [syncingNow, setSyncingNow] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
 
 
   // Load user and preferences from Supabase if logged in
@@ -112,6 +116,39 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSyncNow = async () => {
+    if (!isOnline) {
+      setSyncResult("Cannot sync while offline");
+      setTimeout(() => setSyncResult(null), 3000);
+      return;
+    }
+
+    setSyncingNow(true);
+    setSyncResult(null);
+
+    try {
+      // Refresh events cache
+      await refreshEventsCache();
+
+      // Process any queued operations
+      await syncNow();
+
+      setSyncResult("Sync completed successfully!");
+      // Refresh last sync time
+      getSyncStatus().then((status) => {
+        if (status?.lastSync) {
+          setLastSync(new Date(status.lastSync).toLocaleString());
+        }
+      });
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncResult("Sync failed. Please try again.");
+    } finally {
+      setSyncingNow(false);
+      setTimeout(() => setSyncResult(null), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-100 to-yellow-300 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-2xl mx-auto w-full flex-1 py-10 px-2 sm:px-4 flex flex-col">
@@ -147,30 +184,57 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={handleClearCacheClick}
-              disabled={clearing}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {clearing ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={handleSyncNow}
+                disabled={syncingNow || !isOnline}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {syncingNow ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                    </motion.div>
+                    Syncing...
+                  </>
+                ) : (
+                  <>
                     <RefreshCw className="w-5 h-5" />
-                  </motion.div>
-                  Clearing...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-5 h-5" />
-                  Clear All Cached Data
-                </>
-              )}
-            </Button>
-          </motion.div>
+                    Sync Now
+                  </>
+                )}
+              </Button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={handleClearCacheClick}
+                disabled={clearing}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {clearing ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                    </motion.div>
+                    Clearing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-5 h-5" />
+                    Clear Cache
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </div>
 
           <AnimatePresence>
             {cleared && (
@@ -182,6 +246,28 @@ export default function SettingsPage() {
               >
                 <CheckCircle className="w-5 h-5" />
                 Cache cleared successfully!
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {syncResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`flex items-center gap-2 font-medium justify-center rounded-lg p-3 ${
+                  syncResult.includes('successfully')
+                    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
+                    : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
+                }`}
+              >
+                {syncResult.includes('successfully') ? (
+                  <CheckCircle className="w-5 h-5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5" />
+                )}
+                {syncResult}
               </motion.div>
             )}
           </AnimatePresence>

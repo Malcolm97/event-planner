@@ -1,35 +1,18 @@
-const CACHE_NAME = 'event-planner-cache-v3';
+const CACHE_NAME = 'event-planner-cache-v4';
 const urlsToCache = [
-  // Routes
-  '/',
-  '/events',
-  '/categories',
-  '/about',
-  '/signin',
-  '/dashboard',
-  
-  // HTML fallbacks
-  '/index.html',
+  // Core static assets only (no dynamic routes)
   '/offline.html',
-  
-  // Styles and Assets
   '/globals.css',
-  '/_next/static/css/**/*',
-  '/_next/static/chunks/**/*',
-  '/_next/static/media/**/*',
-  
-  // Images
+
+  // Images and icons
   '/file.svg',
   '/globe.svg',
   '/next.svg',
   '/vercel.svg',
   '/window.svg',
-  
-  // API responses
-  '/api/events',
-  
-  // Navigation preload
-  '/_next/data/**/*'
+
+  // Manifest and service worker
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,13 +37,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Different strategies based on request type
+  // Handle navigation requests (Next.js routes) - Network first, offline fallback
   if (request.mode === 'navigate') {
-    // Navigation requests (routes like /events, /categories, etc.)
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Cache successful navigation responses
+          // Don't cache navigation responses as they are dynamic
+          return response;
+        })
+        .catch(() => {
+          // When offline, show offline page for navigation
+          return caches.match('/offline.html');
+        })
+    );
+    return;
+  }
+
+  // Handle API requests - Network first with cache fallback
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Cache successful API responses
           if (response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then(cache => {
@@ -70,78 +68,68 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match(request)
-            .then(response => {
-              if (response) return response; // Return cached version
-              return caches.match('/offline.html'); // Fallback for navigation
-            });
+          // Return cached version if available
+          return caches.match(request);
         })
     );
-  } else if (
+    return;
+  }
+
+  // Handle static assets (CSS, JS, images) - Cache first
+  if (
     request.destination === 'style' ||
     request.destination === 'script' ||
     request.destination === 'image' ||
-    url.pathname.startsWith('/_next/static/')
+    request.destination === 'font' ||
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.jpeg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.ico') ||
+    url.pathname.endsWith('.woff') ||
+    url.pathname.endsWith('.woff2')
   ) {
-    // Static assets (CSS, JS, images)
     event.respondWith(
       caches.match(request)
         .then(response => {
-          return response || fetch(request)
-            .then(async response => {
-              if (response.status === 200) {
-              const cache = await caches.open(CACHE_NAME);
-              cache.put(request, response.clone());
-              }
-              return response;
-            });
+          if (response) {
+            return response; // Return cached version
+          }
+          // Fetch and cache
+          return fetch(request).then(response => {
+            if (response.status === 200) {
+              const responseClone = response.clone();
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(request, responseClone);
+              });
+            }
+            return response;
+          });
         })
     );
-  } else if (url.pathname.startsWith('/api/events')) {
-    // API requests for events (support caching by event ID and category)
-    event.respondWith(
-      fetch(request)
-        .then(async response => {
-          if (response.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(request, response.clone());
-            // If fetching a single event or category, cache separately
-            const eventIdMatch = url.pathname.match(/\/api\/events\/(\w+)/);
-            const categoryMatch = url.searchParams.get('category');
-            if (eventIdMatch) {
-              cache.put(`/api/events/${eventIdMatch[1]}`, response.clone());
-            }
-            if (categoryMatch) {
-              cache.put(`/api/events?category=${categoryMatch}`, response.clone());
-            }
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
-  } else {
-    // For other assets, use a stale-while-revalidate strategy
-    event.respondWith(
-      caches.match(request).then((response) => {
-        const networkFetch = fetch(request).then(async (fetchResponse) => {
-          if (fetchResponse.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(request, fetchResponse.clone());
-          }
-          return fetchResponse;
-        }).catch(() => {
-          // If both cache and network fail, serve offline page for navigation requests
-          if (request.mode === 'navigate') {
-            return caches.match('/offline.html');
-          }
-          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-        });
-
-        // Return cached response if found, otherwise wait for network
-        return response || networkFetch;
-      })
-    );
+    return;
   }
+
+  // For other requests, try network first, fallback to cache
+  event.respondWith(
+    fetch(request)
+      .then(response => {
+        // Cache successful responses for other assets
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, responseClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(request);
+      })
+  );
 });
 
 self.addEventListener('activate', (event) => {
