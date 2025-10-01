@@ -152,7 +152,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           {/* Tab Navigation */}
           <EventModalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <div className="space-y-6 sm:space-y-8 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8">
+          <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
               <EventDetailsTab event={selectedEvent} onImageExpand={handleImageExpand} />

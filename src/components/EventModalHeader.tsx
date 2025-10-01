@@ -35,42 +35,42 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
         </Link>
       )}
 
-      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+      <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
         {/* Category Icon */}
         <div className="flex-shrink-0">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-yellow-100 via-orange-50 to-yellow-200 flex items-center justify-center shadow-lg border border-yellow-200/50">
-            <span className="text-2xl sm:text-3xl">🎯</span>
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-yellow-100 via-orange-50 to-yellow-200 flex items-center justify-center shadow-md border border-yellow-200/50">
+            <span className="text-lg sm:text-xl">🎯</span>
           </div>
         </div>
 
         {/* Event Title and Badges */}
-        <div className="flex-1 min-w-0 space-y-3">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight break-words">
+        <div className="flex-1 min-w-0 space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight break-words">
             {selectedEvent?.name}
           </h1>
 
           {/* Category and Pricing Badges */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold text-sm shadow-md">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold text-xs shadow-sm">
               {selectedEvent?.category || 'Other'}
             </span>
 
             {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold text-sm shadow-md">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold text-xs shadow-sm">
                 Presale: K{selectedEvent.presale_price.toFixed(0)}
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-semibold text-sm shadow-sm">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold text-xs shadow-sm">
                 Presale: None
               </span>
             )}
 
             {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-semibold text-sm shadow-md">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-semibold text-xs shadow-sm">
                 Gate: K{selectedEvent.gate_price.toFixed(0)}
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-semibold text-sm shadow-sm">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold text-xs shadow-sm">
                 Gate: None
               </span>
             )}

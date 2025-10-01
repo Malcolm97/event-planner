@@ -69,42 +69,42 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ event }) => {
           e.stopPropagation();
           handleShare();
         }}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 transition-all duration-200 text-gray-700 hover:text-gray-900 font-medium shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 transition-all duration-200 text-gray-700 hover:text-gray-900 font-medium shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
         aria-label="Share Event"
       >
-        <FiShare2 size={18} />
-        <span className="hidden sm:inline">Share Event</span>
+        <FiShare2 size={16} />
+        <span className="hidden sm:inline text-sm">Share Event</span>
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-3 w-auto bg-white rounded-2xl shadow-2xl border border-gray-200/80 p-4 flex gap-3 z-20 backdrop-blur-sm">
+        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-xl shadow-xl border border-gray-200/80 p-3 flex gap-2 z-20 backdrop-blur-sm">
           <button
             onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }}
-            className="p-3 rounded-xl hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-110 shadow-sm"
+            className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 shadow-sm"
             aria-label="Share on Facebook"
           >
-            <FaFacebook size={20} />
+            <FaFacebook size={18} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }}
-            className="p-3 rounded-xl hover:bg-blue-50 text-blue-400 transition-all duration-200 hover:scale-110 shadow-sm"
+            className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-all duration-200 hover:scale-105 shadow-sm"
             aria-label="Share on Twitter"
           >
-            <FaTwitter size={20} />
+            <FaTwitter size={18} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }}
-            className="p-3 rounded-xl hover:bg-blue-50 text-blue-700 transition-all duration-200 hover:scale-110 shadow-sm"
+            className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-all duration-200 hover:scale-105 shadow-sm"
             aria-label="Share on LinkedIn"
           >
-            <FaLinkedin size={20} />
+            <FaLinkedin size={18} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }}
-            className="p-3 rounded-xl hover:bg-green-50 text-green-500 transition-all duration-200 hover:scale-110 shadow-sm"
+            className="p-2.5 rounded-lg hover:bg-green-50 text-green-500 transition-all duration-200 hover:scale-105 shadow-sm"
             aria-label="Share on WhatsApp"
           >
-            <FaWhatsapp size={20} />
+            <FaWhatsapp size={18} />
           </button>
         </div>
       )}

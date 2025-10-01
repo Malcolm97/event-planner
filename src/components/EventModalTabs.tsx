@@ -13,14 +13,14 @@ const EventModalTabs: React.FC<EventModalTabsProps> = ({ activeTab, onTabChange 
   ];
 
   return (
-    <div className="flex mb-6 sm:mb-8 border-b border-gray-200/60 bg-gradient-to-r from-gray-50/80 to-white/80 rounded-2xl p-1.5 mx-4 sm:mx-6 shadow-sm">
+    <div className="flex mb-4 sm:mb-6 border-b border-gray-200/60 bg-gradient-to-r from-gray-50/80 to-white/80 rounded-xl p-1 mx-3 sm:mx-4 shadow-sm">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`flex-1 px-4 py-3 sm:px-6 sm:py-4 font-semibold rounded-xl transition-all duration-300 text-sm sm:text-base lg:text-lg touch-manipulation relative overflow-hidden ${
+          className={`flex-1 px-3 py-2 sm:px-4 sm:py-3 font-semibold rounded-lg transition-all duration-300 text-sm sm:text-base touch-manipulation relative overflow-hidden ${
             activeTab === tab.id
-              ? 'bg-white text-yellow-600 shadow-lg border border-yellow-200 transform scale-[1.02]'
+              ? 'bg-white text-yellow-600 shadow-md border border-yellow-200 transform scale-[1.01]'
               : 'text-gray-600 hover:text-gray-800 hover:bg-white/60'
           }`}
         >
@@ -35,7 +35,7 @@ const EventModalTabs: React.FC<EventModalTabsProps> = ({ activeTab, onTabChange 
 
           {/* Active indicator */}
           {activeTab === tab.id && (
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full" />
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full" />
           )}
         </button>
       ))}
