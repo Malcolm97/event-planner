@@ -132,17 +132,19 @@ export const getUserActivities = async (userId: string, limit: number = 10): Pro
       .order('created_at', { ascending: false })
       .limit(limit);
 
+    console.log('Supabase query result - data:', data, 'error:', error);
+
     if (error) {
-      console.error('Supabase error details:', {
-        message: error?.message || 'Unknown error',
-        details: error?.details || 'No details available',
-        hint: error?.hint || 'No hint available',
-        code: error?.code || 'Unknown code',
-        userId: userId,
-        fullError: error, // Log the full error object for debugging
-        errorType: typeof error,
-        errorKeys: error ? Object.keys(error) : 'No error object'
-      });
+      console.error('Supabase error occurred');
+      console.error('Message:', error?.message || 'Unknown error');
+      console.error('Details:', error?.details || 'No details available');
+      console.error('Hint:', error?.hint || 'No hint available');
+      console.error('Code:', error?.code || 'Unknown code');
+      console.error('User ID:', userId);
+      console.error('Error type:', typeof error);
+      console.error('Error string:', String(error));
+      console.error('Error JSON:', (() => { try { return JSON.stringify(error); } catch { return 'Cannot stringify error'; } })());
+      console.error('Raw error:', error);
 
       // Provide more specific error messages based on error codes
       if (error.code === 'PGRST116') {

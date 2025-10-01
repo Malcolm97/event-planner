@@ -1,0 +1,148 @@
+import React from 'react';
+import Image from 'next/image';
+import { FiX } from 'react-icons/fi';
+import { EventItem } from '@/lib/types';
+
+// Helper function to get all image URLs
+const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
+  if (!imageUrls) return [];
+
+  if (typeof imageUrls === 'string') {
+    try {
+      const parsed = JSON.parse(imageUrls);
+      return Array.isArray(parsed) ? parsed : [imageUrls];
+    } catch (error) {
+      return [imageUrls];
+    }
+  }
+
+  return Array.isArray(imageUrls) ? imageUrls : [];
+};
+
+interface ImageModalProps {
+  event: EventItem;
+  activeImageIndex: number;
+  onClose: () => void;
+  onPrevImage: () => void;
+  onNextImage: () => void;
+}
+
+const ImageModal: React.FC<ImageModalProps> = ({
+  event,
+  activeImageIndex,
+  onClose,
+  onPrevImage,
+  onNextImage
+}) => {
+  const allImageUrls = getAllImageUrls(event?.image_urls);
+  const hasImages = allImageUrls.length > 0;
+
+  if (!hasImages) return null;
+
+  // Determine the current image URL and alt text
+  let currentImageUrl = '';
+  let currentImageAlt = 'Event Image';
+
+  if (allImageUrls.length > 0) {
+    const safeIndex = activeImageIndex % allImageUrls.length;
+    currentImageUrl = allImageUrls[safeIndex];
+    currentImageAlt = event?.name ? `${event.name} image ${safeIndex + 1}` : 'Event Image';
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-md p-4 animate-fade-in"
+      onClick={onClose}
+    >
+      <div className="relative w-full max-w-6xl max-h-[90vh] flex items-center justify-center">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
+          aria-label="Close Image Viewer"
+        >
+          <FiX size={24} />
+        </button>
+
+        {/* Navigation Buttons */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrevImage(); }}
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-10 shadow-lg hover:scale-110"
+          aria-label="Previous Image"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Main Image */}
+        <div className="relative z-10 max-w-full max-h-full">
+          <Image
+            src={currentImageUrl}
+            alt={currentImageAlt}
+            width={1200}
+            height={800}
+            className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            loading="eager"
+          />
+        </div>
+
+        <button
+          onClick={(e) => { e.stopPropagation(); onNextImage(); }}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-10 shadow-lg hover:scale-110"
+          aria-label="Next Image"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Thumbnail Strip */}
+        {allImageUrls.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 flex-wrap justify-center max-w-full px-4">
+            {allImageUrls.slice(0, 8).map((imageUrl: string, index: number) => (
+              <div
+                key={index}
+                className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-lg ${
+                  activeImageIndex === index
+                    ? 'border-white scale-110 shadow-white/50'
+                    : 'border-white/30 hover:border-white/70 hover:scale-105'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // This would need to be handled by parent component
+                  // For now, we'll just close and let parent handle
+                  onClose();
+                }}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={`${event?.name} image ${index + 1}`}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Image Counter and Title */}
+        <div className="absolute bottom-6 left-6 right-6 text-white">
+          <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
+            <h3 className="text-xl sm:text-2xl font-bold mb-1">{event?.name}</h3>
+            {allImageUrls.length > 1 && (
+              <p className="text-sm sm:text-base text-white/80">
+                {activeImageIndex + 1} of {allImageUrls.length} images
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ImageModal;

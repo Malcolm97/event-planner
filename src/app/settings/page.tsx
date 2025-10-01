@@ -9,8 +9,9 @@ import { clearAllData, getSyncStatus } from "@/lib/indexedDB";
 import { useNetworkStatus } from "@/context/NetworkStatusContext";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Wifi, WifiOff, RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle, ChevronDown } from "lucide-react";
+import { Moon, Sun, Wifi, WifiOff, RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import ToggleSwitch from "@/components/ToggleSwitch";
+import CustomSelect, { SelectOption } from "@/components/CustomSelect";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -289,22 +290,20 @@ export default function SettingsPage() {
                 <Home className="w-5 h-5 text-purple-600" />
                 <span className="text-gray-800 dark:text-gray-200 font-medium">Landing Page</span>
               </div>
-              <div className="relative">
-                <select
-                  value={landing}
-                  onChange={e => {
-                    setLanding(e.target.value);
-                    savePreferences({ landing: e.target.value });
-                  }}
-                  className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 pr-10 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-colors"
-                >
-                  <option value="home">🏠 Home</option>
-                  <option value="events">📅 Events</option>
-                  <option value="categories">📂 Categories</option>
-                  {user && <option value="dashboard">📊 Dashboard</option>}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
+              <CustomSelect
+                options={[
+                  { value: 'home', label: 'Home', icon: '🏠' },
+                  { value: 'events', label: 'Events', icon: '📅' },
+                  { value: 'categories', label: 'Categories', icon: '📂' },
+                  ...(user ? [{ value: 'dashboard', label: 'Dashboard', icon: '📊' }] : [])
+                ]}
+                value={landing}
+                onChange={(value) => {
+                  setLanding(value);
+                  savePreferences({ landing: value });
+                }}
+                placeholder="Select landing page"
+              />
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Choose which page to show when you open the app</p>
             </motion.div>
 
@@ -318,15 +317,15 @@ export default function SettingsPage() {
                 <span className="text-2xl">🌐</span>
                 <span className="text-gray-800 dark:text-gray-200 font-medium">Language</span>
               </div>
-              <div className="relative">
-                <select
-                  disabled
-                  className="w-full appearance-none bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 pr-10 text-gray-500 cursor-not-allowed"
-                >
-                  <option>🇺🇸 English</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
+              <CustomSelect
+                options={[
+                  { value: 'en', label: 'English', icon: '🇺🇸' }
+                ]}
+                value="en"
+                onChange={() => {}}
+                disabled={true}
+                placeholder="Select language"
+              />
               <p className="text-sm text-gray-500 mt-2">More languages coming soon</p>
             </motion.div>
           </div>

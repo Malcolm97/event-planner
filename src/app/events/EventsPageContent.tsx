@@ -10,6 +10,7 @@ import { useEvents } from '@/hooks/useOfflineFirstData';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
+import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 
 
 
@@ -154,26 +155,18 @@ export default function EventsPageContent() {
                   <span className="text-sm sm:text-base font-medium text-gray-700">Filter by location:</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                  <select
+                  <CustomSelect
+                    options={[
+                      { value: 'all', label: 'All Locations' },
+                      ...availableLocations.map(location => ({ value: location, label: location })),
+                      ...(hasOtherLocations ? [{ value: 'other', label: 'Other Locations' }] : [])
+                    ]}
                     value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="flex-1 sm:flex-none input-field min-w-[140px] sm:min-w-[160px]"
-                    aria-label="Filter events by location"
-                  >
-                    <option value="all">All Locations</option>
-
-                    {/* Regular locations */}
-                    {availableLocations.map((location) => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
-                    ))}
-
-                    {/* Other locations option */}
-                    {hasOtherLocations && (
-                      <option value="other">Other Locations</option>
-                    )}
-                  </select>
+                    onChange={setSelectedLocation}
+                    placeholder="Select location"
+                    className="flex-1 sm:flex-none min-w-[140px] sm:min-w-[160px]"
+                    searchable={availableLocations.length > 5}
+                  />
                   {selectedLocation !== 'all' && (
                     <button
                       onClick={() => setSelectedLocation('all')}

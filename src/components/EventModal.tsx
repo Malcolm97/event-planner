@@ -1,19 +1,15 @@
 
 'use client';
-import Link from 'next/link';
-import Button from './Button';
-import '../components/EventModal.animations.css';
-import React, { ElementType, useState, useRef, useEffect } from 'react';
-
-import { FiStar, FiMapPin, FiCalendar, FiClock, FiUser, FiMail, FiPhone, FiBriefcase, FiX, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiShare2, FiLink, FiHome, FiEdit } from 'react-icons/fi';
-import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
-import Image from 'next/image';
-import Zoom from 'react-medium-image-zoom';
-import 'react-medium-image-zoom/dist/styles.css';
-import { getEventPrimaryImage } from '@/lib/utils';
+import EventModalHeader from './EventModalHeader';
+import EventModalTabs from './EventModalTabs';
+import EventDetailsTab from './EventDetailsTab';
+import AboutEventTab from './AboutEventTab';
+import HostDetailsTab from './HostDetailsTab';
+import ImageModal from './ImageModal';
+import '../components/EventModal.animations.css';
 
 interface EventModalProps {
   selectedEvent: EventItem | null;
@@ -21,34 +17,6 @@ interface EventModalProps {
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
 }
-
-// Local map to reconstruct icon components
-const localCategoryIconMap: { [key: string]: React.ElementType } = {
-  'Music': FiMusic,
-  'Art': FiImage,
-  'Food': FiCoffee,
-  'Technology': FiCpu,
-  'Wellness': FiHeart,
-  'Comedy': FiSmile,
-  'Other': FiStar,
-};
-
-// Helper function to get all image URLs, handling stringified JSON or single string
-const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
-  if (!imageUrls) return [];
-
-  if (typeof imageUrls === 'string') {
-    try {
-      const parsed = JSON.parse(imageUrls);
-      return Array.isArray(parsed) ? parsed : [imageUrls]; // If it's a string, treat it as a single URL
-    } catch (error) {
-      // If JSON parsing fails, treat the string as a single URL
-      return [imageUrls];
-    }
-  }
-
-  return Array.isArray(imageUrls) ? imageUrls : [];
-};
 
 export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen }: EventModalProps) {
   // Accessibility: focus trap and keyboard navigation
@@ -60,7 +28,6 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
-  const { user: authUser } = useAuth();
 
   useEffect(() => {
     setIsOffline(typeof navigator !== 'undefined' && !navigator.onLine);
@@ -103,8 +70,6 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     if (!selectedEvent) {
       setError('No event selected.');
     }
-    // Simulate loading state for async fetches (if needed)
-    // setLoading(true); setTimeout(() => setLoading(false), 300);
   }, [selectedEvent]);
 
   // Navigation helper functions
@@ -114,6 +79,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       setActiveImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
     }
   };
+
   const handleNextImage = () => {
     const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
     if (imageUrls.length > 0) {
@@ -121,13 +87,13 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     }
   };
 
-  // Helper function to get the correct icon component based on the string name
-  const getIconComponent = (name: string | undefined) => {
-    const Icon = localCategoryIconMap[name || 'Other'];
-    return Icon || FiStar;
+  const handleImageExpand = (index: number) => {
+    setActiveImageIndex(index);
+    setImageExpanded(true);
   };
 
   if (!dialogOpen) return null;
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md">
@@ -138,6 +104,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md">
@@ -149,6 +116,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       </div>
     );
   }
+
   if (!selectedEvent) return null;
 
   return (
@@ -169,551 +137,66 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           boxSizing: 'border-box',
         }}
       >
-        {/* Header */}
+        {/* Offline indicator */}
         {isOffline && (
           <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 text-sm sm:text-base font-semibold" role="alert">
             You are offline. Event details may be cached.
           </div>
         )}
-        <div className="event-card-modal-header border-b border-gray-200 relative">
-          <button
-            onClick={() => setDialogOpen(false)}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 p-1.5 sm:p-2 md:p-3 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20"
-            aria-label="Close Modal"
-            tabIndex={0}
-            style={{ lineHeight: 0 }}
-          >
-            <FiX size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-            <span className="sr-only">Close (ESC)</span>
-          </button>
 
-          {/* Manage button for event creators */}
-          {authUser && selectedEvent?.created_by === authUser.id && (
-            <Link
-              href={`/dashboard/edit-event/${selectedEvent.id}`}
-              className="absolute top-2 right-12 sm:top-3 sm:right-12 md:top-4 md:right-16 p-1.5 sm:p-2 md:p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 text-white shadow focus:outline-none focus:ring-2 focus:ring-yellow-500 z-20 transition-colors"
-              aria-label="Manage Event"
-              tabIndex={0}
-            >
-              <FiEdit size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
-              <span className="sr-only">Manage Event</span>
-            </Link>
-          )}
+        {/* Header */}
+        <EventModalHeader selectedEvent={selectedEvent} onClose={() => setDialogOpen(false)} />
 
-          <div className="flex items-center gap-3 sm:gap-4 md:gap-6 mt-8 sm:mt-0">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center flex-shrink-0 shadow-lg">
-              {(() => {
-              const category = selectedEvent?.category;
-              const IconComponent = getIconComponent(category || 'Other');
-
-                return React.createElement(IconComponent as ElementType, { size: 24, className: "text-yellow-600 sm:w-8 sm:h-8 md:w-10 md:h-10" });
-              })()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold text-gray-900 leading-tight line-clamp-2 break-words text-wrap">{selectedEvent?.name}</h2>
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 mt-1.5 sm:mt-2 md:mt-4">
-                <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 text-yellow-800 font-bold text-xs sm:text-sm shadow-sm">
-                  {selectedEvent?.category || 'Other'}
-                </span>
-                {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-green-100 text-green-700 font-bold text-xs sm:text-sm shadow-sm">
-                    Presale: K{selectedEvent.presale_price.toFixed(0)}
-                  </span>
-                ) : (
-                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
-                    Presale: None
-                  </span>
-                )}
-                {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
-                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-blue-100 text-blue-700 font-bold text-xs sm:text-sm shadow-sm">
-                    Gate: K{selectedEvent.gate_price.toFixed(0)}
-                  </span>
-                ) : (
-                  <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-xs sm:text-sm shadow-sm">
-                    Gate: None
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-    {/* Content */}
-    <div className="event-card-modal-content flex-1 overflow-y-auto">
+        {/* Content */}
+        <div className="event-card-modal-content flex-1 overflow-y-auto">
           {/* Tab Navigation */}
-          <div className="flex mb-4 sm:mb-6 border-b border-gray-200 bg-gray-50 rounded-xl p-1.5 mx-2 sm:mx-4 mt-3 sm:mt-4">
-            <button
-              onClick={() => setActiveTab('event-details')}
-              className={`flex-1 px-3 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base md:text-lg touch-manipulation ${activeTab === 'event-details' ? 'bg-white text-blue-600 shadow-md border border-gray-200' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
-            >
-              <span className="hidden sm:inline">Event Details</span>
-              <span className="sm:hidden">Details</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('about-event')}
-              className={`flex-1 px-3 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base md:text-lg touch-manipulation ${activeTab === 'about-event' ? 'bg-white text-blue-600 shadow-md border border-gray-200' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
-            >
-              <span className="hidden sm:inline">About Event</span>
-              <span className="sm:hidden">About</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('host-details')}
-              className={`flex-1 px-3 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base md:text-lg touch-manipulation ${activeTab === 'host-details' ? 'bg-white text-blue-600 shadow-md border border-gray-200' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
-            >
-              <span className="hidden sm:inline">Host Details</span>
-              <span className="sm:hidden">Host</span>
-            </button>
-          </div>
+          <EventModalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           <div className="space-y-6 sm:space-y-8 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
-              <div className="space-y-6 sm:space-y-8">
-                {/* Event Image and Details Grid */}
-                <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 md:gap-8">
-                  {/* On mobile, stack columns vertically. On tablet/desktop, use side-by-side layout. */}
-                  {/* Responsive image sizing and spacing */}
-                  {/* Left Column: Event Images */}
-                  <div className="order-2 md:order-1">
-                    {(() => {
-                      const primaryImageUrl = selectedEvent ? getEventPrimaryImage(selectedEvent) : '/next.svg';
-                      const allImageUrls = getAllImageUrls(selectedEvent?.image_urls);
-                      const currentHasImages = allImageUrls.length > 0;
-
-                      return (
-                        <div className="space-y-6">
-                          {/* Primary Image */}
-                          <div
-                            className="relative group rounded-2xl overflow-hidden shadow-lg w-full h-64 sm:h-80 md:h-96"
-                          >
-                            {/* Navigation arrows for multiple images */}
-                            {currentHasImages && allImageUrls.length > 1 && (
-                              <>
-                                <button
-                                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200 z-10"
-                                  onClick={e => { e.stopPropagation(); setActiveImageIndex((prev) => (prev - 1 + allImageUrls.length) % allImageUrls.length); }}
-                                  aria-label="Previous image"
-                                >
-                                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-                                </button>
-                                <button
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200 z-10"
-                                  onClick={e => { e.stopPropagation(); setActiveImageIndex((prev) => (prev + 1) % allImageUrls.length); }}
-                                  aria-label="Next image"
-                                >
-                                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                                </button>
-                              </>
-                            )}
-                            {/* Loading spinner */}
-                            <div id="event-image-spinner" className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                              <span className="animate-spin h-10 w-10 border-4 border-yellow-400 border-t-transparent rounded-full opacity-70"></span>
-                            </div>
-                            <Zoom>
-                              <Image
-                                src={currentHasImages ? allImageUrls[activeImageIndex] : primaryImageUrl}
-                                alt={selectedEvent?.name ? `${selectedEvent.name} image ${activeImageIndex + 1}` : 'Event Image'}
-                                width={400}
-                                height={300}
-                                className="w-full h-64 sm:h-80 md:h-96 object-cover transition-transform duration-500 group-hover:scale-110"
-                                loading="eager"
-                                onLoad={() => {
-                                  const spinner = document.getElementById('event-image-spinner');
-                                  if (spinner) spinner.style.display = 'none';
-                                }}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = '/window.svg';
-                                }}
-                              />
-                            </Zoom>
-                            {/* Image count indicator */}
-                            {currentHasImages && allImageUrls.length > 1 && (
-                              <span className="absolute bottom-3 right-3 bg-black/70 text-white text-sm px-3 py-1.5 rounded-full z-10 font-medium">
-                                {activeImageIndex + 1} / {allImageUrls.length}
-                              </span>
-                            )}
-                            {currentHasImages && (
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-4 shadow-lg">
-                                  <FiImage size={28} className="text-gray-700" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Additional Images */}
-                          {currentHasImages && allImageUrls.length > 1 && (
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                              {allImageUrls.slice(1).map((imageUrl: string, index: number) => (
-                                <div
-                                  key={index}
-                                  className="relative cursor-pointer group rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
-                                  onClick={() => { setActiveImageIndex(index + 1); setImageExpanded(true); }}
-                                >
-                                  <Image
-                                    src={imageUrl}
-                                    alt={selectedEvent?.name ? `${selectedEvent.name} image ${index + 2}` : `Event image ${index + 2}`}
-                                    width={200}
-                                    height={150}
-                                    className="w-full h-28 sm:h-40 object-cover transition-transform duration-300 group-hover:scale-105"
-                                    loading="lazy"
-                                  />
-                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-95 rounded-full p-3 shadow-lg">
-                                      <FiImage size={20} className="text-gray-700" />
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Right Column: Location and Date/Time */}
-                  <div className="order-1 md:order-2 space-y-6 sm:space-y-8 w-full">
-                    <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
-                      <FiMapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
-                      <div className="space-y-3 sm:space-y-4 w-full">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 text-lg sm:text-xl">Location</h4>
-                          <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{selectedEvent?.location || 'Not specified'}</p>
-                        </div>
-                        {selectedEvent?.venue && (
-                          <div>
-                            <h4 className="font-semibold text-gray-900 text-lg sm:text-xl">Venue</h4>
-                            <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{selectedEvent.venue}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {selectedEvent?.date && (
-                      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm">
-                        <FiCalendar size={20} className="text-blue-500 mt-1 flex-shrink-0" />
-                        <div className="w-full">
-                          <h4 className="font-semibold text-gray-900 text-lg sm:text-xl">Date & Time</h4>
-                          <p className="text-gray-700 text-base sm:text-lg font-medium leading-relaxed break-words">
-                            {new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                            {selectedEvent.end_date ?
-                              ` - ${new Date(selectedEvent.end_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
-                              : ''}
-                          </p>
-                          <p className="text-gray-700 text-base sm:text-lg leading-relaxed break-words">
-                            {new Date(selectedEvent.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                            {selectedEvent.end_date ?
-                              ` - ${new Date(selectedEvent.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
-                              : ''}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Social Share Feature */}
-                <div className="pt-6 mt-6 border-t border-gray-200 flex justify-end">
-                  <ShareButtons event={selectedEvent} />
-                </div>
-              </div>
+              <EventDetailsTab event={selectedEvent} onImageExpand={handleImageExpand} />
             )}
 
             {/* About Event Section */}
             {activeTab === 'about-event' && (
-              <div className="space-y-6 sm:space-y-8">
-                {selectedEvent?.description ? (
-                  <div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
-                    <div className="flex-shrink-0 mt-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base sm:text-lg">{selectedEvent.description}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 border border-gray-200 text-gray-600 px-5 sm:px-6 py-5 sm:py-6 rounded-2xl text-center shadow-sm">
-                    <p className="text-base sm:text-lg">No description available for this event.</p>
-                  </div>
-                )}
-              </div>
+              <AboutEventTab event={selectedEvent} />
             )}
 
+            {/* Host Details Section */}
             {activeTab === 'host-details' && (
-              <div className="space-y-6 sm:space-y-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-5 sm:mb-6">Event Host</h3>
-                {host ? (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mb-5 sm:mb-6">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
-                        {host?.photo_url ? (
-                          <Image src={host.photo_url} alt={host.name || 'Host'} width={80} height={80} className="w-full h-full object-cover" />
-                        ) : (
-                          <FiUser size={32} className="text-gray-500" />
-                        )}
-                      </div>
-                      <div className="flex-1 space-y-2 sm:space-y-3">
-                        {host?.name && (
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <FiUser size={18} className="text-gray-500" />
-                            <span className="font-bold text-xl sm:text-2xl text-gray-900">{host.name}</span>
-                          </div>
-                        )}
-                        {host?.company && (
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <FiBriefcase size={18} className="text-gray-500" />
-                            <span className="text-gray-700 text-base sm:text-lg">{host.company}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {host?.about && (
-                      <div className="mb-5 sm:mb-6">
-                        <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{host.about}</p>
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row items-center sm:gap-4 sm:gap-5 bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-                      {authUser ? (
-                        <>
-                          {host?.email ? (
-                            <div className="flex items-center gap-3 sm:gap-4 text-blue-600 rounded-lg px-4 sm:px-5 py-3 sm:py-4 bg-blue-50 font-medium w-full sm:w-auto">
-                              <FiMail size={18} />
-                              <span className="text-base sm:text-lg">{host.email}</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-3 sm:gap-4 text-red-600 font-semibold w-full sm:w-auto">
-                              <FiMail size={18} />
-                              <span className="text-base sm:text-lg">Email not available</span>
-                            </div>
-                          )}
-                          {host?.phone ? (
-                            <div className="flex items-center gap-3 sm:gap-4 text-green-600 rounded-lg px-4 sm:px-5 py-3 sm:py-4 bg-green-50 font-medium w-full sm:w-auto">
-                              <FiPhone size={18} />
-                              <span className="text-base sm:text-lg">{host.phone}</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-3 sm:gap-4 text-red-600 font-semibold w-full sm:w-auto">
-                              <FiPhone size={18} />
-                              <span className="text-base sm:text-lg">Phone not available</span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="w-full text-center py-4 sm:py-5 px-4 sm:px-5 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
-                          <p className="text-base sm:text-lg">To view the host's email and phone number, please <span className="font-bold">log in</span> to your account.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-red-50 border border-red-200 text-red-800 px-5 sm:px-6 py-4 sm:py-5 rounded-2xl text-center shadow-sm">
-                    {selectedEvent?.created_by ? (
-                      <p className="font-medium text-base sm:text-lg">Host details could not be fetched for user ID "{selectedEvent.created_by}".</p>
-                    ) : (
-                      <p className="font-medium text-base sm:text-lg">Host details are not available for this event.</p>
-                    )}
-                  </div>
-                )}
-              </div>
+              <HostDetailsTab event={selectedEvent} host={host} />
             )}
           </div>
         </div>
       </div>
 
       {/* Expanded Image Modal */}
-      {imageExpanded && (() => {
-        const allImageUrls = getAllImageUrls(selectedEvent?.image_urls);
-        const hasImages = allImageUrls.length > 0;
-
-  if (!hasImages) return null;
-
-  // Determine the current image URL and alt text
-  let currentImageUrl = '';
-  let currentImageAlt = 'Event Image';
-
-  if (allImageUrls.length > 0) {
-    // Ensure activeImageIndex is within bounds of allImageUrls array
-    const safeIndex = activeImageIndex % allImageUrls.length;
-    currentImageUrl = allImageUrls[safeIndex];
-    currentImageAlt = selectedEvent?.name ? `${selectedEvent.name} image ${safeIndex + 1}` : 'Event Image';
-  } else {
-    currentImageUrl = getEventPrimaryImage(selectedEvent || { name: 'Event' }); // Fallback using getEventPrimaryImage
-    currentImageAlt = selectedEvent?.name ? `${selectedEvent.name} image` : 'Event Image';
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4"
-      onClick={() => setImageExpanded(false)}
-    >
-            <div className="relative max-w-4xl max-h-full">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setImageExpanded(false);
-                }}
-                className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-white hover:bg-opacity-20 z-10"
-              >
-                <FiX size={24} />
-              </button>
-
-              {/* Navigation Buttons */}
-              <button
-                onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
-                className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity z-10"
-                aria-label="Previous Image"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
-                className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity z-10"
-                aria-label="Next Image"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-
-              {/* Show first image or single image */}
-              <Image
-                src={currentImageUrl}
-                alt={currentImageAlt}
-                width={800}
-                height={600}
-                className="max-w-full max-h-full object-contain rounded-lg"
-                onClick={(e) => e.stopPropagation()}
-                loading="lazy"
-              />
-
-              {/* Show additional images if available */}
-              {allImageUrls.length > 0 && (
-                <div className="absolute bottom-4 left-4 right-4 flex gap-2 overflow-x-auto">
-{allImageUrls.map((imageUrl: string, index: number) => (
-  <div
-    key={index}
-    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer transition-colors ${
-      activeImageIndex === index ? 'border-2 border-white scale-105' : 'border-2 border-white/20 hover:border-white/50'
-    }`}
-    onClick={(e) => { e.stopPropagation(); setActiveImageIndex(index); }} // Update active index
-  >
-    <Image
-      src={imageUrl}
-      alt={`${selectedEvent?.name} image ${index + 1}`}
-      width={80}
-      height={80}
-      className="w-full h-full object-cover"
-      loading="lazy"
-    />
-  </div>
-))}
-                </div>
-              )}
-
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <h3 className="text-lg font-semibold bg-black bg-opacity-50 rounded px-3 py-2 inline-block">
-                  {selectedEvent?.name}
-                </h3>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-    </div>
-  );
-}
-
-// ShareButtons Component (copied from EventCard.tsx and adapted for modal context)
-function ShareButtons({ event }: { event: EventItem }) {
-  const [showShareOptions, setShowShareOptions] = useState(false);
-  const [eventUrl, setEventUrl] = useState(''); // State for event URL
-  const [isClient, setIsClient] = useState(false);
-
-  // Use useEffect to construct the eventUrl safely on the client
-  useEffect(() => {
-    setIsClient(true);
-    if (typeof window !== 'undefined') {
-      setEventUrl(`${window.location.origin}/events/${event.id}`);
-    }
-  }, [event.id]); // Re-run if event.id changes
-
-  const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
-
-  const handleShare = async () => {
-    if (isClient && navigator.share) {
-      try {
-        await navigator.share({
-          title: event.name,
-          text: shareText,
-          url: eventUrl,
-        });
-        // ...existing code...
-      } catch (error) {
-        // ...existing code...
-      }
-    } else {
-      setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons
-    }
-  };
-
-  const shareOnFacebook = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
-    }
-  };
-
-  const shareOnTwitter = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
-    }
-  };
-
-  const shareOnLinkedIn = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
-      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
-    }
-  };
-
-  const shareOnWhatsApp = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
-    }
-  };
-
-  return (
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent modal close if clicked directly
-          handleShare();
-        }}
-        className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 shadow-sm"
-        aria-label="Share Event"
-      >
-        <FiShare2 size={20} />
-      </button>
-
-      {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-3 w-auto bg-white rounded-xl shadow-xl border border-gray-200 p-3 flex gap-3 z-20">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-3 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
-            <FaFacebook size={22} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-3 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
-            <FaTwitter size={22} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-3 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
-            <FaLinkedin size={22} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-3 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
-            <FaWhatsapp size={22} />
-          </button>
-        </div>
+      {imageExpanded && (
+        <ImageModal
+          event={selectedEvent}
+          activeImageIndex={activeImageIndex}
+          onClose={() => setImageExpanded(false)}
+          onPrevImage={handlePrevImage}
+          onNextImage={handleNextImage}
+        />
       )}
     </div>
   );
 }
+
+// Helper function to get all image URLs
+const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
+  if (!imageUrls) return [];
+
+  if (typeof imageUrls === 'string') {
+    try {
+      const parsed = JSON.parse(imageUrls);
+      return Array.isArray(parsed) ? parsed : [imageUrls];
+    } catch (error) {
+      return [imageUrls];
+    }
+  }
+
+  return Array.isArray(imageUrls) ? imageUrls : [];
+};

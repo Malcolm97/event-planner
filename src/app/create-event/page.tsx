@@ -7,6 +7,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -231,23 +232,22 @@ export default function CreateEventPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-3">Category</label>
-                  <select
-                    id="category"
-                    className="input-field"
+                  <CustomSelect
+                    label="Category"
+                    options={[
+                      { value: 'Music', label: 'Music', icon: '🎵' },
+                      { value: 'Art', label: 'Art', icon: '🎨' },
+                      { value: 'Food', label: 'Food', icon: '🍽️' },
+                      { value: 'Technology', label: 'Technology', icon: '💻' },
+                      { value: 'Wellness', label: 'Wellness', icon: '🧘' },
+                      { value: 'Comedy', label: 'Comedy', icon: '🎭' },
+                      { value: 'Other', label: 'Other', icon: '📌' }
+                    ]}
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={setCategory}
+                    placeholder="Select a category"
                     required
-                  >
-                    <option value="">Select a category</option>
-                    <option value="Music">Music</option>
-                    <option value="Art">Art</option>
-                    <option value="Food">Food</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Wellness">Wellness</option>
-                    <option value="Comedy">Comedy</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  />
                 </div>
               </div>
             </div>
@@ -349,18 +349,19 @@ export default function CreateEventPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-3">Location</label>
-                  <select
-                    id="location"
-                    className="input-field"
+                  <CustomSelect
+                    label="Location"
+                    options={popularPngCities.map(city => ({
+                      value: city,
+                      label: city,
+                      icon: city === 'Other' ? '📍' : '🏙️'
+                    }))}
                     value={selectedLocationType}
-                    onChange={(e) => setSelectedLocationType(e.target.value)}
+                    onChange={setSelectedLocationType}
+                    placeholder="Select location"
+                    searchable={true}
                     required
-                  >
-                    {popularPngCities.map((city) => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
+                  />
                   {selectedLocationType === 'Other' && (
                     <input
                       type="text"
