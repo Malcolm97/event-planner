@@ -198,7 +198,7 @@ export default function CreateEventPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Create New Event</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2">Create New Event</h1>
             <p className="text-gray-600 text-lg">Fill in the details to create your event</p>
           </div>
 

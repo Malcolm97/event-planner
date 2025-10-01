@@ -15,6 +15,7 @@ export default function EditEventPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [location, setLocation] = useState('');
   const [venue, setVenue] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby');
@@ -78,6 +79,7 @@ export default function EditEventPage() {
           setName(eventData.name || '');
           setDescription(eventData.description || '');
           setDate(eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : '');
+          setEndDate(eventData.end_date ? new Date(eventData.end_date).toISOString().slice(0, 16) : '');
           setPresale_price(eventData.presale_price || 0); // Changed from price
           setGate_price(eventData.gate_price || 0); // Added gate_price
           setCategory(eventData.category || '');
@@ -242,6 +244,7 @@ export default function EditEventPage() {
           name,
           description,
           date,
+          end_date: endDate || null,
           location: finalLocation,
           venue,
           presale_price, // Changed from price
@@ -426,7 +429,7 @@ export default function EditEventPage() {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Date & Location</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Start Date & Time</label>
                   <input
                     type="datetime-local"
                     id="date"
@@ -434,6 +437,14 @@ export default function EditEventPage() {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
+                  />
+                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2 mt-4">End Date & Time <span className="text-xs text-gray-400">(optional)</span></label>
+                  <input
+                    type="datetime-local"
+                    id="endDate"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
                   />
                 </div>
 

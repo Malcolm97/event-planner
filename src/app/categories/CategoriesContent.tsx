@@ -92,7 +92,7 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
       <div className="text-center mb-12">
         <div className="flex items-center justify-center gap-3 mb-4">
           <Icon className="w-8 h-8 text-yellow-500" />
-          <h1 className="text-4xl font-bold text-gray-900">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">
             {queryCategory || 'All Events'}
           </h1>
         </div>

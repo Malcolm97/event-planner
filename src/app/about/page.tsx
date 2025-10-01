@@ -233,7 +233,7 @@ export default function AboutPage() {
       <section className="max-w-6xl mx-auto w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 sm:mb-8">Our Mission</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Our Mission</h2>
             <div className="space-y-6 text-lg text-gray-700 leading-relaxed">
               <p>
                 We believe that every community deserves access to vibrant, engaging events that bring people together.
@@ -273,7 +273,7 @@ export default function AboutPage() {
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">Powerful Features for Event Management</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Powerful Features for Event Management</h2>
             <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
               Everything you need to discover, create, and manage events with ease
             </p>
@@ -441,7 +441,7 @@ export default function AboutPage() {
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">Never Miss an Event</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Never Miss an Event</h2>
             <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
               Experience the freedom of discovering events anywhere, anytime - even without internet connection
             </p>
@@ -526,7 +526,7 @@ export default function AboutPage() {
       {/* Team Section */}
       <section className="max-w-6xl mx-auto w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">Meet Our Team</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Meet Our Team</h2>
           <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto font-light leading-relaxed">
             Passionate people dedicated to building a connected PNG through memorable events and experiences.
           </p>
@@ -557,7 +557,7 @@ export default function AboutPage() {
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-400 to-red-500 text-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">Our Impact</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">Our Impact</h2>
             <p className="text-lg sm:text-xl text-gray-100 max-w-3xl mx-auto opacity-90 leading-relaxed">
               Numbers that showcase our commitment to fostering vibrant communities and unforgettable events.
             </p>
@@ -591,7 +591,7 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gray-100 border-t border-gray-200">
         <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">Ready to Get Started?</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Ready to Get Started?</h2>
           <p className="text-lg sm:text-xl text-gray-700 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
             Join {isOnline
               ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'thousands of'))

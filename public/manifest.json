@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": ["lifestyle", "entertainment", "social"],
+  "categories": ["lifestyle", "entertainment", "social", "events"],
   "icons": [
     {
       "src": "/window.svg",
@@ -35,5 +35,36 @@
       "type": "image/svg+xml",
       "form_factor": "wide"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Event",
+      "short_name": "Create",
+      "description": "Create a new event",
+      "url": "/create-event",
+      "icons": [
+        {
+          "src": "/next.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Browse Events",
+      "short_name": "Events",
+      "description": "Browse all events",
+      "url": "/events",
+      "icons": [
+        {
+          "src": "/next.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

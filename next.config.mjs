@@ -24,6 +24,25 @@ const nextConfig = {
       },
     ],
   },
+  // Enable experimental features for better browser support
+  experimental: {
+    // Enable Webpack 5 for better polyfill support
+    webpackBuildWorker: true,
+  },
+  // Configure polyfills for cross-browser compatibility
+  webpack: (config, { isServer }) => {
+    // Add polyfills for older browsers
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
+    return config;
+  },
 };
 
 export default nextConfig;

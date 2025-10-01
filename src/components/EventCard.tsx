@@ -294,38 +294,39 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-        <div className="event-card-container event-card-content">
+        <div className="px-4 py-3 sm:px-5 sm:py-4 pb-12 sm:pb-14">
           {/* Event Title */}
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 text-left">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
             {event.name}
           </h3>
 
-          {/* Location and Date */}
-          <div className="event-card-section space-y-1 sm:space-y-1.5 text-left">
+          {/* Location and Venue */}
+          <div className="space-y-2 text-left mb-3">
             <div className="flex items-start gap-2 sm:gap-3">
-              <FiMapPin size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-              <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">{event.location}</span>
+              <FiMapPin size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
+              <span className="font-medium text-gray-700 text-sm leading-snug">{event.location}</span>
             </div>
             {event.venue && (
               <div className="flex items-start gap-2 sm:gap-3">
-                <FiHome size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">{event.venue}</span>
+                <FiHome size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-sm leading-snug">{event.venue}</span>
               </div>
             )}
           </div>
 
+          {/* Date and Time */}
           {event.date && (
-            <div className="event-card-section space-y-1 sm:space-y-1.5 text-left">
+            <div className="space-y-2 text-left">
               <div className="flex items-start gap-2 sm:gap-3">
-                <FiCalendar size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">
+                <FiCalendar size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-sm leading-snug">
                   {formatDate(new Date(event.date))}
                   {event.end_date ? ` - ${formatDate(new Date(event.end_date))}` : ''}
                 </span>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
-                <FiClock size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-relaxed">
+                <FiClock size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-sm leading-snug">
                   {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                   {event.end_date ? ` - ${new Date(event.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}` : ''}
                 </span>
@@ -335,11 +336,11 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         </div>
 
         {/* Action Buttons - positioned in bottom area */}
-        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 flex items-center gap-2">
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 flex items-center gap-2 sm:gap-3">
           {/* Delete button for event owners */}
           {isOwner && (
             <button
-              className={`p-2.5 rounded-full bg-red-50 hover:bg-red-100 shadow border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 ${deleting ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}`}
+              className={`p-3 sm:p-2.5 rounded-full bg-red-50 hover:bg-red-100 shadow border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center ${deleting ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}`}
               aria-label="Delete Event"
               onClick={handleDelete}
               disabled={deleting}
@@ -425,7 +426,7 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation(); // Prevent card click
           handleShare();
         }}
-        className="p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50"
+        className="p-3 sm:p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Share Event"
       >
         <FiShare2 size={18} />

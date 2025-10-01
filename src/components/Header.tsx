@@ -185,7 +185,7 @@ const Header = React.memo(function Header() {
           <Button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             variant="ghost"
-            className="p-2 sm:p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 lg:hidden h-auto"
+            className="p-3 sm:p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 lg:hidden h-auto min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Open navigation menu"
           >
             {isMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
@@ -195,10 +195,10 @@ const Header = React.memo(function Header() {
         {isMenuOpen && (
           <div className="border-t border-gray-200/50 dark:border-gray-700/50 py-4 sm:py-6 animate-slide-up lg:hidden">
             <nav className="flex flex-col space-y-2 sm:space-y-4">
-              <Button onClick={() => { router.push('/events'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Events</Button>
-              <Button onClick={() => { router.push('/categories'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Categories</Button>
-              <Button onClick={() => { router.push('/about'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">About</Button>
-              <Button onClick={() => { router.push('/settings'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Settings</Button>
+              <Button onClick={() => { router.push('/events'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Events</Button>
+              <Button onClick={() => { router.push('/categories'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Categories</Button>
+              <Button onClick={() => { router.push('/about'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">About</Button>
+              <Button onClick={() => { router.push('/settings'); setIsMenuOpen(false); }} variant="ghost" className="text-left text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">Settings</Button>
               {user ? (
                 <>
                   <Button onClick={() => { router.push('/create-event'); setIsMenuOpen(false); }} variant="primary" className="w-full justify-center mt-4">
@@ -224,7 +224,7 @@ const Header = React.memo(function Header() {
               ) : (
                 hasMounted && isOnline && (
                   <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
-                    <Button onClick={() => { router.push('/signin'); setIsMenuOpen(false); }} variant="ghost" className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">
+                    <Button onClick={() => { router.push('/signin'); setIsMenuOpen(false); }} variant="ghost" className="flex items-center text-gray-900 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full justify-start h-auto">
                       <FiUser size={14} className="inline mr-2" />Sign In
                     </Button>
                   </div>

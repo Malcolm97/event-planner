@@ -2,6 +2,7 @@ import './globals.css';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import ClientProviders from './ClientProviders';
+import '@/lib/polyfills'; // Import polyfills for cross-browser compatibility
 
 import Header from '@/components/Header';
 
@@ -35,7 +36,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="PNG Events" />
       </head>
-      <body className={`antialiased ${inter.className} min-h-screen`}>
+      <body className={`antialiased ${inter.className} min-h-screen safe-area-inset`}>
         <ClientProviders>
           <Header />
           {children}

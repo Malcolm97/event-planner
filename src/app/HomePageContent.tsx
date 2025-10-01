@@ -13,6 +13,7 @@ import Link from 'next/link';
 import AppFooter from '@/components/AppFooter';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 
 const EventModal = dynamic(() => import('@/components/EventModal'), { ssr: false });
 
@@ -302,42 +303,40 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           <div className="w-full text-center py-2 bg-yellow-50 text-yellow-800 font-semibold text-sm animate-pulse">Syncing events...</div>
         )}
         <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-2 sm:mb-4 tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-2 sm:mb-4 tracking-tight leading-tight">
             Local Events Near You
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-gray-100 max-w-4xl leading-relaxed px-4">
             Find concerts, festivals, workshops, and more happening in your area.
             Create memories with events that matter to you.
           </p>
-          <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-4xl mt-2 sm:mt-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <input
-                className="flex-1 input-field text-base sm:text-lg"
-                placeholder="Search events, locations, or venues..."
-                aria-label="Search events, locations, or venues"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <select
-                className="input-field w-full sm:w-auto sm:min-w-[140px] text-base sm:text-lg"
-                aria-label="Filter by location"
+          <div className="flex flex-col gap-4 w-full max-w-4xl mt-4 sm:mt-6">
+            {/* Search and Filter Controls - Single Line */}
+            <div className="flex flex-col lg:flex-row gap-3 items-end">
+              <div className="flex-1">
+                <input
+                  className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg bg-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-colors"
+                  placeholder="Search events, locations, or venues..."
+                  aria-label="Search events, locations, or venues"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <CustomSelect
+                options={displayedLocations.map(location => ({ value: location, label: location }))}
                 value={selectedLocationFilter}
-                onChange={(e) => setSelectedLocationFilter(e.target.value)}
-              >
-                {displayedLocations.map(location => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
-              <select
-                className="input-field w-full sm:w-auto sm:min-w-[140px] text-base sm:text-lg"
+                onChange={setSelectedLocationFilter}
+                placeholder="All locations"
+                className="w-full sm:w-auto sm:min-w-[160px]"
+              />
+              <CustomSelect
+                options={displayedDates.map(dateOption => ({ value: dateOption, label: dateOption }))}
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              >
-                {displayedDates.map(dateOption => (
-                  <option key={dateOption} value={dateOption}>{dateOption}</option>
-                ))}
-              </select>
-              <Button size="lg" aria-label="Find Events">Find Events</Button>
+                onChange={setSelectedDate}
+                placeholder="All dates"
+                className="w-full sm:w-auto sm:min-w-[160px]"
+              />
+              <Button size="md" aria-label="Find Events" className="w-full sm:w-auto whitespace-nowrap px-4 py-3 h-auto">Find Events</Button>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8 w-full max-w-2xl">
