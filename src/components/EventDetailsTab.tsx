@@ -1,8 +1,11 @@
-import React from 'react';
-import { FiMapPin, FiCalendar, FiClock } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiMapPin, FiCalendar, FiClock, FiBookmark } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 import ImageGallery from './ImageGallery';
 import ShareButtons from './ShareButtons';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase, TABLES } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 
 interface EventDetailsTabProps {
   event: EventItem;
@@ -10,6 +13,72 @@ interface EventDetailsTabProps {
 }
 
 const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand }) => {
+  const { user } = useAuth();
+  const [bookmarked, setBookmarked] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Check if event is saved on component mount
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('event_id', event.id)
+          .single();
+
+        if (data && !error) {
+          setBookmarked(true);
+        }
+      } catch (error) {
+        // Event not saved, that's fine
+      }
+    };
+
+    checkIfSaved();
+  }, [user, event.id]);
+
+  // Save/Bookmark logic
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || loading) return;
+
+    setLoading(true);
+    try {
+      if (bookmarked) {
+        // Remove from saved events
+        const { error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .delete()
+          .eq('user_id', user.id)
+          .eq('event_id', event.id);
+
+        if (!error) {
+          setBookmarked(false);
+        }
+      } else {
+        // Add to saved events
+        const { error } = await supabase
+          .from(TABLES.SAVED_EVENTS)
+          .insert({
+            user_id: user.id,
+            event_id: event.id
+          });
+
+        if (!error) {
+          setBookmarked(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving event:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Event Image and Details Grid */}
@@ -97,8 +166,24 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
         </div>
       </div>
 
-      {/* Social Share Section */}
-      <div className="pt-4 border-t border-gray-200/60 flex justify-center sm:justify-end">
+      {/* Action Buttons Section */}
+      <div className="pt-4 border-t border-gray-200/60 flex justify-center sm:justify-end gap-3">
+        {/* Save/Bookmark button for logged-in users */}
+        {user && (
+          <button
+            onClick={handleBookmark}
+            className={`p-3 sm:p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-yellow-100 shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[48px] min-h-[48px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : ''} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
+            ) : (
+              <FiBookmark size={20} className={bookmarked ? 'fill-current' : ''} />
+            )}
+          </button>
+        )}
+
         <ShareButtons event={event} />
       </div>
     </div>

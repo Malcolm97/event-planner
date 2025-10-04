@@ -64,7 +64,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ event, onImageExpand }) => 
           alt={event?.name ? `${event.name} main image` : 'Event Image'}
           width={600}
           height={400}
-          className="w-full h-48 sm:h-64 md:h-72 lg:h-80 object-cover transition-all duration-700 group-hover:scale-105"
+          className="w-full h-56 sm:h-64 md:h-72 lg:h-80 object-cover transition-all duration-700 group-hover:scale-105"
           loading="eager"
           onLoad={handleImageLoad}
           onError={handleImageError}
