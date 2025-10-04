@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -154,16 +155,8 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
   };
 
   // Delete event logic
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user || deleting || !isOwner) return;
-
-    // Show confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${event.name}"? This action cannot be undone.`
-    );
-
-    if (!confirmed) return;
+  const performDelete = async () => {
+    if (!user) return;
 
     setDeleting(true);
     try {
@@ -176,7 +169,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       if (error) {
         console.error('Error deleting event:', error);
-        alert('Failed to delete event. Please try again.');
+        toast.error('Failed to delete event. Please try again.');
         return;
       }
 
@@ -195,36 +188,79 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         event.name
       );
 
+      toast.success('Event deleted successfully.');
+
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert('Failed to delete event. Please try again.');
+      toast.error('Failed to delete event. Please try again.');
     } finally {
       setDeleting(false);
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || deleting || !isOwner) return;
+
+    // Show confirmation dialog with toast
+    toast((t) => (
+      <div>
+        <p className="font-medium mb-2">Delete Event</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Are you sure you want to delete "{event.name}"? This action cannot be undone.
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              performDelete();
+            }}
+            className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
+  };
+
   return (
-    <div
-      className="group relative card cursor-pointer overflow-hidden card-hover h-full rounded-2xl shadow transition-transform duration-200 hover:scale-[1.025] focus-within:scale-[1.025] focus:outline-none"
+    <article
+      className="group relative card cursor-pointer overflow-hidden card-hover h-full rounded-2xl shadow transition-transform duration-200 hover:scale-[1.025] focus-within:scale-[1.025] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
       tabIndex={0}
-      aria-label={event.name}
+      role="button"
+      aria-label={`View details for ${event.name} event`}
       onClick={() => {
         if (typeof onClick === 'function') {
           onClick();
         }
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (typeof onClick === 'function') {
+            onClick();
+          }
+        }
+      }}
     >
       {/* Top Badges Row */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex flex-row flex-wrap items-center gap-2 sm:gap-3 min-w-[0]">
-        {/* Popular Badge */}
-        {isPopular && (
-          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
-        )}
-        {/* Featured Badge */}
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex flex-col items-start gap-1 sm:gap-2 min-w-[0]">
+        {/* Featured Badge - Priority 1 */}
         {event.featured && (
           <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
         )}
-        {/* New Badge */}
+        {/* Popular Badge - Priority 2 */}
+        {isPopular && (
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
+        )}
+        {/* New Badge - Priority 3 */}
         {isNew && (
           <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-green-200 text-green-800 shadow-md">New</span>
         )}
@@ -357,7 +393,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         {/* Hover Overlay Effect */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"></div>
       </div>
-    </div>
+    </article>
   );
 });
 export default EventCard;

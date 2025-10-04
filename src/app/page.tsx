@@ -1,4 +1,4 @@
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, TABLES, isSupabaseConfigured, getEventsCount, getUserCount } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { Suspense } from 'react';
 import ClientHomePageWrapper from './ClientHomePageWrapper';
@@ -8,50 +8,63 @@ import Loading from './loading'; // Import the Loading component
 export const revalidate = 60;
 
 async function getEvents() {
-
-
-  // Fetch events
-  const { data: eventsData, error: eventsError } = await supabase
-    .from(TABLES.EVENTS)
-    .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by')
-    .order('date', { ascending: true });
-
-  if (eventsError) {
-    console.warn('Error fetching events from Supabase:', eventsError.message);
+  // Check if Supabase is properly configured
+  if (!isSupabaseConfigured()) {
+    console.warn('Supabase is not properly configured. Using fallback values.');
+    return {
+      events: [],
+      totalEvents: 0,
+      totalUsers: 0,
+      citiesCovered: 0,
+    };
   }
 
-  const events: EventItem[] = (eventsData || []).map((event: any) => ({
-    ...event,
-    date: event.date ? String(event.date) : '',
-    id: String(event.id),
-    name: event.name,
-    location: event.location || '',
-    description: event.description || '',
-    category: event.category || 'Other',
-    presale_price: event.presale_price ?? 0,
-    gate_price: event.gate_price ?? 0,
-    image_urls: event.image_urls || [],
-    created_at: event.created_at || '',
-    featured: event.featured || false,
-    created_by: event.created_by || '',
-  }));
+  let events: EventItem[] = [];
+  let totalEvents = 0;
+  let totalUsers = 0;
 
-  // Fetch total events count
-  const { count: totalEvents, error: totalEventsError } = await supabase
-    .from(TABLES.EVENTS)
-    .select('id', { count: 'exact', head: true }); // Select only 'id' to optimize count
+  try {
+    // Fetch events
+    const { data: eventsData, error: eventsError } = await supabase
+      .from(TABLES.EVENTS)
+      .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by')
+      .order('date', { ascending: true });
 
-  if (totalEventsError) {
-    console.error('Error fetching total events:', totalEventsError.message);
-  }
+    if (eventsError) {
+      console.warn('Error fetching events from Supabase:', eventsError.message);
+    } else {
+      events = (eventsData || []).map((event: any) => ({
+        ...event,
+        date: event.date ? String(event.date) : '',
+        id: String(event.id),
+        name: event.name,
+        location: event.location || '',
+        description: event.description || '',
+        category: event.category || 'Other',
+        presale_price: event.presale_price ?? 0,
+        gate_price: event.gate_price ?? 0,
+        image_urls: event.image_urls || [],
+        created_at: event.created_at || '',
+        featured: event.featured || false,
+        created_by: event.created_by || '',
+      }));
+    }
 
-  // Fetch total users count
-  const { count: totalUsers, error: totalUsersError } = await supabase
-    .from(TABLES.USERS)
-    .select('id', { count: 'exact', head: true }); // Select only 'id' to optimize count
+    // Fetch total events count using utility function
+    totalEvents = await getEventsCount();
 
-  if (totalUsersError) {
-    console.error('Error fetching total users:', totalUsersError.message);
+    // Fetch total users count using utility function
+    totalUsers = await getUserCount();
+
+  } catch (error) {
+    console.error('Unexpected error in getEvents:', error);
+    // Return fallback values on any error
+    return {
+      events: [],
+      totalEvents: 0,
+      totalUsers: 0,
+      citiesCovered: 0,
+    };
   }
 
   // Calculate cities covered
