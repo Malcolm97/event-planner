@@ -121,7 +121,7 @@ const Header = React.memo(function Header() {
 
 
   return (
-    <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-50 backdrop-blur-md safe-area-inset">
+    <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md safe-area-inset">
       <div className="max-w-7xl mx-auto container-padding">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
@@ -173,7 +173,7 @@ const Header = React.memo(function Header() {
                 </Button>
 
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-2 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-2 z-[100]">
                     <Button onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsProfileDropdownOpen(false); }} variant="ghost" className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                       <FiUser size={16} className="inline mr-2" />
                       Dashboard
@@ -208,120 +208,116 @@ const Header = React.memo(function Header() {
             {isMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
           </Button>
         </div>
-        {/* Mobile Navigation Overlay */}
+        {/* Mobile Navigation Dropdown */}
         {isMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
-              onClick={() => setIsMenuOpen(false)}
-              aria-hidden="true"
-            />
-            {/* Slide-out Menu */}
-            <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-out animate-slide-up">
-              <div className="flex flex-col h-full">
-                {/* Mobile Menu Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                  <span className="text-lg font-semibold text-gray-900">Menu</span>
-                  <Button
-                    onClick={() => setIsMenuOpen(false)}
-                    variant="ghost"
-                    className="p-2 h-auto w-auto"
-                    aria-label="Close menu"
-                  >
-                    <FiX size={24} />
-                  </Button>
-                </div>
+          <div className="absolute right-0 top-full mt-2 w-80 max-w-[85vw] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-2 z-[100] lg:hidden">
+            {/* Mobile Menu Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
+              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">Navigation</span>
+              <Button
+                onClick={() => setIsMenuOpen(false)}
+                variant="ghost"
+                className="p-2 h-auto w-auto"
+                aria-label="Close menu"
+              >
+                <FiX size={24} />
+              </Button>
+            </div>
 
-                {/* Mobile Menu Content */}
-                <div className="flex-1 overflow-y-auto py-4">
-                  <nav className="px-4 space-y-1">
-                    <Button
-                      onClick={() => { navigateWithOfflineCheck('/events', 'Events'); setIsMenuOpen(false); }}
-                      variant="ghost"
-                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                    >
-                      📅 Events
-                    </Button>
-                    <Button
-                      onClick={() => { navigateWithOfflineCheck('/categories', 'Categories'); setIsMenuOpen(false); }}
-                      variant="ghost"
-                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                    >
-                      🏷️ Categories
-                    </Button>
-                    <Button
-                      onClick={() => { router.push('/about'); setIsMenuOpen(false); }}
-                      variant="ghost"
-                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                    >
-                      ℹ️ About
-                    </Button>
-                    <Button
-                      onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
-                      variant="ghost"
-                      className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                    >
-                      ⚙️ Settings
-                    </Button>
-                  </nav>
+            {/* Mobile Menu Content */}
+            <div className="max-h-96 overflow-y-auto">
+              <nav className="p-2 space-y-1">
+                <Button
+                  onClick={() => { navigateWithOfflineCheck('/events', 'Events'); setIsMenuOpen(false); }}
+                  variant="ghost"
+                  className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                >
+                  📅 Events
+                </Button>
+                <Button
+                  onClick={() => { navigateWithOfflineCheck('/categories', 'Categories'); setIsMenuOpen(false); }}
+                  variant="ghost"
+                  className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                >
+                  🏷️ Categories
+                </Button>
+                <Button
+                  onClick={() => { router.push('/about'); setIsMenuOpen(false); }}
+                  variant="ghost"
+                  className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                >
+                  ℹ️ About
+                </Button>
+              </nav>
 
-                  {/* User Section */}
-                  <div className="px-4 mt-6">
-                    {user ? (
-                      <>
-                        <Button
-                          onClick={() => { navigateWithOfflineCheck('/create-event', 'Create Event'); setIsMenuOpen(false); }}
-                          variant="primary"
-                          className="w-full mb-4"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                          Create Event
-                        </Button>
-                        <div className="border-t border-gray-200 pt-4 space-y-1">
-                          <Button
-                            onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsMenuOpen(false); }}
-                            variant="ghost"
-                            className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                          >
-                            {userPhotoUrl ? (
-                              <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-3" />
-                            ) : (
-                              <FiUser size={16} className="inline mr-3" />
-                            )}
-                            {userName || 'Dashboard'}
-                          </Button>
-                          <Button
-                            onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
-                            variant="ghost"
-                            className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                          >
-                            <FiLogOut size={16} className="inline mr-3" />
-                            Sign Out
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      hasMounted && isOnline && (
-                        <div className="border-t border-gray-200 pt-4">
-                          <Button
-                            onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}
-                            variant="ghost"
-                            className="w-full justify-start text-left text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
-                          >
-                            <FiUser size={16} className="inline mr-3" />
-                            Sign In
-                          </Button>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
+              {/* User Section */}
+              <div className="px-2 mt-2">
+                {user ? (
+                  <>
+                    <Button
+                      onClick={() => { navigateWithOfflineCheck('/create-event', 'Create Event'); setIsMenuOpen(false); }}
+                      variant="primary"
+                      className="w-full mb-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Create Event
+                    </Button>
+                    <div className="border-t border-gray-200 pt-2 space-y-1">
+                      <Button
+                        onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsMenuOpen(false); }}
+                        variant="ghost"
+                        className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                      >
+                        {userPhotoUrl ? (
+                          <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-3" />
+                        ) : (
+                          <FiUser size={16} className="inline mr-3" />
+                        )}
+                        {userName || 'Dashboard'}
+                      </Button>
+                      <Button
+                        onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
+                        variant="ghost"
+                        className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                      >
+                        <FiLogOut size={16} className="inline mr-3" />
+                        Sign Out
+                      </Button>
+                      <Button
+                        onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
+                        variant="ghost"
+                        className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                      >
+                        ⚙️ Settings
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  hasMounted && isOnline && (
+                    <div className="border-t border-gray-200 pt-2 space-y-1">
+                      <Button
+                        onClick={() => { router.push('/signin'); setIsMenuOpen(false); }}
+                        variant="ghost"
+                        className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                      >
+                        <FiUser size={16} className="inline mr-3" />
+                        Sign In
+                      </Button>
+                      <Button
+                        onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
+                        variant="ghost"
+                        className="w-full justify-start text-left text-black hover:text-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-base h-auto"
+                      >
+                        ⚙️ Settings
+                      </Button>
+                    </div>
+                  )
+                )}
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </header>
