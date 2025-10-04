@@ -89,7 +89,7 @@ export default function BottomNav() {
 
   return (
     <nav className="bottom-nav lg:hidden">
-      <div className="flex items-center justify-around px-2 py-2">
+      <div className="flex items-center justify-around px-1 py-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.active;
@@ -100,11 +100,11 @@ export default function BottomNav() {
               <button
                 key={item.path}
                 onClick={() => navigateWithOfflineCheck(item.path, item.label)}
-                className="relative -mt-6 flex flex-col items-center justify-center touch-target focus-ring"
+                className="relative -mt-4 flex flex-col items-center justify-center touch-target focus-ring"
                 aria-label={`Go to ${item.label}`}
               >
-                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-yellow-400 to-red-500 flex items-center justify-center shadow-lg transform transition-transform active:scale-95">
-                  <Icon size={24} className="text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-red-500 flex items-center justify-center shadow-lg transform transition-transform active:scale-95">
+                  <Icon size={18} className="text-white" />
                 </div>
               </button>
             );
@@ -120,7 +120,7 @@ export default function BottomNav() {
                   navigateWithOfflineCheck(item.path, item.label);
                 }
               }}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-200 touch-target focus-ring ${
+              className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all duration-200 touch-target focus-ring ${
                 isActive
                   ? 'text-yellow-600 bg-yellow-50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -128,12 +128,12 @@ export default function BottomNav() {
               aria-label={item.hamburger ? 'Open menu' : `Go to ${item.label}`}
             >
               <Icon
-                size={20}
-                className={`mb-1 transition-colors ${
+                size={16}
+                className={`mb-0.5 transition-colors ${
                   isActive ? 'text-yellow-600' : 'text-gray-600'
                 }`}
               />
-              <span className={`text-xs font-medium ${
+              <span className={`text-[10px] font-medium hidden sm:inline ${
                 isActive ? 'text-yellow-700' : 'text-gray-600'
               }`}>
                 {item.label}

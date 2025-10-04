@@ -10,7 +10,7 @@ import { useNetworkStatus } from "@/context/NetworkStatusContext";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Wifi, WifiOff, RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import CustomSelect, { SelectOption } from "@/components/CustomSelect";
 
@@ -20,7 +20,6 @@ export default function SettingsPage() {
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
   const [offlineNotif, setOfflineNotif] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
   const [landing, setLanding] = useState('home');
@@ -42,7 +41,6 @@ export default function SettingsPage() {
       }
     });
     // Load preferences from localStorage
-    setDarkMode(localStorage.getItem('darkMode') === 'true');
     setOfflineNotif(localStorage.getItem('offlineNotif') !== 'false');
     setAutoSync(localStorage.getItem('autoSync') !== 'false');
     setLanding(localStorage.getItem('landing') || 'home');
@@ -58,7 +56,6 @@ export default function SettingsPage() {
         if (profile?.preferences) {
           try {
             const prefs = JSON.parse(profile.preferences);
-            if (prefs.darkMode !== undefined) setDarkMode(prefs.darkMode);
             if (prefs.offlineNotif !== undefined) setOfflineNotif(prefs.offlineNotif);
             if (prefs.autoSync !== undefined) setAutoSync(prefs.autoSync);
             if (prefs.landing) setLanding(prefs.landing);
@@ -67,15 +64,6 @@ export default function SettingsPage() {
       }
     });
   }, []);
-
-  // Apply dark mode to <html> on mount and when toggled
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
 
   // Save preferences (the useEffect handles the actual saving)
   const savePreferences = async (prefs: any) => {
@@ -87,15 +75,14 @@ export default function SettingsPage() {
 
   // Persist preferences to localStorage and Supabase (if logged in)
   useEffect(() => {
-    const prefs = { darkMode, offlineNotif, autoSync, landing };
-    localStorage.setItem('darkMode', String(darkMode));
+    const prefs = { offlineNotif, autoSync, landing };
     localStorage.setItem('offlineNotif', String(offlineNotif));
     localStorage.setItem('autoSync', String(autoSync));
     localStorage.setItem('landing', landing);
     if (user) {
       supabase.from('users').update({ preferences: JSON.stringify(prefs) }).eq('id', user.id);
     }
-  }, [darkMode, offlineNotif, autoSync, landing, user]);
+  }, [offlineNotif, autoSync, landing, user]);
 
   const handleClearCacheClick = () => {
     setShowConfirmDialog(true);
@@ -150,7 +137,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-100 to-yellow-300 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <div className="max-w-2xl mx-auto w-full flex-1 py-10 px-2 sm:px-4 flex flex-col">
         {/* Back Button */}
         <Button
@@ -169,23 +156,23 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="rounded-2xl bg-white/80 dark:bg-gray-900/80 shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100 dark:border-gray-800 backdrop-blur-sm"
+          className="rounded-2xl bg-white shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100"
         >
           <div className="flex items-center gap-3 mb-2">
             <Trash2 className="w-6 h-6 text-red-600" />
             <h2 className="text-xl sm:text-2xl font-semibold">Cache Management</h2>
           </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50">
             <RefreshCw className="w-5 h-5 text-blue-600" />
             <div>
-              <span className="text-gray-800 dark:text-gray-200 font-medium">Last Sync</span>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{lastSync || "Never synced"}</p>
+              <span className="text-gray-800 font-medium">Last Sync</span>
+              <p className="text-sm text-gray-600">{lastSync || "Never synced"}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div>
               <Button
                 onClick={handleSyncNow}
                 disabled={syncingNow || !isOnline}
@@ -210,7 +197,7 @@ export default function SettingsPage() {
               </Button>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div>
               <Button
                 onClick={handleClearCacheClick}
                 disabled={clearing}
@@ -242,7 +229,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium justify-center bg-green-50 dark:bg-green-900/20 rounded-lg p-3"
+                className="flex items-center gap-2 text-green-600 font-medium justify-center bg-green-50 rounded-lg p-3"
               >
                 <CheckCircle className="w-5 h-5" />
                 Cache cleared successfully!
@@ -258,8 +245,8 @@ export default function SettingsPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className={`flex items-center gap-2 font-medium justify-center rounded-lg p-3 ${
                   syncResult.includes('successfully')
-                    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
-                    : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
+                    ? 'text-green-600 bg-green-50'
+                    : 'text-red-600 bg-red-50'
                 }`}
               >
                 {syncResult.includes('successfully') ? (
@@ -278,7 +265,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-2 text-red-600 dark:text-red-400 font-medium justify-center bg-red-50 dark:bg-red-900/20 rounded-lg p-3"
+                className="flex items-center gap-2 text-red-600 font-medium justify-center bg-red-50 rounded-lg p-3"
               >
                 <AlertCircle className="w-5 h-5" />
                 {error}
@@ -292,7 +279,7 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="rounded-2xl bg-white/80 dark:bg-gray-900/80 shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100 dark:border-gray-800 backdrop-blur-sm"
+          className="rounded-2xl bg-white shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100"
         >
           <div className="flex items-center gap-3 mb-2">
             <Settings className="w-6 h-6 text-yellow-600" />
@@ -300,39 +287,15 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col gap-5">
-            {/* Dark Mode Toggle */}
-            <motion.div
-              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center gap-3">
-                {darkMode ? <Moon className="w-5 h-5 text-blue-600" /> : <Sun className="w-5 h-5 text-yellow-500" />}
-                <div>
-                  <span className="text-gray-800 dark:text-gray-200 font-medium">Dark Mode</span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Switch between light and dark themes</p>
-                </div>
-              </div>
-              <ToggleSwitch
-                checked={darkMode}
-                onChange={(checked) => {
-                  setDarkMode(checked);
-                  savePreferences({ darkMode: checked });
-                }}
-              />
-            </motion.div>
-
             {/* Offline Notifications Toggle */}
             <motion.div
-              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-3">
                 {isOnline ? <Wifi className="w-5 h-5 text-green-600" /> : <WifiOff className="w-5 h-5 text-red-600" />}
                 <div>
-                  <span className="text-gray-800 dark:text-gray-200 font-medium">Offline Notifications</span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Show notifications when offline</p>
+                  <span className="text-gray-800 font-medium">Offline Notifications</span>
+                  <p className="text-sm text-gray-600">Show notifications when offline</p>
                 </div>
               </div>
               <ToggleSwitch
@@ -346,15 +309,13 @@ export default function SettingsPage() {
 
             {/* Auto Sync Toggle */}
             <motion.div
-              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <RefreshCw className="w-5 h-5 text-blue-600" />
                 <div>
-                  <span className="text-gray-800 dark:text-gray-200 font-medium">Auto Sync</span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Automatically sync data in background</p>
+                  <span className="text-gray-800 font-medium">Auto Sync</span>
+                  <p className="text-sm text-gray-600">Automatically sync data in background</p>
                 </div>
               </div>
               <ToggleSwitch
@@ -368,13 +329,11 @@ export default function SettingsPage() {
 
             {/* Landing Page Selector */}
             <motion.div
-              className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="p-4 rounded-xl bg-gray-50"
             >
               <div className="flex items-center gap-3 mb-3">
-                <Home className="w-5 h-5 text-purple-600" />
-                <span className="text-gray-800 dark:text-gray-200 font-medium">Landing Page</span>
+                <Home className="w-5 h-5 text-yellow-600" />
+                <span className="text-gray-800 font-medium">Landing Page</span>
               </div>
               <CustomSelect
                 options={[
@@ -390,18 +349,16 @@ export default function SettingsPage() {
                 }}
                 placeholder="Select landing page"
               />
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Choose which page to show when you open the app</p>
+              <p className="text-sm text-gray-600 mt-2">Choose which page to show when you open the app</p>
             </motion.div>
 
             {/* Language Selector (Disabled) */}
             <motion.div
-              className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 opacity-60"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="p-4 rounded-xl bg-gray-50 opacity-60"
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-2xl">🌐</span>
-                <span className="text-gray-800 dark:text-gray-200 font-medium">Language</span>
+                <span className="text-gray-800 font-medium">Language</span>
               </div>
               <CustomSelect
                 options={[
@@ -423,7 +380,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium text-center justify-center bg-green-50 dark:bg-green-900/20 rounded-lg p-3"
+                className="flex items-center gap-2 text-green-600 font-medium text-center justify-center bg-green-50 rounded-lg p-3"
                 role="status"
               >
                 <CheckCircle className="w-5 h-5" />
@@ -439,7 +396,7 @@ export default function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="rounded-2xl bg-white/80 dark:bg-gray-900/80 shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100 dark:border-gray-800 backdrop-blur-sm"
+            className="rounded-2xl bg-white shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100"
           >
             <div className="flex items-center gap-3 mb-2">
               <User className="w-6 h-6 text-green-600" />
@@ -447,27 +404,27 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div>
                 <Link href="/dashboard/edit-profile">
-                  <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-800/30 dark:hover:to-blue-700/30 border-blue-200 dark:border-blue-700 transition-all">
+                  <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-200 transition-all">
                     <User className="w-6 h-6 text-blue-600" />
                     <span className="font-medium">Edit Profile</span>
                   </Button>
                 </Link>
               </motion.div>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div>
                 <Link href="/dashboard/update-password">
-                  <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800/30 dark:hover:to-purple-700/30 border-purple-200 dark:border-purple-700 transition-all">
-                    <Settings className="w-6 h-6 text-purple-600" />
+                  <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-orange-200 transition-all">
+                    <Settings className="w-6 h-6 text-orange-600" />
                     <span className="font-medium">Change Password</span>
                   </Button>
                 </Link>
               </motion.div>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div>
                 <Link href="/dashboard">
-                  <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800/30 dark:hover:to-green-700/30 border-green-200 dark:border-green-700 transition-all">
+                  <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-green-200 transition-all">
                     <Grid3X3 className="w-6 h-6 text-green-600" />
                     <span className="font-medium">Dashboard</span>
                   </Button>
@@ -482,35 +439,35 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="rounded-2xl bg-white/80 dark:bg-gray-900/80 shadow-lg p-6 sm:p-8 flex flex-col gap-4 border border-gray-100 dark:border-gray-800 backdrop-blur-sm"
+          className="rounded-2xl bg-white shadow-lg p-6 sm:p-8 flex flex-col gap-4 border border-gray-100"
         >
           <div className="flex items-center gap-3 mb-2">
-            <Info className="w-6 h-6 text-indigo-600" />
+            <Info className="w-6 h-6 text-blue-600" />
             <h2 className="text-xl sm:text-2xl font-semibold">App Info</h2>
           </div>
 
           <div className="grid gap-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50">
               <span className="text-lg">📱</span>
               <div>
-                <span className="text-gray-800 dark:text-gray-200 font-medium">Version</span>
-                <p className="text-sm text-gray-600 dark:text-gray-400">1.0.0</p>
+                <span className="text-gray-800 font-medium">Version</span>
+                <p className="text-sm text-gray-600">1.0.0</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50">
               <span className="text-lg">📅</span>
               <div>
-                <span className="text-gray-800 dark:text-gray-200 font-medium">Last Updated</span>
-                <p className="text-sm text-gray-600 dark:text-gray-400">September 27, 2025</p>
+                <span className="text-gray-800 font-medium">Last Updated</span>
+                <p className="text-sm text-gray-600">September 27, 2025</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-teal-50 dark:bg-teal-900/20">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-teal-50">
               <span className="text-lg">💻</span>
               <div>
-                <span className="text-gray-800 dark:text-gray-200 font-medium">Device</span>
-                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                <span className="text-gray-800 font-medium">Device</span>
+                <p className="text-sm text-gray-600 truncate">
                   {typeof window !== 'undefined' ? navigator.userAgent.split(' ').pop() : 'Unknown'}
                 </p>
               </div>
@@ -523,22 +480,20 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="rounded-2xl bg-white/80 dark:bg-gray-900/80 shadow-lg p-6 sm:p-8 flex flex-col gap-4 border border-gray-100 dark:border-gray-800 backdrop-blur-sm"
+          className="rounded-2xl bg-white shadow-lg p-6 sm:p-8 flex flex-col gap-4 border border-gray-100"
         >
           <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="w-6 h-6 text-pink-600" />
+            <MessageSquare className="w-6 h-6 text-orange-600" />
             <h2 className="text-xl sm:text-2xl font-semibold">Feedback</h2>
           </div>
 
-          <div className="p-4 rounded-xl bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border border-pink-200 dark:border-pink-800">
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200">
+            <p className="text-gray-700 mb-4">
               Have suggestions or need help? We'd love to hear from you!
             </p>
             <motion.a
               href="mailto:support@pngevents.com"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
             >
               <MessageSquare className="w-4 h-4" />
               Contact Support
@@ -561,20 +516,20 @@ export default function SettingsPage() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700"
+                className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                     <AlertCircle className="w-6 h-6 text-red-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Clear All Data?</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Clear All Data?</h3>
+                    <p className="text-sm text-gray-600">This action cannot be undone</p>
                   </div>
                 </div>
 
-                <p className="text-gray-700 dark:text-gray-300 mb-6">
+                <p className="text-gray-700 mb-6">
                   This will permanently delete all cached events, user data, and offline content. Your account preferences will be preserved.
                 </p>
 

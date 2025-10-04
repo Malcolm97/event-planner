@@ -33,7 +33,7 @@ export default function ToggleSwitch({
       className={`relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
         checked
           ? 'bg-yellow-500'
-          : 'bg-gray-300 dark:bg-gray-600'
+          : 'bg-gray-300'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       style={{ width, height }}
     >

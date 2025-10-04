@@ -15,7 +15,7 @@ import Link from 'next/link';
 
 // Define categories and their properties
 const allCategories = [
-  { name: 'All Categories', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
+  { name: 'All Events', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
   { name: 'Music', icon: 'FiMusic', color: 'bg-purple-100 text-purple-600' },
   { name: 'Art', icon: 'FiImage', color: 'bg-pink-100 text-pink-600' },
   { name: 'Food', icon: 'FiCoffee', color: 'bg-orange-100 text-orange-600' },
@@ -36,7 +36,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = { // Use React.Ele
 };
 
 const categoryColorMap: { [key: string]: string } = {
-  'All Categories': 'bg-gray-200 text-gray-800',
+  'All Events': 'bg-gray-200 text-gray-800',
   'Music': 'bg-purple-100 text-purple-600',
   'Art': 'bg-pink-100 text-pink-600',
   'Food': 'bg-orange-100 text-orange-600',
@@ -75,13 +75,12 @@ const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
 }
 
 function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
-  const searchParams = useSearchParams();
-  const queryCategory = searchParams.get('category');
-  const { data: events = [], isLoading: loading } = useEvents(queryCategory || undefined);
+  const { data: events = [], isLoading: loading } = useEvents();
   const [displayCategories] = useState<typeof allCategories>(initialDisplayCategories);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
   const now = new Date();
 
-  const selectedCategoryInfo = displayCategories.find(cat => cat.name === queryCategory);
+  const selectedCategoryInfo = displayCategories.find(cat => cat.name === selectedCategory);
   const Icon = selectedCategoryInfo?.icon ? categoryIconMap[selectedCategoryInfo.icon] : FiStar;
 
   // Modal states
@@ -122,8 +121,8 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   }, [selectedEvent]);
 
   const filteredEvents = events.filter(event => {
-    if (!queryCategory || queryCategory === 'All Categories') return true;
-    return event.category === queryCategory;
+    if (!selectedCategory || selectedCategory === 'All Events') return true;
+    return event.category === selectedCategory;
   });
 
   const upcomingEvents = filteredEvents.filter(event => {
@@ -137,11 +136,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
-            {queryCategory ? `${queryCategory} Events` : 'All Categories'}
+            {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Categories'}
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            {queryCategory 
-              ? `Discover amazing ${queryCategory.toLowerCase()} events happening near you.`
+            {selectedCategory !== 'All Events'
+              ? `Discover amazing ${selectedCategory.toLowerCase()} events happening near you.`
               : 'Explore events by category and find something that interests you.'
             }
           </p>
@@ -160,7 +159,10 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {displayCategories
               .filter(cat => {
-                // Only show categories that have upcoming events
+                // Always show "All Events" category
+                if (cat.name === 'All Events') return true;
+
+                // Only show other categories that have upcoming events
                 const upcomingEvents = events.filter(event => {
                   if (!event.date) return false;
                   return new Date(event.date) >= new Date();
@@ -176,16 +178,16 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
               .map((cat) => {
               const CategoryIcon = categoryIconMap[cat.icon];
               return (
-                  <Link
+                  <button
                     key={cat.name}
-                    href={`/categories?category=${encodeURIComponent(cat.name)}`}
-                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${cat.color} group ${queryCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
+                    onClick={() => setSelectedCategory(cat.name)}
+                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${cat.color} group ${selectedCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
                   >
                     <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
                       <CategoryIcon size={28} />
                     </span>
                     <span className="text-base font-bold text-center">{cat.name}</span>
-                  </Link>
+                  </button>
               );
             })}
           </div>
@@ -197,11 +199,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {queryCategory ? `${queryCategory} Events` : 'All Events'}
+              {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Events'}
             </h2>
             <p className="text-gray-600 text-lg">
-              {queryCategory 
-                ? `Showing ${upcomingEvents.length} upcoming ${queryCategory.toLowerCase()} events`
+              {selectedCategory !== 'All Events'
+                ? `Showing ${upcomingEvents.length} upcoming ${selectedCategory.toLowerCase()} events`
                 : `Showing ${upcomingEvents.length} upcoming events across all categories`
               }
             </p>
@@ -228,11 +230,11 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📅</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {queryCategory ? `No ${queryCategory} events found` : 'No events found'}
+                {selectedCategory !== 'All Events' ? `No ${selectedCategory} events found` : 'No events found'}
               </h3>
               <p className="text-gray-500">
-                {queryCategory 
-                  ? `Check back later for ${queryCategory.toLowerCase()} events.`
+                {selectedCategory !== 'All Events'
+                  ? `Check back later for ${selectedCategory.toLowerCase()} events.`
                   : 'Check back later for new events.'
                 }
               </p>

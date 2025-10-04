@@ -130,10 +130,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       aria-describedby="event-modal-desc"
     >
       <div
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden focus:outline-none flex flex-col"
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
         style={{
-          minHeight: 'calc(100vh - 6rem - 6rem)', // Account for header (4rem) + bottom nav (6rem) + padding
-          maxHeight: 'calc(100vh - 6rem - 6rem)', // Same calculation for max height
+          minHeight: 'calc(80vh - 6rem)', // Reduced height for mobile - account for header + padding
+          maxHeight: 'calc(85vh - 6rem)', // Same calculation for max height
           boxSizing: 'border-box',
         }}
       >
@@ -152,7 +152,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           {/* Tab Navigation */}
           <EventModalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
+          <div className="space-y-3 sm:space-y-6 px-2 sm:px-4 md:px-6 pb-3 sm:pb-6">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
               <EventDetailsTab event={selectedEvent} onImageExpand={handleImageExpand} />

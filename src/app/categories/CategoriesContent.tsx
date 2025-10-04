@@ -113,7 +113,7 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
           return (
             <Link
               key={cat.name}
-              href={cat.name === 'All Categories' ? '/categories' : `/categories?category=${cat.name}`}
+              href={`/categories?category=${encodeURIComponent(cat.name)}`}
               className={`
                 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl 
                 transition duration-200 ease-in-out transform hover:scale-105

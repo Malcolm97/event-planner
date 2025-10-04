@@ -5,21 +5,21 @@ export default function AppFooter() {
     <footer className="w-full py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
       <div className="max-w-6xl mx-auto">
         {/* Desktop Footer with Navigation */}
-        <div className="hidden lg:grid lg:grid-cols-1 lg:md:grid-cols-3 gap-6 text-gray-400 text-sm items-center">
+        <div className="hidden lg:flex lg:flex-row lg:justify-between lg:items-center text-gray-400 text-sm">
           {/* Navigation Links */}
-          <div className="flex items-center justify-center md:justify-start gap-4 sm:gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base px-2 py-1" aria-label="Events">Events</Link>
             <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base px-2 py-1" aria-label="Categories">Categories</Link>
             <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base px-2 py-1" aria-label="About">About</Link>
           </div>
 
           {/* Copyright */}
-          <div className="text-center text-gray-300 font-medium text-sm sm:text-base">
+          <div className="text-gray-300 font-medium text-sm sm:text-base">
             © 2025 PNG Events. All rights reserved.
           </div>
 
           {/* Legal Links */}
-          <div className="flex items-center justify-center md:justify-end gap-4 sm:gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-4 sm:gap-6">
               <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Terms">Terms</Link>
               <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Privacy">Privacy</Link>

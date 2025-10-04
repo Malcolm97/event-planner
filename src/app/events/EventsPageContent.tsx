@@ -116,22 +116,6 @@ export default function EventsPageContent() {
 
   return (
     <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
-      {/* Sync status indicator */}
-      <div className="w-full bg-yellow-50 border-b border-yellow-200 py-2 flex flex-col items-center text-sm" role="status" aria-live="polite" tabIndex={0} id="sync-indicator">
-        {isSyncing && (
-          <span className="flex items-center gap-2 text-yellow-700">
-            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></span>
-            Syncing events...
-          </span>
-        )}
-        {syncError && (
-          <span className="text-red-600">Sync error: {syncError}</span>
-        )}
-        {lastSyncTime && !isSyncing && !syncError && (
-          <span className="text-gray-600">Last synced: {lastSyncTime.toLocaleString()}</span>
-        )}
-      </div>
-
       {/* Hero section */}
       <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
@@ -143,6 +127,8 @@ export default function EventsPageContent() {
           </p>
         </div>
       </section>
+
+
 
       {/* Location Filter */}
       {!loading && events.length > 0 && (availableLocations.length > 0 || hasOtherLocations) && (

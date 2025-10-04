@@ -7,6 +7,7 @@ import '@/lib/polyfills'; // Import polyfills for cross-browser compatibility
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import OnlineBadge from '@/components/OnlineBadge';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -72,6 +73,7 @@ export default function RootLayout({
           </main>
           <BottomNav />
           <PWAInstallPrompt />
+          <OnlineBadge />
         </ClientProviders>
         <Script id="service-worker-script">
           {`

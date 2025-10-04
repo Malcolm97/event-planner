@@ -290,7 +290,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       </div>
 
       {/* Hero Image Area */}
-      <div className="relative aspect-[16/9] sm:aspect-[4/3] md:aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
+      <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
         <Image
           src={getEventPrimaryImage(event)}
           alt={`Event image for ${event.name}`}
@@ -328,14 +328,14 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-        <div className="px-3 py-2 sm:px-5 sm:py-4 pb-10 sm:pb-14">
+        <div className="px-3 py-3 sm:px-5 sm:py-4 pb-8 sm:pb-14">
           {/* Event Title */}
           <h3 className="text-sm sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 sm:mb-3 text-left">
             {event.name}
           </h3>
 
           {/* Location and Venue */}
-          <div className="space-y-1 sm:space-y-2 text-left mb-2 sm:mb-3">
+          <div className="space-y-1.5 sm:space-y-2 text-left mb-2 sm:mb-3">
             <div className="flex items-start gap-1.5 sm:gap-3">
               <FiMapPin size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
               <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">{event.location}</span>
@@ -387,16 +387,16 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
           {/* Save/Bookmark button for logged-in users */}
           {user && (
             <button
-              className={`p-3 sm:p-2.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow-lg border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-[44px] min-h-[44px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 sm:p-2 rounded-full bg-white/90 hover:bg-yellow-100 shadow-lg border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-[36px] min-h-[36px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
               onClick={handleBookmark}
               disabled={loading}
               tabIndex={0}
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-yellow-600"></div>
+                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-yellow-600"></div>
               ) : (
-                <FiBookmark size={18} className={bookmarked ? 'fill-current' : ''} />
+                <FiBookmark size={16} className={bookmarked ? 'fill-current' : ''} />
               )}
             </button>
           )}
@@ -477,10 +477,10 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation(); // Prevent card click
           handleShare();
         }}
-        className="p-3 sm:p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="p-2 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[36px] min-h-[36px] flex items-center justify-center"
         aria-label="Share Event"
       >
-        <FiShare2 size={18} />
+        <FiShare2 size={16} />
       </button>
 
       {showShareOptions && (

@@ -173,7 +173,7 @@ const Header = React.memo(function Header() {
             </span>
           </Link>
           {/* Centered nav for desktop */}
-          <nav className="hidden lg:flex flex-1 justify-center items-center space-x-4 xl:space-x-6">
+          <nav className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 items-center space-x-6 xl:space-x-8">
             <Button onClick={() => navigateWithOfflineCheck('/events', 'Events')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Events</Button>
             <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Categories</Button>
             <Button onClick={() => router.push('/about')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">About</Button>
@@ -181,7 +181,7 @@ const Header = React.memo(function Header() {
           {/* Right side actions */}
           <div className="flex items-center space-x-2 xl:space-x-3">
             {/* Network Status */}
-            <div className="relative network-dropdown">
+            <div className="relative network-dropdown lg:hidden">
               <Button
                 onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
                 variant="ghost"
