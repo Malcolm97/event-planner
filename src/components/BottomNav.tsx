@@ -1,16 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo } from 'react-icons/fi';
+import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu } from 'react-icons/fi';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { toast } from 'react-hot-toast';
+import { getLastCommitDate } from '@/lib/github';
 
 export default function BottomNav() {
   const { isOnline } = useNetworkStatus();
   const router = useRouter();
   const currentPath = usePathname();
+  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
+  const [lastCommitDate, setLastCommitDate] = useState<string | null>(null);
+
+  // Fetch last commit date on mount
+  useEffect(() => {
+    const fetchCommitDate = async () => {
+      const date = await getLastCommitDate();
+      setLastCommitDate(date);
+    };
+    fetchCommitDate();
+  }, []);
 
   const navItems = [
     {
@@ -38,12 +50,7 @@ export default function BottomNav() {
       active: currentPath === '/create-event',
       primary: true,
     },
-    {
-      icon: FiSettings,
-      label: 'Settings',
-      path: '/settings',
-      active: currentPath === '/settings' || currentPath?.startsWith('/settings'),
-    },
+
     {
       icon: FiInfo,
       label: 'About',
@@ -55,6 +62,13 @@ export default function BottomNav() {
       label: 'Profile',
       path: '/dashboard',
       active: currentPath?.startsWith('/dashboard') || currentPath?.startsWith('/profile'),
+    },
+    {
+      icon: FiMenu,
+      label: 'Menu',
+      path: 'hamburger',
+      active: false,
+      hamburger: true,
     },
   ];
 
@@ -99,13 +113,19 @@ export default function BottomNav() {
           return (
             <button
               key={item.path}
-              onClick={() => navigateWithOfflineCheck(item.path, item.label)}
+              onClick={() => {
+                if (item.hamburger) {
+                  setIsHamburgerOpen(!isHamburgerOpen);
+                } else {
+                  navigateWithOfflineCheck(item.path, item.label);
+                }
+              }}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-200 touch-target focus-ring ${
                 isActive
                   ? 'text-yellow-600 bg-yellow-50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
-              aria-label={`Go to ${item.label}`}
+              aria-label={item.hamburger ? 'Open menu' : `Go to ${item.label}`}
             >
               <Icon
                 size={20}
@@ -122,6 +142,68 @@ export default function BottomNav() {
           );
         })}
       </div>
+
+      {/* Hamburger Menu Overlay */}
+      {isHamburgerOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm" onClick={() => setIsHamburgerOpen(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Menu</h3>
+                <button
+                  onClick={() => setIsHamburgerOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100"
+                  aria-label="Close menu"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Menu Items */}
+              <div className="space-y-4">
+                <button
+                  onClick={() => { router.push('/settings'); setIsHamburgerOpen(false); }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <FiSettings size={20} />
+                  <span className="font-medium">Settings</span>
+                </button>
+                <button
+                  onClick={() => { router.push('/terms'); setIsHamburgerOpen(false); }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <span className="text-xl">📄</span>
+                  <span className="font-medium">Terms</span>
+                </button>
+                <button
+                  onClick={() => { router.push('/privacy'); setIsHamburgerOpen(false); }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <span className="text-xl">🔒</span>
+                  <span className="font-medium">Privacy</span>
+                </button>
+                <button
+                  onClick={() => { router.push('/download'); setIsHamburgerOpen(false); }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <span className="text-xl">⬇️</span>
+                  <span className="font-medium">Download</span>
+                </button>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 space-y-1">
+                <p>Version 0.1.0</p>
+                {lastCommitDate && (
+                  <p>Last updated: {lastCommitDate}</p>
+                )}
+                <p className="mt-2">© 2025 PNG Events. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
