@@ -1,18 +1,26 @@
-const CACHE_NAME = 'event-planner-cache-v4';
+const CACHE_NAME = 'event-planner-cache-v5';
+const STATIC_CACHE = 'event-planner-static-v5';
+const DYNAMIC_CACHE = 'event-planner-dynamic-v5';
+const API_CACHE = 'event-planner-api-v5';
+
+// Core static assets to cache immediately
 const urlsToCache = [
-  // Core static assets only (no dynamic routes)
   '/offline.html',
   '/globals.css',
+  '/manifest.json',
 
-  // Images and icons
-  '/file.svg',
-  '/globe.svg',
-  '/next.svg',
-  '/vercel.svg',
-  '/window.svg',
+  // Critical icons for PWA
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  '/icons/icon-maskable-192x192.png',
+  '/icons/icon-maskable-512x512.png'
+];
 
-  // Manifest and service worker
-  '/manifest.json'
+// Additional assets to cache when possible
+const additionalAssets = [
+  '/favicon.ico',
+  '/robots.txt',
+  '/sitemap.xml'
 ];
 
 self.addEventListener('install', (event) => {

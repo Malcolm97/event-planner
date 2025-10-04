@@ -12,17 +12,12 @@ const Toaster = dynamic(
   { ssr: false }
 );
 
-const SyncIndicator = dynamic(() => import("@/components/SyncIndicator"), {
-  ssr: false
-});
-
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
       <NetworkStatusProvider>
         <>
           {children}
-          <SyncIndicator />
           <Toaster position="bottom-center" />
         </>
       </NetworkStatusProvider>

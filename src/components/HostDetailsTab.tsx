@@ -20,35 +20,35 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
       {host ? (
         <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl p-6 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300">
           {/* Host Profile Section */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+          <div className="flex items-center gap-3 mb-6">
             <div className="flex-shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden shadow-md border-4 border-white">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden shadow-md border-3 border-white">
                 {host?.photo_url ? (
                   <Image
                     src={host.photo_url}
                     alt={host.name || 'Host'}
-                    width={96}
-                    height={96}
+                    width={80}
+                    height={80}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <FiUser size={32} className="text-gray-500" />
+                  <FiUser size={24} className="text-gray-500" />
                 )}
               </div>
             </div>
 
-            <div className="flex-1 space-y-3 text-center sm:text-left">
+            <div className="flex-1 min-w-0">
               {host?.name && (
-                <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <FiUser size={18} className="text-gray-500" />
-                  <span className="font-bold text-xl sm:text-2xl text-gray-900">{host.name}</span>
+                <div className="flex items-center gap-2 mb-1">
+                  <FiUser size={16} className="text-gray-500 flex-shrink-0" />
+                  <span className="font-bold text-lg sm:text-xl text-gray-900 truncate">{host.name}</span>
                 </div>
               )}
 
               {host?.company && (
-                <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <FiBriefcase size={16} className="text-gray-500" />
-                  <span className="text-gray-700 text-base font-medium">{host.company}</span>
+                <div className="flex items-center gap-2">
+                  <FiBriefcase size={14} className="text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-700 text-sm font-medium truncate">{host.company}</span>
                 </div>
               )}
             </div>

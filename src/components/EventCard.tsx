@@ -3,11 +3,12 @@ import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, 
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useSwipe } from '@/hooks/useSwipe';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
@@ -59,6 +60,18 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
   const [loading, setLoading] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
   const [deleting, setDeleting] = useState(false);
+
+  // Swipe gesture for sharing - disabled for now to avoid scroll conflicts
+  // const swipeRef = useSwipe({
+  //   onSwipeUp: () => {
+  //     // Trigger share functionality
+  //     const shareButton = document.querySelector(`[data-event-id="${event.id}"] button[aria-label="Share Event"]`) as HTMLButtonElement;
+  //     if (shareButton) {
+  //       shareButton.click();
+  //       toast.success('Swipe up to share! 📤', { duration: 2000 });
+  //     }
+  //   },
+  // });
 
   // New badge logic (created within last 7 days)
   const now = new Date();
@@ -232,7 +245,8 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
   return (
     <article
-      className="group relative card cursor-pointer overflow-hidden card-hover h-full rounded-2xl shadow transition-transform duration-200 hover:scale-[1.025] focus-within:scale-[1.025] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
+      data-event-id={event.id}
+      className="group relative responsive-card cursor-pointer overflow-hidden h-full transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl focus-within:scale-[1.02] focus:outline-none focus-ring active:scale-[0.98]"
       tabIndex={0}
       role="button"
       aria-label={`View details for ${event.name} event`}

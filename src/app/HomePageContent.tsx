@@ -297,61 +297,93 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   }, [events, upcomingEvents]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900">
-      <section className="w-full py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-yellow-300 to-red-600 border-b border-black">
-        {/* Sync indicator */}
-        {isSyncing && (
-          <div className="w-full text-center py-2 bg-yellow-50 text-yellow-800 font-semibold text-sm animate-pulse">Syncing events...</div>
-        )}
-        <div className="max-w-6xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8">
-          <h1 className="text-display-lg text-white mb-2 sm:mb-4">
-            Local Events Near You
-          </h1>
-          <p className="text-body-lg text-gray-100 max-w-4xl px-4">
-            Find concerts, festivals, workshops, and more happening in your area.
-            Create memories with events that matter to you.
-          </p>
-          <div className="flex flex-col gap-4 w-full max-w-4xl mt-4 sm:mt-6">
-            {/* Search and Filter Controls - Single Line */}
-            <div className="flex flex-col lg:flex-row gap-3 items-end">
-              <div className="w-full sm:w-auto sm:min-w-[160px]">
-                <input
-                  className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg bg-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-colors"
-                  placeholder="Search events, locations, or venues..."
-                  aria-label="Search events, locations, or venues"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+      {/* Sync indicator */}
+      {isSyncing && (
+        <div className="w-full text-center py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold text-sm shadow-sm animate-pulse">
+          🔄 Syncing events...
+        </div>
+      )}
+
+      {/* Modern Hero Section */}
+      <section className="relative w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 overflow-hidden">
+        {/* Subtle Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-xl"></div>
+          <div className="absolute top-40 right-32 w-24 h-24 bg-white rounded-full blur-lg"></div>
+          <div className="absolute bottom-32 left-1/3 w-28 h-28 bg-white rounded-full blur-xl"></div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center gap-8 sm:gap-10">
+          <div className="animate-bounce-in">
+            <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
+              Local Events Near You
+            </h1>
+            <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
+              Discover concerts, festivals, workshops, and more happening in your area.
+              Create unforgettable memories with events that matter.
+            </p>
+          </div>
+
+          {/* Search and Filter Controls - Mobile Optimized */}
+          <div className="w-full max-w-4xl animate-slide-up-fade">
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/30">
+              <div className="flex flex-col gap-4">
+                <div className="w-full">
+                  <input
+                    className="w-full px-4 py-4 text-base border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-200 placeholder-gray-500 shadow-sm"
+                    placeholder="🔍 Search events, locations, or venues..."
+                    aria-label="Search events, locations, or venues"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <CustomSelect
+                    options={displayedLocations.map(location => ({ value: location, label: location }))}
+                    value={selectedLocationFilter}
+                    onChange={setSelectedLocationFilter}
+                    placeholder="📍 All locations"
+                    className="w-full"
+                  />
+                  <CustomSelect
+                    options={displayedDates.map(dateOption => ({ value: dateOption, label: dateOption }))}
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                    placeholder="📅 All dates"
+                    className="w-full"
+                  />
+                  <Button
+                    size="md"
+                    aria-label="Find Events"
+                    className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                  >
+                    Find Events ✨
+                  </Button>
+                </div>
               </div>
-              <CustomSelect
-                options={displayedLocations.map(location => ({ value: location, label: location }))}
-                value={selectedLocationFilter}
-                onChange={setSelectedLocationFilter}
-                placeholder="All locations"
-                className="w-full sm:w-auto sm:min-w-[160px]"
-              />
-              <CustomSelect
-                options={displayedDates.map(dateOption => ({ value: dateOption, label: dateOption }))}
-                value={selectedDate}
-                onChange={setSelectedDate}
-                placeholder="All dates"
-                className="w-full sm:w-auto sm:min-w-[160px]"
-              />
-              <Button size="md" aria-label="Find Events" className="w-full sm:w-auto whitespace-nowrap px-4 py-3 h-auto">Find Events</Button>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8 w-full max-w-2xl">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{totalEvents !== null ? totalEvents : '...'}</div>
-              <div className="text-xs sm:text-sm md:text-base text-gray-200 font-medium">Total Events</div>
+
+          {/* Stats Cards - Modern Design */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-lg animate-slide-up-fade" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 text-center rounded-xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm">
+                {totalEvents !== null ? totalEvents : '...'}
+              </div>
+              <div className="text-xs sm:text-sm text-orange-100 font-medium">Total Events</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{totalUsers !== null ? totalUsers : '...'}</div>
-              <div className="text-xs sm:text-sm md:text-base text-gray-200 font-medium">Total Users</div>
+            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 text-center rounded-xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm">
+                {totalUsers !== null ? totalUsers : '...'}
+              </div>
+              <div className="text-xs sm:text-sm text-orange-100 font-medium">Total Users</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{citiesCoveredCount !== null ? citiesCoveredCount : '...'}</div>
-              <div className="text-xs sm:text-sm md:text-base text-gray-200 font-medium">Cities Covered</div>
+            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 text-center rounded-xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm">
+                {citiesCoveredCount !== null ? citiesCoveredCount : '...'}
+              </div>
+              <div className="text-xs sm:text-sm text-orange-100 font-medium">Cities Covered</div>
             </div>
           </div>
         </div>

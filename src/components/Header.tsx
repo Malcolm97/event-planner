@@ -5,20 +5,25 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiUser, FiLogOut, FiMenu, FiX, FiSettings } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiMenu, FiX, FiSettings, FiWifi, FiWifiOff, FiRefreshCw, FiClock, FiCheckCircle, FiAlertTriangle, FiDatabase } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { toast } from 'react-hot-toast';
+import * as db from '@/lib/indexedDB';
 
 import React from 'react';
 const Header = React.memo(function Header() {
-  const { isOnline } = useNetworkStatus(); // Get the status
+  const { isOnline, isSyncing, lastSyncTime, syncError } = useNetworkStatus();
+  const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null); // New state for user photo URL
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
+  const [cachedEventsCount, setCachedEventsCount] = useState(0);
 
 
   const router = useRouter();
@@ -34,14 +39,35 @@ const Header = React.memo(function Header() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('.profile-dropdown')) {
+      if (!target.closest('.profile-dropdown') && !target.closest('.network-dropdown')) {
         setIsProfileDropdownOpen(false);
+        setIsNetworkDropdownOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Check cached events count
+  useEffect(() => {
+    const checkCachedEvents = async () => {
+      try {
+        const events = await db.getEvents();
+        setCachedEventsCount(events.length);
+      } catch (error) {
+        console.warn('Failed to check cached events:', error);
+        setCachedEventsCount(0);
+      }
+    };
+
+    checkCachedEvents();
+    // Check periodically when offline
+    if (!isOnline) {
+      const interval = setInterval(checkCachedEvents, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -100,6 +126,17 @@ const Header = React.memo(function Header() {
     router.push('/');
   };
 
+  // Determine the current sync state
+  const getSyncState = () => {
+    if (!isOnline) return 'offline';
+    if (isSyncing || isProcessingQueue) return 'syncing';
+    if (syncError) return 'error';
+    if (queueLength > 0) return 'has-queue';
+    return 'online';
+  };
+
+  const syncState = getSyncState();
+
   // Offline-aware navigation helper
   const navigateWithOfflineCheck = (path: string, description: string) => {
     // Always allow navigation to home, settings, and about (static-ish pages)
@@ -139,11 +176,103 @@ const Header = React.memo(function Header() {
             <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Categories</Button>
             <Button onClick={() => router.push('/about')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">About</Button>
           </nav>
-          {/* Right side actions for desktop */}
-          <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
+          {/* Right side actions */}
+          <div className="flex items-center space-x-2 xl:space-x-3">
+            {/* Network Status */}
+            <div className="relative network-dropdown">
+              <Button
+                onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
+                variant="ghost"
+                className={`flex items-center text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                  syncState === 'offline' ? 'text-red-600' :
+                  syncState === 'syncing' ? 'text-blue-600' :
+                  syncState === 'error' ? 'text-red-600' :
+                  syncState === 'has-queue' ? 'text-yellow-600' :
+                  'text-green-600'
+                }`}
+                aria-expanded={isNetworkDropdownOpen}
+                aria-haspopup="menu"
+                title={syncState === 'offline' ? 'Offline Mode' :
+                       syncState === 'syncing' ? 'Syncing...' :
+                       syncState === 'error' ? 'Sync Error' :
+                       syncState === 'has-queue' ? 'Pending Sync' :
+                       'Online'}
+              >
+                {syncState === 'offline' ? <FiWifiOff size={16} /> :
+                 syncState === 'syncing' ? <FiRefreshCw size={16} className="animate-spin" /> :
+                 syncState === 'error' ? <FiAlertTriangle size={16} /> :
+                 syncState === 'has-queue' ? <FiClock size={16} /> :
+                 <FiWifi size={16} />}
+              </Button>
 
+              {isNetworkDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-[100] backdrop-blur-sm">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">Network Status</p>
+                    <p className="text-xs text-gray-500">Connection & sync information</p>
+                  </div>
+                  <div className="py-2">
+                    {/* Cached events indicator */}
+                    {!isOnline && cachedEventsCount > 0 && (
+                      <div className="px-4 py-2 flex items-center space-x-3 text-sm text-blue-700">
+                        <FiDatabase size={16} />
+                        <span>{cachedEventsCount} cached events</span>
+                      </div>
+                    )}
 
-            <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="flex items-center text-sm xl:text-base">
+                    {/* Queue indicator */}
+                    {queueLength > 0 && (
+                      <div className="px-4 py-2 flex items-center space-x-3 text-sm text-orange-700">
+                        <FiClock size={16} />
+                        <span>{queueLength} pending operation{queueLength !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+
+                    {/* Status */}
+                    <div className="px-4 py-2">
+                      <div className="flex items-center space-x-3 text-sm">
+                        {syncState === 'offline' ? <FiWifiOff size={16} className="text-red-600" /> :
+                         syncState === 'syncing' ? <FiRefreshCw size={16} className="text-blue-600 animate-spin" /> :
+                         syncState === 'error' ? <FiAlertTriangle size={16} className="text-red-600" /> :
+                         syncState === 'has-queue' ? <FiClock size={16} className="text-yellow-600" /> :
+                         <FiCheckCircle size={16} className="text-green-600" />}
+                        <span className="font-medium">
+                          {syncState === 'offline' ? 'Offline Mode' :
+                           syncState === 'syncing' ? 'Syncing...' :
+                           syncState === 'error' ? 'Sync Error' :
+                           syncState === 'has-queue' ? 'Online (Pending)' :
+                           'Online'}
+                        </span>
+                      </div>
+                      {lastSyncTime && isOnline && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
+                        </div>
+                      )}
+                      {syncState === 'offline' && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Changes will sync when online
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    {(syncState === 'error' || syncState === 'has-queue') && (
+                      <div className="border-t border-gray-100 mt-2 pt-2 px-4">
+                        <button
+                          onClick={() => { syncNow(); setIsNetworkDropdownOpen(false); }}
+                          className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          {syncState === 'error' ? 'Retry Sync' : 'Sync Now'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="hidden lg:flex items-center text-sm xl:text-base">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 inline mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -156,7 +285,7 @@ const Header = React.memo(function Header() {
                 <Button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   variant="ghost"
-                  className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100"
+                  className="hidden lg:flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100"
                   aria-expanded={isProfileDropdownOpen}
                   aria-haspopup="menu"
                 >
@@ -215,25 +344,12 @@ const Header = React.memo(function Header() {
               )
             )}
           </div>
-          {/* Hamburger for mobile */}
-          <Button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            variant="ghost"
-            className="p-3 sm:p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 lg:hidden h-auto min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={isMenuOpen}
-          >
-            <div className="relative w-5 h-5">
-              <span className={`absolute block h-0.5 w-5 bg-current transform transition-all duration-300 ease-in-out ${isMenuOpen ? 'rotate-45 top-2' : 'top-0'}`}></span>
-              <span className={`absolute block h-0.5 w-5 bg-current transform transition-all duration-300 ease-in-out top-2 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-              <span className={`absolute block h-0.5 w-5 bg-current transform transition-all duration-300 ease-in-out ${isMenuOpen ? '-rotate-45 top-2' : 'top-4'}`}></span>
-            </div>
-          </Button>
+
         </div>
 
         {/* Mobile Navigation Overlay */}
         <div
-          className={`fixed inset-0 z-[90] lg:hidden transition-all duration-300 ease-in-out ${
+          className={`fixed inset-0 z-[90] hidden transition-all duration-300 ease-in-out ${
             isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
           onClick={() => setIsMenuOpen(false)}
