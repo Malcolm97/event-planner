@@ -51,6 +51,8 @@ export default function SignInPage() {
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [about, setAbout] = useState("");
+  const [contactMethod, setContactMethod] = useState<'email' | 'phone' | 'both' | 'none'>('both');
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
   const [successMessage, setSuccessMessage] = useState(""); // New state for success message
@@ -102,6 +104,9 @@ export default function SignInPage() {
             company: company || "",
             phone: phone || "",
             about: about || "",
+            contact_method: contactMethod,
+            whatsapp_number: whatsappNumber || null,
+            contact_visibility: true,
             updated_at: new Date().toISOString(),
           };
 
@@ -316,6 +321,70 @@ export default function SignInPage() {
                 className="input-field"
                 required
               />
+              </div>
+
+              {/* Contact Preferences */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Contact Preferences (Optional)</h3>
+                <p className="text-xs text-gray-500 mb-3">Choose how other users can contact you about your events. This information will be visible to logged-in users.</p>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Contact Method</label>
+                  <select
+                    value={contactMethod}
+                    onChange={e => setContactMethod(e.target.value as 'email' | 'phone' | 'both' | 'none')}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  >
+                    <option value="both">Email and Phone</option>
+                    <option value="email">Email only</option>
+                    <option value="phone">Phone only</option>
+                    <option value="none">No contact</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Number (Optional)</label>
+                  <input
+                    type="tel"
+                    placeholder="Enter your WhatsApp number"
+                    value={whatsappNumber}
+                    onChange={e => setWhatsappNumber(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number (Optional)</label>
+                  <input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Company (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Enter your company name"
+                    value={company}
+                    onChange={e => setCompany(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">About You (Optional)</label>
+                  <textarea
+                    placeholder="Tell others about yourself..."
+                    value={about}
+                    onChange={e => setAbout(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  />
+                </div>
               </div>
             </>
           ) : (

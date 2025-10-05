@@ -27,7 +27,10 @@ export default function EditProfilePage() {
     company: '',
     phone: '',
     about: '',
-    email: '' // Add email to formData
+    email: '', // Add email to formData
+    contactMethod: 'both' as 'email' | 'phone' | 'both' | 'none',
+    whatsappNumber: '',
+    contactVisibility: true
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -70,7 +73,10 @@ export default function EditProfilePage() {
           company: data.company || '',
           phone: data.phone || '',
           about: data.about || '',
-          email: user.email || '' // Set existing email
+          email: user.email || '', // Set existing email
+          contactMethod: data.contact_method || 'both',
+          whatsappNumber: data.whatsapp_number || '',
+          contactVisibility: data.contact_visibility !== false // Default to true
         });
         setPhotoUrl(data.photo_url || null); // Set existing photo URL
       }
@@ -139,6 +145,9 @@ export default function EditProfilePage() {
         phone: formData.phone,
         about: formData.about,
         photo_url: newPhotoUrl, // Update photo URL
+        contact_method: formData.contactMethod,
+        whatsapp_number: formData.whatsappNumber || null,
+        contact_visibility: formData.contactVisibility,
         updated_at: new Date().toISOString(),
       };
 
@@ -167,7 +176,7 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -381,6 +390,61 @@ export default function EditProfilePage() {
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 placeholder="Tell us about yourself..."
               />
+            </div>
+
+            {/* Contact Preferences */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Preferences</h3>
+              <p className="text-sm text-gray-600 mb-4">Choose how other users can contact you about your events. This information will be visible to logged-in users only.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label htmlFor="contactMethod" className="block text-sm font-medium text-gray-700 mb-2">
+                    Preferred Contact Method
+                  </label>
+                  <select
+                    id="contactMethod"
+                    name="contactMethod"
+                    value={formData.contactMethod}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  >
+                    <option value="both">Email and Phone</option>
+                    <option value="email">Email only</option>
+                    <option value="phone">Phone only</option>
+                    <option value="none">No contact</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                    WhatsApp Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    id="whatsappNumber"
+                    name="whatsappNumber"
+                    value={formData.whatsappNumber}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    placeholder="Enter your WhatsApp number"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="contactVisibility"
+                  name="contactVisibility"
+                  checked={formData.contactVisibility}
+                  onChange={(e) => setFormData(prev => ({ ...prev, contactVisibility: e.target.checked }))}
+                  className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                />
+                <label htmlFor="contactVisibility" className="ml-2 block text-sm text-gray-700">
+                  Make my contact information visible to other logged-in users
+                </label>
+              </div>
             </div>
 
             {/* Password Change Section */}

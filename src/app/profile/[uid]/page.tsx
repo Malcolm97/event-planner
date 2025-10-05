@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES, Event, User } from '@/lib/supabase';
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiBriefcase } from 'react-icons/fi';
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageCircle } from 'react-icons/fi';
 import Image from 'next/image';
 import Link from 'next/link';
 import AppFooter from '@/components/AppFooter';
@@ -173,27 +173,39 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
               </div>
 
               {/* Contact Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {user.email && (
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <FiMail size={18} className="text-blue-600" />
-                    <div>
-                      <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">Email</p>
-                      <p className="text-blue-800 font-medium">{user.email}</p>
+              {user.contact_visibility && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {(user.contact_method === 'email' || user.contact_method === 'both') && user.email && (
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <FiMail size={18} className="text-blue-600" />
+                      <div>
+                        <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">Email</p>
+                        <p className="text-blue-800 font-medium">{user.email}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {user.phone && (
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                    <FiPhone size={18} className="text-green-600" />
-                    <div>
-                      <p className="text-xs text-green-600 font-medium uppercase tracking-wide">Phone</p>
-                      <p className="text-green-800 font-medium">{user.phone}</p>
+                  {(user.contact_method === 'phone' || user.contact_method === 'both') && user.phone && (
+                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <FiPhone size={18} className="text-green-600" />
+                      <div>
+                        <p className="text-xs text-green-600 font-medium uppercase tracking-wide">Phone</p>
+                        <p className="text-green-800 font-medium">{user.phone}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+
+                  {user.whatsapp_number && (
+                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <FiMessageCircle size={18} className="text-green-600" />
+                      <div>
+                        <p className="text-xs text-green-600 font-medium uppercase tracking-wide">WhatsApp</p>
+                        <p className="text-green-800 font-medium">{user.whatsapp_number}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

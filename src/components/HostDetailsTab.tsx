@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiUser, FiBriefcase, FiMail, FiPhone, FiExternalLink } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiMail, FiPhone, FiExternalLink, FiMessageCircle } from 'react-icons/fi';
 import Image from 'next/image';
 import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -81,51 +81,61 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
             <h3 className="font-bold text-lg text-gray-900 mb-3">Contact Information</h3>
 
             {authUser ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {host?.email ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <FiMail size={16} className="text-blue-600" />
+              host?.contact_visibility ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(host.contact_method === 'email' || host.contact_method === 'both') && host.email && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <FiMail size={16} className="text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-900 text-sm">Email</p>
+                        <p className="text-blue-700 font-medium text-sm">{host.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-blue-900 text-sm">Email</p>
-                      <p className="text-blue-700 font-medium text-sm">{host.email}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <FiMail size={16} className="text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-600 text-sm">Email</p>
-                      <p className="text-gray-500 text-sm">Not available</p>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {host?.phone ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                      <FiPhone size={16} className="text-green-600" />
+                  {(host.contact_method === 'phone' || host.contact_method === 'both') && host.phone && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                        <FiPhone size={16} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-green-900 text-sm">Phone</p>
+                        <p className="text-green-700 font-medium text-sm">{host.phone}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-green-900 text-sm">Phone</p>
-                      <p className="text-green-700 font-medium text-sm">{host.phone}</p>
+                  )}
+
+                  {host.whatsapp_number && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                        <FiMessageCircle size={16} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-green-900 text-sm">WhatsApp</p>
+                        <p className="text-green-700 font-medium text-sm">{host.whatsapp_number}</p>
+                      </div>
                     </div>
+                  )}
+
+                  {(!host.contact_method || host.contact_method === 'none') && !host.whatsapp_number && (
+                    <div className="col-span-full text-center py-4 px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                      <div className="w-8 h-8 mx-auto mb-2 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <FiUser size={16} className="text-gray-500" />
+                      </div>
+                      <p className="text-gray-600 text-sm">Host prefers not to be contacted</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6 px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <FiUser size={18} className="text-gray-500" />
                   </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <FiPhone size={16} className="text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-600 text-sm">Phone</p>
-                      <p className="text-gray-500 text-sm">Not available</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                  <p className="text-gray-600 text-sm">Host has chosen to keep contact information private</p>
+                </div>
+              )
             ) : (
               <div className="text-center py-6 px-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/60 rounded-xl">
                 <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-yellow-100 flex items-center justify-center">

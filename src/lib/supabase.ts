@@ -51,6 +51,9 @@ export interface User {
   phone?: string
   about?: string
   photo_url?: string
+  contact_method?: 'email' | 'phone' | 'both' | 'none'
+  whatsapp_number?: string
+  contact_visibility?: boolean
   updated_at?: string
 }
 
