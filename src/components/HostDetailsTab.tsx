@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { storeSigninRedirect, ModalState } from '@/lib/utils';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 interface HostDetailsTabProps {
   event: EventItem;
@@ -15,6 +16,7 @@ interface HostDetailsTabProps {
 const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
   const { user: authUser } = useAuth();
   const router = useRouter();
+  const { isOnline } = useNetworkStatus();
 
   const handleSignInClick = () => {
     // Store current URL and modal state for redirect after sign-in
@@ -162,13 +164,15 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-red-50 to-pink-50 border border-red-200/60 text-red-800 px-6 py-8 rounded-2xl text-center shadow-md">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-red-100 flex items-center justify-center shadow-sm">
-            <FiUser size={20} className="text-red-600" />
+        <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200/60 text-orange-800 px-6 py-8 rounded-2xl text-center shadow-md">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-orange-100 flex items-center justify-center shadow-sm">
+            <FiUser size={20} className="text-orange-600" />
           </div>
           <h3 className="font-semibold text-lg mb-2">Host Information Unavailable</h3>
-          {event?.created_by ? (
-            <p className="text-sm">Unable to fetch host details for user ID "{event.created_by}".</p>
+          {!isOnline ? (
+            <p className="text-sm">Host information unavailable in offline mode.</p>
+          ) : event?.created_by ? (
+            <p className="text-sm">Unable to fetch host details. Please try again later.</p>
           ) : (
             <p className="text-sm">Host details are not available for this event.</p>
           )}

@@ -9,6 +9,7 @@ import EventDetailsTab from './EventDetailsTab';
 import AboutEventTab from './AboutEventTab';
 import HostDetailsTab from './HostDetailsTab';
 import ImageModal from './ImageModal';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import '../components/EventModal.animations.css';
 
 interface EventModalProps {
@@ -28,11 +29,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-
-  useEffect(() => {
-    setIsOffline(typeof navigator !== 'undefined' && !navigator.onLine);
-  }, [dialogOpen]);
+  const { isOnline } = useNetworkStatus();
 
   useEffect(() => {
     if (!dialogOpen) return;
@@ -146,7 +143,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         }}
       >
         {/* Offline indicator */}
-        {isOffline && (
+        {!isOnline && (
           <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 text-sm sm:text-base font-semibold" role="alert">
             You are offline. Event details may be cached.
           </div>

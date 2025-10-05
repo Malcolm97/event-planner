@@ -33,8 +33,11 @@ const Header = React.memo(function Header() {
   const [hasMounted, setHasMounted] = useState(false); // New state for client-side check
   const [isClient, setIsClient] = useState(false);
 
-  // Pull to refresh hook
-  const { isPulling, progress } = usePullToRefresh();
+  // Pull to refresh hook - enable debug mode for development
+  const debugMode = typeof window !== 'undefined' &&
+                   (window.location.search.includes('pullToRefreshDebug=true') ||
+                    localStorage.getItem('pullToRefreshDebug') === 'true');
+  const { isPulling, progress } = usePullToRefresh({ debugMode });
 
   useEffect(() => {
     setHasMounted(true); // Set to true after component mounts on client

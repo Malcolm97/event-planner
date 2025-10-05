@@ -9,7 +9,7 @@ const OnlineBadge = React.memo(() => {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm font-semibold transition-all duration-300 ease-in-out backdrop-blur-sm border lg:block hidden
+      className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-xl items-center gap-3 text-sm font-semibold transition-all duration-300 ease-in-out backdrop-blur-sm border hidden lg:flex
         ${isOnline ? 'bg-green-500/90 text-white border-green-400' : 'bg-red-500/90 text-white border-red-400'}`}
     >
       {isOnline ? (

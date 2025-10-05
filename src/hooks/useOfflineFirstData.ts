@@ -3,6 +3,7 @@ import { getItems, addItems } from '@/lib/indexedDB';
 import { supabase, TABLES } from '@/lib/supabase';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { EventItem } from '@/lib/types';
+import { isEventCurrentOrUpcoming } from '@/lib/utils';
 
 export function useOfflineFirstData<T>(storeName: string) {
   const [data, setData] = useState<T[]>([]);
@@ -15,12 +16,16 @@ export function useOfflineFirstData<T>(storeName: string) {
 
     const loadData = async () => {
       try {
-        // First load cached data (with expiration check for events)
+        // First load cached data (with expiration check for events and users)
         let cachedData: T[] = [];
         let cacheExpired = false;
         if (storeName === 'events') {
           // Use getEvents for expiration logic
           cachedData = (await (await import('@/lib/indexedDB')).getEvents()) as T[];
+          cacheExpired = cachedData.length === 0;
+        } else if (storeName === 'users') {
+          // Use getUsers for expiration logic
+          cachedData = (await (await import('@/lib/indexedDB')).getUsers()) as T[];
           cacheExpired = cachedData.length === 0;
         } else {
           cachedData = await getItems(storeName);
@@ -41,8 +46,15 @@ export function useOfflineFirstData<T>(storeName: string) {
 
           if (mounted) {
             setData(freshData as T[]);
-            // Update cache
-            await addItems(storeName, freshData);
+            // Update cache - filter events to only current/upcoming for offline use
+            if (storeName === TABLES.EVENTS) {
+              const currentUpcomingEvents = (freshData as EventItem[]).filter(isEventCurrentOrUpcoming);
+              await (await import('@/lib/indexedDB')).addEvents(currentUpcomingEvents);
+            } else if (storeName === TABLES.USERS) {
+              await (await import('@/lib/indexedDB')).addUsers(freshData);
+            } else {
+              await addItems(storeName, freshData);
+            }
             setIsLoading(false);
           }
         }

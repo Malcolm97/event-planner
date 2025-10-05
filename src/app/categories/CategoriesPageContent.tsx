@@ -7,11 +7,12 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '../../lib/types';
-import { useEvents } from '@/hooks/useOfflineFirstData';
+import { useEvents, useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 import EventCard from '@/components/EventCard';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import EventModal from '@/components/EventModal';
 import Link from 'next/link';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 // Define categories and their properties
 const allCategories = [
@@ -76,6 +77,8 @@ const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
 
 function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   const { data: events = [], isLoading: loading } = useEvents();
+  const { data: users = [] } = useOfflineFirstData<User>(TABLES.USERS);
+  const { isOnline } = useNetworkStatus();
   const [displayCategories] = useState<typeof allCategories>(initialDisplayCategories);
   const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
   const now = new Date();
@@ -91,19 +94,32 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   // Fetch host details based on the event's creator ID
   const fetchHost = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.USERS)
-        .select('*')
-        .eq('id', userId);
-
-      if (error) {
-  // ...existing code...
+      // First try to find user in cached data
+      const cachedUser = users.find(user => user.id === userId);
+      if (cachedUser) {
+        setHost(cachedUser);
         return;
       }
 
-      if (data && data.length > 0) {
-        setHost(data[0]);
+      // If not in cache and online, fetch from server
+      if (isOnline) {
+        const { data, error } = await supabase
+          .from(TABLES.USERS)
+          .select('*')
+          .eq('id', userId);
+
+        if (error) {
+    // ...existing code...
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setHost(data[0]);
+        } else {
+          setHost(null);
+        }
       } else {
+        // Offline and not in cache
         setHost(null);
       }
     } catch (err: any) {

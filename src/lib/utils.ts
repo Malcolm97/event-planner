@@ -143,3 +143,14 @@ export function safeRedirect(url: string, router: any, fallbackUrl: string = '/d
     router.push(fallbackUrl);
   }
 }
+
+// Check if an event is current or upcoming (including today, ignoring time)
+export function isEventCurrentOrUpcoming(event: any): boolean {
+  if (!event.date) return false;
+  const eventDate = new Date(event.date);
+  const today = new Date();
+  // Set time to start of day for comparison
+  const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return eventDateOnly >= todayOnly;
+}

@@ -174,6 +174,14 @@ export const addEvents = async (events: EventItem[]): Promise<void> => {
   await addItems(STORES.EVENTS, [{ id: 'cache-meta', timestamp }, ...limitedEvents]);
 };
 
+// Add users with cache timestamp
+export const addUsers = async (users: any[]): Promise<void> => {
+  const timestamp = Date.now();
+  // Limit cache size to 200 users
+  const limitedUsers = users.slice(0, 200);
+  await addItems(STORES.USERS, [{ id: 'cache-meta', timestamp }, ...limitedUsers]);
+};
+
 // Clear events cache utility
 export const clearEventsCache = async (): Promise<void> => {
   await clearStore(STORES.EVENTS);
@@ -199,6 +207,23 @@ export const getEvents = async (): Promise<EventItem[]> => {
 // Get events by category
 export const getEventsByCategory = (category: string): Promise<EventItem[]> => {
   return getItemsByIndex(STORES.EVENTS, 'category', category);
+};
+
+// Get users and check cache expiration (24h)
+export const getUsers = async (): Promise<any[]> => {
+  const items = await getItems<any>(STORES.USERS);
+  const meta = items.find((item: any) => item.id === 'cache-meta');
+  const users = items.filter((item: any) => item.id !== 'cache-meta');
+  if (meta && meta.timestamp) {
+    const now = Date.now();
+    const age = now - meta.timestamp;
+    if (age > 24 * 60 * 60 * 1000) {
+      // Cache expired, clear store
+      await clearStore(STORES.USERS);
+      return [];
+    }
+  }
+  return users;
 };
 
 // Sync status management
