@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu } from 'react-icons/fi';
+import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu, FiUsers } from 'react-icons/fi';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { toast } from 'react-hot-toast';
 import { getLastCommitDate } from '@/lib/github';
@@ -42,6 +42,12 @@ export default function BottomNav() {
       label: 'Categories',
       path: '/categories',
       active: currentPath === '/categories' || currentPath?.startsWith('/categories'),
+    },
+    {
+      icon: FiUsers,
+      label: 'Creators',
+      path: '/creators',
+      active: currentPath === '/creators',
     },
     {
       icon: FiPlus,
