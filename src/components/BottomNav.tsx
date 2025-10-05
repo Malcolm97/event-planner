@@ -44,24 +44,17 @@ export default function BottomNav() {
       active: currentPath === '/categories' || currentPath?.startsWith('/categories'),
     },
     {
-      icon: FiUsers,
-      label: 'Creators',
-      path: '/creators',
-      active: currentPath === '/creators',
-    },
-    {
       icon: FiPlus,
       label: 'Create',
       path: '/create-event',
       active: currentPath === '/create-event',
       primary: true,
     },
-
     {
-      icon: FiInfo,
-      label: 'About',
-      path: '/about',
-      active: currentPath === '/about',
+      icon: FiUsers,
+      label: 'Creators',
+      path: '/creators',
+      active: currentPath === '/creators',
     },
     {
       icon: FiUser,
@@ -168,6 +161,13 @@ export default function BottomNav() {
 
               {/* Menu Items */}
               <div className="space-y-4">
+                <button
+                  onClick={() => { router.push('/about'); setIsHamburgerOpen(false); }}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <FiInfo size={20} />
+                  <span className="font-medium">About</span>
+                </button>
                 <button
                   onClick={() => { router.push('/settings'); setIsHamburgerOpen(false); }}
                   className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"

@@ -12,6 +12,8 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { toast } from 'react-hot-toast';
 import * as db from '@/lib/indexedDB';
 import { storeSigninRedirect } from '@/lib/utils';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 
 
 import React from 'react';
@@ -30,6 +32,9 @@ const Header = React.memo(function Header() {
   const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false); // New state for client-side check
   const [isClient, setIsClient] = useState(false);
+
+  // Pull to refresh hook
+  const { isPulling, progress } = usePullToRefresh();
 
   useEffect(() => {
     setHasMounted(true); // Set to true after component mounts on client
@@ -161,7 +166,9 @@ const Header = React.memo(function Header() {
 
 
   return (
-    <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md safe-area-inset">
+    <>
+      <PullToRefreshIndicator isPulling={isPulling} progress={progress} />
+      <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md safe-area-inset">
       <div className="max-w-7xl mx-auto container-padding">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
@@ -363,6 +370,7 @@ const Header = React.memo(function Header() {
 
       </div>
     </header>
+    </>
   );
 });
 export default Header;

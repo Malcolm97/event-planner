@@ -32,7 +32,7 @@ export default function CreatorsPage() {
       try {
         setLoading(true);
 
-        // Get all users who have created events
+        // Get all users who have created events (both current and past)
         const { data: eventsData, error: eventsError } = await supabase
           .from(TABLES.EVENTS)
           .select('created_by')
@@ -238,7 +238,7 @@ export default function CreatorsPage() {
                     )}
 
                     {/* Events Count */}
-                    <div className="mt-2 text-xs text-gray-500">
+                    <div className="mt-2 text-xs text-yellow-600">
                       {creator.eventsCount} event{creator.eventsCount !== 1 ? 's' : ''}
                     </div>
                   </div>
