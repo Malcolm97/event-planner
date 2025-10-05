@@ -196,13 +196,18 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
                   )}
 
                   {user.whatsapp_number && (
-                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <a
+                      href={`https://wa.me/${user.whatsapp_number.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
+                    >
                       <FiMessageCircle size={18} className="text-green-600" />
                       <div>
                         <p className="text-xs text-green-600 font-medium uppercase tracking-wide">WhatsApp</p>
                         <p className="text-green-800 font-medium">{user.whatsapp_number}</p>
                       </div>
-                    </div>
+                    </a>
                   )}
                 </div>
               )}

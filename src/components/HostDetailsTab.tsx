@@ -108,7 +108,12 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
                   )}
 
                   {host.whatsapp_number && (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm">
+                    <a
+                      href={`https://wa.me/${host.whatsapp_number.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm hover:bg-green-100 transition-colors"
+                    >
                       <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
                         <FiMessageCircle size={16} className="text-green-600" />
                       </div>
@@ -116,7 +121,7 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
                         <p className="font-semibold text-green-900 text-sm">WhatsApp</p>
                         <p className="text-green-700 font-medium text-sm">{host.whatsapp_number}</p>
                       </div>
-                    </div>
+                    </a>
                   )}
 
                   {(!host.contact_method || host.contact_method === 'none') && !host.whatsapp_number && (
