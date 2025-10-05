@@ -49,15 +49,25 @@ export default function PWAInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if app was installed
-    window.addEventListener('appinstalled', () => {
+    // Enhanced app installed handler for PWA features
+    const handleAppInstalled = () => {
+      console.log('PWA installed successfully!');
       setDeferredPrompt(null);
       setShowPrompt(false);
       setIsStandalone(true);
-    });
+
+      // Register background sync for installed PWA
+      registerBackgroundSyncForPWA();
+
+      // Request notification permission for push notifications
+      requestNotificationPermission();
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, [isStandalone]);
 
@@ -85,6 +95,36 @@ export default function PWAInstallPrompt() {
     setShowPrompt(false);
     // Store dismissal in localStorage to avoid showing again
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+  };
+
+  // Register background sync for installed PWA
+  const registerBackgroundSyncForPWA = async () => {
+    if ('serviceWorker' in navigator && 'sync' in (window as any).ServiceWorkerRegistration?.prototype) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await (registration as any).sync.register('background-cache-sync');
+        console.log('Background sync registered for installed PWA');
+      } catch (error) {
+        console.warn('Background sync registration failed:', error);
+      }
+    }
+  };
+
+  // Request notification permission for push notifications
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window && 'serviceWorker' in navigator) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          console.log('Notification permission granted');
+          // You can now send push notifications
+        } else {
+          console.log('Notification permission denied');
+        }
+      } catch (error) {
+        console.warn('Error requesting notification permission:', error);
+      }
+    }
   };
 
   // Don't show if already installed or dismissed recently

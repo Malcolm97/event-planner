@@ -5,17 +5,11 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit');
-    const category = searchParams.get('category');
 
     let query = supabase
-      .from(TABLES.EVENTS)
-      .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by, created_at')
-      .order('date', { ascending: true });
-
-    // Apply category filter if provided
-    if (category) {
-      query = query.eq('category', category);
-    }
+      .from(TABLES.USERS)
+      .select('id, name, email, phone, company, about, photo_url, updated_at')
+      .order('updated_at', { ascending: false });
 
     // Apply limit if provided
     if (limit) {
@@ -28,13 +22,13 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching events from Supabase:', error.message);
+      console.error('Error fetching users from Supabase:', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json(data || []);
   } catch (error: any) {
-    console.error('Unexpected error fetching events:', error.message);
+    console.error('Unexpected error fetching users:', error.message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

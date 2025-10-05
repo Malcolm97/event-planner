@@ -182,12 +182,50 @@ export const addUsers = async (users: any[]): Promise<void> => {
   await addItems(STORES.USERS, [{ id: 'cache-meta', timestamp }, ...limitedUsers]);
 };
 
+// Update events cache periodically (called every second by service worker)
+export const updateEventsCache = async (events: EventItem[]): Promise<void> => {
+  try {
+    const timestamp = Date.now();
+    // Keep existing events and merge with new ones, limit to 500
+    const existingEvents = await getEvents();
+    const mergedEvents = [...existingEvents, ...events];
+    const uniqueEvents = mergedEvents.filter((event, index, self) =>
+      index === self.findIndex(e => e.id === event.id)
+    );
+    const limitedEvents = uniqueEvents.slice(0, 500);
+
+    await addItems(STORES.EVENTS, [{ id: 'cache-meta', timestamp }, ...limitedEvents]);
+    console.log(`Updated events cache with ${limitedEvents.length} events`);
+  } catch (error) {
+    console.error('Failed to update events cache:', error);
+  }
+};
+
+// Update users cache periodically (called every second by service worker)
+export const updateUsersCache = async (users: any[]): Promise<void> => {
+  try {
+    const timestamp = Date.now();
+    // Keep existing users and merge with new ones, limit to 200
+    const existingUsers = await getUsers();
+    const mergedUsers = [...existingUsers, ...users];
+    const uniqueUsers = mergedUsers.filter((user, index, self) =>
+      index === self.findIndex(u => u.id === user.id)
+    );
+    const limitedUsers = uniqueUsers.slice(0, 200);
+
+    await addItems(STORES.USERS, [{ id: 'cache-meta', timestamp }, ...limitedUsers]);
+    console.log(`Updated users cache with ${limitedUsers.length} users`);
+  } catch (error) {
+    console.error('Failed to update users cache:', error);
+  }
+};
+
 // Clear events cache utility
 export const clearEventsCache = async (): Promise<void> => {
   await clearStore(STORES.EVENTS);
 };
 
-// Get events and check cache expiration (24h)
+// Get events and check cache expiration (7 days - extended due to periodic caching)
 export const getEvents = async (): Promise<EventItem[]> => {
   const items = await getItems<any>(STORES.EVENTS);
   const meta = items.find((item: any) => item.id === 'cache-meta');
@@ -195,7 +233,7 @@ export const getEvents = async (): Promise<EventItem[]> => {
   if (meta && meta.timestamp) {
     const now = Date.now();
     const age = now - meta.timestamp;
-    if (age > 24 * 60 * 60 * 1000) {
+    if (age > 7 * 24 * 60 * 60 * 1000) { // 7 days
       // Cache expired, clear store
       await clearStore(STORES.EVENTS);
       return [];
@@ -209,7 +247,7 @@ export const getEventsByCategory = (category: string): Promise<EventItem[]> => {
   return getItemsByIndex(STORES.EVENTS, 'category', category);
 };
 
-// Get users and check cache expiration (24h)
+// Get users and check cache expiration (7 days - extended due to periodic caching)
 export const getUsers = async (): Promise<any[]> => {
   const items = await getItems<any>(STORES.USERS);
   const meta = items.find((item: any) => item.id === 'cache-meta');
@@ -217,7 +255,7 @@ export const getUsers = async (): Promise<any[]> => {
   if (meta && meta.timestamp) {
     const now = Date.now();
     const age = now - meta.timestamp;
-    if (age > 24 * 60 * 60 * 1000) {
+    if (age > 7 * 24 * 60 * 60 * 1000) { // 7 days
       // Cache expired, clear store
       await clearStore(STORES.USERS);
       return [];

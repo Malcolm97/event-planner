@@ -16,15 +16,15 @@ export function useOfflineFirstData<T>(storeName: string) {
 
     const loadData = async () => {
       try {
-        // First load cached data (with expiration check for events and users)
+        // First load cached data (with extended expiration for better offline support)
         let cachedData: T[] = [];
         let cacheExpired = false;
         if (storeName === 'events') {
-          // Use getEvents for expiration logic
+          // Use getEvents for expiration logic (extended to 7 days due to periodic caching)
           cachedData = (await (await import('@/lib/indexedDB')).getEvents()) as T[];
           cacheExpired = cachedData.length === 0;
         } else if (storeName === 'users') {
-          // Use getUsers for expiration logic
+          // Use getUsers for expiration logic (extended to 7 days due to periodic caching)
           cachedData = (await (await import('@/lib/indexedDB')).getUsers()) as T[];
           cacheExpired = cachedData.length === 0;
         } else {

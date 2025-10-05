@@ -376,4 +376,5 @@ const Header = React.memo(function Header() {
     </>
   );
 });
+
 export default Header;
