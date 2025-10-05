@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { storeSigninRedirect, ModalState } from '@/lib/utils';
 
 // Base64 encoded SVG for a default user avatar
 const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
@@ -50,6 +51,17 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
     sessionStorage.setItem('creatorsScrollPosition', window.scrollY.toString());
     router.push(`/profile/${creator.id}`);
     onClose();
+  };
+
+  const handleSignInClick = () => {
+    // Store current URL and modal state for redirect after sign-in
+    const currentUrl = window.location.pathname + window.location.search;
+    storeSigninRedirect(currentUrl, {
+      type: 'creator-modal',
+      creatorId: creator.id,
+      isOpen: true
+    });
+    router.push('/signin');
   };
 
   return (
@@ -214,34 +226,17 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
               <p className="text-yellow-800 text-sm mb-4">
                 Please <span className="font-bold">log in</span> to your account to view contact information and access full profiles.
               </p>
-              <Link
-                href="/signin"
+              <button
+                onClick={handleSignInClick}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
                 Sign In
                 <FiExternalLink size={14} />
-              </Link>
+              </button>
             </div>
           )}
 
-          {/* Action Button */}
-          <div className="pt-4 border-t border-gray-200">
-            {authUser ? (
-              <button
-                onClick={handleViewFullProfile}
-                className="w-full bg-gradient-to-r from-yellow-400 to-red-500 text-white py-3 px-6 rounded-xl font-semibold hover:from-yellow-500 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                View Full Profile
-              </button>
-            ) : (
-              <Link
-                href="/signin"
-                className="block w-full bg-gradient-to-r from-yellow-400 to-red-500 text-white py-3 px-6 rounded-xl font-semibold hover:from-yellow-500 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl text-center"
-              >
-                Sign In to View Profile
-              </Link>
-            )}
-          </div>
+
         </div>
       </div>
     </div>

@@ -1,88 +1,145 @@
+import { EventItem } from './types';
 
-import { FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiUsers, FiBook, FiTrendingUp, FiStar } from 'react-icons/fi';
-import { EventItem } from '@/lib/types';
+// Get the primary image URL for an event
+export function getEventPrimaryImage(event: EventItem): string {
+  if (!event.image_urls) return '/next.svg';
 
-export const allCategories = [
-  { name: "Music" },
-  { name: "Art" },
-  { name: "Food" },
-  { name: "Technology" },
-  { name: "Wellness" },
-  { name: "Comedy" },
-  { name: "Business" },
-  { name: "Education" },
-  { name: "Community" },
-  { name: "Festival" },
-  { name: "Conference" },
-  { name: "Workshop" },
-  { name: "Sports" },
-  { name: "Meetup" },
-];
-
-export const categoryIconMap: Record<string, React.ComponentType<{ size: number }>> = {
-  Music: FiMusic,
-  Art: FiImage,
-  Food: FiCoffee,
-  Technology: FiCpu,
-  Wellness: FiHeart,
-  Comedy: FiSmile,
-  Business: FiTrendingUp,
-  Education: FiBook,
-  Community: FiUsers,
-  Festival: FiStar,
-  Conference: FiTrendingUp,
-  Workshop: FiBook,
-  Sports: FiStar,
-  Meetup: FiUsers,
-};
-
-export const categoryColorMap: Record<string, string> = {
-  Music: 'bg-yellow-400 text-black',
-  Art: 'bg-pink-400 text-white',
-  Food: 'bg-amber-300 text-black',
-  Technology: 'bg-yellow-300 text-black',
-  Wellness: 'bg-green-400 text-black',
-  Comedy: 'bg-yellow-200 text-black',
-  Business: 'bg-red-600 text-white',
-  Education: 'bg-black text-yellow-300',
-  Community: 'bg-red-400 text-white',
-  Festival: 'bg-fuchsia-400 text-white',
-  Conference: 'bg-cyan-400 text-black',
-  Workshop: 'bg-lime-300 text-black',
-  Sports: 'bg-amber-500 text-black',
-  Meetup: 'bg-gray-300 text-black',
-  Other: 'bg-gray-300 text-black',
-};
-
-/**
- * Get the primary image URL from an event, with support for multiple images
- * @param event - Event object that may have image_urls array
- * @returns The primary image URL or fallback placeholder
- */
-export function getEventPrimaryImage(event: EventItem | { image_urls?: string[] | null | string; name?: string }): string {
-  if (event.image_urls) {
-    let imageUrls: string[] | null = null;
-
-    if (typeof event.image_urls === 'string') {
-      try {
-        const parsedUrls = JSON.parse(event.image_urls);
-        if (Array.isArray(parsedUrls) && parsedUrls.length > 0 && parsedUrls[0]) {
-          imageUrls = parsedUrls;
-        } else {
-          imageUrls = [event.image_urls];
-        }
-      } catch (error) {
-        console.warn('Failed to parse image_urls as JSON, treating as single URL:', error);
-        imageUrls = [event.image_urls];
+  if (typeof event.image_urls === 'string') {
+    try {
+      const parsed = JSON.parse(event.image_urls);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed[0];
       }
-    } else if (Array.isArray(event.image_urls)) {
-      imageUrls = event.image_urls;
-    }
-
-    if (imageUrls && imageUrls.length > 0 && imageUrls[0]) {
-      return imageUrls[0];
+      return event.image_urls;
+    } catch (error) {
+      return event.image_urls;
     }
   }
 
-  return `/next.svg`;
+  if (Array.isArray(event.image_urls) && event.image_urls.length > 0) {
+    return event.image_urls[0];
+  }
+
+  return '/next.svg';
+}
+
+// Sign-in redirect utilities
+export const REDIRECT_URL_KEY = 'signinRedirectUrl';
+export const MODAL_STATE_KEY = 'signinModalState';
+export const REDIRECT_TIMESTAMP_KEY = 'signinRedirectTimestamp';
+
+// Maximum age for stored redirect data (24 hours)
+const MAX_REDIRECT_AGE = 24 * 60 * 60 * 1000;
+
+export interface ModalState {
+  type: 'creator-modal' | 'event-modal';
+  creatorId?: string;
+  eventId?: string;
+  activeTab?: 'event-details' | 'about-event' | 'host-details';
+  isOpen?: boolean;
+}
+
+export function storeSigninRedirect(url: string, modalState?: ModalState) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    // Validate URL
+    new URL(url, window.location.origin);
+
+    sessionStorage.setItem(REDIRECT_URL_KEY, url);
+    sessionStorage.setItem(REDIRECT_TIMESTAMP_KEY, Date.now().toString());
+
+    if (modalState) {
+      // Validate modal state structure
+      if (modalState.type && ['creator-modal', 'event-modal'].includes(modalState.type)) {
+        sessionStorage.setItem(MODAL_STATE_KEY, JSON.stringify(modalState));
+      }
+    }
+  } catch (error) {
+    console.warn('Invalid redirect URL provided:', url);
+  }
+}
+
+export function getSigninRedirect(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const url = sessionStorage.getItem(REDIRECT_URL_KEY);
+    const timestamp = sessionStorage.getItem(REDIRECT_TIMESTAMP_KEY);
+
+    if (!url || !timestamp) return null;
+
+    // Check if redirect data is too old
+    const age = Date.now() - parseInt(timestamp);
+    if (age > MAX_REDIRECT_AGE) {
+      clearSigninRedirect();
+      return null;
+    }
+
+    // Validate URL is still valid
+    new URL(url, window.location.origin);
+    return url;
+  } catch (error) {
+    console.warn('Stored redirect URL is invalid, clearing:', error);
+    clearSigninRedirect();
+    return null;
+  }
+}
+
+export function getSigninModalState(): ModalState | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const state = sessionStorage.getItem(MODAL_STATE_KEY);
+    const timestamp = sessionStorage.getItem(REDIRECT_TIMESTAMP_KEY);
+
+    if (!state || !timestamp) return null;
+
+    // Check if modal state is too old
+    const age = Date.now() - parseInt(timestamp);
+    if (age > MAX_REDIRECT_AGE) {
+      clearSigninRedirect();
+      return null;
+    }
+
+    const parsedState = JSON.parse(state);
+
+    // Validate modal state structure
+    if (parsedState.type && ['creator-modal', 'event-modal'].includes(parsedState.type)) {
+      return parsedState as ModalState;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('Stored modal state is invalid, clearing:', error);
+    clearSigninRedirect();
+    return null;
+  }
+}
+
+export function clearSigninRedirect() {
+  if (typeof window === 'undefined') return;
+
+  sessionStorage.removeItem(REDIRECT_URL_KEY);
+  sessionStorage.removeItem(MODAL_STATE_KEY);
+  sessionStorage.removeItem(REDIRECT_TIMESTAMP_KEY);
+}
+
+// Utility to check if we have valid redirect data
+export function hasValidSigninRedirect(): boolean {
+  return getSigninRedirect() !== null;
+}
+
+// Safe redirect function with error handling
+export function safeRedirect(url: string, router: any, fallbackUrl: string = '/dashboard') {
+  try {
+    // Validate URL
+    new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
+    // Use Next.js router for client-side navigation
+    router.push(url);
+  } catch (error) {
+    console.warn('Redirect failed, using fallback:', error);
+    router.push(fallbackUrl);
+  }
 }

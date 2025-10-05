@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { supabase, TABLES, Event, User } from "@/lib/supabase";
 import EventModal from "@/components/EventModal";
 import Button from "@/components/Button";
 
 export default function EventDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const eventId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [host, setHost] = useState<User | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [initialTab, setInitialTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
 
   useEffect(() => {
     async function fetchEvent() {
@@ -43,6 +45,26 @@ export default function EventDetailsPage() {
     }
     fetchEvent();
   }, [eventId]);
+
+  // Check for modal state in URL parameters (after sign-in redirect)
+  useEffect(() => {
+    const modalStateParam = searchParams.get('modalState');
+    if (modalStateParam && event) {
+      try {
+        const modalState = JSON.parse(modalStateParam);
+        if (modalState.type === 'event-modal' && modalState.eventId === eventId) {
+          setInitialTab(modalState.activeTab || 'event-details');
+          setDialogOpen(true);
+          // Clean up URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('modalState');
+          window.history.replaceState({}, '', url.toString());
+        }
+      } catch (error) {
+        console.error('Error parsing modal state:', error);
+      }
+    }
+  }, [searchParams, event, eventId]);
 
   if (loading) {
     return (
@@ -84,7 +106,7 @@ export default function EventDetailsPage() {
           </Button>
         </div>
       </div>
-      <EventModal selectedEvent={event} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
+      <EventModal selectedEvent={event} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} initialTab={initialTab} />
     </div>
   );
 }

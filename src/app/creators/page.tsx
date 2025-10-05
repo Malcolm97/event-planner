@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AppFooter from '@/components/AppFooter';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { FiSearch, FiUser } from 'react-icons/fi';
@@ -17,6 +18,7 @@ interface CreatorWithEvents extends User {
 }
 
 export default function CreatorsPage() {
+  const searchParams = useSearchParams();
   const [creators, setCreators] = useState<CreatorWithEvents[]>([]);
   const [filteredCreators, setFilteredCreators] = useState<CreatorWithEvents[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +113,29 @@ export default function CreatorsPage() {
 
     setFilteredCreators(filtered);
   }, [creators, searchTerm]);
+
+  // Check for modal state in URL parameters (after sign-in redirect)
+  useEffect(() => {
+    const modalStateParam = searchParams.get('modalState');
+    if (modalStateParam && creators.length > 0) {
+      try {
+        const modalState = JSON.parse(modalStateParam);
+        if (modalState.type === 'creator-modal' && modalState.creatorId) {
+          const creator = creators.find(c => c.id === modalState.creatorId);
+          if (creator) {
+            setSelectedCreator(creator);
+            setModalOpen(true);
+            // Clean up URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('modalState');
+            window.history.replaceState({}, '', url.toString());
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing modal state:', error);
+      }
+    }
+  }, [searchParams, creators]);
 
   const handleCreatorClick = (creator: CreatorWithEvents) => {
     setSelectedCreator(creator);

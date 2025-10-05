@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import SuccessModal from '@/components/SuccessModal';
+import { getSigninRedirect, getSigninModalState, clearSigninRedirect, ModalState, safeRedirect } from '@/lib/utils';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -130,7 +131,15 @@ export default function SignInPage() {
           }
 
           setError("");
-          setSuccessMessage("Account created successfully! Please check your email for verification.");
+
+          // Check if we should redirect after registration
+          const redirectUrl = getSigninRedirect();
+          if (redirectUrl) {
+            setSuccessMessage("Account created successfully! Please check your email for verification. You will be redirected after signing in.");
+          } else {
+            setSuccessMessage("Account created successfully! Please check your email for verification.");
+          }
+
           setShowSuccessModal(true); // Show the success modal
         }
       } else if (isForgotPassword) {
@@ -152,7 +161,24 @@ export default function SignInPage() {
 
         if (error) throw error;
 
-        router.push("/dashboard");
+        // Check for stored redirect URL and modal state
+        const redirectUrl = getSigninRedirect();
+        const modalState = getSigninModalState();
+
+        if (redirectUrl) {
+          clearSigninRedirect();
+
+          // If there's modal state, pass it as query parameters
+          if (modalState) {
+            const params = new URLSearchParams();
+            params.set('modalState', JSON.stringify(modalState));
+            safeRedirect(`${redirectUrl}?${params.toString()}`, router);
+          } else {
+            safeRedirect(redirectUrl, router);
+          }
+        } else {
+          safeRedirect('/dashboard', router);
+        }
       }
     } catch (err: any) {
       let errorMessage = "An unexpected error occurred.";

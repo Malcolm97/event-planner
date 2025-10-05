@@ -16,9 +16,10 @@ interface EventModalProps {
   host: User | null;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
+  initialTab?: 'event-details' | 'about-event' | 'host-details';
 }
 
-export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen }: EventModalProps) {
+export default function EventModal({ selectedEvent, host, dialogOpen, setDialogOpen, initialTab }: EventModalProps) {
   // Accessibility: focus trap and keyboard navigation
   const modalRef = useRef<HTMLDivElement>(null);
   const lastActiveElement = useRef<HTMLElement | null>(null);
@@ -71,6 +72,13 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       setError('No event selected.');
     }
   }, [selectedEvent]);
+
+  // Set initial tab when modal opens
+  useEffect(() => {
+    if (dialogOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [dialogOpen, initialTab]);
 
   // Navigation helper functions
   const handlePrevImage = () => {

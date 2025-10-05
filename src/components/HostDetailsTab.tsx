@@ -1,9 +1,11 @@
 import React from 'react';
-import { FiUser, FiBriefcase, FiMail, FiPhone } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiMail, FiPhone, FiExternalLink } from 'react-icons/fi';
 import Image from 'next/image';
 import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { storeSigninRedirect, ModalState } from '@/lib/utils';
 
 interface HostDetailsTabProps {
   event: EventItem;
@@ -12,6 +14,18 @@ interface HostDetailsTabProps {
 
 const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
   const { user: authUser } = useAuth();
+  const router = useRouter();
+
+  const handleSignInClick = () => {
+    // Store current URL and modal state for redirect after sign-in
+    const currentUrl = window.location.pathname + window.location.search;
+    storeSigninRedirect(currentUrl, {
+      type: 'event-modal',
+      eventId: event.id,
+      activeTab: 'host-details'
+    });
+    router.push('/signin');
+  };
 
   return (
     <div className="space-y-6">
@@ -118,9 +132,16 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
                   <FiUser size={18} className="text-yellow-600" />
                 </div>
                 <h4 className="font-semibold text-yellow-900 mb-1 text-base">Sign In Required</h4>
-                <p className="text-yellow-800 text-sm">
+                <p className="text-yellow-800 text-sm mb-4">
                   Please <span className="font-bold">log in</span> to your account to view the host's contact information.
                 </p>
+                <button
+                  onClick={handleSignInClick}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                >
+                  Sign In
+                  <FiExternalLink size={14} />
+                </button>
               </div>
             )}
           </div>

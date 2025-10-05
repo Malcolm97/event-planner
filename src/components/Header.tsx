@@ -11,6 +11,7 @@ import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { toast } from 'react-hot-toast';
 import * as db from '@/lib/indexedDB';
+import { storeSigninRedirect } from '@/lib/utils';
 
 
 import React from 'react';
@@ -341,7 +342,16 @@ const Header = React.memo(function Header() {
               </div>
             ) : (
               hasMounted && isOnline && (
-                <Button onClick={() => router.push('/signin')} variant="ghost" className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2">
+                <Button
+                  onClick={() => {
+                    // Store current URL for redirect after sign-in
+                    const currentUrl = window.location.pathname + window.location.search;
+                    storeSigninRedirect(currentUrl);
+                    router.push('/signin');
+                  }}
+                  variant="ghost"
+                  className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2"
+                >
                   <FiUser size={14} className="inline mr-1 sm:mr-2" />Sign In
                 </Button>
               )
