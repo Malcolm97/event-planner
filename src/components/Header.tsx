@@ -197,12 +197,12 @@ const Header = React.memo(function Header() {
               <Button
                 onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
                 variant="ghost"
-                className={`flex items-center text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  syncState === 'offline' ? 'text-red-600' :
-                  syncState === 'syncing' ? 'text-blue-600' :
-                  syncState === 'error' ? 'text-red-600' :
-                  syncState === 'has-queue' ? 'text-yellow-600' :
-                  'text-green-600'
+                className={`relative flex items-center text-sm xl:text-base h-auto px-3 py-2 rounded-xl transition-all duration-200 hover:bg-gray-50 hover:scale-105 active:scale-95 ${
+                  syncState === 'offline' ? 'text-red-600 hover:bg-red-50' :
+                  syncState === 'syncing' ? 'text-blue-600 hover:bg-blue-50' :
+                  syncState === 'error' ? 'text-red-600 hover:bg-red-50' :
+                  syncState === 'has-queue' ? 'text-yellow-600 hover:bg-yellow-50' :
+                  'text-green-600 hover:bg-green-50'
                 }`}
                 aria-expanded={isNetworkDropdownOpen}
                 aria-haspopup="menu"
@@ -212,72 +212,133 @@ const Header = React.memo(function Header() {
                        syncState === 'has-queue' ? 'Pending Sync' :
                        'Online'}
               >
-                {syncState === 'offline' ? <FiWifiOff size={16} /> :
-                 syncState === 'syncing' ? <FiRefreshCw size={16} className="animate-spin" /> :
-                 syncState === 'error' ? <FiAlertTriangle size={16} /> :
-                 syncState === 'has-queue' ? <FiClock size={16} /> :
-                 <FiWifi size={16} />}
+                <div className="relative">
+                  {syncState === 'offline' ? <FiWifiOff size={18} /> :
+                   syncState === 'syncing' ? <FiRefreshCw size={18} className="animate-spin" /> :
+                   syncState === 'error' ? <FiAlertTriangle size={18} /> :
+                   syncState === 'has-queue' ? <FiClock size={18} /> :
+                   <FiWifi size={18} />}
+
+                  {/* Notification dot for pending/error states */}
+                  {(syncState === 'error' || syncState === 'has-queue') && (
+                    <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse ${
+                      syncState === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+                    }`} />
+                  )}
+                </div>
               </Button>
 
               {isNetworkDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-[100] backdrop-blur-sm">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">Network Status</p>
-                    <p className="text-xs text-gray-500">Connection & sync information</p>
+                <div className="absolute right-0 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 backdrop-blur-xl z-[100] animate-in slide-in-from-top-2 fade-in duration-200">
+                  {/* Header */}
+                  <div className="px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-gray-50/50 to-white/50">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-xl ${
+                        syncState === 'offline' ? 'bg-red-100 text-red-600' :
+                        syncState === 'syncing' ? 'bg-blue-100 text-blue-600' :
+                        syncState === 'error' ? 'bg-red-100 text-red-600' :
+                        syncState === 'has-queue' ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {syncState === 'offline' ? <FiWifiOff size={20} /> :
+                         syncState === 'syncing' ? <FiRefreshCw size={20} className="animate-spin" /> :
+                         syncState === 'error' ? <FiAlertTriangle size={20} /> :
+                         syncState === 'has-queue' ? <FiClock size={20} /> :
+                         <FiWifi size={20} />}
+                      </div>
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">
+                          {syncState === 'offline' ? 'Offline Mode' :
+                           syncState === 'syncing' ? 'Syncing Data' :
+                           syncState === 'error' ? 'Sync Error' :
+                           syncState === 'has-queue' ? 'Pending Sync' :
+                           'Online'}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {syncState === 'offline' ? 'Limited functionality available' :
+                           syncState === 'syncing' ? 'Updating your data...' :
+                           syncState === 'error' ? 'Connection issue detected' :
+                           syncState === 'has-queue' ? 'Changes ready to sync' :
+                           'Fully connected'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="py-2">
+
+                  <div className="p-4 space-y-4">
                     {/* Cached events indicator */}
                     {!isOnline && cachedEventsCount > 0 && (
-                      <div className="px-4 py-2 flex items-center space-x-3 text-sm text-blue-700">
-                        <FiDatabase size={16} />
-                        <span>{cachedEventsCount} cached events</span>
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FiDatabase size={16} className="text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-blue-900">Cached Events</p>
+                          <p className="text-xs text-blue-700">{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} available offline</p>
+                        </div>
                       </div>
                     )}
 
                     {/* Queue indicator */}
                     {queueLength > 0 && (
-                      <div className="px-4 py-2 flex items-center space-x-3 text-sm text-orange-700">
-                        <FiClock size={16} />
-                        <span>{queueLength} pending operation{queueLength !== 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl border border-orange-100">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <FiClock size={16} className="text-orange-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-orange-900">Pending Changes</p>
+                          <p className="text-xs text-orange-700">{queueLength} item{queueLength !== 1 ? 's' : ''} waiting to sync</p>
+                        </div>
                       </div>
                     )}
 
-                    {/* Status */}
-                    <div className="px-4 py-2">
-                      <div className="flex items-center space-x-3 text-sm">
-                        {syncState === 'offline' ? <FiWifiOff size={16} className="text-red-600" /> :
-                         syncState === 'syncing' ? <FiRefreshCw size={16} className="text-blue-600 animate-spin" /> :
-                         syncState === 'error' ? <FiAlertTriangle size={16} className="text-red-600" /> :
-                         syncState === 'has-queue' ? <FiClock size={16} className="text-yellow-600" /> :
-                         <FiCheckCircle size={16} className="text-green-600" />}
-                        <span className="font-medium">
-                          {syncState === 'offline' ? 'Offline Mode' :
-                           syncState === 'syncing' ? 'Syncing...' :
-                           syncState === 'error' ? 'Sync Error' :
-                           syncState === 'has-queue' ? 'Online (Pending)' :
-                           'Online'}
-                        </span>
+                    {/* Last sync time */}
+                    {lastSyncTime && isOnline && (
+                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <FiCheckCircle size={16} className="text-green-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-green-900">Last Synced</p>
+                          <p className="text-xs text-green-700">{new Date(lastSyncTime).toLocaleString()}</p>
+                        </div>
                       </div>
-                      {lastSyncTime && isOnline && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
-                        </div>
-                      )}
-                      {syncState === 'offline' && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Changes will sync when online
-                        </div>
-                      )}
-                    </div>
+                    )}
+
+                    {/* Offline message */}
+                    {syncState === 'offline' && (
+                      <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Offline Mode:</span> Your changes will automatically sync when you reconnect to the internet.
+                        </p>
+                      </div>
+                    )}
 
                     {/* Actions */}
                     {(syncState === 'error' || syncState === 'has-queue') && (
-                      <div className="border-t border-gray-100 mt-2 pt-2 px-4">
+                      <div className="pt-2 border-t border-gray-100">
                         <button
                           onClick={() => { syncNow(); setIsNetworkDropdownOpen(false); }}
-                          className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                          disabled={isProcessingQueue}
+                          className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                            isProcessingQueue
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : syncState === 'error'
+                                ? 'bg-red-500 hover:bg-red-600 text-white hover:scale-105 active:scale-95'
+                                : 'bg-blue-500 hover:bg-blue-600 text-white hover:scale-105 active:scale-95'
+                          }`}
                         >
-                          {syncState === 'error' ? 'Retry Sync' : 'Sync Now'}
+                          {isProcessingQueue ? (
+                            <>
+                              <FiRefreshCw size={16} className="animate-spin" />
+                              Syncing...
+                            </>
+                          ) : (
+                            <>
+                              <FiRefreshCw size={16} />
+                              {syncState === 'error' ? 'Retry Sync' : 'Sync Now'}
+                            </>
+                          )}
                         </button>
                       </div>
                     )}
