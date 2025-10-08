@@ -13,6 +13,7 @@ import Link from 'next/link';
 import AppFooter from '@/components/AppFooter';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 

@@ -72,6 +72,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   // Refresh events cache from server
   const refreshEventsCache = useCallback(async () => {
     try {
+      console.log('Refreshing events cache...');
       await db.clearEventsCache();
       await clearServiceWorkerCache();
 
@@ -90,6 +91,9 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
         await db.addEvents(eventsData as EventItem[]);
         console.log(`Cached ${eventsData.length} events for offline use`);
       }
+
+      // Force refresh of any components using cached data
+      window.dispatchEvent(new CustomEvent('cache-refreshed', { detail: { type: 'events' } }));
     } catch (error) {
       console.error('Failed to refresh events cache:', error);
       throw error;

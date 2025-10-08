@@ -197,25 +197,58 @@ self.addEventListener('fetch', (event) => {
 
 
 
-// Periodic caching mechanism - runs every second as requested
+// Periodic caching mechanism - runs every 5 minutes for better performance
 let periodicCacheInterval;
 
 async function cacheDataPeriodically() {
   try {
     console.log('Starting periodic cache update...');
 
-    // Cache critical API data
-    await cacheApiData();
+    // Only cache if we're online and not in PWA mode (to avoid conflicts)
+    if (!navigator.onLine) {
+      console.log('Skipping periodic cache update - offline');
+      return;
+    }
 
-    // Cache important pages
-    await cachePages();
+    // Check if we're in PWA mode - reduce caching frequency for PWA
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                  window.navigator.standalone === true;
 
-    // Cache modal data (events and creators)
-    await cacheModalData();
+    if (isPWA) {
+      console.log('PWA mode detected - using lighter caching strategy');
+      // In PWA mode, only cache essential data and less frequently
+      await cacheEssentialDataOnly();
+    } else {
+      // Browser mode - full caching
+      await cacheApiData();
+      await cachePages();
+      await cacheModalData();
+    }
 
     console.log('Periodic cache update completed');
   } catch (error) {
     console.error('Periodic cache update failed:', error);
+  }
+}
+
+// Lighter caching for PWA mode to avoid conflicts with app data loading
+async function cacheEssentialDataOnly() {
+  const essentialUrls = [
+    '/api/events?limit=20', // Only recent events for PWA
+    '/api/users?limit=10'   // Only recent users for PWA
+  ];
+
+  for (const url of essentialUrls) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        const cache = await caches.open(API_CACHE);
+        await cache.put(url, response);
+        console.log(`Cached essential data: ${url}`);
+      }
+    } catch (error) {
+      console.warn(`Failed to cache essential data: ${url}`, error);
+    }
   }
 }
 
@@ -360,8 +393,8 @@ self.addEventListener('activate', (event) => {
     clearInterval(periodicCacheInterval);
   }
 
-  // Start periodic caching every 1 second as requested
-  periodicCacheInterval = setInterval(cacheDataPeriodically, 1000);
+  // Start periodic caching every 5 minutes (300000ms) for better performance
+  periodicCacheInterval = setInterval(cacheDataPeriodically, 300000);
 
   // Also run immediately
   cacheDataPeriodically();

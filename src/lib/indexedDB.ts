@@ -227,19 +227,44 @@ export const clearEventsCache = async (): Promise<void> => {
 
 // Get events and check cache expiration (7 days - extended due to periodic caching)
 export const getEvents = async (): Promise<EventItem[]> => {
-  const items = await getItems<any>(STORES.EVENTS);
-  const meta = items.find((item: any) => item.id === 'cache-meta');
-  const events = items.filter((item: any) => item.id !== 'cache-meta');
-  if (meta && meta.timestamp) {
-    const now = Date.now();
-    const age = now - meta.timestamp;
-    if (age > 7 * 24 * 60 * 60 * 1000) { // 7 days
-      // Cache expired, clear store
-      await clearStore(STORES.EVENTS);
-      return [];
+  try {
+    const items = await getItems<any>(STORES.EVENTS);
+    const meta = items.find((item: any) => item.id === 'cache-meta');
+    const events = items.filter((item: any) => item.id !== 'cache-meta');
+
+    if (meta && meta.timestamp) {
+      const now = Date.now();
+      const age = now - meta.timestamp;
+      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      if (age > maxAge) {
+        console.log('Events cache expired, clearing...');
+        // Cache expired, clear store
+        await clearStore(STORES.EVENTS);
+        return [];
+      }
     }
+
+    // Validate events data
+    const validEvents = events.filter((event: any) => {
+      return event && typeof event === 'object' && event.id && event.name;
+    });
+
+    if (validEvents.length !== events.length) {
+      console.warn(`Found ${events.length - validEvents.length} invalid events in cache`);
+    }
+
+    return validEvents;
+  } catch (error) {
+    console.error('Error getting events from cache:', error);
+    // If there's an error reading cache, clear it and return empty
+    try {
+      await clearStore(STORES.EVENTS);
+    } catch (clearError) {
+      console.error('Error clearing corrupted events cache:', clearError);
+    }
+    return [];
   }
-  return events;
 };
 
 // Get events by category
@@ -249,19 +274,44 @@ export const getEventsByCategory = (category: string): Promise<EventItem[]> => {
 
 // Get users and check cache expiration (7 days - extended due to periodic caching)
 export const getUsers = async (): Promise<any[]> => {
-  const items = await getItems<any>(STORES.USERS);
-  const meta = items.find((item: any) => item.id === 'cache-meta');
-  const users = items.filter((item: any) => item.id !== 'cache-meta');
-  if (meta && meta.timestamp) {
-    const now = Date.now();
-    const age = now - meta.timestamp;
-    if (age > 7 * 24 * 60 * 60 * 1000) { // 7 days
-      // Cache expired, clear store
-      await clearStore(STORES.USERS);
-      return [];
+  try {
+    const items = await getItems<any>(STORES.USERS);
+    const meta = items.find((item: any) => item.id === 'cache-meta');
+    const users = items.filter((item: any) => item.id !== 'cache-meta');
+
+    if (meta && meta.timestamp) {
+      const now = Date.now();
+      const age = now - meta.timestamp;
+      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      if (age > maxAge) {
+        console.log('Users cache expired, clearing...');
+        // Cache expired, clear store
+        await clearStore(STORES.USERS);
+        return [];
+      }
     }
+
+    // Validate users data
+    const validUsers = users.filter((user: any) => {
+      return user && typeof user === 'object' && user.id;
+    });
+
+    if (validUsers.length !== users.length) {
+      console.warn(`Found ${users.length - validUsers.length} invalid users in cache`);
+    }
+
+    return validUsers;
+  } catch (error) {
+    console.error('Error getting users from cache:', error);
+    // If there's an error reading cache, clear it and return empty
+    try {
+      await clearStore(STORES.USERS);
+    } catch (clearError) {
+      console.error('Error clearing corrupted users cache:', clearError);
+    }
+    return [];
   }
-  return users;
 };
 
 // Sync status management
