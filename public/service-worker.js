@@ -1,9 +1,9 @@
-const CACHE_NAME = 'event-planner-cache-v7';
-const STATIC_CACHE = 'event-planner-static-v7';
-const DYNAMIC_CACHE = 'event-planner-dynamic-v7';
-const API_CACHE = 'event-planner-api-v7';
-const PAGES_CACHE = 'event-planner-pages-v7';
-const APP_SHELL_CACHE = 'event-planner-app-shell-v7';
+const CACHE_NAME = 'event-planner-cache-v8';
+const STATIC_CACHE = 'event-planner-static-v8';
+const DYNAMIC_CACHE = 'event-planner-dynamic-v8';
+const API_CACHE = 'event-planner-api-v8';
+const PAGES_CACHE = 'event-planner-pages-v8';
+const APP_SHELL_CACHE = 'event-planner-app-shell-v8';
 
 // Core static assets to cache immediately
 const urlsToCache = [
@@ -87,32 +87,131 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests (Next.js routes) - Network first, offline fallback
+  // Handle navigation requests (Next.js routes)
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Cache successful navigation responses in pages cache
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(PAGES_CACHE).then(cache => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(async () => {
-          // When offline, try to serve from pages cache first
-          const cachedResponse = await caches.match(request, { cacheName: PAGES_CACHE });
-          if (cachedResponse) {
-            console.log(`Serving cached page: ${request.url}`);
-            return cachedResponse;
-          }
+    // Define pages that are available offline
+    const offlinePages = [
+      '/',
+      '/events',
+      '/categories',
+      '/creators',
+      '/about',
+      '/settings',
+      '/terms',
+      '/privacy',
+      '/download'
+    ];
 
-          // Fallback to offline page
-          return caches.match('/offline.html');
-        })
-    );
+    const isOfflinePage = offlinePages.some(page => url.pathname === page);
+
+    if (isOfflinePage) {
+      // For offline pages: try cache first, then network
+      event.respondWith(
+        caches.match(request, { cacheName: PAGES_CACHE })
+          .then(cachedResponse => {
+            if (cachedResponse) {
+              console.log(`Serving cached offline page: ${request.url}`);
+              // Also try to update cache in background
+              fetch(request).then(response => {
+                if (response.ok) {
+                  const responseClone = response.clone();
+                  caches.open(PAGES_CACHE).then(cache => {
+                    cache.put(request, responseClone);
+                  });
+                }
+              }).catch(() => {
+                // Silently fail background update
+              });
+              return cachedResponse;
+            }
+
+            // Not in cache, try network
+            return fetch(request).then(response => {
+              if (response.ok) {
+                const responseClone = response.clone();
+                caches.open(PAGES_CACHE).then(cache => {
+                  cache.put(request, responseClone);
+                });
+              }
+              return response;
+            });
+          })
+      );
+    } else {
+      // For pages that require internet: network first, custom offline message
+      event.respondWith(
+        fetch(request)
+          .then(response => {
+            // Don't cache these pages
+            return response;
+          })
+          .catch(() => {
+            // Return custom offline page for non-offline pages
+            const offlineMessage = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Internet Required - PNG Events</title>
+                <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        min-height: 100vh;
+                        background: linear-gradient(to bottom right, #FCD34D, #EF4444, #DC2626);
+                        color: #111827;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0;
+                        padding: 2rem;
+                        text-align: center;
+                    }
+                    .message {
+                        background: white;
+                        padding: 2rem;
+                        border-radius: 1rem;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        max-width: 400px;
+                    }
+                    h1 {
+                        font-size: 1.5rem;
+                        margin-bottom: 1rem;
+                        color: #111827;
+                    }
+                    p {
+                        color: #6B7280;
+                        margin-bottom: 1.5rem;
+                    }
+                    .retry-button {
+                        display: inline-block;
+                        padding: 0.75rem 1.5rem;
+                        background: #FCD34D;
+                        color: #111827;
+                        text-decoration: none;
+                        border-radius: 0.5rem;
+                        font-weight: 600;
+                    }
+                    .retry-button:hover {
+                        background: #FBBF24;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="message">
+                    <h1>Internet Connection Required</h1>
+                    <p>This page requires an internet connection to function properly. Please check your connection and try again.</p>
+                    <a href="/" class="retry-button">Go to Homepage</a>
+                </div>
+            </body>
+            </html>
+            `;
+            return new Response(offlineMessage, {
+              headers: { 'Content-Type': 'text/html' }
+            });
+          })
+      );
+    }
     return;
   }
 
@@ -274,26 +373,29 @@ async function cacheApiData() {
 }
 
 async function cachePages() {
-  const pageUrls = [
+  // Only cache these specific pages for offline access
+  const offlinePages = [
     '/',
     '/events',
     '/categories',
     '/creators',
     '/about',
+    '/settings',
+    '/terms',
     '/privacy',
-    '/terms'
+    '/download'
   ];
 
   const cache = await caches.open(PAGES_CACHE);
 
-  for (const url of pageUrls) {
+  for (const url of offlinePages) {
     try {
       // Only cache if not already cached or if cache is stale
       const cachedResponse = await cache.match(url);
       const now = Date.now();
 
       if (!cachedResponse || !cachedResponse.headers.get('sw-cache-time') ||
-          (now - parseInt(cachedResponse.headers.get('sw-cache-time'))) > 1000) { // 1 second
+          (now - parseInt(cachedResponse.headers.get('sw-cache-time'))) > 300000) { // 5 minutes
 
         const response = await fetch(url);
         if (response.ok) {
@@ -309,11 +411,11 @@ async function cachePages() {
           });
 
           await cache.put(url, newResponse);
-          console.log(`Cached page: ${url}`);
+          console.log(`Cached offline page: ${url}`);
         }
       }
     } catch (error) {
-      console.warn(`Failed to cache page: ${url}`, error);
+      console.warn(`Failed to cache offline page: ${url}`, error);
     }
   }
 }
@@ -373,7 +475,8 @@ self.addEventListener('activate', (event) => {
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (![CACHE_NAME, PAGES_CACHE, APP_SHELL_CACHE].includes(cacheName)) {
+            // Keep only current version caches
+            if (![CACHE_NAME, PAGES_CACHE, APP_SHELL_CACHE, API_CACHE, STATIC_CACHE, DYNAMIC_CACHE].includes(cacheName)) {
               console.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -498,6 +601,6 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: '7.0.0' });
+    event.ports[0].postMessage({ version: '8.0.0' });
   }
 });

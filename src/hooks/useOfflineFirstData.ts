@@ -1,9 +1,75 @@
 import { useState, useEffect } from 'react';
 import { getItems, addItems } from '@/lib/indexedDB';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { EventItem } from '@/lib/types';
 import { isEventCurrentOrUpcoming } from '@/lib/utils';
+
+// Helper function to check network connectivity
+function isNetworkAvailable(): boolean {
+  return navigator.onLine;
+}
+
+// Helper function to extract meaningful error messages
+function getErrorMessage(error: any, storeName: string): string {
+  // Check network connectivity first
+  if (!isNetworkAvailable()) {
+    return `No internet connection. Please check your network and try again.`;
+  }
+
+  // Handle empty error objects (common with network/CORS issues)
+  if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
+    return `Unable to connect to ${storeName} service. This may be due to network issues or service unavailability.`;
+  }
+
+  // Handle Supabase error objects
+  if (typeof error === 'object' && error.message) {
+    // Check for common Supabase error patterns
+    if (error.message.includes('JWT') || error.message.includes('auth')) {
+      return `Authentication error. Please sign in again.`;
+    }
+    if (error.message.includes('network') || error.message.includes('fetch')) {
+      return `Network error connecting to ${storeName} service. Please check your connection.`;
+    }
+    if (error.code === 'PGRST116') {
+      return `${storeName} table not found. Please contact support.`;
+    }
+    if (error.code === '42501') {
+      return `Permission denied accessing ${storeName}. Please contact support.`;
+    }
+    return error.message;
+  }
+
+  // Handle Error instances
+  if (error instanceof Error) {
+    // Check for network-related errors
+    if (error.message.includes('fetch') || error.message.includes('network')) {
+      return `Network error: ${error.message}`;
+    }
+    return error.message;
+  }
+
+  // Handle string errors
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  // Fallback
+  return `Failed to load ${storeName}. Please try again later.`;
+}
+
+// Helper function to log detailed error information
+function logDetailedError(error: any, storeName: string, context: string) {
+  console.error(`[${new Date().toISOString()}] Error in ${context} for ${storeName}:`, {
+    error,
+    errorType: typeof error,
+    errorKeys: error && typeof error === 'object' ? Object.keys(error) : 'N/A',
+    isSupabaseConfigured: isSupabaseConfigured(),
+    isOnline: navigator.onLine,
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  });
+}
 
 export function useOfflineFirstData<T>(storeName: string) {
   const [data, setData] = useState<T[]>([]);
@@ -49,11 +115,58 @@ export function useOfflineFirstData<T>(storeName: string) {
 
         // Fetch fresh data in background if online or cache expired
         if (isOnline || cacheExpired) {
+          // Check if Supabase is properly configured before making requests
+          if (!isSupabaseConfigured()) {
+            console.warn(`Supabase not configured, skipping fresh data fetch for ${storeName}`);
+            if (cachedData.length === 0 && mounted) {
+              setError('Service configuration error. Please contact support.');
+              setIsLoading(false);
+            }
+            return;
+          }
+
+          // Log Supabase configuration for debugging
+          console.log(`Attempting to fetch ${storeName} from Supabase:`, {
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
+            hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            isConfigured: isSupabaseConfigured(),
+            isOnline: isOnline
+          });
+
+          // Test basic Supabase connectivity
           try {
-            const { data: freshData, error: fetchError } = await supabase
-              .from(storeName)
-              .select('*')
-              .order('created_at', { ascending: false });
+            const { data: testData, error: testError } = await supabase
+              .from('events')
+              .select('count')
+              .limit(1)
+              .single();
+
+            if (testError) {
+              console.warn(`Supabase connectivity test failed:`, testError);
+            } else {
+              console.log(`Supabase connectivity test passed`);
+            }
+          } catch (connectivityError) {
+            console.error(`Supabase connectivity test error:`, connectivityError);
+          }
+
+          try {
+            let freshData: T[] | null = null;
+            let fetchError: any = null;
+
+            try {
+              const result = await supabase
+                .from(storeName)
+                .select('*')
+                .order('created_at', { ascending: false });
+
+              freshData = result.data;
+              fetchError = result.error;
+            } catch (networkError) {
+              // Catch network-level errors that Supabase might not wrap properly
+              console.warn(`Network error during ${storeName} fetch:`, networkError);
+              throw networkError;
+            }
 
             if (fetchError) throw fetchError;
 
@@ -79,10 +192,10 @@ export function useOfflineFirstData<T>(storeName: string) {
               setIsLoading(false);
             }
           } catch (fetchError) {
-            console.error(`Failed to fetch fresh ${storeName}:`, fetchError);
+            logDetailedError(fetchError, storeName, 'fetch fresh data');
             // If we have cached data, keep using it; otherwise show error
             if (cachedData.length === 0 && mounted) {
-              setError(fetchError instanceof Error ? fetchError.message : 'Failed to load data');
+              setError(getErrorMessage(fetchError, storeName));
               setIsLoading(false);
             }
           }
@@ -92,9 +205,9 @@ export function useOfflineFirstData<T>(storeName: string) {
           setIsLoading(false);
         }
       } catch (err) {
-        console.error(`Error in useOfflineFirstData(${storeName}):`, err);
+        logDetailedError(err, storeName, 'useOfflineFirstData main');
         if (mounted) {
-          setError(err instanceof Error ? err.message : 'Failed to load data');
+          setError(getErrorMessage(err, storeName));
           setIsLoading(false);
         }
       }
