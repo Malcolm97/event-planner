@@ -6,7 +6,8 @@
         "Supabase",
         "presale",
         "homescreen",
-        "PGRST"
+        "PGRST",
+        "pngevents"
     ],
     "flagWords": [],
     "ignorePaths": [

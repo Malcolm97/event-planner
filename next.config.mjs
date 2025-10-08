@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable SWC minifier for better code obfuscation
-  swcMinify: true,
-
   // Production optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
