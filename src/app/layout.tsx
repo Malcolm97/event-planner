@@ -1,3 +1,7 @@
+// Copyright 2024 PNG Events. All rights reserved.
+// This software and its associated intellectual property are protected by copyright law.
+// Unauthorized copying, modification, or distribution is prohibited.
+
 import './globals.css';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';

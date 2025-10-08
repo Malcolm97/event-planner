@@ -1,3 +1,7 @@
+// Copyright 2024 PNG Events. All rights reserved.
+// This software and its associated intellectual property are protected by copyright law.
+// Unauthorized copying, modification, or distribution is prohibited.
+
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
