@@ -75,7 +75,7 @@ export function useOfflineFirstData<T>(storeName: string) {
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isOnline, isPwaOnMobile } = useNetworkStatus();
+  const { isOnline, isPwaOnMobile, connectionQuality } = useNetworkStatus();
 
   useEffect(() => {
     let mounted = true;
@@ -114,7 +114,10 @@ export function useOfflineFirstData<T>(storeName: string) {
         }
 
         // Fetch fresh data in background if online or cache expired
-        if (isOnline || cacheExpired) {
+        // Skip fetching on poor connections to avoid wasting bandwidth
+        const shouldFetchFresh = (isOnline || cacheExpired) && connectionQuality !== 'poor';
+
+        if (shouldFetchFresh) {
           // Check if Supabase is properly configured before making requests
           if (!isSupabaseConfigured()) {
             console.warn(`Supabase not configured, skipping fresh data fetch for ${storeName}`);
@@ -200,8 +203,16 @@ export function useOfflineFirstData<T>(storeName: string) {
             }
           }
         } else if (cachedData.length === 0 && mounted) {
-          // Offline with no cached data
-          setError('No cached data available. Please check your connection.');
+          // Offline with no cached data, or poor connection
+          const errorMsg = connectionQuality === 'poor'
+            ? 'Poor connection detected. Using cached data only to save bandwidth.'
+            : 'No cached data available. Please check your connection.';
+          setError(errorMsg);
+          setIsLoading(false);
+        } else if (connectionQuality === 'poor' && cachedData.length > 0 && mounted) {
+          // Poor connection but we have cached data - show a warning but still display data
+          console.warn(`Poor connection detected for ${storeName}, using cached data only`);
+          // For poor connections with cached data, don't show error - just log it
           setIsLoading(false);
         }
       } catch (err) {
@@ -229,7 +240,7 @@ export function useOfflineFirstData<T>(storeName: string) {
       mounted = false;
       window.removeEventListener('cache-refreshed', handleCacheRefresh as EventListener);
     };
-  }, [storeName, isOnline, isPwaOnMobile]);
+  }, [storeName, isOnline, isPwaOnMobile, connectionQuality]);
 
   return { data, isLoading, error, setData };
 }

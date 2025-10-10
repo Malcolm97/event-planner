@@ -12,6 +12,10 @@ interface NetworkStatusContextType {
   isSyncing: boolean;
   syncError: string | null;
   lastSyncTime: Date | null;
+  connectionQuality: 'poor' | 'fair' | 'good' | 'excellent' | 'unknown';
+  connectionType: string;
+  downlink: number;
+  rtt: number;
   setLastSyncTime: (time: Date) => void;
   setIsSyncing: (syncing: boolean) => void;
   refreshEventsCache: () => Promise<void>;
@@ -26,8 +30,71 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
+  // Connection quality detection
+  const [connectionQuality, setConnectionQuality] = useState<'poor' | 'fair' | 'good' | 'excellent' | 'unknown'>('unknown');
+  const [connectionType, setConnectionType] = useState<string>('unknown');
+  const [downlink, setDownlink] = useState<number>(0);
+  const [rtt, setRtt] = useState<number>(0);
+
   // Debounce network status changes to prevent flickering
   const networkStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Connection quality detection using Network Information API
+  const updateConnectionQuality = useCallback(() => {
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+
+      // Update connection type and metrics
+      setConnectionType(connection.effectiveType || 'unknown');
+      setDownlink(connection.downlink || 0);
+      setRtt(connection.rtt || 0);
+
+      // Determine connection quality based on effectiveType and downlink
+      let quality: 'poor' | 'fair' | 'good' | 'excellent' | 'unknown' = 'unknown';
+
+      if (connection.effectiveType) {
+        switch (connection.effectiveType) {
+          case 'slow-2g':
+          case '2g':
+            quality = 'poor';
+            break;
+          case '3g':
+            quality = connection.downlink >= 1 ? 'fair' : 'poor';
+            break;
+          case '4g':
+            if (connection.downlink >= 5) {
+              quality = 'excellent';
+            } else if (connection.downlink >= 2) {
+              quality = 'good';
+            } else {
+              quality = 'fair';
+            }
+            break;
+          default:
+            quality = 'unknown';
+        }
+      } else if (connection.downlink > 0) {
+        // Fallback to downlink speed if effectiveType not available
+        if (connection.downlink >= 5) {
+          quality = 'excellent';
+        } else if (connection.downlink >= 2) {
+          quality = 'good';
+        } else if (connection.downlink >= 0.5) {
+          quality = 'fair';
+        } else {
+          quality = 'poor';
+        }
+      }
+
+      setConnectionQuality(quality);
+    } else {
+      // Fallback for browsers without Network Information API
+      setConnectionQuality('unknown');
+      setConnectionType('unknown');
+      setDownlink(0);
+      setRtt(0);
+    }
+  }, []);
 
   // Utility to clear service worker cache
   const clearServiceWorkerCache = useCallback(async () => {
@@ -161,11 +228,30 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     // Initialize network status
     updateNetworkStatus(navigator.onLine);
 
+    // Initialize connection quality detection
+    updateConnectionQuality();
+
     const handleOnline = () => updateNetworkStatus(true);
     const handleOffline = () => updateNetworkStatus(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Listen for connection changes if Network Information API is available
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      const handleConnectionChange = () => updateConnectionQuality();
+      connection.addEventListener('change', handleConnectionChange);
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        connection.removeEventListener('change', handleConnectionChange);
+        if (networkStatusTimeoutRef.current) {
+          clearTimeout(networkStatusTimeoutRef.current);
+        }
+      };
+    }
 
     // Check if PWA on mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -179,7 +265,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
         clearTimeout(networkStatusTimeoutRef.current);
       }
     };
-  }, [updateNetworkStatus]);
+  }, [updateNetworkStatus, updateConnectionQuality]);
 
   const contextValue = {
     isOnline,
@@ -187,6 +273,10 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     isSyncing,
     syncError,
     lastSyncTime,
+    connectionQuality,
+    connectionType,
+    downlink,
+    rtt,
     setLastSyncTime,
     setIsSyncing,
     refreshEventsCache,

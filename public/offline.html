@@ -128,6 +128,22 @@
             text-align: left;
         }
 
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #FCD34D;
+        }
+
         .event-item {
             background: #F9FAFB;
             border: 1px solid #E5E7EB;
@@ -151,6 +167,17 @@
         .event-meta {
             font-size: 0.875rem;
             color: #6B7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-description {
+            font-size: 0.875rem;
+            color: #4B5563;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .event-category {
@@ -161,6 +188,14 @@
             border-radius: 0.25rem;
             font-size: 0.75rem;
             font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
             margin-top: 0.5rem;
         }
 
@@ -168,7 +203,44 @@
             text-align: center;
             color: #6B7280;
             font-style: italic;
-            margin-top: 2rem;
+            margin-top: 1rem;
+            padding: 2rem;
+            background: #F9FAFB;
+            border-radius: 0.5rem;
+            border: 1px solid #E5E7EB;
+        }
+
+        .loading {
+            text-align: center;
+            color: #9CA3AF;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #E5E7EB;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6B7280;
         }
 
         @media (max-width: 640px) {
@@ -202,28 +274,52 @@
             <p>PNG Events is temporarily unavailable. Some features may be limited while offline.</p>
 
             <div class="features">
-                <div class="feature">Browse cached events below</div>
+                <div class="feature">Browse cached events, creators, and categories below</div>
                 <div class="feature">Create events (will sync when online)</div>
                 <div class="feature">View your dashboard (if logged in)</div>
+                <div class="feature">Connection quality indicators for mobile users</div>
             </div>
 
             <a href="/" class="retry-button">Retry Connection</a>
 
+            <div class="stats" id="stats-section">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
             <div class="cached-events" id="cached-events">
-                <h2 style="margin-top: 2rem; margin-bottom: 1rem; color: #374151; font-size: 1.25rem;">Cached Events</h2>
+                <div class="section-title">
+                    <span class="section-icon">📅</span>
+                    Cached Events
+                </div>
                 <div id="events-list">
-                    <p class="no-events">Loading cached events...</p>
+                    <div class="loading">Loading cached events...</div>
+                </div>
+
+                <div class="section-title">
+                    <span class="section-icon">👥</span>
+                    Cached Creators
+                </div>
+                <div id="creators-list">
+                    <div class="loading">Loading cached creators...</div>
+                </div>
+
+                <div class="section-title">
+                    <span class="section-icon">🏷️</span>
+                    Cached Categories
+                </div>
+                <div id="categories-list">
+                    <div class="loading">Loading cached categories...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Load cached events from IndexedDB
-        async function loadCachedEvents() {
-            try {
-                const eventsList = document.getElementById('events-list');
+        let cachedStats = { events: 0, creators: 0, categories: 0 };
 
+        // Load cached data from IndexedDB
+        async function loadCachedData() {
+            try {
                 // Open IndexedDB
                 const db = await new Promise((resolve, reject) => {
                     const request = indexedDB.open('event-planner-db', 5);
@@ -231,20 +327,64 @@
                     request.onerror = () => reject(request.error);
                 });
 
+                // Load cached events
+                await loadCachedEvents(db);
+
+                // Load cached users/creators
+                await loadCachedCreators(db);
+
+                // Load cached categories
+                await loadCachedCategories();
+
+                // Update stats
+                updateStats();
+
+            } catch (error) {
+                console.error('Failed to load cached data:', error);
+                document.getElementById('events-list').innerHTML =
+                    '<p class="no-events">Unable to load cached data. Please try refreshing the page.</p>';
+            }
+        }
+
+        function updateStats() {
+            const statsSection = document.getElementById('stats-section');
+            statsSection.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${cachedStats.events}</div>
+                    <div class="stat-label">Cached Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${cachedStats.creators}</div>
+                    <div class="stat-label">Cached Creators</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${cachedStats.categories}</div>
+                    <div class="stat-label">Cached Categories</div>
+                </div>
+            `;
+        }
+
+        async function loadCachedEvents(db) {
+            try {
+                const eventsList = document.getElementById('events-list');
+
                 // Get events from store
                 const transaction = db.transaction(['events'], 'readonly');
                 const store = transaction.objectStore('events');
                 const request = store.getAll();
 
-                const events = await new Promise((resolve, reject) => {
+                const allEvents = await new Promise((resolve, reject) => {
                     request.onsuccess = () => {
                         const allItems = request.result;
                         // Filter out metadata and return events
-                        const events = allItems.filter(item => item.id !== 'cache-meta').slice(0, 10); // Show max 10
+                        const events = allItems.filter(item => item.id !== 'cache-meta');
                         resolve(events);
                     };
                     request.onerror = () => reject(request.error);
                 });
+
+                cachedStats.events = allEvents.length;
+                const events = allEvents.slice(0, 10); // Show max 10
 
                 if (events.length === 0) {
                     eventsList.innerHTML = '<p class="no-events">No cached events available. Connect to the internet to load events.</p>';
@@ -258,8 +398,13 @@
                         <div class="event-meta">
                             ${event.location ? `📍 ${event.location}` : ''}
                             ${event.date ? `📅 ${new Date(event.date).toLocaleDateString()}` : ''}
+                            ${event.price ? `💰 ${event.price}` : ''}
                         </div>
-                        ${event.category ? `<span class="event-category">${event.category}</span>` : ''}
+                        ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                        <div class="event-tags">
+                            ${event.category ? `<span class="event-category">${event.category}</span>` : ''}
+                            ${event.tags ? event.tags.map(tag => `<span class="event-category">${tag}</span>`).join('') : ''}
+                        </div>
                     </div>
                 `).join('');
 
@@ -272,8 +417,101 @@
             }
         }
 
-        // Load events when page loads
-        loadCachedEvents();
+        async function loadCachedCreators(db) {
+            try {
+                const creatorsList = document.getElementById('creators-list');
+
+                // Get users from store
+                const transaction = db.transaction(['users'], 'readonly');
+                const store = transaction.objectStore('users');
+                const request = store.getAll();
+
+                const allUsers = await new Promise((resolve, reject) => {
+                    request.onsuccess = () => {
+                        const allItems = request.result;
+                        // Filter out metadata and return users
+                        const users = allItems.filter(item => item.id !== 'cache-meta');
+                        resolve(users);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+
+                cachedStats.creators = allUsers.length;
+                const users = allUsers.slice(0, 8); // Show max 8
+
+                if (users.length === 0) {
+                    creatorsList.innerHTML = '<p class="no-events">No cached creators available.</p>';
+                    return;
+                }
+
+                // Display creators
+                const creatorsHtml = users.map(user => `
+                    <div class="event-item">
+                        <div class="event-title">${user.name || 'Anonymous Creator'}</div>
+                        <div class="event-meta">
+                            ${user.bio ? `👤 ${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}` : 'Event creator'}
+                            ${user.email ? `✉️ ${user.email}` : ''}
+                        </div>
+                        <div class="event-tags">
+                            ${user.location ? `<span class="event-category">${user.location}</span>` : ''}
+                            ${user.role ? `<span class="event-category">${user.role}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                creatorsList.innerHTML = creatorsHtml;
+
+            } catch (error) {
+                console.error('Failed to load cached creators:', error);
+                document.getElementById('creators-list').innerHTML =
+                    '<p class="no-events">Unable to load cached creators.</p>';
+            }
+        }
+
+        async function loadCachedCategories() {
+            try {
+                // Try to fetch categories from cache
+                const cache = await caches.open('event-planner-cache-v8');
+                const response = await cache.match('/api/categories');
+
+                if (response) {
+                    const categories = await response.json();
+                    cachedStats.categories = categories ? categories.length : 0;
+                    const categoriesList = document.getElementById('categories-list');
+
+                    if (categories && categories.length > 0) {
+                        const displayCategories = categories.slice(0, 6);
+                        const categoriesHtml = displayCategories.map(category => `
+                            <div class="event-item">
+                                <div class="event-title">${category.name || 'Category'}</div>
+                                <div class="event-meta">
+                                    ${category.description ? category.description.substring(0, 80) + (category.description.length > 80 ? '...' : '') : 'Event category'}
+                                </div>
+                                <div class="event-tags">
+                                    ${category.color ? `<span class="event-category" style="background-color: ${category.color}20; color: ${category.color};">${category.name}</span>` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+
+                        categoriesList.innerHTML = categoriesHtml;
+                    } else {
+                        categoriesList.innerHTML = '<p class="no-events">No cached categories available.</p>';
+                    }
+                } else {
+                    cachedStats.categories = 0;
+                    document.getElementById('categories-list').innerHTML =
+                        '<p class="no-events">No cached categories available.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load cached categories:', error);
+                cachedStats.categories = 0;
+                document.getElementById('categories-list').innerHTML =
+                    '<p class="no-events">Unable to load cached categories.</p>';
+            }
+        }
+
+        // Load all cached data when page loads
+        loadCachedData();
     </script>
 </body>
 </html>

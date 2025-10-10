@@ -442,8 +442,8 @@ async function cacheModalData() {
       }
     }
 
-    // Cache creators for modals
-    const creatorsResponse = await fetch('/api/users?role=creator&limit=20');
+    // Cache creators for offline use (remove unsupported role parameter)
+    const creatorsResponse = await fetch('/api/users?limit=20');
     if (creatorsResponse.ok) {
       const creators = await creatorsResponse.json();
 
@@ -459,6 +459,18 @@ async function cacheModalData() {
           console.warn(`Failed to cache creator ${creator.id}:`, error);
         }
       }
+    }
+
+    // Cache categories for offline use
+    try {
+      const categoriesResponse = await fetch('/api/categories');
+      if (categoriesResponse.ok) {
+        const cache = await caches.open(API_CACHE);
+        await cache.put('/api/categories', categoriesResponse);
+        console.log('Cached categories data');
+      }
+    } catch (error) {
+      console.warn('Failed to cache categories:', error);
     }
   } catch (error) {
     console.warn('Failed to cache modal data:', error);

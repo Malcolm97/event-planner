@@ -7,7 +7,7 @@ import { FiWifi, FiWifiOff, FiRefreshCw, FiClock, FiAlertTriangle, FiChevronUp, 
 import * as db from '@/lib/indexedDB';
 
 const OnlineBadge = React.memo(() => {
-  const { isOnline, isSyncing, lastSyncTime, syncError } = useNetworkStatus();
+  const { isOnline, isSyncing, lastSyncTime, syncError, connectionQuality, connectionType, downlink, rtt } = useNetworkStatus();
   const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
   const [isExpanded, setIsExpanded] = useState(false);
   const [cachedEventsCount, setCachedEventsCount] = useState(0);
@@ -96,8 +96,24 @@ const OnlineBadge = React.memo(() => {
     }
   };
 
+  // Get connection quality indicator
+  const getConnectionQualityIndicator = () => {
+    switch (connectionQuality) {
+      case 'excellent':
+        return <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" title="Excellent connection" />;
+      case 'good':
+        return <div className="w-2 h-2 bg-blue-400 rounded-full" title="Good connection" />;
+      case 'fair':
+        return <div className="w-2 h-2 bg-yellow-400 rounded-full" title="Fair connection" />;
+      case 'poor':
+        return <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" title="Poor connection" />;
+      default:
+        return <div className="w-2 h-2 bg-gray-400 rounded-full" title="Connection quality unknown" />;
+    }
+  };
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 hidden lg:block">
+    <div className="fixed bottom-6 right-6 z-50">
       <div
         className={`
           ${config.bg} ${config.border}
@@ -124,7 +140,14 @@ const OnlineBadge = React.memo(() => {
             <span className="font-semibold text-sm leading-tight">{config.text}</span>
             <span className="text-xs opacity-90 leading-tight truncate">{config.subtext}</span>
           </div>
-          {(statusState === 'error' || statusState === 'has-queue' || cachedEventsCount > 0) && (
+          {/* Connection quality indicator */}
+          {isOnline && connectionQuality !== 'unknown' && (
+            <div className="flex items-center gap-1">
+              {getConnectionQualityIndicator()}
+              <span className="text-xs opacity-75">{connectionType}</span>
+            </div>
+          )}
+          {(statusState === 'error' || statusState === 'has-queue' || cachedEventsCount > 0 || (isOnline && connectionQuality !== 'unknown')) && (
             <button
               className="ml-2 p-1 rounded-lg hover:bg-white/20 transition-colors"
               onClick={(e) => {
@@ -154,6 +177,15 @@ const OnlineBadge = React.memo(() => {
               <div className="flex items-center gap-2 text-xs opacity-90">
                 <FiClock className="w-4 h-4 flex-shrink-0" />
                 <span>{queueLength} pending sync</span>
+              </div>
+            )}
+
+            {/* Connection details */}
+            {isOnline && connectionQuality !== 'unknown' && (
+              <div className="flex items-center gap-2 text-xs opacity-90">
+                <span>Connection: {connectionQuality}</span>
+                {downlink > 0 && <span>({downlink} Mbps)</span>}
+                {rtt > 0 && <span>{rtt}ms RTT</span>}
               </div>
             )}
 

@@ -18,7 +18,7 @@ import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 
 import React from 'react';
 const Header = React.memo(function Header() {
-  const { isOnline, isSyncing, lastSyncTime, syncError } = useNetworkStatus();
+  const { isOnline, isSyncing, lastSyncTime, syncError, connectionQuality } = useNetworkStatus();
   const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
@@ -168,9 +168,23 @@ const Header = React.memo(function Header() {
 
 
 
+  // Determine if we should show cached data banner
+  const shouldShowCachedDataBanner = !isOnline && cachedEventsCount > 0;
+
   return (
     <>
       <PullToRefreshIndicator isPulling={isPulling} progress={progress} />
+
+      {/* Cached Data Banner for Mobile/Tablet */}
+      {shouldShowCachedDataBanner && (
+        <div className="bg-blue-600 text-white text-center py-2 px-4 text-sm font-medium lg:hidden">
+          <div className="flex items-center justify-center gap-2">
+            <FiDatabase size={16} />
+            <span>Using cached data ({cachedEventsCount} events)</span>
+          </div>
+        </div>
+      )}
+
       <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md safe-area-inset">
       <div className="max-w-7xl mx-auto container-padding">
         <div className="flex justify-between items-center h-16 sm:h-20">
