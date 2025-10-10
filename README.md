@@ -1,171 +1,103 @@
-# PNG Events - Event Discovery Platform
+# PNG Events - Production Deployment Guide
 
-A modern, offline-first web application for discovering and managing events in Papua New Guinea. Built with Next.js, Supabase, and Progressive Web App (PWA) capabilities.
+A modern, offline-first Progressive Web App (PWA) for discovering local events in Papua New Guinea.
 
-## Features
+## 🚀 Production Deployment Checklist
 
-- 🎯 **Event Discovery**: Browse events by category, location, and date
-- 📱 **PWA Support**: Install as a mobile app with offline functionality
-- 🔄 **Offline-First**: Works seamlessly without internet connection
-- 👤 **User Authentication**: Secure sign-up and login with Supabase
-- 📅 **Event Management**: Create, edit, and manage your events
-- 🖼️ **Image Support**: Upload multiple images per event
-- 🌐 **Responsive Design**: Optimized for all device sizes
-- 🔍 **Advanced Search**: Filter by location, category, and date
-- 📊 **Real-time Sync**: Automatic data synchronization when online
+### ✅ Completed Tasks
 
-## Getting Started
+- [x] **Vercel Configuration**: Fixed `vercel.json` for proper Next.js routing
+- [x] **ESLint Configuration**: Updated to be compatible with Next.js 15 (warnings present but non-blocking)
+- [x] **Environment Variables**: Created `.env.example` template
+- [x] **PWA Features**: Verified manifest.json and service worker implementation
+- [x] **Error Handling**: Confirmed error boundaries and error handling utilities
+- [x] **Production Build**: Verified successful build completion
 
-### Prerequisites
+### 🔄 Manual Verification Required
 
-- Node.js 18+ 
-- npm or yarn
-- Supabase account
+- [ ] **Database Migrations**: Apply all SQL migrations to production Supabase instance
+- [ ] **Environment Variables**: Set up production environment variables in Vercel
+- [ ] **PWA Testing**: Test offline functionality and PWA installation
+- [ ] **Security Review**: Verify RLS policies and authentication
+- [ ] **Performance Testing**: Test load times and Core Web Vitals
 
-### Installation
+## 📋 Database Setup
 
-1. Clone the repository:
+Run the following SQL files in your Supabase SQL Editor in order:
+
+1. `complete-schema-setup.sql` - Core tables and RLS policies
+2. `supabase-rls-setup.sql` - Storage policies for images
+3. `add_end_date_migration.sql` - Optional end date support
+4. `user_contact_migration.sql` - Contact preferences
+5. `create_activities_table.sql` - User activity tracking
+6. `recent_activities_dashboard.sql` - Dashboard queries
+
+## 🔧 Environment Variables
+
+Set these in your Vercel project settings:
+
 ```bash
-git clone <repository-url>
-cd png-events
+NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_supabase_anon_key
+NODE_ENV=production
 ```
 
-2. Install dependencies:
+## 🏗️ Build & Deploy
+
 ```bash
+# Install dependencies
 npm install
+
+# Build for production
+npm run build
+
+# Start production server (for testing)
+npm start
 ```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env.local
-```
+## 📱 PWA Features
 
-4. Configure your Supabase credentials in `.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+- **Offline Support**: Service worker caches critical assets and API responses
+- **Installable**: Manifest.json configured for PWA installation
+- **Background Sync**: Periodic data updates when online
+- **Push Notifications**: Support for event updates (requires additional setup)
 
-5. Run the development server:
+## 🔒 Security Features
 
-```bash
-npm run dev
-```
+- **Row Level Security (RLS)**: Enabled on all database tables
+- **Authentication**: Supabase Auth integration
+- **API Route Protection**: Server-side authentication checks
+- **Input Validation**: Comprehensive validation on all forms
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📊 Performance
 
-## Database Setup
+- **Next.js 15**: Latest framework with App Router
+- **Optimized Builds**: Code splitting and tree shaking
+- **Image Optimization**: Next.js built-in image optimization
+- **Caching Strategy**: Multi-layer caching (service worker + browser)
 
-1. Create a new Supabase project
-2. Run the SQL migration files in your Supabase SQL editor:
-   - `database-migration.sql` - Main database schema
-   - `supabase-rls-setup.sql` - Row Level Security setup
+## 🐛 Known Issues
 
-## Project Structure
+- ESLint shows warnings during build (non-blocking)
+- Some TypeScript strict mode issues may appear (under review)
 
-```
-src/
-├── app/                    # Next.js app router pages
-├── components/             # Reusable React components
-├── context/               # React context providers
-├── hooks/                 # Custom React hooks
-├── lib/                   # Utility functions and configurations
-└── types/                 # TypeScript type definitions
-```
+## 📞 Support
 
-## Key Technologies
+For production deployment issues, check:
+1. Vercel deployment logs
+2. Supabase dashboard for database errors
+3. Browser developer tools for client-side issues
 
-- **Next.js 14**: React framework with App Router
-- **Supabase**: Backend-as-a-Service for database and authentication
-- **Tailwind CSS**: Utility-first CSS framework
-- **IndexedDB**: Client-side database for offline functionality
-- **Service Worker**: PWA capabilities and caching
-- **TypeScript**: Type-safe JavaScript
+## 🔄 Post-Deployment
 
-## Features Overview
+After successful deployment:
 
-### Event Management
-- Create events with multiple images
-- Set presale and gate prices
-- Categorize events (Music, Art, Food, Technology, etc.)
-- Specify venue and location details
-
-### User System
-- Email/password authentication
-- User profiles with company and contact information
-- Event ownership and management
-
-### Offline Functionality
-- Browse cached events when offline
-- Automatic sync when connection is restored
-- Service worker for asset caching
-- IndexedDB for local data storage
-
-### PWA Features
-- Installable on mobile devices
-- Offline page fallback
-- App-like experience
-- Push notification ready (future feature)
-
-## Development
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
-### Code Quality
-
-The project includes:
-- TypeScript for type safety
-- ESLint for code linting
-- Error boundaries for graceful error handling
-- Input validation and sanitization
-- Comprehensive error logging
-
-## Deployment
-
-The app is optimized for deployment on:
-- Vercel (recommended for Next.js)
-- Netlify
-- Any platform supporting Node.js
-
-### Environment Variables
-
-Required environment variables:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support or questions, please open an issue in the repository.
-
-## Roadmap
-
-- [ ] Push notifications
-- [ ] Event ticketing integration
-- [ ] Social sharing enhancements
-- [ ] Event reviews and ratings
-- [ ] Calendar integration
-- [ ] Advanced analytics
+1. Test PWA installation on mobile devices
+2. Verify offline functionality works
+3. Check Core Web Vitals in search console
+4. Monitor error rates and performance
+5. Set up monitoring and alerting
 
 ---
 
-**PNG Events** - Connecting communities through events in Papua New Guinea.
-
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with ❤️ for Papua New Guinea's event community.

@@ -173,16 +173,27 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
     setDeleting(true);
     try {
-      // Delete the event from Supabase
-      const { error } = await supabase
-        .from(TABLES.EVENTS)
-        .delete()
-        .eq('id', event.id)
-        .eq('created_by', user.id); // Ensure user can only delete their own events
+      // Get the session token for API authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Authentication session expired. Please sign in again.');
+        setDeleting(false);
+        return;
+      }
 
-      if (error) {
-        console.error('Error deleting event:', error);
-        toast.error('Failed to delete event. Please try again.');
+      // Make API call to delete event
+      const response = await fetch(`/api/events/${event.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error deleting event:', errorData);
+        toast.error(errorData.error || 'Failed to delete event. Please try again.');
+        setDeleting(false);
         return;
       }
 

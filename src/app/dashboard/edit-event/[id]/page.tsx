@@ -166,6 +166,14 @@ export default function EditEventPage() {
         return;
       }
 
+      // Get the session token for API authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('Authentication session expired. Please sign in again.');
+        setSubmitting(false);
+        return;
+      }
+
       let finalLocation = selectedLocationType;
       if (selectedLocationType === 'Other') {
         finalLocation = customLocation;
@@ -177,36 +185,9 @@ export default function EditEventPage() {
         return;
       }
 
-      // 1. Handle image deletions first
-      if (imagesToDelete.length > 0) {
-        const filePathsToDelete = imagesToDelete.map(url => {
-          // Extract the file path from the public URL
-          const pathSegments = url.split('/');
-          // Assuming the path is '.../storage/v1/object/public/event-images/fileName.ext'
-          // We need 'event-images/fileName.ext'
-          const bucketIndex = pathSegments.indexOf('event-images');
-          if (bucketIndex > -1 && bucketIndex + 1 < pathSegments.length) {
-            return pathSegments.slice(bucketIndex).join('/');
-          }
-          return ''; // Should not happen if URLs are consistent
-        }).filter(Boolean); // Remove empty strings
-
-        if (filePathsToDelete.length > 0) {
-          const { error: deleteError } = await supabase.storage
-            .from('event-images')
-            .remove(filePathsToDelete);
-
-          if (deleteError) {
-            setError(`Error deleting images: ${deleteError.message}`);
-            setSubmitting(false);
-            return;
-          }
-        }
-      }
-
+      // Handle image uploads first (since we need the URLs for the API call)
       let finalImageUrls: string[] = [...imageUrls]; // Start with currently displayed images (after local deletions)
 
-      // 2. Upload new images
       if (imageFiles.length > 0) {
         for (const imageFile of imageFiles) {
           const fileExt = imageFile.name.split('.').pop();
@@ -234,33 +215,64 @@ export default function EditEventPage() {
         }
       }
 
-      // 3. Ensure total images do not exceed 3 (if somehow more were added)
-      // This scenario should ideally be prevented by the onChange logic,
-      // but as a safeguard, keep the most recent 3.
+      // Prepare the update data
+      const updateData = {
+        name: name.trim(),
+        description: description ? description.trim() : '',
+        date,
+        end_date: endDate || null,
+        location: finalLocation.trim(),
+        venue: venue ? venue.trim() : '',
+        presale_price: presale_price || 0,
+        gate_price: gate_price || 0,
+        category: category || '',
+        image_urls: finalImageUrls.length > 0 ? finalImageUrls : null,
+      };
 
-      const { error: updateError } = await supabase
-        .from(TABLES.EVENTS)
-        .update({
-          name,
-          description,
-          date,
-          end_date: endDate || null,
-          location: finalLocation,
-          venue,
-          presale_price, // Changed from price
-          gate_price,    // Added gate_price
-          category,
-          image_urls: finalImageUrls.length > 0 ? finalImageUrls : null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('created_by', user.id); // Ensure only event creator can update
+      // Make API call to update event
+      const response = await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(updateData),
+      });
 
-      if (updateError) {
-        setError(updateError.message);
-      } else {
-        router.push('/dashboard');
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update event');
+        setSubmitting(false);
+        return;
       }
+
+      // Handle image deletions after successful update
+      if (imagesToDelete.length > 0) {
+        const filePathsToDelete = imagesToDelete.map(url => {
+          // Extract the file path from the public URL
+          const pathSegments = url.split('/');
+          // Assuming the path is '.../storage/v1/object/public/event-images/fileName.ext'
+          // We need 'event-images/fileName.ext'
+          const bucketIndex = pathSegments.indexOf('event-images');
+          if (bucketIndex > -1 && bucketIndex + 1 < pathSegments.length) {
+            return pathSegments.slice(bucketIndex).join('/');
+          }
+          return ''; // Should not happen if URLs are consistent
+        }).filter(Boolean); // Remove empty strings
+
+        if (filePathsToDelete.length > 0) {
+          // Delete images asynchronously - don't block the success flow
+          supabase.storage
+            .from('event-images')
+            .remove(filePathsToDelete)
+            .catch(deleteError => {
+              console.error('Error deleting old images:', deleteError);
+              // Don't show error to user as the event was successfully updated
+            });
+        }
+      }
+
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'An error occurred during update');
     } finally {
