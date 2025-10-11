@@ -158,10 +158,13 @@ export function useOfflineFirstData<T>(storeName: string) {
             let fetchError: any = null;
 
             try {
+              // Determine the correct order column based on table
+              const orderColumn = storeName === 'users' ? 'updated_at' : 'created_at';
+
               const result = await supabase
                 .from(storeName)
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order(orderColumn, { ascending: false });
 
               freshData = result.data;
               fetchError = result.error;

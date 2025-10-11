@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import EventCard from '@/components/EventCard';
 import Button from '@/components/Button';
 import { supabase, TABLES, User } from '@/lib/supabase';
-import { getEvents as getCachedEvents } from '@/lib/indexedDB';
 import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
@@ -13,7 +12,7 @@ import Link from 'next/link';
 import AppFooter from '@/components/AppFooter';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
+import { useEvents } from '@/hooks/useOfflineFirstData';
 import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 
@@ -69,9 +68,10 @@ interface HomePageContentProps {
 }
 
 export default function HomePageContent({ initialEvents, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: HomePageContentProps) {
-  const [events, setEvents] = useState<EventItem[]>(initialEvents);
+  // Use the standardized offline-first data hook
+  const { data: events, isLoading: loading, error: eventsError } = useEvents();
+
   const [filteredEvents, setFilteredEvents] = useState<EventItem[]>(initialEvents);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('All Dates');
   const [selectedLocationFilter, setSelectedLocationFilter] = useState('All Areas');
@@ -106,25 +106,10 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     };
   }, []);
 
-  // Offline-first: load events from cache if offline
+  // Update filtered events when events data changes
   useEffect(() => {
-    const loadOfflineEvents = async () => {
-      if (!isOnline) {
-        try {
-          const offlineEvents = await getCachedEvents();
-          if (offlineEvents.length > 0) {
-            setEvents(offlineEvents);
-            setFilteredEvents(offlineEvents);
-          }
-        } catch (error) {
-          // fallback: show empty state
-          setEvents([]);
-          setFilteredEvents([]);
-        }
-      }
-    };
-    loadOfflineEvents();
-  }, [isOnline]);
+    setFilteredEvents(events);
+  }, [events]);
 
   const fetchHost = async (userId: string) => {
     try {

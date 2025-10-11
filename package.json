@@ -30,6 +30,7 @@
     "react-medium-image-zoom": "^5.4.0",
     "regenerator-runtime": "^0.14.1",
     "rimraf": "^6.0.1",
+    "web-push": "^3.6.7",
     "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {

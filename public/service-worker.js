@@ -549,15 +549,16 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'New event update available!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
+    icon: data.icon || '/icons/icon-192x192.png',
+    badge: data.badge || '/icons/icon-96x96.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
       primaryKey: data.primaryKey || 1,
-      url: data.url || '/'
+      url: data.data?.url || data.url || '/',
+      eventId: data.data?.eventId || null
     },
-    actions: [
+    actions: data.actions || [
       {
         action: 'view',
         title: 'View Event',
@@ -567,7 +568,9 @@ self.addEventListener('push', (event) => {
         action: 'dismiss',
         title: 'Dismiss'
       }
-    ]
+    ],
+    requireInteraction: true, // Keep notification visible until user interacts
+    silent: false
   };
 
   event.waitUntil(

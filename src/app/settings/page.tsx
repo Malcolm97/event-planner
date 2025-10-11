@@ -5,12 +5,13 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Link from "next/link";
-import { clearAllData, getSyncStatus } from "@/lib/indexedDB";
+import { clearAllData, getSyncStatus, updateSyncStatus } from "@/lib/indexedDB";
 import { useNetworkStatus } from "@/context/NetworkStatusContext";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wifi, WifiOff, RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import CustomSelect, { SelectOption } from "@/components/CustomSelect";
 
@@ -20,7 +21,6 @@ export default function SettingsPage() {
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [offlineNotif, setOfflineNotif] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
   const [landing, setLanding] = useState('home');
   const [saveMsg, setSaveMsg] = useState('');
@@ -28,61 +28,134 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const { isOnline, refreshEventsCache } = useNetworkStatus();
   const { syncNow, queueLength, isProcessingQueue } = useOfflineSync();
+  const {
+    isSupported: pushSupported,
+    isSubscribed: pushSubscribed,
+    permission: pushPermission,
+    isLoading: pushLoading,
+    error: pushError,
+    subscribe: subscribeToPush,
+    unsubscribe: unsubscribeFromPush
+  } = usePushNotifications();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [syncingNow, setSyncingNow] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [isPWA, setIsPWA] = useState(false);
 
+
+  // Detect PWA mode
+  useEffect(() => {
+    const checkPWAMode = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isIOSStandalone = (window.navigator as any).standalone === true;
+      setIsPWA(isStandalone || isIOSStandalone);
+    };
+
+    checkPWAMode();
+
+    // Listen for changes in display mode
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsPWA(e.matches || (window.navigator as any).standalone === true);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   // Load user and preferences from Supabase if logged in
   useEffect(() => {
-    getSyncStatus().then((status) => {
-      if (status?.lastSync) {
-        setLastSync(new Date(status.lastSync).toLocaleString());
-      }
-    });
-    // Load preferences from localStorage
-    setOfflineNotif(localStorage.getItem('offlineNotif') !== 'false');
-    setAutoSync(localStorage.getItem('autoSync') !== 'false');
-    setLanding(localStorage.getItem('landing') || 'home');
-    // Load user and preferences from Supabase
-    supabase.auth.getUser().then(async ({ data }) => {
-      setUser(data.user);
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('preferences')
-          .eq('id', data.user.id)
-          .single();
-        if (profile?.preferences) {
-          try {
-            const prefs = JSON.parse(profile.preferences);
-            if (prefs.offlineNotif !== undefined) setOfflineNotif(prefs.offlineNotif);
-            if (prefs.autoSync !== undefined) setAutoSync(prefs.autoSync);
-            if (prefs.landing) setLanding(prefs.landing);
-          } catch {}
+    const loadSettings = async () => {
+      try {
+        // Load sync status with error handling
+        const status = await getSyncStatus();
+        if (status?.lastSync) {
+          setLastSync(new Date(status.lastSync).toLocaleString());
         }
+      } catch (error) {
+        console.error('Failed to load sync status:', error);
+        setLastSync("Error loading sync status");
       }
-    });
+
+      // Load preferences from localStorage
+      setAutoSync(localStorage.getItem('autoSync') !== 'false');
+      setLanding(localStorage.getItem('landing') || 'home');
+
+      // Load user and preferences from Supabase
+      try {
+        const { data } = await supabase.auth.getUser();
+        setUser(data.user);
+        if (data.user) {
+          const { data: profile, error } = await supabase
+            .from('users')
+            .select('preferences')
+            .eq('id', data.user.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+            console.error('Failed to load user preferences:', error);
+          } else if (profile?.preferences) {
+            try {
+              const prefs = JSON.parse(profile.preferences);
+              if (prefs.autoSync !== undefined) setAutoSync(prefs.autoSync);
+              if (prefs.landing) setLanding(prefs.landing);
+            } catch (parseError) {
+              console.error('Failed to parse user preferences:', parseError);
+            }
+          }
+        }
+      } catch (authError) {
+        console.error('Failed to load user:', authError);
+      }
+    };
+
+    loadSettings();
   }, []);
 
-  // Save preferences (the useEffect handles the actual saving)
+  // Save preferences with proper error handling
   const savePreferences = async (prefs: any) => {
-    setSaveMsg('Preferences saved!');
-    if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(() => setSaveMsg(''), 2000);
-  };
+    try {
+      setSaveMsg('Saving preferences...');
 
+      // Save to localStorage immediately
+      if (prefs.autoSync !== undefined) {
+        localStorage.setItem('autoSync', String(prefs.autoSync));
+      }
+      if (prefs.landing !== undefined) {
+        localStorage.setItem('landing', prefs.landing);
+      }
 
-  // Persist preferences to localStorage and Supabase (if logged in)
-  useEffect(() => {
-    const prefs = { offlineNotif, autoSync, landing };
-    localStorage.setItem('offlineNotif', String(offlineNotif));
-    localStorage.setItem('autoSync', String(autoSync));
-    localStorage.setItem('landing', landing);
-    if (user) {
-      supabase.from('users').update({ preferences: JSON.stringify(prefs) }).eq('id', user.id);
+      // Save to Supabase if user is logged in
+      if (user) {
+        const currentPrefs = {
+          autoSync: prefs.autoSync !== undefined ? prefs.autoSync : autoSync,
+          landing: prefs.landing !== undefined ? prefs.landing : landing
+        };
+
+        const { error } = await supabase
+          .from('users')
+          .update({ preferences: JSON.stringify(currentPrefs) })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Failed to save preferences to Supabase:', error);
+          setSaveMsg('Preferences saved locally only');
+        } else {
+          setSaveMsg('Preferences saved!');
+        }
+      } else {
+        setSaveMsg('Preferences saved locally!');
+      }
+
+      // Clear message after 2 seconds
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      saveTimeout.current = setTimeout(() => setSaveMsg(''), 2000);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      setSaveMsg('Failed to save preferences');
+      setTimeout(() => setSaveMsg(''), 3000);
     }
-  }, [offlineNotif, autoSync, landing, user]);
+  };
 
   const handleClearCacheClick = () => {
     setShowConfirmDialog(true);
@@ -93,10 +166,23 @@ export default function SettingsPage() {
     setClearing(true);
     setError(null);
     try {
+      // Clear IndexedDB data
       await clearAllData();
+
+      // Clear service worker cache
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('Service worker cache cleared');
+      }
+
+      // Clear last sync status
+      setLastSync(null);
+
       setCleared(true);
       setTimeout(() => setCleared(false), 2000);
     } catch (e) {
+      console.error('Failed to clear cache:', e);
       setError("Failed to clear cache");
     } finally {
       setClearing(false);
@@ -120,15 +206,24 @@ export default function SettingsPage() {
       // Process any queued operations
       await syncNow();
 
-      setSyncResult("Sync completed successfully!");
-      // Refresh last sync time
-      getSyncStatus().then((status) => {
-        if (status?.lastSync) {
-          setLastSync(new Date(status.lastSync).toLocaleString());
-        }
+      // Update sync status with current timestamp
+      const now = Date.now();
+      await updateSyncStatus({
+        lastSync: now,
+        inProgress: false
       });
+
+      // Update UI
+      setLastSync(new Date(now).toLocaleString());
+      setSyncResult("Sync completed successfully!");
     } catch (error) {
       console.error('Sync failed:', error);
+      // Update sync status to reflect failure
+      await updateSyncStatus({
+        lastSync: Date.now(),
+        inProgress: false,
+        error: error instanceof Error ? error.message : 'Sync failed'
+      });
       setSyncResult("Sync failed. Please try again.");
     } finally {
       setSyncingNow(false);
@@ -287,25 +382,62 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col gap-5">
-            {/* Offline Notifications Toggle */}
-            <motion.div
-              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                {isOnline ? <Wifi className="w-5 h-5 text-green-600" /> : <WifiOff className="w-5 h-5 text-red-600" />}
-                <div>
-                  <span className="text-gray-800 font-medium">Offline Notifications</span>
-                  <p className="text-sm text-gray-600">Show notifications when offline</p>
+            {/* Push Notifications Toggle */}
+            {pushSupported && (
+              <motion.div
+                className={`p-4 rounded-xl transition-colors ${
+                  isPWA
+                    ? 'bg-gray-50 hover:bg-gray-100'
+                    : 'bg-amber-50 border border-amber-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      pushSubscribed ? 'bg-green-100' : 'bg-gray-200'
+                    }`}>
+                      <span className="text-xs">{pushSubscribed ? '🔔' : '🔕'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-800 font-medium">Notifications</span>
+                      <p className="text-sm text-gray-600">
+                        {isPWA ? (
+                          pushSubscribed
+                            ? 'Get notified when new events are published'
+                            : pushPermission === 'denied'
+                            ? 'Notifications blocked - enable in browser settings'
+                            : 'Get push notifications for new events'
+                        ) : (
+                          'Install the app to receive push notifications for new events'
+                        )}
+                      </p>
+                      {!isPWA && (
+                        <p className="text-xs text-amber-700 mt-1">
+                          📱 Tap the install button in your browser or share menu
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <ToggleSwitch
+                    checked={pushSubscribed}
+                    disabled={pushLoading || pushPermission === 'denied' || !isPWA}
+                    onChange={async (checked) => {
+                      try {
+                        if (checked) {
+                          await subscribeToPush();
+                        } else {
+                          await unsubscribeFromPush();
+                        }
+                      } catch (error) {
+                        console.error('Push notification toggle failed:', error);
+                      }
+                    }}
+                  />
                 </div>
-              </div>
-              <ToggleSwitch
-                checked={offlineNotif}
-                onChange={(checked) => {
-                  setOfflineNotif(checked);
-                  savePreferences({ offlineNotif: checked });
-                }}
-              />
-            </motion.div>
+              </motion.div>
+            )}
+
+
 
             {/* Auto Sync Toggle */}
             <motion.div

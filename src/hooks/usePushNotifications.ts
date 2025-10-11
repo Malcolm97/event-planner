@@ -1,0 +1,236 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface PushSubscriptionData {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
+interface UsePushNotificationsReturn {
+  isSupported: boolean;
+  isSubscribed: boolean;
+  permission: NotificationPermission;
+  isLoading: boolean;
+  error: string | null;
+  subscribe: () => Promise<void>;
+  unsubscribe: () => Promise<void>;
+  requestPermission: () => Promise<NotificationPermission>;
+}
+
+export function usePushNotifications(): UsePushNotificationsReturn {
+  const [isSupported, setIsSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if push notifications are supported
+  useEffect(() => {
+    const checkSupport = () => {
+      const supported = 'serviceWorker' in navigator &&
+                       'PushManager' in window &&
+                       'Notification' in window;
+
+      setIsSupported(supported);
+
+      if (supported) {
+        setPermission(Notification.permission);
+      }
+    };
+
+    checkSupport();
+  }, []);
+
+  // Check current subscription status
+  const checkSubscriptionStatus = useCallback(async () => {
+    if (!isSupported) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      setIsSubscribed(!!subscription);
+    } catch (err) {
+      console.error('Error checking subscription status:', err);
+      setError('Failed to check subscription status');
+    }
+  }, [isSupported]);
+
+  useEffect(() => {
+    checkSubscriptionStatus();
+  }, [checkSubscriptionStatus]);
+
+  // Request notification permission
+  const requestPermission = useCallback(async (): Promise<NotificationPermission> => {
+    if (!isSupported) {
+      throw new Error('Push notifications are not supported');
+    }
+
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to request permission';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, [isSupported]);
+
+  // Subscribe to push notifications
+  const subscribe = useCallback(async () => {
+    if (!isSupported) {
+      throw new Error('Push notifications are not supported');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Request permission first if not granted
+      if (permission !== 'granted') {
+        const newPermission = await requestPermission();
+        if (newPermission !== 'granted') {
+          throw new Error('Notification permission denied');
+        }
+      }
+
+      // Get service worker registration
+      const registration = await navigator.serviceWorker.ready;
+
+      // Check if already subscribed
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        // Subscribe with VAPID key
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidPublicKey) {
+          throw new Error('VAPID public key not configured');
+        }
+
+        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+      }
+
+      if (!subscription) {
+        throw new Error('Failed to create push subscription');
+      }
+
+      // Convert subscription to JSON
+      const p256dhKey = subscription.getKey('p256dh');
+      const authKey = subscription.getKey('auth');
+
+      if (!p256dhKey || !authKey) {
+        throw new Error('Failed to get subscription keys');
+      }
+
+      const subscriptionData: PushSubscriptionData = {
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: btoa(String.fromCharCode(...Array.from(new Uint8Array(p256dhKey)))),
+          auth: btoa(String.fromCharCode(...Array.from(new Uint8Array(authKey))))
+        }
+      };
+
+      // Save subscription to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { error: dbError } = await supabase
+        .from('push_subscriptions')
+        .upsert({
+          user_id: user.id,
+          subscription: subscriptionData,
+          user_agent: navigator.userAgent
+        });
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw new Error('Failed to save subscription');
+      }
+
+      setIsSubscribed(true);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSupported, permission, requestPermission]);
+
+  // Unsubscribe from push notifications
+  const unsubscribe = useCallback(async () => {
+    if (!isSupported) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        await subscription.unsubscribe();
+
+        // Remove from database
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error: dbError } = await supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('user_id', user.id);
+
+          if (dbError) {
+            console.error('Database error:', dbError);
+          }
+        }
+      }
+
+      setIsSubscribed(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSupported]);
+
+  return {
+    isSupported,
+    isSubscribed,
+    permission,
+    isLoading,
+    error,
+    subscribe,
+    unsubscribe,
+    requestPermission
+  };
+}
+
+// Helper function to convert VAPID key
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}

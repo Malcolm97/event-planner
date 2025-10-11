@@ -169,16 +169,16 @@ export const getItemsByIndex = async <T>(storeName: string, indexName: string, v
 // Add events with cache timestamp
 export const addEvents = async (events: EventItem[]): Promise<void> => {
   const timestamp = Date.now();
-  // Limit cache size to 500 events
-  const limitedEvents = events.slice(0, 500);
+  // Limit cache size to 1000 events (increased for better offline experience)
+  const limitedEvents = events.slice(0, 1000);
   await addItems(STORES.EVENTS, [{ id: 'cache-meta', timestamp }, ...limitedEvents]);
 };
 
 // Add users with cache timestamp
 export const addUsers = async (users: any[]): Promise<void> => {
   const timestamp = Date.now();
-  // Limit cache size to 200 users
-  const limitedUsers = users.slice(0, 200);
+  // Limit cache size to 500 users (increased for better offline experience)
+  const limitedUsers = users.slice(0, 500);
   await addItems(STORES.USERS, [{ id: 'cache-meta', timestamp }, ...limitedUsers]);
 };
 
@@ -186,13 +186,13 @@ export const addUsers = async (users: any[]): Promise<void> => {
 export const updateEventsCache = async (events: EventItem[]): Promise<void> => {
   try {
     const timestamp = Date.now();
-    // Keep existing events and merge with new ones, limit to 500
+    // Keep existing events and merge with new ones, limit to 1000
     const existingEvents = await getEvents();
     const mergedEvents = [...existingEvents, ...events];
     const uniqueEvents = mergedEvents.filter((event, index, self) =>
       index === self.findIndex(e => e.id === event.id)
     );
-    const limitedEvents = uniqueEvents.slice(0, 500);
+    const limitedEvents = uniqueEvents.slice(0, 1000);
 
     await addItems(STORES.EVENTS, [{ id: 'cache-meta', timestamp }, ...limitedEvents]);
     console.log(`Updated events cache with ${limitedEvents.length} events`);
@@ -205,13 +205,13 @@ export const updateEventsCache = async (events: EventItem[]): Promise<void> => {
 export const updateUsersCache = async (users: any[]): Promise<void> => {
   try {
     const timestamp = Date.now();
-    // Keep existing users and merge with new ones, limit to 200
+    // Keep existing users and merge with new ones, limit to 500
     const existingUsers = await getUsers();
     const mergedUsers = [...existingUsers, ...users];
     const uniqueUsers = mergedUsers.filter((user, index, self) =>
       index === self.findIndex(u => u.id === user.id)
     );
-    const limitedUsers = uniqueUsers.slice(0, 200);
+    const limitedUsers = uniqueUsers.slice(0, 500);
 
     await addItems(STORES.USERS, [{ id: 'cache-meta', timestamp }, ...limitedUsers]);
     console.log(`Updated users cache with ${limitedUsers.length} users`);
@@ -225,7 +225,7 @@ export const clearEventsCache = async (): Promise<void> => {
   await clearStore(STORES.EVENTS);
 };
 
-// Get events and check cache expiration (7 days - extended due to periodic caching)
+// Get events and check cache expiration (3 days - events are time-sensitive)
 export const getEvents = async (): Promise<EventItem[]> => {
   try {
     const items = await getItems<any>(STORES.EVENTS);
@@ -235,7 +235,7 @@ export const getEvents = async (): Promise<EventItem[]> => {
     if (meta && meta.timestamp) {
       const now = Date.now();
       const age = now - meta.timestamp;
-      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+      const maxAge = 3 * 24 * 60 * 60 * 1000; // 3 days
 
       if (age > maxAge) {
         console.log('Events cache expired, clearing...');

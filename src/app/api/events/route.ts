@@ -2,6 +2,34 @@ import { NextResponse } from 'next/server';
 import { supabase, TABLES } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
+// Function to send push notifications for new events
+async function sendPushNotificationForNewEvent(event: any) {
+  try {
+    // Call the send-push-notification API
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-push-notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'New Event Added!',
+        body: `${event.name} - ${new Date(event.date).toLocaleDateString()}`,
+        url: `/events/${event.id}`,
+        eventId: event.id
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send push notifications:', response.status);
+    } else {
+      const result = await response.json();
+      console.log(`Push notifications sent: ${result.sent || 0} successful`);
+    }
+  } catch (err) {
+    console.error('Error sending push notifications:', err);
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -160,6 +188,11 @@ export async function POST(request: Request) {
       console.error('Error creating event:', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Trigger push notifications for new event (don't await to avoid blocking response)
+    sendPushNotificationForNewEvent(data).catch(err => {
+      console.error('Failed to send push notification for new event:', err);
+    });
 
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
