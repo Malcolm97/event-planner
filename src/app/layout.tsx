@@ -12,6 +12,7 @@ import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnlineBadge from '@/components/OnlineBadge';
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -94,6 +95,7 @@ export default function RootLayout({
           }
           `}
         </Script>
+        <Analytics />
       </body>
     </html>
   );
