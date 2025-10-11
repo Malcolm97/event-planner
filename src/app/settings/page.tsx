@@ -662,7 +662,7 @@ export default function SettingsPage() {
                 </div>
 
                 <p className="text-gray-700 mb-6">
-                  This will permanently delete all cached events, user data, and offline content. Your account preferences will be preserved.
+                  This will permanently delete all saved events, user data, and offline content. Your account preferences will be preserved.
                 </p>
 
                 <div className="flex gap-3">

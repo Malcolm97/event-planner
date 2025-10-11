@@ -44,11 +44,11 @@ export default function SyncIndicator() {
 
   return (
     <div className="fixed bottom-6 right-6 flex flex-col gap-3 items-end z-50">
-      {/* Cached events indicator - show when offline and have cached events */}
+      {/* Saved events indicator - show when offline and have saved events */}
       {!isOnline && cachedEventsCount > 0 && (
         <div className="bg-blue-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-xl shadow-xl border border-blue-400 flex items-center gap-2">
           <FiDatabase className="h-4 w-4" />
-          <span className="text-sm font-medium">{cachedEventsCount} cached events</span>
+          <span className="text-sm font-medium">{cachedEventsCount} saved events</span>
         </div>
       )}
 

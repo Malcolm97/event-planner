@@ -391,7 +391,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         ) : !isOnline && events.length === 0 ? (
           <div className="col-span-full text-center py-20">
             <div className="text-8xl mb-6">📴</div>
-            <h3 className="text-heading-lg mb-4">No cached events available offline</h3>
+            <h3 className="text-heading-lg mb-4">No saved events available offline</h3>
             <p className="text-body-sm text-gray-500">Connect to the internet to load events for offline use.</p>
           </div>
         ) : (

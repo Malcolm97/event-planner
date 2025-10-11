@@ -289,7 +289,7 @@
             <div class="cached-events" id="cached-events">
                 <div class="section-title">
                     <span class="section-icon">📅</span>
-                    Cached Events
+                    Saved Events
                 </div>
                 <div id="events-list">
                     <div class="loading">Loading cached events...</div>
@@ -351,7 +351,7 @@
             statsSection.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${cachedStats.events}</div>
-                    <div class="stat-label">Cached Events</div>
+                    <div class="stat-label">Saved Events</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${cachedStats.creators}</div>
@@ -387,7 +387,7 @@
                 const events = allEvents.slice(0, 10); // Show max 10
 
                 if (events.length === 0) {
-                    eventsList.innerHTML = '<p class="no-events">No cached events available. Connect to the internet to load events.</p>';
+                    eventsList.innerHTML = '<p class="no-events">No saved events available. Connect to the internet to load events.</p>';
                     return;
                 }
 
@@ -413,7 +413,7 @@
             } catch (error) {
                 console.error('Failed to load cached events:', error);
                 document.getElementById('events-list').innerHTML =
-                    '<p class="no-events">Unable to load cached events. Please try refreshing the page.</p>';
+                    '<p class="no-events">Unable to load saved events. Please try refreshing the page.</p>';
             }
         }
 

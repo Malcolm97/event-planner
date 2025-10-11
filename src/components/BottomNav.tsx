@@ -72,8 +72,8 @@ export default function BottomNav() {
   ];
 
   const navigateWithOfflineCheck = (path: string, description: string) => {
-    // Always allow navigation to home, settings, and about (static-ish pages)
-    const alwaysAllowedPaths = ['/', '/settings', '/about'];
+    // Always allow navigation to pages with offline support
+    const alwaysAllowedPaths = ['/', '/events', '/categories', '/creators', '/dashboard', '/settings', '/about'];
 
     if (isOnline || alwaysAllowedPaths.includes(path)) {
       router.push(path);

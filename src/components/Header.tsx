@@ -175,12 +175,12 @@ const Header = React.memo(function Header() {
     <>
       <PullToRefreshIndicator isPulling={isPulling} progress={progress} />
 
-      {/* Cached Data Banner for Mobile/Tablet */}
+      {/* Saved Data Banner for Mobile/Tablet */}
       {shouldShowCachedDataBanner && (
         <div className="bg-blue-600 text-white text-center py-2 px-4 text-sm font-medium lg:hidden">
           <div className="flex items-center justify-center gap-2">
             <FiDatabase size={16} />
-            <span>Using cached data ({cachedEventsCount} events)</span>
+            <span>Saved events ({cachedEventsCount})</span>
           </div>
         </div>
       )}
@@ -280,15 +280,15 @@ const Header = React.memo(function Header() {
                   </div>
 
                   <div className="p-4 space-y-4">
-                    {/* Cached events indicator */}
+                    {/* Saved events indicator */}
                     {!isOnline && cachedEventsCount > 0 && (
                       <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <FiDatabase size={16} className="text-blue-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-blue-900">Cached Events</p>
-                          <p className="text-xs text-blue-700">{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} available offline</p>
+                          <p className="text-sm font-medium text-blue-900">Saved Events</p>
+                          <p className="text-xs text-blue-700">{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} saved offline</p>
                         </div>
                       </div>
                     )}

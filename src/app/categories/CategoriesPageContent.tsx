@@ -233,7 +233,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
           ) : events.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📴</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No cached events available offline</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No saved events available offline</h3>
               <p className="text-gray-500">Connect to the internet to load events for offline use.</p>
             </div>
           ) : upcomingEvents.length > 0 ? (

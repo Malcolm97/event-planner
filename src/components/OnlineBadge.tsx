@@ -164,11 +164,11 @@ const OnlineBadge = React.memo(() => {
         {/* Expanded details */}
         {isExpanded && (
           <div className="border-t border-white/20 px-4 py-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
-            {/* Cached events */}
+            {/* Saved events */}
             {cachedEventsCount > 0 && (
               <div className="flex items-center gap-2 text-xs opacity-90">
                 <FiDatabase className="w-4 h-4 flex-shrink-0" />
-                <span>{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} cached</span>
+                <span>{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} saved</span>
               </div>
             )}
 
