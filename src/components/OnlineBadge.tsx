@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { FiWifi, FiWifiOff, FiRefreshCw, FiClock, FiAlertTriangle, FiChevronUp, FiChevronDown, FiDatabase } from 'react-icons/fi';
+import { FiWifi, FiWifiOff, FiRefreshCw, FiClock, FiAlertTriangle, FiChevronDown, FiChevronUp, FiDatabase } from 'react-icons/fi';
 import * as db from '@/lib/indexedDB';
+import { isAutoSyncEnabled } from '@/lib/utils';
 
 const OnlineBadge = React.memo(() => {
   const { isOnline, isSyncing, lastSyncTime, syncError, connectionQuality, connectionType, downlink, rtt } = useNetworkStatus();
@@ -190,7 +191,7 @@ const OnlineBadge = React.memo(() => {
             )}
 
             {/* Last sync time */}
-            {lastSyncTime && isOnline && (
+            {lastSyncTime && isOnline && isAutoSyncEnabled() && (
               <div className="text-xs opacity-75 pt-1 border-t border-white/10">
                 Last synced: {new Date(lastSyncTime).toLocaleString()}
               </div>

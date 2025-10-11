@@ -13,6 +13,7 @@
     "@eslint/object-schema": "^2.1.6",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/line-clamp": "^0.4.4",
+    "@vercel/analytics": "^1.5.0",
     "clsx": "^2.1.1",
     "core-js": "^3.45.1",
     "critters": "^0.0.23",

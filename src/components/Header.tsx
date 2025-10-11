@@ -11,7 +11,7 @@ import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { toast } from 'react-hot-toast';
 import * as db from '@/lib/indexedDB';
-import { storeSigninRedirect } from '@/lib/utils';
+import { storeSigninRedirect, isAutoSyncEnabled } from '@/lib/utils';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import PullToRefreshIndicator from '@/components/PullToRefreshIndicator';
 
@@ -307,7 +307,7 @@ const Header = React.memo(function Header() {
                     )}
 
                     {/* Last sync time */}
-                    {lastSyncTime && isOnline && (
+                    {lastSyncTime && isOnline && isAutoSyncEnabled() && (
                       <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
                         <div className="p-2 bg-green-100 rounded-lg">
                           <FiCheckCircle size={16} className="text-green-600" />

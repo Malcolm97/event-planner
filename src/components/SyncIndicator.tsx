@@ -5,6 +5,7 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { FiCloudOff, FiRefreshCw, FiClock, FiWifi, FiWifiOff, FiCheckCircle, FiAlertTriangle, FiDatabase } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import * as db from '@/lib/indexedDB';
+import { isAutoSyncEnabled } from '@/lib/utils';
 
 export default function SyncIndicator() {
   const { isOnline, isSyncing, lastSyncTime, syncError } = useNetworkStatus();
@@ -67,7 +68,7 @@ export default function SyncIndicator() {
             <FiWifiOff className="h-6 w-6" />
             <span className="font-semibold">Offline Mode</span>
           </div>
-          {lastSyncTime && (
+          {lastSyncTime && isAutoSyncEnabled() && (
             <div className="text-sm opacity-90 font-medium">
               Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
             </div>
@@ -120,7 +121,7 @@ export default function SyncIndicator() {
           >
             Sync Now
           </button>
-          {lastSyncTime && (
+          {lastSyncTime && isAutoSyncEnabled() && (
             <div className="text-xs opacity-75">
               Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
             </div>
@@ -134,7 +135,7 @@ export default function SyncIndicator() {
             <FiCheckCircle className="h-6 w-6" />
             <span className="font-semibold">Online</span>
           </div>
-          {lastSyncTime && (
+          {lastSyncTime && isAutoSyncEnabled() && (
             <div className="text-xs opacity-75">
               Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
             </div>

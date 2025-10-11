@@ -154,3 +154,9 @@ export function isEventCurrentOrUpcoming(event: any): boolean {
   const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   return eventDateOnly >= todayOnly;
 }
+
+// Check if auto sync is enabled
+export function isAutoSyncEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('autoSync') !== 'false';
+}

@@ -10,6 +10,7 @@ import { useNetworkStatus } from "@/context/NetworkStatusContext";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/lib/supabase";
+import { isAutoSyncEnabled } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import ToggleSwitch from "@/components/ToggleSwitch";
@@ -258,13 +259,15 @@ export default function SettingsPage() {
             <h2 className="text-xl sm:text-2xl font-semibold">Cache Management</h2>
           </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50">
-            <RefreshCw className="w-5 h-5 text-blue-600" />
-            <div>
-              <span className="text-gray-800 font-medium">Last Sync</span>
-              <p className="text-sm text-gray-600">{lastSync || "Never synced"}</p>
+          {isAutoSyncEnabled() && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50">
+              <RefreshCw className="w-5 h-5 text-blue-600" />
+              <div>
+                <span className="text-gray-800 font-medium">Last Sync</span>
+                <p className="text-sm text-gray-600">{lastSync || "Never synced"}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <motion.div>
