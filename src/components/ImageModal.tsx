@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { FiX } from 'react-icons/fi';
+import { FiX, FiZoomIn, FiZoomOut, FiRotateCcw } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 
 // Helper function to get all image URLs
@@ -25,6 +25,7 @@ interface ImageModalProps {
   onClose: () => void;
   onPrevImage: () => void;
   onNextImage: () => void;
+  onImageSelect: (index: number) => void;
 }
 
 const ImageModal: React.FC<ImageModalProps> = ({
@@ -32,10 +33,19 @@ const ImageModal: React.FC<ImageModalProps> = ({
   activeImageIndex,
   onClose,
   onPrevImage,
-  onNextImage
+  onNextImage,
+  onImageSelect
 }) => {
   const allImageUrls = getAllImageUrls(event?.image_urls);
   const hasImages = allImageUrls.length > 0;
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   if (!hasImages) return null;
 
@@ -49,25 +59,100 @@ const ImageModal: React.FC<ImageModalProps> = ({
     currentImageAlt = event?.name ? `${event.name} image ${safeIndex + 1}` : 'Event Image';
   }
 
+  // Reset zoom and pan when image changes
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    setImageLoading(true);
+    setImageError(false);
+  }, [activeImageIndex]);
+
+  // Handle zoom controls
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.2, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.2, 0.5));
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  // Handle mouse/touch interactions for panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoom > 1) {
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+      setPan({ x: newX, y: newY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Handle wheel zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.max(0.5, Math.min(prev * delta, 3)));
+  };
+
   return (
     <div
       className="fixed inset-x-0 top-16 sm:top-20 lg:top-0 bottom-24 lg:bottom-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-md p-4 animate-fade-in"
       onClick={onClose}
     >
-      <div className="relative w-full max-w-6xl max-h-[90vh] flex items-center justify-center">
+      <div className="relative w-full max-w-7xl h-full max-h-[90vh] flex items-center justify-center">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
+          className="absolute top-4 right-4 z-30 p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
           aria-label="Close Image Viewer"
         >
           <FiX size={24} />
         </button>
 
+        {/* Zoom Controls */}
+        <div className="absolute top-4 left-4 z-30 flex gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
+            className="p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
+            aria-label="Zoom Out"
+          >
+            <FiZoomOut size={20} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
+            className="px-4 py-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110 text-sm font-medium"
+            aria-label="Reset Zoom"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
+            className="p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
+            aria-label="Zoom In"
+          >
+            <FiZoomIn size={20} />
+          </button>
+        </div>
+
         {/* Navigation Buttons */}
         <button
           onClick={(e) => { e.stopPropagation(); onPrevImage(); }}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-10 shadow-lg hover:scale-110"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
           aria-label="Previous Image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,22 +160,64 @@ const ImageModal: React.FC<ImageModalProps> = ({
           </svg>
         </button>
 
-        {/* Main Image */}
-        <div className="relative z-10 max-w-full max-h-full">
-          <Image
-            src={currentImageUrl}
-            alt={currentImageAlt}
-            width={1200}
-            height={800}
-            className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-            loading="eager"
-          />
+        {/* Main Image Container */}
+        <div
+          ref={containerRef}
+          className="relative z-10 w-full h-full max-w-full max-h-full overflow-hidden rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+          style={{ touchAction: 'none' }}
+        >
+          {/* Loading State */}
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 rounded-2xl">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {imageError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 rounded-2xl">
+              <div className="text-center text-white">
+                <div className="text-6xl mb-4">📷</div>
+                <p className="text-lg font-medium">Failed to load image</p>
+                <p className="text-sm text-gray-400 mt-2">Please try again later</p>
+              </div>
+            </div>
+          )}
+
+          {/* Main Image */}
+          {!imageError && (
+            <img
+              ref={imageRef}
+              src={currentImageUrl}
+              alt={currentImageAlt}
+              className={`w-full h-full object-contain transition-transform duration-200 ease-out ${
+                imageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              style={{
+                transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                transformOrigin: 'center center',
+                maxWidth: '100%',
+                maxHeight: '100%',
+              }}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false);
+                setImageError(true);
+              }}
+              draggable={false}
+            />
+          )}
         </div>
 
         <button
           onClick={(e) => { e.stopPropagation(); onNextImage(); }}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-10 shadow-lg hover:scale-110"
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
           aria-label="Next Image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,9 +238,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                 }`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  // This would need to be handled by parent component
-                  // For now, we'll just close and let parent handle
-                  onClose();
+                  onImageSelect(index);
                 }}
               >
                 <Image

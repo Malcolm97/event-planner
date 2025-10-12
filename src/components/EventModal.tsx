@@ -77,6 +77,12 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     }
   }, [dialogOpen, initialTab]);
 
+  // Reset image modal state when event changes
+  useEffect(() => {
+    setImageExpanded(false);
+    setActiveImageIndex(0);
+  }, [selectedEvent]);
+
   // Navigation helper functions
   const handlePrevImage = () => {
     const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
@@ -95,6 +101,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   const handleImageExpand = (index: number) => {
     setActiveImageIndex(index);
     setImageExpanded(true);
+  };
+
+  const handleImageSelect = (index: number) => {
+    setActiveImageIndex(index);
   };
 
   if (!dialogOpen) return null;
@@ -184,6 +194,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           onClose={() => setImageExpanded(false)}
           onPrevImage={handlePrevImage}
           onNextImage={handleNextImage}
+          onImageSelect={handleImageSelect}
         />
       )}
     </div>
