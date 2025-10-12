@@ -313,7 +313,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
               Discover concerts, festivals, workshops, and more happening in your area.
               Create unforgettable memories with events that matter.
-            </p>
+v            </p>
           </div>
 
           {/* Search and Filter Controls - Mobile Optimized */}

@@ -124,10 +124,10 @@ export function useOptimizedData<T>(
           let cachedData: T[] = [];
           if (storeName === TABLES.EVENTS) {
             const { getEvents } = await import('@/lib/indexedDB');
-            cachedData = await getEvents();
+            cachedData = (await getEvents()) as T[];
           } else if (storeName === TABLES.USERS) {
             const { getUsers } = await import('@/lib/indexedDB');
-            cachedData = await getUsers();
+            cachedData = (await getUsers()) as T[];
           } else {
             cachedData = await getItems(storeName);
           }

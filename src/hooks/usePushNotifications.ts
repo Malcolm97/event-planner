@@ -20,6 +20,7 @@ interface UsePushNotificationsReturn {
   subscribe: () => Promise<void>;
   unsubscribe: () => Promise<void>;
   requestPermission: () => Promise<NotificationPermission>;
+  refreshPermission: () => void;
 }
 
 export function usePushNotifications(): UsePushNotificationsReturn {
@@ -60,9 +61,39 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     }
   }, [isSupported]);
 
+  // Refresh permission state
+  const refreshPermission = useCallback(() => {
+    if (isSupported) {
+      setPermission(Notification.permission);
+    }
+  }, [isSupported]);
+
   useEffect(() => {
     checkSubscriptionStatus();
   }, [checkSubscriptionStatus]);
+
+  // Add window focus listeners to refresh permission state
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshPermission();
+      checkSubscriptionStatus();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshPermission();
+        checkSubscriptionStatus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshPermission, checkSubscriptionStatus]);
 
   // Request notification permission
   const requestPermission = useCallback(async (): Promise<NotificationPermission> => {
@@ -91,8 +122,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     setError(null);
 
     try {
-      // Request permission first if not granted
-      if (permission !== 'granted') {
+      // Request permission first if not granted - check current browser permission
+      if (Notification.permission !== 'granted') {
         const newPermission = await requestPermission();
         if (newPermission !== 'granted') {
           throw new Error('Notification permission denied');
@@ -215,7 +246,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     error,
     subscribe,
     unsubscribe,
-    requestPermission
+    requestPermission,
+    refreshPermission
   };
 }
 
