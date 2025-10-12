@@ -5,15 +5,17 @@ export function getEventPrimaryImage(event: EventItem): string {
   if (!event.image_urls) return '/next.svg';
 
   if (typeof event.image_urls === 'string') {
+    // Check if it's a JSON string containing an array
     try {
       const parsed = JSON.parse(event.image_urls);
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed[0];
       }
-      return event.image_urls;
     } catch (error) {
-      return event.image_urls;
+      // Not JSON, treat as direct URL string
     }
+    // Return the string as-is (it's a direct URL)
+    return event.image_urls;
   }
 
   if (Array.isArray(event.image_urls) && event.image_urls.length > 0) {
