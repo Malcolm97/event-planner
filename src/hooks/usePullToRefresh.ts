@@ -28,6 +28,11 @@ export const usePullToRefresh = (config: PullToRefreshConfig = {}) => {
       return;
     }
 
+    // Device-adaptive threshold based on screen size and pixel density
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const screenHeight = window.innerHeight;
+    const adaptiveThreshold = threshold * (devicePixelRatio > 1 ? 1.2 : 1) * (screenHeight < 600 ? 0.8 : 1);
+
     let touchStartY = 0;
     let touchStartX = 0;
     let isTracking = false;
@@ -94,17 +99,17 @@ export const usePullToRefresh = (config: PullToRefreshConfig = {}) => {
       const touchDuration = endTime - startTime;
 
       // Only trigger refresh if the gesture was quick enough and distance sufficient
-      if (isPulling && pullDistance >= threshold && touchDuration < 1000) {
+      if (isPulling && pullDistance >= adaptiveThreshold && touchDuration < 1000) {
         // Trigger haptic feedback if available
         if ('vibrate' in navigator) {
           navigator.vibrate(50);
         }
 
-        // Trigger refresh
+        // Trigger refresh with cache bypass for PWA
         if (onRefresh) {
           onRefresh();
         } else {
-          window.location.reload();
+          performCacheBustingRefresh();
         }
       }
 
@@ -112,6 +117,30 @@ export const usePullToRefresh = (config: PullToRefreshConfig = {}) => {
       setPullDistance(0);
       isTracking = false;
       hasPreventedDefault = false;
+    };
+
+    // Enhanced refresh function that bypasses service worker cache
+    const performCacheBustingRefresh = () => {
+      // For PWA mode, we need to ensure cache is bypassed
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        // Unregister service worker temporarily and reload
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => {
+            registration.unregister().then(() => {
+              // Add cache-busting parameter to force fresh content
+              const url = new URL(window.location.href);
+              url.searchParams.set('_t', Date.now().toString());
+              window.location.href = url.toString();
+            });
+          });
+        }).catch(() => {
+          // Fallback to regular reload with cache busting
+          window.location.href = window.location.href + (window.location.href.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        });
+      } else {
+        // Regular browser refresh with cache busting
+        window.location.reload();
+      }
     };
 
     // Add event listeners with appropriate options
@@ -126,5 +155,5 @@ export const usePullToRefresh = (config: PullToRefreshConfig = {}) => {
     };
   }, [enabled, threshold, onRefresh]);
 
-  return { isPulling, pullDistance, progress: Math.min(pullDistance / threshold, 1) };
+  return { isPulling, pullDistance, progress: Math.min(pullDistance / (threshold * (window.devicePixelRatio > 1 ? 1.2 : 1) * (window.innerHeight < 600 ? 0.8 : 1)), 1) };
 };

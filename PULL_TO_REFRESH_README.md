@@ -34,17 +34,20 @@ The pull-to-refresh feature allows users on mobile and tablet devices who have s
 
 ### Files Modified/Created
 
-- `src/hooks/usePullToRefresh.ts` - Main hook for gesture detection
-- `src/components/PullToRefreshIndicator.tsx` - Visual indicator component
+- `src/hooks/usePullToRefresh.ts` - Main hook for gesture detection with PWA optimizations
+- `src/components/PullToRefreshIndicator.tsx` - Visual indicator component with hardware acceleration
 - `src/components/Header.tsx` - Integration point
 
 ### Key Features
 
-- **Performance Optimized**: Fixed useEffect dependencies to prevent unnecessary re-runs
+- **Performance Optimized**: Fixed useEffect dependencies, React.memo, and hardware acceleration
+- **Device-Adaptive**: Adjusts threshold based on screen size and pixel density
+- **Cache-Busting Refresh**: Bypasses service worker cache for true browser-like refresh
 - **Multi-touch Safe**: Only handles single-touch gestures
 - **Conflict Prevention**: Distinguishes between vertical pulls and horizontal scrolls
 - **Accessibility**: Screen reader announcements and proper ARIA attributes
 - **Development Testing**: Debug mode for testing without standalone mode
+- **Cross-Platform**: Optimized for both iOS and Android PWA environments
 
 ## Testing
 
