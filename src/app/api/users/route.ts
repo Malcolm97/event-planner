@@ -5,18 +5,32 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit');
+    const offset = searchParams.get('offset');
+    const fields = searchParams.get('fields');
+
+    // Define default fields for performance - only fetch what's needed
+    const defaultFields = 'id, name, email, phone, company, about, photo_url, updated_at';
+    const selectedFields = fields || defaultFields;
 
     let query = supabase
       .from(TABLES.USERS)
-      .select('id, name, email, phone, company, about, photo_url, updated_at')
+      .select(selectedFields)
       .order('updated_at', { ascending: false });
 
-    // Apply limit if provided
-    if (limit) {
+    // Apply pagination
+    if (offset) {
+      const offsetNum = parseInt(offset, 10);
+      if (!isNaN(offsetNum) && offsetNum >= 0) {
+        query = query.range(offsetNum, offsetNum + (limit ? parseInt(limit, 10) : 50) - 1);
+      }
+    } else if (limit) {
       const limitNum = parseInt(limit, 10);
-      if (!isNaN(limitNum) && limitNum > 0) {
+      if (!isNaN(limitNum) && limitNum > 0 && limitNum <= 100) { // Max 100 items per request
         query = query.limit(limitNum);
       }
+    } else {
+      // Default limit for performance
+      query = query.limit(50);
     }
 
     const { data, error } = await query;

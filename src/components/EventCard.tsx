@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark, FiTrash2, FiEdit, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
-import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import LazyImage from './LazyImage';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
@@ -52,14 +51,59 @@ const formatDate = (date: Date): string => {
 };
 
 const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOwner = false }: { event: EventItem; onClick?: () => void; onDelete?: (eventId: string) => void; isOwner?: boolean }) {
-  const categoryLabel = event.category?.trim() || 'Other';
-  const categoryColor = categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700';
-  const Icon = categoryIconMap[categoryLabel] || FiStar;
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
   const [deleting, setDeleting] = useState(false);
+
+  // Memoize expensive computations
+  const categoryLabel = useMemo(() => event.category?.trim() || 'Other', [event.category]);
+  const categoryColor = useMemo(() => categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700', [categoryLabel]);
+  const Icon = useMemo(() => categoryIconMap[categoryLabel] || FiStar, [categoryLabel]);
+
+  // Memoize date calculations
+  const now = useMemo(() => new Date(), []);
+  const isNew = useMemo(() =>
+    event.created_at && (now.getTime() - new Date(event.created_at).getTime() < 1000 * 60 * 60 * 24 * 7),
+    [event.created_at, now]
+  );
+  const isCurrentEvent = useMemo(() =>
+    event.date && new Date(event.date) >= now,
+    [event.date, now]
+  );
+  const isPopular = useMemo(() =>
+    isCurrentEvent && saveCount >= 5,
+    [isCurrentEvent, saveCount]
+  );
+
+  // Memoize formatted dates and times
+  const formattedDate = useMemo(() => {
+    if (!event.date) return null;
+    const date = new Date(event.date);
+    return formatDate(date);
+  }, [event.date]);
+
+  const formattedTime = useMemo(() => {
+    if (!event.date) return null;
+    const date = new Date(event.date);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  }, [event.date]);
+
+  const formattedEndDate = useMemo(() => {
+    if (!event.end_date) return null;
+    const date = new Date(event.end_date);
+    return formatDate(date);
+  }, [event.end_date]);
+
+  const formattedEndTime = useMemo(() => {
+    if (!event.end_date) return null;
+    const date = new Date(event.end_date);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  }, [event.end_date]);
+
+  // Memoize image source
+  const imageSrc = useMemo(() => getEventPrimaryImage(event), [event.image_urls]);
 
   // Swipe gesture for sharing - disabled for now to avoid scroll conflicts
   // const swipeRef = useSwipe({
@@ -72,16 +116,6 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
   //     }
   //   },
   // });
-
-  // New badge logic (created within last 7 days)
-  const now = new Date();
-  const isNew = event.created_at && (now.getTime() - new Date(event.created_at).getTime() < 1000 * 60 * 60 * 24 * 7);
-
-  // Check if event is current (not past)
-  const isCurrentEvent = event.date && new Date(event.date) >= now;
-
-  // Popular badge logic: only show on current events with high save count by logged-in users
-  const isPopular = isCurrentEvent && saveCount >= 5; // Threshold for popular events
 
   // Fetch save count for popular badge logic
   useEffect(() => {
@@ -302,13 +336,13 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Hero Image Area */}
       <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
-        <Image
-          src={getEventPrimaryImage(event)}
+        <LazyImage
+          src={imageSrc}
           alt={`Event image for ${event.name}`}
           fill={true}
           priority={true}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="transition-transform duration-500 group-hover:scale-110 object-cover"
+          className="transition-transform duration-500 group-hover:scale-110"
         />
         {/* Price Badges - Bottom Left */}
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
@@ -365,15 +399,15 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
               <div className="flex items-start gap-1.5 sm:gap-3">
                 <FiCalendar size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
                 <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">
-                  {formatDate(new Date(event.date))}
-                  {event.end_date ? ` - ${formatDate(new Date(event.end_date))}` : ''}
+                  {formattedDate}
+                  {formattedEndDate ? ` - ${formattedEndDate}` : ''}
                 </span>
               </div>
               <div className="flex items-start gap-1.5 sm:gap-3">
                 <FiClock size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
                 <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">
-                  {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                  {event.end_date ? ` - ${new Date(event.end_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}` : ''}
+                  {formattedTime}
+                  {formattedEndTime ? ` - ${formattedEndTime}` : ''}
                 </span>
               </div>
             </div>

@@ -1,29 +1,36 @@
-const CACHE_NAME = 'event-planner-cache-v8';
-const STATIC_CACHE = 'event-planner-static-v8';
-const DYNAMIC_CACHE = 'event-planner-dynamic-v8';
-const API_CACHE = 'event-planner-api-v8';
-const PAGES_CACHE = 'event-planner-pages-v8';
-const APP_SHELL_CACHE = 'event-planner-app-shell-v8';
+const CACHE_NAME = 'event-planner-cache-v9';
+const STATIC_CACHE = 'event-planner-static-v9';
+const DYNAMIC_CACHE = 'event-planner-dynamic-v9';
+const API_CACHE = 'event-planner-api-v9';
+const PAGES_CACHE = 'event-planner-pages-v9';
+const APP_SHELL_CACHE = 'event-planner-app-shell-v9';
 
-// Core static assets to cache immediately
+// Cache size limits for better performance
+const CACHE_LIMITS = {
+  [STATIC_CACHE]: 100,
+  [DYNAMIC_CACHE]: 50,
+  [API_CACHE]: 30,
+  [PAGES_CACHE]: 10,
+  [APP_SHELL_CACHE]: 20
+};
+
+// Core static assets to cache immediately - only critical ones
 const urlsToCache = [
   '/offline.html',
-  '/globals.css',
   '/manifest.json',
-
-  // Critical icons for PWA
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/icons/icon-maskable-192x192.png',
   '/icons/icon-maskable-512x512.png'
 ];
 
-// Additional assets to cache when possible
-const additionalAssets = [
-  '/favicon.ico',
-  '/robots.txt',
-  '/sitemap.xml'
-];
+// Cache expiration times (in milliseconds)
+const CACHE_EXPIRATION = {
+  API: 5 * 60 * 1000,      // 5 minutes for API responses
+  PAGES: 15 * 60 * 1000,   // 15 minutes for pages
+  STATIC: 24 * 60 * 60 * 1000, // 24 hours for static assets
+  DYNAMIC: 60 * 60 * 1000  // 1 hour for dynamic content
+};
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
@@ -128,10 +135,7 @@ self.addEventListener('fetch', (event) => {
             // Not in cache, try network
             return fetch(request).then(response => {
               if (response.ok) {
-                const responseClone = response.clone();
-                caches.open(PAGES_CACHE).then(cache => {
-                  cache.put(request, responseClone);
-                });
+                cacheWithMetadata(PAGES_CACHE, request, response.clone());
               }
               return response;
             });
@@ -215,23 +219,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle API requests - Network first with cache fallback
+  // Handle API requests - Network first with intelligent caching
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Cache successful API responses
+          // Cache successful API responses with metadata
           if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, responseClone);
-            });
+            cacheWithMetadata(API_CACHE, request, response.clone());
           }
           return response;
         })
         .catch(() => {
           // Return cached version if available
-          return caches.match(request);
+          return caches.match(request, { cacheName: API_CACHE });
         })
     );
     return;
@@ -609,6 +610,130 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
+// Cache management utilities
+async function enforceCacheLimit(cacheName, maxEntries) {
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+
+    if (keys.length > maxEntries) {
+      // Sort by age (oldest first) and remove excess entries
+      const entriesToDelete = keys
+        .sort((a, b) => {
+          const timeA = parseInt(a.headers.get('sw-cache-time') || '0');
+          const timeB = parseInt(b.headers.get('sw-cache-time') || '0');
+          return timeA - timeB;
+        })
+        .slice(0, keys.length - maxEntries);
+
+      await Promise.all(entriesToDelete.map(key => cache.delete(key)));
+      console.log(`Cleaned up ${entriesToDelete.length} entries from ${cacheName}`);
+    }
+  } catch (error) {
+    console.warn(`Failed to enforce cache limit for ${cacheName}:`, error);
+  }
+}
+
+async function cleanupExpiredCache(cacheName, maxAge) {
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+    const now = Date.now();
+    let deletedCount = 0;
+
+    for (const request of keys) {
+      const response = await cache.match(request);
+      if (response) {
+        const cacheTime = parseInt(response.headers.get('sw-cache-time') || '0');
+        if (now - cacheTime > maxAge) {
+          await cache.delete(request);
+          deletedCount++;
+        }
+      }
+    }
+
+    if (deletedCount > 0) {
+      console.log(`Cleaned up ${deletedCount} expired entries from ${cacheName}`);
+    }
+  } catch (error) {
+    console.warn(`Failed to cleanup expired cache for ${cacheName}:`, error);
+  }
+}
+
+// Enhanced cache storage with metadata
+async function cacheWithMetadata(cacheName, request, response) {
+  try {
+    const cache = await caches.open(cacheName);
+    const responseClone = response.clone();
+
+    // Add cache metadata
+    const newResponse = new Response(responseClone.body, {
+      status: responseClone.status,
+      statusText: responseClone.statusText,
+      headers: {
+        ...Object.fromEntries(responseClone.headers.entries()),
+        'sw-cache-time': Date.now().toString(),
+        'sw-cache-version': 'v9'
+      }
+    });
+
+    await cache.put(request, newResponse);
+
+    // Enforce cache limits
+    const limit = CACHE_LIMITS[cacheName];
+    if (limit) {
+      await enforceCacheLimit(cacheName, limit);
+    }
+
+    // Cleanup expired entries
+    const expiration = getCacheExpiration(cacheName);
+    if (expiration) {
+      await cleanupExpiredCache(cacheName, expiration);
+    }
+
+  } catch (error) {
+    console.warn(`Failed to cache with metadata for ${cacheName}:`, error);
+  }
+}
+
+function getCacheExpiration(cacheName) {
+  switch (cacheName) {
+    case API_CACHE: return CACHE_EXPIRATION.API;
+    case PAGES_CACHE: return CACHE_EXPIRATION.PAGES;
+    case STATIC_CACHE: return CACHE_EXPIRATION.STATIC;
+    case DYNAMIC_CACHE: return CACHE_EXPIRATION.DYNAMIC;
+    default: return null;
+  }
+}
+
+// Periodic cache cleanup
+async function performCacheMaintenance() {
+  console.log('Performing cache maintenance...');
+
+  try {
+    // Clean up all caches
+    const cacheNames = Object.values({ CACHE_NAME, STATIC_CACHE, DYNAMIC_CACHE, API_CACHE, PAGES_CACHE, APP_SHELL_CACHE });
+
+    for (const cacheName of cacheNames) {
+      // Enforce size limits
+      const limit = CACHE_LIMITS[cacheName];
+      if (limit) {
+        await enforceCacheLimit(cacheName, limit);
+      }
+
+      // Clean up expired entries
+      const expiration = getCacheExpiration(cacheName);
+      if (expiration) {
+        await cleanupExpiredCache(cacheName, expiration);
+      }
+    }
+
+    console.log('Cache maintenance completed');
+  } catch (error) {
+    console.warn('Cache maintenance failed:', error);
+  }
+}
+
 // Handle PWA install and update events
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -616,6 +741,36 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: '8.0.0' });
+    event.ports[0].postMessage({ version: '9.0.0' });
+  }
+
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      Promise.all([
+        caches.delete(CACHE_NAME),
+        caches.delete(STATIC_CACHE),
+        caches.delete(DYNAMIC_CACHE),
+        caches.delete(API_CACHE),
+        caches.delete(PAGES_CACHE),
+        caches.delete(APP_SHELL_CACHE)
+      ]).then(() => {
+        console.log('All caches cleared');
+        event.ports[0].postMessage({ success: true });
+      }).catch((error) => {
+        console.error('Failed to clear caches:', error);
+        event.ports[0].postMessage({ success: false, error: error.message });
+      })
+    );
+  }
+
+  if (event.data && event.data.type === 'CACHE_MAINTENANCE') {
+    event.waitUntil(
+      performCacheMaintenance().then(() => {
+        event.ports[0].postMessage({ success: true });
+      }).catch((error) => {
+        console.error('Cache maintenance failed:', error);
+        event.ports[0].postMessage({ success: false, error: error.message });
+      })
+    );
   }
 });

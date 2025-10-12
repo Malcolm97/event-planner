@@ -9,14 +9,19 @@ import { EventItem } from '@/lib/types';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import Link from 'next/link';
-import AppFooter from '@/components/AppFooter';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useEvents } from '@/hooks/useOfflineFirstData';
-import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
+import ProgressiveLoader, { ProgressiveEnhancement } from '@/components/ProgressiveLoader';
 
+// Dynamic imports for better code splitting
 const EventModal = dynamic(() => import('@/components/EventModal'), { ssr: false });
+const AppFooter = dynamic(() => import('@/components/AppFooter'), { ssr: false });
+const CustomSelect = dynamic(() => import('@/components/CustomSelect'), {
+  ssr: false,
+  loading: () => <div className="h-12 bg-gray-200 rounded-xl animate-pulse" />
+});
 
 // Define categories and their properties
 const allCategories = [
@@ -445,33 +450,35 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             <h3 className="text-heading-xl mb-4">Explore by Category</h3>
             <p className="text-body-sm text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-            {allCategories
-              .filter(cat => {
-                if (cat.name === 'Other') {
-                  const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
-                  return events.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
-                } else {
-                  return events.some(ev => ev.category === cat.name);
-                }
-              })
-              .map((cat) => {
-                const Icon = categoryIconMap[cat.name] || FiStar;
-                const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
-                return (
-                  <Link
-                    href={`/categories?category=${encodeURIComponent(cat.name)}`}
-                    key={cat.name}
-                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${categoryColor} group`}
-                  >
-                    <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
-                      <Icon size={28} />
-                    </span>
-                    <span className="text-base font-bold text-center">{cat.name}</span>
-                  </Link>
-                );
-              })}
-          </div>
+          <ProgressiveLoader priority="low" delay={200}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+              {allCategories
+                .filter(cat => {
+                  if (cat.name === 'Other') {
+                    const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
+                    return events.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
+                  } else {
+                    return events.some(ev => ev.category === cat.name);
+                  }
+                })
+                .map((cat) => {
+                  const Icon = categoryIconMap[cat.name] || FiStar;
+                  const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
+                  return (
+                    <Link
+                      href={`/categories?category=${encodeURIComponent(cat.name)}`}
+                      key={cat.name}
+                      className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${categoryColor} group`}
+                    >
+                      <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
+                        <Icon size={28} />
+                      </span>
+                      <span className="text-base font-bold text-center">{cat.name}</span>
+                    </Link>
+                  );
+                })}
+            </div>
+          </ProgressiveLoader>
         </div>
       </section>
 

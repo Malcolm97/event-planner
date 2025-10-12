@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getItems, addItems } from '@/lib/indexedDB';
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
@@ -71,179 +71,211 @@ function logDetailedError(error: any, storeName: string, context: string) {
   });
 }
 
-export function useOfflineFirstData<T>(storeName: string) {
+interface UseOptimizedDataOptions {
+  limit?: number;
+  offset?: number;
+  fields?: string;
+  category?: string;
+  upcoming?: boolean;
+  refreshInterval?: number; // in milliseconds
+  enablePagination?: boolean;
+}
+
+export function useOptimizedData<T>(
+  storeName: string,
+  options: UseOptimizedDataOptions = {}
+) {
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isOnline, isPwaOnMobile, connectionQuality } = useNetworkStatus();
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
+  const { isOnline, connectionQuality } = useNetworkStatus();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const loadData = async (forceRefresh = false) => {
-      try {
+  // Memoize options to prevent unnecessary re-fetches
+  const memoizedOptions = useRef(options);
+  memoizedOptions.current = options;
+
+  const fetchData = useCallback(async (
+    isLoadMore = false,
+    forceRefresh = false
+  ): Promise<void> => {
+    const opts = memoizedOptions.current;
+
+    // Cancel previous request if still pending
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      if (!isLoadMore) {
         setIsLoading(true);
         setError(null);
+      }
 
-        // First load cached data immediately for better UX
-        let cachedData: T[] = [];
-        let cacheExpired = false;
-
+      // Load cached data first for immediate UI feedback
+      if (!forceRefresh && !isLoadMore) {
         try {
-          if (storeName === 'events') {
-            cachedData = (await (await import('@/lib/indexedDB')).getEvents()) as T[];
-            cacheExpired = cachedData.length === 0;
-          } else if (storeName === 'users') {
-            cachedData = (await (await import('@/lib/indexedDB')).getUsers()) as T[];
-            cacheExpired = cachedData.length === 0;
+          let cachedData: T[] = [];
+          if (storeName === TABLES.EVENTS) {
+            const { getEvents } = await import('@/lib/indexedDB');
+            cachedData = await getEvents();
+          } else if (storeName === TABLES.USERS) {
+            const { getUsers } = await import('@/lib/indexedDB');
+            cachedData = await getUsers();
           } else {
             cachedData = await getItems(storeName);
           }
+
+          if (cachedData.length > 0) {
+            setData(cachedData as any);
+            setIsLoading(false);
+          }
         } catch (cacheError) {
           console.warn(`Failed to load cached ${storeName}:`, cacheError);
-          cacheExpired = true;
-        }
-
-        // Always show cached data first if available (even if expired) for better UX
-        if (cachedData.length > 0 && mounted) {
-          setData(cachedData as T[]);
-          setIsLoading(false);
-        } else if (cacheExpired && mounted) {
-          // If no cached data and cache expired, show loading until fresh data loads
-          setIsLoading(true);
-        }
-
-        // Fetch fresh data in background if online or cache expired
-        // Skip fetching on poor connections to avoid wasting bandwidth
-        const shouldFetchFresh = (isOnline || cacheExpired) && connectionQuality !== 'poor';
-
-        if (shouldFetchFresh) {
-          // Check if Supabase is properly configured before making requests
-          if (!isSupabaseConfigured()) {
-            console.warn(`Supabase not configured, skipping fresh data fetch for ${storeName}`);
-            if (cachedData.length === 0 && mounted) {
-              setError('Service configuration error. Please contact support.');
-              setIsLoading(false);
-            }
-            return;
-          }
-
-          // Log Supabase configuration for debugging
-          console.log(`Attempting to fetch ${storeName} from Supabase:`, {
-            url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
-            hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            isConfigured: isSupabaseConfigured(),
-            isOnline: isOnline
-          });
-
-          // Test basic Supabase connectivity
-          try {
-            const { data: testData, error: testError } = await supabase
-              .from('events')
-              .select('count')
-              .limit(1)
-              .single();
-
-            if (testError) {
-              console.warn(`Supabase connectivity test failed:`, testError);
-            } else {
-              console.log(`Supabase connectivity test passed`);
-            }
-          } catch (connectivityError) {
-            console.error(`Supabase connectivity test error:`, connectivityError);
-          }
-
-          try {
-            let freshData: T[] | null = null;
-            let fetchError: any = null;
-
-            try {
-              // Determine the correct order column based on table
-              const orderColumn = storeName === 'users' ? 'updated_at' : 'created_at';
-
-              const result = await supabase
-                .from(storeName)
-                .select('*')
-                .order(orderColumn, { ascending: false });
-
-              freshData = result.data;
-              fetchError = result.error;
-            } catch (networkError) {
-              // Catch network-level errors that Supabase might not wrap properly
-              console.warn(`Network error during ${storeName} fetch:`, networkError);
-              throw networkError;
-            }
-
-            if (fetchError) throw fetchError;
-
-            if (mounted && freshData) {
-              // Update state with fresh data
-              setData(freshData as T[]);
-
-              // Update cache in background - don't block UI
-              try {
-                if (storeName === TABLES.EVENTS) {
-                  const currentUpcomingEvents = (freshData as EventItem[]).filter(isEventCurrentOrUpcoming);
-                  await (await import('@/lib/indexedDB')).addEvents(currentUpcomingEvents);
-                } else if (storeName === TABLES.USERS) {
-                  await (await import('@/lib/indexedDB')).addUsers(freshData);
-                } else {
-                  await addItems(storeName, freshData);
-                }
-              } catch (cacheUpdateError) {
-                console.warn(`Failed to update ${storeName} cache:`, cacheUpdateError);
-                // Don't fail the whole operation if caching fails
-              }
-
-              setIsLoading(false);
-            }
-          } catch (fetchError) {
-            logDetailedError(fetchError, storeName, 'fetch fresh data');
-            // If we have cached data, keep using it; otherwise show error
-            if (cachedData.length === 0 && mounted) {
-              setError(getErrorMessage(fetchError, storeName));
-              setIsLoading(false);
-            }
-          }
-        } else if (cachedData.length === 0 && mounted) {
-          // Offline with no cached data, or poor connection
-          const errorMsg = connectionQuality === 'poor'
-            ? 'Poor connection detected. Using cached data only to save bandwidth.'
-            : 'No cached data available. Please check your connection.';
-          setError(errorMsg);
-          setIsLoading(false);
-        } else if (connectionQuality === 'poor' && cachedData.length > 0 && mounted) {
-          // Poor connection but we have cached data - show a warning but still display data
-          console.warn(`Poor connection detected for ${storeName}, using cached data only`);
-          // For poor connections with cached data, don't show error - just log it
-          setIsLoading(false);
-        }
-      } catch (err) {
-        logDetailedError(err, storeName, 'useOfflineFirstData main');
-        if (mounted) {
-          setError(getErrorMessage(err, storeName));
-          setIsLoading(false);
         }
       }
+
+      // Skip network request on poor connections unless forced
+      if (!isOnline || connectionQuality === 'poor') {
+        if (!isLoadMore) setIsLoading(false);
+        return;
+      }
+
+      // Check Supabase configuration
+      if (!isSupabaseConfigured()) {
+        if (!isLoadMore) {
+          setError('Service configuration error. Please contact support.');
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Build API URL with optimized parameters
+      const params = new URLSearchParams();
+      if (opts.limit) params.set('limit', opts.limit.toString());
+      if (opts.offset && isLoadMore) params.set('offset', opts.offset.toString());
+      if (opts.fields) params.set('fields', opts.fields);
+      if (opts.category) params.set('category', opts.category);
+      if (opts.upcoming) params.set('upcoming', 'true');
+
+      const apiUrl = `/${storeName}?${params.toString()}`;
+
+      const response = await fetch(apiUrl, {
+        signal: abortControllerRef.current.signal,
+        headers: {
+          'Cache-Control': forceRefresh ? 'no-cache' : 'default'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const freshData: T[] = await response.json();
+
+      // Update state
+      setData(prevData => isLoadMore ? [...prevData, ...freshData] : freshData);
+      setHasMore(freshData.length === (opts.limit || 50));
+      setTotalCount(response.headers.get('x-total-count') ? parseInt(response.headers.get('x-total-count')!) : null);
+
+      // Cache data in background
+      try {
+        if (storeName === TABLES.EVENTS) {
+          const currentUpcomingEvents = (freshData as EventItem[]).filter(isEventCurrentOrUpcoming);
+          await (await import('@/lib/indexedDB')).addEvents(currentUpcomingEvents);
+        } else if (storeName === TABLES.USERS) {
+          await (await import('@/lib/indexedDB')).addUsers(freshData);
+        } else {
+          await addItems(storeName, freshData);
+        }
+      } catch (cacheError) {
+        console.warn(`Failed to cache ${storeName}:`, cacheError);
+      }
+
+      if (!isLoadMore) setIsLoading(false);
+
+    } catch (err: any) {
+      if (err.name === 'AbortError') return; // Request was cancelled
+
+      logDetailedError(err, storeName, 'fetchData');
+      if (!isLoadMore) {
+        setError(getErrorMessage(err, storeName));
+        setIsLoading(false);
+      }
+    }
+  }, [storeName, isOnline, connectionQuality]);
+
+  const loadMore = useCallback(() => {
+    if (!hasMore || isLoading) return;
+
+    const opts = memoizedOptions.current;
+    const newOffset = data.length;
+    memoizedOptions.current = { ...opts, offset: newOffset };
+    fetchData(true);
+  }, [hasMore, isLoading, data.length, fetchData]);
+
+  const refresh = useCallback(() => {
+    fetchData(false, true);
+  }, [fetchData]);
+
+  // Initial data load
+  useEffect(() => {
+    fetchData();
+
+    // Set up periodic refresh if specified
+    if (options.refreshInterval && options.refreshInterval > 0) {
+      refreshTimeoutRef.current = setInterval(() => {
+        fetchData(false, true);
+      }, options.refreshInterval);
+    }
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (refreshTimeoutRef.current) {
+        clearInterval(refreshTimeoutRef.current);
+      }
     };
+  }, [storeName]); // Only depend on storeName to prevent unnecessary re-fetches
 
-    loadData();
-
-    // Listen for cache refresh events (useful for PWA manual refresh)
+  // Listen for cache refresh events
+  useEffect(() => {
     const handleCacheRefresh = (event: CustomEvent) => {
       if (event.detail?.type === storeName || event.detail?.type === 'all') {
-        console.log(`Cache refresh triggered for ${storeName}, reloading data...`);
-        loadData(true);
+        console.log(`Cache refresh triggered for ${storeName}`);
+        fetchData(false, true);
       }
     };
 
     window.addEventListener('cache-refreshed', handleCacheRefresh as EventListener);
+    return () => window.removeEventListener('cache-refreshed', handleCacheRefresh as EventListener);
+  }, [storeName, fetchData]);
 
-    return () => {
-      mounted = false;
-      window.removeEventListener('cache-refreshed', handleCacheRefresh as EventListener);
-    };
-  }, [storeName, isOnline, isPwaOnMobile, connectionQuality]);
+  return {
+    data,
+    isLoading,
+    error,
+    hasMore,
+    totalCount,
+    loadMore,
+    refresh,
+    setData
+  };
+}
+
+// Legacy hook for backward compatibility - now uses optimized version
+export function useOfflineFirstData<T>(storeName: string) {
+  const { data, isLoading, error, setData } = useOptimizedData<T>(storeName, {
+    limit: 50,
+    enablePagination: false
+  });
 
   return { data, isLoading, error, setData };
 }

@@ -34,11 +34,18 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit');
+    const offset = searchParams.get('offset');
     const category = searchParams.get('category');
+    const fields = searchParams.get('fields');
+    const upcoming = searchParams.get('upcoming');
+
+    // Define default fields for performance - only fetch what's needed
+    const defaultFields = 'id, name, date, end_date, location, venue, category, presale_price, gate_price, image_urls, featured, created_by, created_at';
+    const selectedFields = fields || defaultFields;
 
     let query = supabase
       .from(TABLES.EVENTS)
-      .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by, created_at')
+      .select(selectedFields)
       .order('date', { ascending: true });
 
     // Apply category filter if provided
@@ -46,12 +53,26 @@ export async function GET(request: Request) {
       query = query.eq('category', category);
     }
 
-    // Apply limit if provided
-    if (limit) {
+    // Filter for upcoming events only if requested
+    if (upcoming === 'true') {
+      const now = new Date().toISOString();
+      query = query.gte('date', now);
+    }
+
+    // Apply pagination
+    if (offset) {
+      const offsetNum = parseInt(offset, 10);
+      if (!isNaN(offsetNum) && offsetNum >= 0) {
+        query = query.range(offsetNum, offsetNum + (limit ? parseInt(limit, 10) : 50) - 1);
+      }
+    } else if (limit) {
       const limitNum = parseInt(limit, 10);
-      if (!isNaN(limitNum) && limitNum > 0) {
+      if (!isNaN(limitNum) && limitNum > 0 && limitNum <= 100) { // Max 100 items per request
         query = query.limit(limitNum);
       }
+    } else {
+      // Default limit for performance
+      query = query.limit(50);
     }
 
     const { data, error } = await query;

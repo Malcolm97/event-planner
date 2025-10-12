@@ -1,8 +1,14 @@
 import { supabase, TABLES } from '../../lib/supabase';
 import { EventItem } from '@/lib/types';
 import { Suspense } from 'react';
-import EventsPageContent from './EventsPageContent';
+import dynamic from 'next/dynamic';
 import Loading from './loading'; // Import the Loading component
+
+// Dynamic import for better code splitting
+const EventsPageContent = dynamic(() => import('./EventsPageContent'), {
+  loading: () => <Loading />,
+  ssr: false
+});
 
 // Revalidate the page every 60 seconds
 export const revalidate = 60;
