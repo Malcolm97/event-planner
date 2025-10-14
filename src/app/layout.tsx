@@ -13,6 +13,7 @@ import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnlineBadge from '@/components/OnlineBadge';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -96,6 +97,7 @@ export default function RootLayout({
           `}
         </Script>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
