@@ -85,10 +85,10 @@ const LazyImage = memo(function LazyImage({
     );
   }
 
-  // Show error state - fallback to Next.js logo
+  // Show error state - fallback to Next.js logo with better styling
   if (hasError) {
     return (
-      <div className={`relative overflow-hidden ${className}`}>
+      <div className={`relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center ${className}`}>
         <Image
           src="/next.svg"
           alt={alt}
@@ -99,6 +99,12 @@ const LazyImage = memo(function LazyImage({
           priority={priority}
           className="transition-opacity duration-300 opacity-100 object-contain p-4"
         />
+        {/* Clear overlay to indicate error state */}
+        <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+          <div className="text-xs text-gray-600 bg-white/90 px-3 py-1.5 rounded-md shadow-sm border border-gray-200">
+            Image unavailable
+          </div>
+        </div>
       </div>
     );
   }

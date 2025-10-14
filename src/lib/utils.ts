@@ -2,26 +2,48 @@ import { EventItem } from './types';
 
 // Get the primary image URL for an event
 export function getEventPrimaryImage(event: EventItem): string {
-  if (!event.image_urls) return '/next.svg';
-
-  if (typeof event.image_urls === 'string') {
-    // Check if it's a JSON string containing an array
-    try {
-      const parsed = JSON.parse(event.image_urls);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed[0];
+  // Check for image_urls first (array format)
+  if (event.image_urls) {
+    if (Array.isArray(event.image_urls) && event.image_urls.length > 0) {
+      // Filter out empty/null/undefined values and return first valid URL
+      const validUrls = event.image_urls.filter(url => url && typeof url === 'string' && url.trim().length > 0);
+      if (validUrls.length > 0) {
+        const firstUrl = validUrls[0];
+        // Validate the URL is properly formatted
+        if (isValidImageUrl(firstUrl)) {
+          return firstUrl;
+        }
       }
-    } catch (error) {
-      // Not JSON, treat as direct URL string
+    } else if (typeof event.image_urls === 'string' && event.image_urls.trim().length > 0) {
+      // Check if it's a JSON string containing an array
+      try {
+        const parsed = JSON.parse(event.image_urls);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const validUrls = parsed.filter(url => url && typeof url === 'string' && url.trim().length > 0);
+          if (validUrls.length > 0) {
+            const firstUrl = validUrls[0];
+            // Validate the URL is properly formatted
+            if (isValidImageUrl(firstUrl)) {
+              return firstUrl;
+            }
+          }
+        }
+      } catch (error) {
+        // Not JSON, treat as direct URL string and validate it
+        const trimmedUrl = event.image_urls.trim();
+        if (isValidImageUrl(trimmedUrl)) {
+          return trimmedUrl;
+        }
+      }
+      // If it's a non-empty string but not JSON, validate and return it
+      const trimmedUrl = event.image_urls.trim();
+      if (isValidImageUrl(trimmedUrl)) {
+        return trimmedUrl;
+      }
     }
-    // Return the string as-is (it's a direct URL)
-    return event.image_urls;
   }
 
-  if (Array.isArray(event.image_urls) && event.image_urls.length > 0) {
-    return event.image_urls[0];
-  }
-
+  // Fallback to default placeholder
   return '/next.svg';
 }
 
@@ -161,4 +183,44 @@ export function isEventCurrentOrUpcoming(event: any): boolean {
 export function isAutoSyncEnabled(): boolean {
   if (typeof window === 'undefined') return false;
   return localStorage.getItem('autoSync') !== 'false';
+}
+
+// Centralized function to get all image URLs from event data
+export function getAllImageUrls(imageUrls: string[] | string | null | undefined): string[] {
+  if (!imageUrls) return [];
+
+  if (typeof imageUrls === 'string') {
+    try {
+      const parsed = JSON.parse(imageUrls);
+      if (Array.isArray(parsed)) {
+        // Filter out empty/null/undefined values and ensure all are strings
+        return parsed.filter(url => url && typeof url === 'string' && url.trim().length > 0);
+      }
+      // If it's a non-empty string but not JSON, treat as single URL
+      return imageUrls.trim() ? [imageUrls.trim()] : [];
+    } catch (error) {
+      // Not JSON, treat as direct URL string
+      return imageUrls.trim() ? [imageUrls.trim()] : [];
+    }
+  }
+
+  if (Array.isArray(imageUrls)) {
+    // Filter out empty/null/undefined values and ensure all are strings
+    return imageUrls.filter(url => url && typeof url === 'string' && url.trim().length > 0);
+  }
+
+  return [];
+}
+
+// Validate if a URL is accessible (basic check)
+export function isValidImageUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+
+  try {
+    const parsedUrl = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+    // Basic validation - has http/https protocol and a valid hostname
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch (error) {
+    return false;
+  }
 }

@@ -9,21 +9,7 @@ interface ImageGalleryProps {
   onImageExpand: (index: number) => void;
 }
 
-// Helper function to get all image URLs
-const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
-  if (!imageUrls) return [];
-
-  if (typeof imageUrls === 'string') {
-    try {
-      const parsed = JSON.parse(imageUrls);
-      return Array.isArray(parsed) ? parsed : [imageUrls];
-    } catch (error) {
-      return [imageUrls];
-    }
-  }
-
-  return Array.isArray(imageUrls) ? imageUrls : [];
-};
+import { getAllImageUrls } from '@/lib/utils';
 
 const ImageGallery: React.FC<ImageGalleryProps> = ({ event, onImageExpand }) => {
   const [imageLoading, setImageLoading] = useState(true);

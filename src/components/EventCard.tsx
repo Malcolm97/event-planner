@@ -102,8 +102,27 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   }, [event.end_date]);
 
-  // Memoize image source
-  const imageSrc = useMemo(() => getEventPrimaryImage(event), [event.image_urls]);
+  // Memoize image source with better error handling and debugging
+  const imageSrc = useMemo(() => {
+    try {
+      const src = getEventPrimaryImage(event);
+
+      // Debug logging to help identify issues
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Event "${event.name}" image data:`, {
+          image_urls: event.image_urls,
+          primaryImage: src,
+          hasValidImage: src && src !== '/next.svg',
+          isPreviousEvent: event.date && new Date(event.date) < new Date()
+        });
+      }
+
+      return src;
+    } catch (error) {
+      console.error('Error getting image for event:', event.name, error);
+      return '/next.svg';
+    }
+  }, [event.image_urls, event.name, event.date]);
 
   // Swipe gesture for sharing - disabled for now to avoid scroll conflicts
   // const swipeRef = useSwipe({

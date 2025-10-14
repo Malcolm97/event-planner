@@ -101,9 +101,6 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Enable SWC minification for better performance
-  swcMinify: true,
-
   // Optimize output
   output: 'standalone',
   poweredByHeader: false,

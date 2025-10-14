@@ -7,9 +7,12 @@ interface AboutEventTabProps {
 }
 
 const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
+  // Check if description exists and is not just whitespace
+  const hasValidDescription = event?.description && typeof event.description === 'string' && event.description.trim().length > 0;
+
   return (
     <div className="space-y-4">
-      {event?.description ? (
+      {hasValidDescription ? (
         <div className="flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br from-gray-50 via-white to-gray-50 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300">
           <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center shadow-sm">
             <FiInfo size={18} className="text-yellow-600" />
@@ -17,7 +20,7 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
           <div className="flex-1">
             <h3 className="font-bold text-gray-900 text-xl mb-3">About This Event</h3>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
-              {event.description}
+              {event.description.trim()}
             </p>
           </div>
         </div>

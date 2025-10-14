@@ -10,6 +10,7 @@ import AboutEventTab from './AboutEventTab';
 import HostDetailsTab from './HostDetailsTab';
 import ImageModal from './ImageModal';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { getAllImageUrls } from '@/lib/utils';
 import '../components/EventModal.animations.css';
 
 interface EventModalProps {
@@ -200,19 +201,3 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     </div>
   );
 }
-
-// Helper function to get all image URLs
-const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
-  if (!imageUrls) return [];
-
-  if (typeof imageUrls === 'string') {
-    try {
-      const parsed = JSON.parse(imageUrls);
-      return Array.isArray(parsed) ? parsed : [imageUrls];
-    } catch (error) {
-      return [imageUrls];
-    }
-  }
-
-  return Array.isArray(imageUrls) ? imageUrls : [];
-};

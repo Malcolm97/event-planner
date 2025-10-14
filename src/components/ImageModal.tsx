@@ -3,21 +3,7 @@ import Image from 'next/image';
 import { FiX, FiZoomIn, FiZoomOut, FiRotateCcw } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 
-// Helper function to get all image URLs
-const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
-  if (!imageUrls) return [];
-
-  if (typeof imageUrls === 'string') {
-    try {
-      const parsed = JSON.parse(imageUrls);
-      return Array.isArray(parsed) ? parsed : [imageUrls];
-    } catch (error) {
-      return [imageUrls];
-    }
-  }
-
-  return Array.isArray(imageUrls) ? imageUrls : [];
-};
+import { getAllImageUrls } from '@/lib/utils';
 
 interface ImageModalProps {
   event: EventItem;

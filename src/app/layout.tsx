@@ -73,7 +73,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <ClientProviders>
           <Header />
-          <main id="main-content" role="main" className="pb-24 lg:pb-0 min-h-screen">
+          <main id="main-content" role="main" className="pb-20 lg:pb-0 min-h-screen">
             {children}
           </main>
           <BottomNav />

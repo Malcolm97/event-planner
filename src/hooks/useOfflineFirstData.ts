@@ -60,14 +60,17 @@ function getErrorMessage(error: any, storeName: string): string {
 
 // Helper function to log detailed error information
 function logDetailedError(error: any, storeName: string, context: string) {
+  const isEmptyError = !error || (typeof error === 'object' && Object.keys(error).length === 0);
+
   console.error(`[${new Date().toISOString()}] Error in ${context} for ${storeName}:`, {
-    error,
+    error: isEmptyError ? 'Empty error object (likely network/CORS issue)' : error,
     errorType: typeof error,
     errorKeys: error && typeof error === 'object' ? Object.keys(error) : 'N/A',
     isSupabaseConfigured: isSupabaseConfigured(),
     isOnline: navigator.onLine,
     userAgent: navigator.userAgent,
-    url: window.location.href
+    url: window.location.href,
+    timestamp: new Date().toISOString()
   });
 }
 
@@ -164,7 +167,7 @@ export function useOptimizedData<T>(
       if (opts.category) params.set('category', opts.category);
       if (opts.upcoming) params.set('upcoming', 'true');
 
-      const apiUrl = `/${storeName}?${params.toString()}`;
+      const apiUrl = `/api/${storeName}?${params.toString()}`;
 
       const response = await fetch(apiUrl, {
         signal: abortControllerRef.current.signal,

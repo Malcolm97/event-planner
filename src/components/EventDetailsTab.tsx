@@ -5,7 +5,7 @@ import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, TABLES } from '@/lib/supabase';
-import { getEventPrimaryImage } from '@/lib/utils';
+import { getEventPrimaryImage, getAllImageUrls } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 interface EventDetailsTabProps {
@@ -19,21 +19,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Helper function to get all image URLs
-  const getAllImageUrls = (imageUrls: string[] | string | null | undefined): string[] => {
-    if (!imageUrls) return [];
 
-    if (typeof imageUrls === 'string') {
-      try {
-        const parsed = JSON.parse(imageUrls);
-        return Array.isArray(parsed) ? parsed : [imageUrls];
-      } catch (error) {
-        return [imageUrls];
-      }
-    }
-
-    return Array.isArray(imageUrls) ? imageUrls : [];
-  };
 
   // Check if event is saved on component mount
   useEffect(() => {
