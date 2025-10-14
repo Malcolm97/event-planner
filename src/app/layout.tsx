@@ -6,6 +6,7 @@ import './globals.css';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import ClientProviders from './ClientProviders';
+import { EnhancedErrorBoundary } from '@/components/EnhancedErrorBoundary';
 import '@/lib/polyfills'; // Import polyfills for cross-browser compatibility
 
 import Header from '@/components/Header';
@@ -72,15 +73,17 @@ export default function RootLayout({
       </head>
       <body className={`antialiased ${inter.className} min-h-screen safe-area-inset`}>
         <a href="#main-content" className="skip-link">Skip to main content</a>
-        <ClientProviders>
-          <Header />
-          <main id="main-content" role="main" className="pb-20 lg:pb-0 min-h-screen">
-            {children}
-          </main>
-          <BottomNav />
-          <PWAInstallPrompt />
-          <OnlineBadge />
-        </ClientProviders>
+        <EnhancedErrorBoundary>
+          <ClientProviders>
+            <Header />
+            <main id="main-content" role="main" className="pb-20 lg:pb-0 min-h-screen">
+              {children}
+            </main>
+            <BottomNav />
+            <PWAInstallPrompt />
+            <OnlineBadge />
+          </ClientProviders>
+        </EnhancedErrorBoundary>
         <Script id="service-worker-script">
           {`
           if ('serviceWorker' in navigator) {

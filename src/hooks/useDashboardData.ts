@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, TABLES, Event, Activity, getUserActivities } from '@/lib/supabase';
-import { handleSupabaseError, logError } from '@/lib/errorHandler';
+import { handleSupabaseError } from '@/lib/errorHandler';
 
 interface UseDashboardDataResult {
   user: any;
@@ -32,7 +32,7 @@ export function useDashboardData(): UseDashboardDataResult {
 
       if (fetchError) {
         const appError = handleSupabaseError(fetchError);
-        logError(appError, 'fetchUserEvents');
+        console.error('fetchUserEvents error:', appError);
         throw appError;
       }
 
@@ -61,7 +61,7 @@ export function useDashboardData(): UseDashboardDataResult {
         .order('created_at', { ascending: false });
 
       if (savedError) {
-        logError(savedError, 'fetchSavedEvents');
+        console.error('fetchSavedEvents error:', savedError);
         throw savedError;
       }
 
@@ -79,7 +79,7 @@ export function useDashboardData(): UseDashboardDataResult {
         .order('date', { ascending: true });
 
       if (eventsError) {
-        logError(eventsError, 'fetchSavedEvents');
+        console.error('fetchSavedEvents events error:', eventsError);
         throw eventsError;
       }
 

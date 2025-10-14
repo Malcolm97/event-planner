@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabase, TABLES } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
+import {
+  handleSupabaseError,
+  validationError,
+  authenticationError,
+  authorizationError,
+  databaseError,
+  createdResponse,
+  successResponse
+} from '@/lib/errorHandler';
+import { validateRequiredFields, sanitizeString, validateDate, validatePrice } from '@/lib/errorHandler';
 
 // Function to send push notifications for new events
 async function sendPushNotificationForNewEvent(event: any) {
@@ -40,7 +50,7 @@ export async function GET(request: Request) {
     const upcoming = searchParams.get('upcoming');
 
     // Define default fields for performance - only fetch what's needed
-    const defaultFields = 'id, name, date, end_date, location, venue, category, presale_price, gate_price, image_urls, featured, created_by, created_at';
+    const defaultFields = 'id, name, date, end_date, location, venue, category, presale_price, gate_price, image_urls, featured, created_by, created_at, updated_at';
     const selectedFields = fields || defaultFields;
 
     let query = supabase
@@ -78,14 +88,13 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching events from Supabase:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleSupabaseError(error);
     }
 
-    return NextResponse.json(data || []);
+    return successResponse(data || []);
   } catch (error: any) {
     console.error('Unexpected error fetching events:', error.message);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return databaseError('Failed to fetch events');
   }
 }
 
@@ -94,7 +103,7 @@ export async function POST(request: Request) {
     // Get the authorization token from headers
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authenticationError();
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -115,7 +124,7 @@ export async function POST(request: Request) {
     // Verify the user is authenticated
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authenticationError();
     }
 
     // Parse request body
@@ -134,66 +143,74 @@ export async function POST(request: Request) {
     } = body;
 
     // Validate required fields
-    if (!name || !date || !location) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, date, and location are required' },
-        { status: 400 }
-      );
+    const missingFields = validateRequiredFields({ name, date, location }, ['name', 'date', 'location']);
+    if (missingFields.length > 0) {
+      return validationError(`Missing required fields: ${missingFields.join(', ')}`);
+    }
+
+    // Validate and sanitize inputs
+    const sanitizedName = sanitizeString(name);
+    const sanitizedDescription = description ? sanitizeString(description) : null;
+    const sanitizedLocation = sanitizeString(location);
+    const sanitizedVenue = venue ? sanitizeString(venue) : null;
+    const sanitizedCategory = category ? sanitizeString(category) : null;
+
+    if (!sanitizedName || !sanitizedLocation) {
+      return validationError('Name and location cannot be empty');
     }
 
     // Validate date format
-    const eventDate = new Date(date);
-    if (isNaN(eventDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+    if (!validateDate(date)) {
+      return validationError('Invalid date format');
     }
+    const eventDate = new Date(date);
 
     // Validate end_date if provided
     let eventEndDate = null;
     if (end_date) {
-      eventEndDate = new Date(end_date);
-      if (isNaN(eventEndDate.getTime())) {
-        return NextResponse.json({ error: 'Invalid end_date format' }, { status: 400 });
+      if (!validateDate(end_date)) {
+        return validationError('Invalid end_date format');
       }
+      eventEndDate = new Date(end_date);
       if (eventEndDate <= eventDate) {
-        return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 });
+        return validationError('End date must be after start date');
       }
     }
 
     // Validate prices
+    if (presale_price !== undefined && !validatePrice(presale_price)) {
+      return validationError('Invalid presale_price');
+    }
+    if (gate_price !== undefined && !validatePrice(gate_price)) {
+      return validationError('Invalid gate_price');
+    }
+
     const presalePrice = presale_price !== undefined ? parseFloat(presale_price) : null;
     const gatePrice = gate_price !== undefined ? parseFloat(gate_price) : null;
-
-    if (presalePrice !== null && (isNaN(presalePrice) || presalePrice < 0)) {
-      return NextResponse.json({ error: 'Invalid presale_price' }, { status: 400 });
-    }
-
-    if (gatePrice !== null && (isNaN(gatePrice) || gatePrice < 0)) {
-      return NextResponse.json({ error: 'Invalid gate_price' }, { status: 400 });
-    }
 
     // Validate image_urls array
     let validatedImageUrls = null;
     if (image_urls) {
       if (!Array.isArray(image_urls)) {
-        return NextResponse.json({ error: 'image_urls must be an array' }, { status: 400 });
+        return validationError('image_urls must be an array');
       }
       if (image_urls.length > 3) {
-        return NextResponse.json({ error: 'Maximum 3 images allowed' }, { status: 400 });
+        return validationError('Maximum 3 images allowed');
       }
       validatedImageUrls = image_urls.filter(url => typeof url === 'string' && url.trim().length > 0);
     }
 
     // Prepare event data
     const eventData = {
-      name: name.trim(),
-      description: description ? description.trim() : null,
+      name: sanitizedName,
+      description: sanitizedDescription,
       date: eventDate.toISOString(),
       end_date: eventEndDate ? eventEndDate.toISOString() : null,
-      location: location.trim(),
-      venue: venue ? venue.trim() : null,
+      location: sanitizedLocation,
+      venue: sanitizedVenue,
       presale_price: presalePrice,
       gate_price: gatePrice,
-      category: category ? category.trim() : null,
+      category: sanitizedCategory,
       image_urls: validatedImageUrls,
       created_by: user.id,
     };
@@ -206,8 +223,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error creating event:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleSupabaseError(error);
     }
 
     // Trigger push notifications for new event (don't await to avoid blocking response)
@@ -215,9 +231,9 @@ export async function POST(request: Request) {
       console.error('Failed to send push notification for new event:', err);
     });
 
-    return NextResponse.json(data, { status: 201 });
+    return createdResponse(data);
   } catch (error: any) {
     console.error('Unexpected error creating event:', error.message);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return databaseError('Failed to create event');
   }
 }

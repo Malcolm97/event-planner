@@ -166,7 +166,7 @@ export async function PUT(
     // Check if event exists and user owns it
     const { data: existingEvent, error: fetchError } = await supabaseAuth
       .from(TABLES.EVENTS)
-      .select('created_by, date')
+      .select('created_by, date, end_date')
       .eq('id', id)
       .single();
 

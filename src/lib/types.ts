@@ -9,6 +9,7 @@ export interface EventItem {
   description: string;
   image_urls?: string[] | string | null;
   created_at?: string;
+  updated_at?: string;
   featured?: boolean;
   date: string;
   end_date?: string | null;
