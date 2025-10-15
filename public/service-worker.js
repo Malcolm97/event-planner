@@ -297,22 +297,10 @@ self.addEventListener('fetch', (event) => {
 
 
 
-// Periodic caching mechanism - runs every 5 minutes for better performance
-let periodicCacheInterval;
-
-async function cacheDataPeriodically() {
+// Periodic caching mechanism - triggered by messages from main thread
+async function cacheDataPeriodically(isPWA = false) {
   try {
     console.log('Starting periodic cache update...');
-
-    // Only cache if we're online and not in PWA mode (to avoid conflicts)
-    if (!navigator.onLine) {
-      console.log('Skipping periodic cache update - offline');
-      return;
-    }
-
-    // Check if we're in PWA mode - reduce caching frequency for PWA
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
-                  window.navigator.standalone === true;
 
     if (isPWA) {
       console.log('PWA mode detected - using lighter caching strategy');
@@ -502,18 +490,7 @@ self.addEventListener('activate', (event) => {
     ])
   );
 
-  console.log('Service worker activated, starting periodic caching...');
-
-  // Clear any existing interval
-  if (periodicCacheInterval) {
-    clearInterval(periodicCacheInterval);
-  }
-
-  // Start periodic caching every 5 minutes (300000ms) for better performance
-  periodicCacheInterval = setInterval(cacheDataPeriodically, 300000);
-
-  // Also run immediately
-  cacheDataPeriodically();
+  console.log('Service worker activated');
 
   // Register background sync for PWA users
   registerBackgroundSync();
@@ -521,15 +498,9 @@ self.addEventListener('activate', (event) => {
 
 // Register background sync for periodic updates when PWA is installed
 async function registerBackgroundSync() {
-  if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.sync.register('background-cache-sync');
-      console.log('Background sync registered for PWA');
-    } catch (error) {
-      console.warn('Background sync registration failed:', error);
-    }
-  }
+  // This function is now empty - background sync registration moved to client-side
+  // The service worker will still handle sync events when they occur
+  console.log('Background sync registration moved to client-side');
 }
 
 // Handle background sync for when connection is restored
@@ -742,6 +713,17 @@ self.addEventListener('message', (event) => {
 
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: '9.0.0' });
+  }
+
+  if (event.data && event.data.type === 'TRIGGER_CACHE_UPDATE') {
+    event.waitUntil(
+      cacheDataPeriodically(event.data.isPWA || false).then(() => {
+        event.ports[0].postMessage({ success: true });
+      }).catch((error) => {
+        console.error('Cache update failed:', error);
+        event.ports[0].postMessage({ success: false, error: error.message });
+      })
+    );
   }
 
   if (event.data && event.data.type === 'CLEAR_CACHE') {

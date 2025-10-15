@@ -471,7 +471,7 @@
         async function loadCachedCategories() {
             try {
                 // Try to fetch categories from cache
-                const cache = await caches.open('event-planner-cache-v8');
+                const cache = await caches.open('event-planner-cache-v9');
                 const response = await cache.match('/api/categories');
 
                 if (response) {

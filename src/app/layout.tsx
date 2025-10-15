@@ -13,6 +13,7 @@ import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnlineBadge from '@/components/OnlineBadge';
+import OfflineIndicator from '@/components/OfflineIndicator';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -75,6 +76,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <EnhancedErrorBoundary>
           <ClientProviders>
+            <OfflineIndicator />
             <Header />
             <main id="main-content" role="main" className="pb-20 lg:pb-0 min-h-screen">
               {children}

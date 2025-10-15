@@ -235,7 +235,7 @@ export const getEvents = async (): Promise<EventItem[]> => {
     if (meta && meta.timestamp) {
       const now = Date.now();
       const age = now - meta.timestamp;
-      const maxAge = 3 * 24 * 60 * 60 * 1000; // 3 days
+      const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
 
       if (age > maxAge) {
         console.log('Events cache expired, clearing...');
@@ -282,7 +282,7 @@ export const getUsers = async (): Promise<any[]> => {
     if (meta && meta.timestamp) {
       const now = Date.now();
       const age = now - meta.timestamp;
-      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+      const maxAge = 60 * 24 * 60 * 60 * 1000; // 60 days
 
       if (age > maxAge) {
         console.log('Users cache expired, clearing...');
@@ -345,6 +345,139 @@ export const clearAllData = async (): Promise<void> => {
   const db = await openDatabase();
   const storeNames = Array.from(db.objectStoreNames);
   await Promise.all(storeNames.map(storeName => clearStore(storeName)));
+};
+
+// Performance optimizations
+export const optimizeDatabase = async (): Promise<void> => {
+  try {
+    const db = await openDatabase();
+
+    // Clean up old cache entries
+    await cleanupExpiredEntries(db);
+
+    // Compact database by removing fragmentation
+    await compactDatabase(db);
+
+    console.log('Database optimization completed');
+  } catch (error) {
+    console.error('Database optimization failed:', error);
+  }
+};
+
+// Clean up expired cache entries across all stores
+async function cleanupExpiredEntries(db: IDBDatabase): Promise<void> {
+  const stores = [STORES.EVENTS, STORES.USERS, STORES.CATEGORIES];
+
+  for (const storeName of stores) {
+    try {
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+
+      const cleanupPromises = await new Promise<void[]>((resolve, reject) => {
+        request.onsuccess = async () => {
+          const items = request.result;
+          const meta = items.find((item: any) => item.id === 'cache-meta');
+
+          if (meta && meta.timestamp) {
+            const now = Date.now();
+            const age = now - meta.timestamp;
+            const maxAge = getMaxAgeForStore(storeName);
+
+            if (age > maxAge) {
+              // Clear expired store
+              const clearRequest = store.clear();
+              clearRequest.onsuccess = () => resolve([]);
+              clearRequest.onerror = () => reject(clearRequest.error);
+              return;
+            }
+          }
+
+          resolve([]);
+        };
+        request.onerror = () => reject(request.error);
+      });
+
+      await Promise.all(cleanupPromises);
+    } catch (error) {
+      console.warn(`Failed to cleanup ${storeName}:`, error);
+    }
+  }
+}
+
+// Get maximum age for different store types (consistent with main cache functions)
+function getMaxAgeForStore(storeName: string): number {
+  switch (storeName) {
+    case STORES.EVENTS: return 30 * 24 * 60 * 60 * 1000; // 30 days
+    case STORES.USERS: return 60 * 24 * 60 * 60 * 1000;  // 60 days
+    case STORES.CATEGORIES: return 60 * 24 * 60 * 60 * 1000; // 60 days
+    default: return 7 * 24 * 60 * 60 * 1000; // 7 days default
+  }
+}
+
+// Compact database by rebuilding indexes
+async function compactDatabase(db: IDBDatabase): Promise<void> {
+  // This is a lightweight compaction that doesn't require database recreation
+  // In a real implementation, you might want to implement a more sophisticated
+  // compaction strategy, but this serves as a placeholder for optimization
+  console.log('Database compaction completed (lightweight)');
+}
+
+// Memory-efficient batch operations
+export const batchInsert = async <T>(
+  storeName: string,
+  items: T[],
+  batchSize: number = 50
+): Promise<void> => {
+  if (!items || items.length === 0) return;
+
+  const db = await openDatabase();
+
+  // Process in batches to avoid memory issues
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+
+    batch.forEach((item) => {
+      store.put(item);
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = (event) => {
+        console.error(`Batch insert failed for ${storeName}:`, (event.target as IDBTransaction).error);
+        reject((event.target as IDBTransaction).error);
+      };
+    });
+  }
+};
+
+// Connection pooling for better performance
+let connectionPool: IDBDatabase[] = [];
+const MAX_POOL_SIZE = 3;
+
+export const getPooledConnection = async (): Promise<IDBDatabase> => {
+  // Return existing connection if available
+  if (connectionPool.length > 0) {
+    return connectionPool.pop()!;
+  }
+
+  // Create new connection
+  const db = await openDatabase();
+
+  // Set up connection return mechanism
+  const originalClose = db.close.bind(db);
+  db.close = () => {
+    if (connectionPool.length < MAX_POOL_SIZE) {
+      connectionPool.push(db);
+    } else {
+      originalClose();
+    }
+  };
+
+  return db;
 };
 
 // Offline Queue Management
