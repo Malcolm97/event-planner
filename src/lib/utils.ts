@@ -2,16 +2,26 @@ import { EventItem } from './types';
 
 // Get the primary image URL for an event
 export function getEventPrimaryImage(event: EventItem): string {
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`getEventPrimaryImage called for event "${event?.name || 'unknown'}":`, {
+      image_urls: event?.image_urls,
+      image_urls_type: typeof event?.image_urls,
+      isArray: Array.isArray(event?.image_urls)
+    });
+  }
+
   // Check for image_urls first (array format)
-  if (event.image_urls) {
+  if (event?.image_urls) {
     if (Array.isArray(event.image_urls) && event.image_urls.length > 0) {
       // Filter out empty/null/undefined values and return first valid URL
       const validUrls = event.image_urls.filter(url => url && typeof url === 'string' && url.trim().length > 0);
       if (validUrls.length > 0) {
         const firstUrl = validUrls[0];
-        // Validate the URL is properly formatted
-        if (isValidImageUrl(firstUrl)) {
-          return firstUrl;
+        // Validate and normalize the URL
+        const normalizedUrl = normalizeImageUrl(firstUrl);
+        if (normalizedUrl) {
+          return normalizedUrl;
         }
       }
     } else if (typeof event.image_urls === 'string' && event.image_urls.trim().length > 0) {
@@ -22,23 +32,26 @@ export function getEventPrimaryImage(event: EventItem): string {
           const validUrls = parsed.filter(url => url && typeof url === 'string' && url.trim().length > 0);
           if (validUrls.length > 0) {
             const firstUrl = validUrls[0];
-            // Validate the URL is properly formatted
-            if (isValidImageUrl(firstUrl)) {
-              return firstUrl;
+            // Validate and normalize the URL
+            const normalizedUrl = normalizeImageUrl(firstUrl);
+            if (normalizedUrl) {
+              return normalizedUrl;
             }
           }
         }
       } catch (error) {
         // Not JSON, treat as direct URL string and validate it
         const trimmedUrl = event.image_urls.trim();
-        if (isValidImageUrl(trimmedUrl)) {
-          return trimmedUrl;
+        const normalizedUrl = normalizeImageUrl(trimmedUrl);
+        if (normalizedUrl) {
+          return normalizedUrl;
         }
       }
       // If it's a non-empty string but not JSON, validate and return it
       const trimmedUrl = event.image_urls.trim();
-      if (isValidImageUrl(trimmedUrl)) {
-        return trimmedUrl;
+      const normalizedUrl = normalizeImageUrl(trimmedUrl);
+      if (normalizedUrl) {
+        return normalizedUrl;
       }
     }
   }
@@ -222,5 +235,34 @@ export function isValidImageUrl(url: string): boolean {
     return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
   } catch (error) {
     return false;
+  }
+}
+
+// Normalize image URL to ensure it has proper protocol and format
+export function normalizeImageUrl(url: string): string | null {
+  if (!url || typeof url !== 'string') return null;
+
+  try {
+    // Trim whitespace
+    const trimmedUrl = url.trim();
+
+    // If it's already a valid URL, return it
+    if (isValidImageUrl(trimmedUrl)) {
+      return trimmedUrl;
+    }
+
+    // Try to construct a full URL if it's a relative path
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    const fullUrl = new URL(trimmedUrl, baseUrl);
+
+    // Validate the constructed URL
+    if (fullUrl.protocol === 'http:' || fullUrl.protocol === 'https:') {
+      return fullUrl.toString();
+    }
+
+    return null;
+  } catch (error) {
+    // If URL construction fails, return null
+    return null;
   }
 }

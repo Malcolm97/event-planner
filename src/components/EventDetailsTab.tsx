@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FiMapPin, FiCalendar, FiClock, FiBookmark, FiImage } from 'react-icons/fi';
-import Image from 'next/image';
 import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
+import LazyImage from './LazyImage';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getEventPrimaryImage, getAllImageUrls } from '@/lib/utils';
@@ -106,18 +106,15 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
               </div>
             )}
 
-            <Image
+            <LazyImage
               src={getEventPrimaryImage(event)}
               alt={event?.name ? `${event.name} main image` : 'Event Image'}
-              width={600}
-              height={400}
-              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
-              loading="eager"
+              fill={true}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="transition-all duration-700 group-hover:scale-105 object-cover"
+              priority={true}
               onLoad={() => setImageLoading(false)}
-              onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                (e.target as HTMLImageElement).src = '/window.svg';
-                setImageLoading(false);
-              }}
+              onError={() => setImageLoading(false)}
             />
 
             {/* Hover overlay */}
@@ -223,13 +220,13 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
               className="relative cursor-pointer group rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200/50 hover:border-yellow-300 bg-white"
               onClick={() => onImageExpand(index + 1)}
             >
-              <Image
+              <LazyImage
                 src={imageUrl}
                 alt={event?.name ? `${event.name} image ${index + 2}` : `Event image ${index + 2}`}
-                width={200}
-                height={150}
-                className="w-full h-20 sm:h-24 md:h-28 object-cover transition-all duration-300 group-hover:scale-110"
-                loading="lazy"
+                fill={true}
+                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                className="transition-all duration-300 group-hover:scale-110 object-cover"
+                priority={false}
               />
 
               {/* Hover overlay */}

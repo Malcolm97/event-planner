@@ -33,7 +33,30 @@ const LazyImage = memo(function LazyImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority); // Load immediately if priority
   const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 second base delay
+
+  // Generate blur placeholder for better UX
+  const generateBlurDataURL = (width: number = 16, height: number = 9) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Create a simple gradient blur placeholder
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, '#f3f4f6');
+      gradient.addColorStop(0.5, '#e5e7eb');
+      gradient.addColorStop(1, '#f3f4f6');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      return canvas.toDataURL('image/jpeg', 0.1);
+    }
+    return '';
+  };
 
   useEffect(() => {
     if (priority || !imgRef.current) return;
@@ -65,8 +88,30 @@ const LazyImage = memo(function LazyImage({
   };
 
   const handleError = () => {
+    // Try to retry loading the image
+    if (retryCount < maxRetries && !isRetrying) {
+      setIsRetrying(true);
+      const delay = retryDelay * Math.pow(2, retryCount); // Exponential backoff
+
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        setIsRetrying(false);
+        setHasError(false); // Reset error state to try again
+      }, delay);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Retrying image load for "${alt}" (attempt ${retryCount + 1}/${maxRetries}) after ${delay}ms`);
+      }
+      return;
+    }
+
+    // All retries failed, show error state
     setHasError(true);
     onError?.();
+
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Failed to load image "${alt}" after ${maxRetries} retries. URL: ${src}`);
+    }
   };
 
   // Show loading placeholder
@@ -105,6 +150,13 @@ const LazyImage = memo(function LazyImage({
             Image unavailable
           </div>
         </div>
+
+        {/* Debug info for failed images (development only) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="absolute bottom-1 right-1 bg-red-500/80 text-white text-xs px-2 py-1 rounded font-mono">
+            ❌ Failed
+          </div>
+        )}
       </div>
     );
   }
@@ -128,6 +180,14 @@ const LazyImage = memo(function LazyImage({
       {/* Loading overlay */}
       {!isLoaded && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-200 to-gray-300" />
+      )}
+
+      {/* Debug info overlay (development only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 py-1 rounded font-mono">
+          {retryCount > 0 && `R:${retryCount}`}
+          {isRetrying && '🔄'}
+        </div>
       )}
     </div>
   );
