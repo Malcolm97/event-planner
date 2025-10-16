@@ -97,10 +97,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-x-0 top-16 sm:top-20 lg:top-0 bottom-24 lg:bottom-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-md p-4 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
       onClick={onClose}
     >
-      <div className="relative w-full max-w-7xl h-full max-h-[90vh] flex items-center justify-center">
+      <div className="relative w-full max-w-7xl h-full max-h-[95vh] sm:max-h-[90vh] flex items-center justify-center">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -213,11 +213,11 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
         {/* Thumbnail Strip */}
         {allImageUrls.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 flex-wrap justify-center max-w-full px-4">
-            {allImageUrls.slice(0, 8).map((imageUrl: string, index: number) => (
+          <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 sm:gap-3 flex-wrap justify-center max-w-full px-2 sm:px-4">
+            {allImageUrls.slice(0, 6).map((imageUrl: string, index: number) => (
               <div
                 key={index}
-                className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-lg ${
+                className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg sm:rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-lg ${
                   activeImageIndex === index
                     ? 'border-white scale-110 shadow-white/50'
                     : 'border-white/30 hover:border-white/70 hover:scale-105'
@@ -241,11 +241,11 @@ const ImageModal: React.FC<ImageModalProps> = ({
         )}
 
         {/* Image Counter and Title */}
-        <div className="absolute bottom-6 left-6 right-6 text-white">
-          <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg">
-            <h3 className="text-xl sm:text-2xl font-bold mb-1">{event?.name}</h3>
+        <div className="absolute bottom-20 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 text-white">
+          <div className="bg-black/60 backdrop-blur-sm rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-lg">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 truncate">{event?.name}</h3>
             {allImageUrls.length > 1 && (
-              <p className="text-sm sm:text-base text-white/80">
+              <p className="text-xs sm:text-sm md:text-base text-white/80">
                 {activeImageIndex + 1} of {allImageUrls.length} images
               </p>
             )}
