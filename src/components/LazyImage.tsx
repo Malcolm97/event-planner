@@ -39,6 +39,13 @@ const LazyImage = memo(function LazyImage({
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second base delay
 
+  // Debug logging for image loading issues
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`LazyImage: Loading image "${alt}" from URL: ${src}`);
+    }
+  }, [src, alt]);
+
   // Generate blur placeholder for better UX
   const generateBlurDataURL = (width: number = 16, height: number = 9) => {
     const canvas = document.createElement('canvas');
@@ -101,6 +108,7 @@ const LazyImage = memo(function LazyImage({
 
       if (process.env.NODE_ENV === 'development') {
         console.log(`Retrying image load for "${alt}" (attempt ${retryCount + 1}/${maxRetries}) after ${delay}ms`);
+        console.log(`Failed URL: ${src}`);
       }
       return;
     }
@@ -111,6 +119,14 @@ const LazyImage = memo(function LazyImage({
 
     if (process.env.NODE_ENV === 'development') {
       console.error(`Failed to load image "${alt}" after ${maxRetries} retries. URL: ${src}`);
+      console.error(`Image source details:`, {
+        src,
+        alt,
+        fill,
+        priority,
+        isInView,
+        retryCount
+      });
     }
   };
 

@@ -1,6 +1,6 @@
 import { Event } from "@/lib/supabase";
 import { getEventPrimaryImage } from "@/lib/utils";
-import LazyImage from "./LazyImage";
+import Image from "next/image";
 import { useMemo } from "react";
 
 export default function CompactEventCard({ event }: { event: Event }) {
@@ -30,10 +30,10 @@ export default function CompactEventCard({ event }: { event: Event }) {
     <div className="bg-gray-50 rounded-lg event-card-compact border border-gray-200 overflow-hidden">
       {/* Event Image */}
       <div className="relative h-24 bg-gradient-to-br from-gray-100 to-gray-200">
-        <LazyImage
+        <Image
           src={imageSrc}
           alt={`Event image for ${event.name}`}
-          fill={true}
+          fill
           sizes="96px"
           className="object-cover"
         />

@@ -2,7 +2,7 @@ import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark, FiTrash2, FiEdit, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
-import LazyImage from './LazyImage';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
@@ -354,13 +354,13 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       </div>
 
       {/* Hero Image Area */}
-      <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl" style={{ aspectRatio: '16/9' }}>
-        <LazyImage
+      <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-2xl">
+        <Image
           src={imageSrc}
           alt={`Event image for ${event.name}`}
-          fill={true}
-          priority={true}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          fill
+          priority
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="transition-transform duration-500 group-hover:scale-110 object-cover object-center"
         />
         {/* Price Badges - Bottom Left */}

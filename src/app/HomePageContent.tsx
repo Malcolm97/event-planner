@@ -76,7 +76,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   // Use the standardized offline-first data hook
   const { data: events, isLoading: loading, error: eventsError } = useEvents();
 
-  const [filteredEvents, setFilteredEvents] = useState<EventItem[]>(initialEvents);
+  const [filteredEvents, setFilteredEvents] = useState<EventItem[]>(initialEvents || []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('All Dates');
   const [selectedLocationFilter, setSelectedLocationFilter] = useState('All Areas');
@@ -111,10 +111,14 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     };
   }, []);
 
-  // Update filtered events when events data changes
+  // Update filtered events when events data changes, but use initialEvents as fallback
   useEffect(() => {
-    setFilteredEvents(events);
-  }, [events]);
+    if (events && events.length > 0) {
+      setFilteredEvents(events);
+    } else if (initialEvents && initialEvents.length > 0) {
+      setFilteredEvents(initialEvents);
+    }
+  }, [events, initialEvents]);
 
   const fetchHost = async (userId: string) => {
     try {
@@ -158,7 +162,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
   useEffect(() => {
     const filterEvents = () => {
-      let tempEvents = events;
+      // Use events from hook if available, otherwise use filteredEvents (which may contain initialEvents)
+      let tempEvents = events && events.length > 0 ? events : filteredEvents;
 
       if (searchTerm) {
         const searchTermLower = searchTerm.toLowerCase();
@@ -215,7 +220,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     };
 
     filterEvents();
-  }, [events, searchTerm, selectedDate, selectedLocationFilter]);
+  }, [events, filteredEvents, searchTerm, selectedDate, selectedLocationFilter]);
 
   useEffect(() => {
     // Only consider current and upcoming events for available locations
