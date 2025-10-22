@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FiMapPin, FiCalendar, FiClock, FiBookmark, FiImage } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
-import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getEventPrimaryImage, getAllImageUrls } from '@/lib/utils';
@@ -13,11 +12,80 @@ interface EventDetailsTabProps {
   onImageExpand: (index: number) => void;
 }
 
+interface ThumbnailImageProps {
+  src: string;
+  alt: string;
+  onClick: () => void;
+  showMoreIndicator?: boolean;
+  moreCount?: number;
+}
+
+const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
+  src,
+  alt,
+  onClick,
+  showMoreIndicator = false,
+  moreCount = 0
+}) => {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div
+      className="relative cursor-pointer group rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200/50 hover:border-yellow-300 bg-white"
+      onClick={onClick}
+    >
+      {/* Loading skeleton */}
+      {imageLoading && (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-xl" />
+      )}
+
+      {/* Error state */}
+      {imageError && !imageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl">
+          <div className="text-center text-gray-500">
+            <div className="text-2xl mb-1">📷</div>
+            <p className="text-xs">Unavailable</p>
+          </div>
+        </div>
+      )}
+
+      {!imageError && (
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+          onLoad={() => setImageLoading(false)}
+          onError={() => {
+            setImageLoading(false);
+            setImageError(true);
+          }}
+        />
+      )}
+
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+        <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg transform scale-75 group-hover:scale-100 transition-all duration-300">
+          <FiImage size={14} className="text-gray-700" />
+        </div>
+      </div>
+
+      {/* More images indicator */}
+      {showMoreIndicator && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+          <span className="text-white font-bold text-sm">+{moreCount}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand }) => {
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
 
 
@@ -106,16 +174,39 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
               </div>
             )}
 
-            <Image
-              src={getEventPrimaryImage(event)}
-              alt={event?.name ? `${event.name} main image` : 'Event Image'}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="transition-all duration-700 group-hover:scale-105 object-cover"
-              priority
-              onLoad={() => setImageLoading(false)}
-              onError={() => setImageLoading(false)}
-            />
+            {/* Error state */}
+            {imageError && !imageLoading && (
+              <div
+                className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 rounded-2xl cursor-pointer hover:bg-gray-200 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageError(false);
+                  setImageLoading(true);
+                }}
+              >
+                <div className="text-center text-gray-500">
+                  <div className="text-4xl mb-2">📷</div>
+                  <p className="text-sm font-medium">Image unavailable</p>
+                  <p className="text-xs text-gray-400 mt-1">Click to try again</p>
+                </div>
+              </div>
+            )}
+
+            {!imageError && (
+              <img
+                src={getEventPrimaryImage(event)}
+                alt={event?.name ? `${event.name} main image` : 'Event Image'}
+                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                onLoad={() => {
+                  setImageLoading(false);
+                  setImageError(false);
+                }}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
+              />
+            )}
 
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
@@ -215,33 +306,14 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
       {getAllImageUrls(event?.image_urls).length > 1 && (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {getAllImageUrls(event?.image_urls).slice(1, 6).map((imageUrl: string, index: number) => (
-            <div
+            <ThumbnailImage
               key={index}
-              className="relative cursor-pointer group rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200/50 hover:border-yellow-300 bg-white"
+              src={imageUrl}
+              alt={event?.name ? `${event.name} image ${index + 2}` : `Event image ${index + 2}`}
               onClick={() => onImageExpand(index + 1)}
-            >
-              <Image
-                src={imageUrl}
-                alt={event?.name ? `${event.name} image ${index + 2}` : `Event image ${index + 2}`}
-                fill
-                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
-                className="transition-all duration-300 group-hover:scale-110 object-cover"
-              />
-
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg transform scale-75 group-hover:scale-100 transition-all duration-300">
-                  <FiImage size={14} className="text-gray-700" />
-                </div>
-              </div>
-
-              {/* More images indicator */}
-              {index === 4 && getAllImageUrls(event?.image_urls).length > 6 && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">+{getAllImageUrls(event?.image_urls).length - 6}</span>
-                </div>
-              )}
-            </div>
+              showMoreIndicator={index === 4 && getAllImageUrls(event?.image_urls).length > 6}
+              moreCount={getAllImageUrls(event?.image_urls).length - 6}
+            />
           ))}
         </div>
       )}
