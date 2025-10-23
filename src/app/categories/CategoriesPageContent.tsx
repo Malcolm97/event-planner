@@ -151,7 +151,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       {/* Hero Section */}
       <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
+          <h1 className="text-display-lg text-white mb-6 tracking-tight">
             {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Categories'}
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
@@ -166,7 +166,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       {/* Category Navigation */}
       <section className="py-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
+          <h2 className="text-heading-2xl text-gray-900 mb-8 text-center">Browse by Category</h2>
           {isOffline && (
             <div className="text-center mb-4">
               <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
@@ -214,7 +214,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       <section className="py-16 px-4 sm:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-heading-2xl text-gray-900 mb-4">
               {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Events'}
             </h2>
             <p className="text-gray-600 text-lg">

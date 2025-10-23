@@ -2,33 +2,21 @@ import Link from 'next/link';
 
 export default function AppFooter() {
   return (
-    <footer className="w-full py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
+    <footer className="w-full py-4 sm:py-6 px-4 sm:px-6 lg:px-8 bg-gray-900 border-t border-gray-700 mt-auto">
       <div className="max-w-6xl mx-auto">
-        {/* Desktop Footer with Navigation */}
-        <div className="hidden lg:flex lg:flex-row lg:justify-between lg:items-center text-gray-400 text-sm">
-          {/* Navigation Links */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/events" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base px-2 py-1" aria-label="Events">Events</Link>
-            <Link href="/categories" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base px-2 py-1" aria-label="Categories">Categories</Link>
-            <Link href="/about" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base px-2 py-1" aria-label="About">About</Link>
-          </div>
-
+        {/* Desktop Footer */}
+        <div className="hidden lg:flex lg:flex-col lg:items-center text-gray-400 text-sm space-y-2">
           {/* Copyright */}
           <div className="text-gray-300 font-medium text-sm sm:text-base">
             © 2025 PNG Events. All rights reserved.
           </div>
 
           {/* Legal Links */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="flex items-center gap-4 sm:gap-6">
-              <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Terms">Terms</Link>
-              <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Privacy">Privacy</Link>
-            </div>
-            <div className="w-px h-6 bg-gray-600"></div>
-            <div className="flex items-center gap-4 sm:gap-6">
-              <Link href="/settings" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Settings">Settings</Link>
-              <Link href="/download" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-sm sm:text-base" aria-label="Download">Download</Link>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link href="/terms" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-xs sm:text-sm" aria-label="Terms">Terms</Link>
+            <Link href="/privacy" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-xs sm:text-sm" aria-label="Privacy">Privacy</Link>
+            <Link href="/settings" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-xs sm:text-sm" aria-label="Settings">Settings</Link>
+            <Link href="/download" className="hover:text-yellow-400 text-gray-300 transition-colors font-medium text-xs sm:text-sm" aria-label="Download">Download</Link>
           </div>
         </div>
 

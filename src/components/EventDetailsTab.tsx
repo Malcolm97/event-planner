@@ -234,14 +234,14 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
               </div>
               <div className="flex-1 space-y-2">
                 <div>
-                  <h3 className="font-bold text-gray-900 text-lg">Location</h3>
+                  <h3 className="text-heading-lg text-gray-900">Location</h3>
                   <p className="text-gray-700 text-base leading-relaxed font-medium">
                     {event?.location || 'Not specified'}
                   </p>
                 </div>
                 {event?.venue && (
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-base">Venue</h3>
+                    <h3 className="text-heading-md text-gray-900">Venue</h3>
                     <p className="text-gray-600 text-sm leading-relaxed">
                       {event.venue}
                     </p>
@@ -259,7 +259,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                   <FiCalendar size={18} className="text-indigo-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 text-lg mb-2">Date & Time</h3>
+                  <h3 className="text-heading-lg text-gray-900 mb-2">Date & Time</h3>
                   <div className="space-y-1">
                     <p className="text-gray-700 text-base font-medium leading-relaxed">
                       {new Date(event.date).toLocaleDateString('en-US', {

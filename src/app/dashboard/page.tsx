@@ -75,7 +75,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-8">
             <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <h1 className="text-display-lg text-gray-900 mb-2">Dashboard</h1>
               <p className="text-gray-600 text-lg">Manage your events and profile</p>
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
             {/* Profile Section */}
             <div className="card p-8">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-gray-900">Profile</h2>
+                <h2 className="text-heading-2xl text-gray-900">Profile</h2>
                 <Link
                   href="/dashboard/edit-profile"
                   className="btn-ghost text-sm gap-2"

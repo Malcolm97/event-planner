@@ -114,7 +114,7 @@ const OnlineBadge = React.memo(() => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 hidden lg:block">
+    <div className="fixed bottom-6 right-4 z-50 hidden lg:block">
       <div
         className={`
           ${config.bg} ${config.border}
@@ -122,6 +122,7 @@ const OnlineBadge = React.memo(() => {
           transition-all duration-300 ease-out cursor-pointer
           hover:scale-105 hover:shadow-3xl active:scale-95
           ${isExpanded ? 'rounded-b-xl' : 'rounded-2xl'}
+          max-w-56
         `}
         onClick={handleClick}
         role="button"
@@ -135,55 +136,55 @@ const OnlineBadge = React.memo(() => {
         }}
       >
         {/* Main status bar */}
-        <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 px-3 py-2">
           {config.icon}
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="font-semibold text-sm leading-tight">{config.text}</span>
-            <span className="text-xs opacity-90 leading-tight truncate">{config.subtext}</span>
+            <span className="font-semibold text-xs leading-tight">{config.text}</span>
+            <span className="text-[10px] opacity-90 leading-tight truncate">{config.subtext}</span>
           </div>
           {/* Connection quality indicator */}
           {isOnline && connectionQuality !== 'unknown' && (
             <div className="flex items-center gap-1">
               {getConnectionQualityIndicator()}
-              <span className="text-xs opacity-75">{connectionType}</span>
+              <span className="text-[10px] opacity-75">{connectionType}</span>
             </div>
           )}
           {(statusState === 'error' || statusState === 'has-queue' || cachedEventsCount > 0 || (isOnline && connectionQuality !== 'unknown')) && (
             <button
-              className="ml-2 p-1 rounded-lg hover:bg-white/20 transition-colors"
+              className="ml-1 p-0.5 rounded-lg hover:bg-white/20 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
               aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
             >
-              {isExpanded ? <FiChevronDown className="w-4 h-4" /> : <FiChevronUp className="w-4 h-4" />}
+              {isExpanded ? <FiChevronDown className="w-3 h-3" /> : <FiChevronUp className="w-3 h-3" />}
             </button>
           )}
         </div>
 
         {/* Expanded details */}
         {isExpanded && (
-          <div className="border-t border-white/20 px-4 py-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+          <div className="border-t border-white/20 px-3 py-2 space-y-1 animate-in slide-in-from-top-2 duration-200">
             {/* Saved events */}
             {cachedEventsCount > 0 && (
-              <div className="flex items-center gap-2 text-xs opacity-90">
-                <FiDatabase className="w-4 h-4 flex-shrink-0" />
+              <div className="flex items-center gap-2 text-[10px] opacity-90">
+                <FiDatabase className="w-3 h-3 flex-shrink-0" />
                 <span>{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} saved</span>
               </div>
             )}
 
             {/* Queue status */}
             {queueLength > 0 && (
-              <div className="flex items-center gap-2 text-xs opacity-90">
-                <FiClock className="w-4 h-4 flex-shrink-0" />
+              <div className="flex items-center gap-2 text-[10px] opacity-90">
+                <FiClock className="w-3 h-3 flex-shrink-0" />
                 <span>{queueLength} pending sync</span>
               </div>
             )}
 
             {/* Connection details */}
             {isOnline && connectionQuality !== 'unknown' && (
-              <div className="flex items-center gap-2 text-xs opacity-90">
+              <div className="flex items-center gap-1 text-[10px] opacity-90">
                 <span>Connection: {connectionQuality}</span>
                 {downlink > 0 && <span>({downlink} Mbps)</span>}
                 {rtt > 0 && <span>{rtt}ms RTT</span>}
@@ -192,7 +193,7 @@ const OnlineBadge = React.memo(() => {
 
             {/* Last sync time */}
             {lastSyncTime && isOnline && isAutoSyncEnabled() && (
-              <div className="text-xs opacity-75 pt-1 border-t border-white/10">
+              <div className="text-[10px] opacity-75 pt-1 border-t border-white/10">
                 Last synced: {new Date(lastSyncTime).toLocaleString()}
               </div>
             )}
@@ -204,7 +205,7 @@ const OnlineBadge = React.memo(() => {
                   e.stopPropagation();
                   syncNow();
                 }}
-                className="w-full mt-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+                className="w-full mt-1 bg-white/20 hover:bg-white/30 text-white px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors"
                 disabled={isProcessingQueue}
               >
                 {isProcessingQueue ? 'Syncing...' : statusState === 'error' ? 'Retry Sync' : 'Sync Now'}

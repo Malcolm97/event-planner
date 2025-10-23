@@ -119,7 +119,7 @@ export default function EventsPageContent() {
       {/* Hero section */}
       <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight">
+          <h1 className="text-display-lg text-white mb-4 sm:mb-6 tracking-tight">
             Events by Location
           </h1>
           <p className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
@@ -198,7 +198,7 @@ export default function EventsPageContent() {
       {!loading && upcomingEvents.length === 0 && (
         <div className="text-center py-16 text-gray-500">
           <FiSmile size={40} className="mx-auto mb-4 text-yellow-400" />
-          <h2 className="text-xl sm:text-2xl font-semibold mb-2">No events found</h2>
+          <h2 className="text-heading-lg mb-2">No events found</h2>
           <p className="mb-4 text-base sm:text-lg">Check back later for new events.</p>
         </div>
       )}
@@ -219,7 +219,7 @@ export default function EventsPageContent() {
         <section className="py-12 bg-gray-50 border-t border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">Previous Events</h2>
+              <h2 className="text-heading-2xl text-gray-900 mb-3">Previous Events</h2>
               <p className="text-gray-600">Browse events that have already taken place.</p>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">

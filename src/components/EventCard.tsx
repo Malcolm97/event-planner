@@ -398,7 +398,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       <div className="flex flex-col h-full">
         <div className="px-3 py-3 sm:px-5 sm:py-4 pb-8 sm:pb-14">
           {/* Event Title */}
-          <h3 className="text-sm sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 sm:mb-3 text-left">
+          <h3 className="text-heading-xl text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 sm:mb-3 text-left">
             {event.name}
           </h3>
 

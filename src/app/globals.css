@@ -243,43 +243,43 @@ body {
 @layer components {
   /* Modern Typography Scale - Mobile First */
   .text-display-2xl {
-    @apply text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight;
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
   }
 
   .text-display-xl {
-    @apply text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight;
+    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
   }
 
   .text-display-lg {
-    @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight;
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
   }
 
   .text-display-md {
-    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight;
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
   }
 
   .text-display-sm {
-    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold tracking-tight;
+    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
   }
 
   .text-heading-2xl {
-    @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight;
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
   }
 
   .text-heading-xl {
-    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight;
+    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
   }
 
   .text-heading-lg {
-    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl font-semibold tracking-tight;
+    @apply text-base sm:text-lg lg:text-xl font-semibold tracking-tight;
   }
 
   .text-heading-md {
-    @apply text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold tracking-tight;
+    @apply text-sm sm:text-base lg:text-lg font-semibold tracking-tight;
   }
 
   .text-heading-sm {
-    @apply text-sm sm:text-base lg:text-lg xl:text-xl font-semibold tracking-tight;
+    @apply text-xs sm:text-sm lg:text-base font-semibold tracking-tight;
   }
 
   .text-body-lg {
