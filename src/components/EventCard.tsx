@@ -367,22 +367,26 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
           {event.presale_price !== undefined && event.presale_price !== null ? (
             event.presale_price === 0 ? (
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-green-500/80 backdrop-blur-md text-white shadow-lg">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={10} />
                 Presale: Free
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={10} />
                 Presale: K{event.presale_price.toFixed(0)}
               </span>
             )
           ) : null}
           {event.gate_price !== undefined && event.gate_price !== null ? (
             event.gate_price === 0 ? (
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-green-500/80 backdrop-blur-md text-white shadow-lg">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={10} />
                 Gate: Free
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-md text-gray-900 shadow-lg border border-white/20">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={10} />
                 Gate: K{event.gate_price.toFixed(0)}
               </span>
             )

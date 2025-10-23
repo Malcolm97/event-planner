@@ -82,6 +82,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -108,9 +109,15 @@ const ImageModal: React.FC<ImageModalProps> = ({
   // Handle zoom controls with bounds checking
   const handleZoomIn = () => {
     setZoom(prev => {
+      const oldZoom = prev;
       const newZoom = Math.min(prev * 1.2, 3);
-      // Reset pan if zooming out to fit
-      if (newZoom === 1) {
+      // Adjust pan to center on cursor position
+      if (newZoom !== 1 && oldZoom !== 1) {
+        setPan(currentPan => ({
+          x: currentPan.x + mousePos.x * (1 - newZoom / oldZoom),
+          y: currentPan.y + mousePos.y * (1 - newZoom / oldZoom)
+        }));
+      } else if (newZoom === 1) {
         setPan({ x: 0, y: 0 });
       }
       return newZoom;
@@ -119,9 +126,15 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   const handleZoomOut = () => {
     setZoom(prev => {
+      const oldZoom = prev;
       const newZoom = Math.max(prev / 1.2, 0.5);
-      // Reset pan if zooming out to fit
-      if (newZoom === 1) {
+      // Adjust pan to center on cursor position
+      if (newZoom !== 1 && oldZoom !== 1) {
+        setPan(currentPan => ({
+          x: currentPan.x + mousePos.x * (1 - newZoom / oldZoom),
+          y: currentPan.y + mousePos.y * (1 - newZoom / oldZoom)
+        }));
+      } else if (newZoom === 1) {
         setPan({ x: 0, y: 0 });
       }
       return newZoom;
@@ -137,7 +150,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoom > 1) {
       setIsDragging(true);
-      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      setDragStart({ x: e.clientX, y: e.clientY });
       e.preventDefault();
     }
   };
@@ -153,15 +166,22 @@ const ImageModal: React.FC<ImageModalProps> = ({
       const maxPanX = (containerWidth * (zoom - 1)) / 2;
       const maxPanY = (containerHeight * (zoom - 1)) / 2;
 
-      // Account for header area - reduce upward pan limit
-      // Header height is approximately 80px (pt-20) on mobile, 96px (pt-24) on larger screens
-      const headerHeight = window.innerWidth < 640 ? 80 : 96;
-      const safeMaxPanY = Math.max(0, maxPanY - headerHeight / 2);
+      // Account for header area and modal padding - create generous upward pan limit
+      // Use dynamic restriction based on zoom level for better UX
+      const headerHeight = 80;
+      const modalTopPadding = window.innerWidth >= 1024 ? 96 : 80; // lg:pt-24 = 96px
+      const totalRestriction = headerHeight + modalTopPadding * 0.5; // Conservative restriction
+      const safeMaxPanY = Math.max(0, maxPanY - totalRestriction);
 
-      const newX = Math.max(-maxPanX, Math.min(maxPanX, e.clientX - dragStart.x));
-      const newY = Math.max(-safeMaxPanY, Math.min(maxPanY, e.clientY - dragStart.y));
+      const deltaX = e.clientX - dragStart.x;
+      const deltaY = e.clientY - dragStart.y;
 
-      setPan({ x: newX, y: newY });
+      setPan(prevPan => ({
+        x: Math.max(-maxPanX, Math.min(maxPanX, prevPan.x + deltaX)),
+        y: Math.max(-safeMaxPanY, Math.min(maxPanY, prevPan.y + deltaY))
+      }));
+
+      setDragStart({ x: e.clientX, y: e.clientY });
     }
   };
 
@@ -173,7 +193,20 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(prev => Math.max(0.5, Math.min(prev * delta, 3)));
+    setZoom(prev => {
+      const oldZoom = prev;
+      const newZoom = Math.max(0.5, Math.min(prev * delta, 3));
+      // Adjust pan to center on cursor position
+      if (newZoom !== 1 && oldZoom !== 1) {
+        setPan(currentPan => ({
+          x: currentPan.x + mousePos.x * (1 - newZoom / oldZoom),
+          y: currentPan.y + mousePos.y * (1 - newZoom / oldZoom)
+        }));
+      } else if (newZoom === 1) {
+        setPan({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
   };
 
   // Handle keyboard navigation
@@ -213,7 +246,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-black bg-opacity-95 backdrop-blur-md pt-20 sm:pt-24 pb-32 sm:pb-36 animate-fade-in flex items-center justify-center"
+      className="fixed inset-0 z-[110] bg-black bg-opacity-95 backdrop-blur-md pt-16 sm:pt-20 lg:pt-24 pb-32 sm:pb-36 lg:pb-4 animate-fade-in flex items-center justify-center"
       onClick={onClose}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-center">
@@ -270,10 +303,20 @@ const ImageModal: React.FC<ImageModalProps> = ({
           {/* Main Image Container */}
           <div
             ref={containerRef}
-            className="relative w-full max-w-5xl h-full max-h-[80vh] overflow-hidden rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
+            className="relative w-full max-w-5xl h-full max-h-[75vh] lg:max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
+            onMouseMove={(e) => {
+              // Track mouse position for zoom centering
+              if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                setMousePos({
+                  x: e.clientX - rect.left - rect.width / 2,
+                  y: e.clientY - rect.top - rect.height / 2
+                });
+              }
+              handleMouseMove(e);
+            }}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
@@ -336,7 +379,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
         {/* Bottom UI Section */}
         <div className="flex-shrink-0 z-30">
           {/* Image Counter and Title */}
-          <div className="px-4 pb-3">
+          <div className="px-4 pb-3 lg:pb-6">
             <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-2xl px-6 py-4 shadow-2xl mx-auto max-w-lg border border-white/10">
               <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 truncate text-center text-white leading-tight">{event?.name}</h3>
               {allImageUrls.length > 1 && (
@@ -361,7 +404,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
           {/* Thumbnail Strip */}
           {allImageUrls.length > 1 && (
-            <div className="px-4 pb-6">
+            <div className="px-4 pb-6 lg:pb-8">
               <div className="flex gap-3 sm:gap-4 flex-wrap justify-center max-w-4xl mx-auto">
                 {allImageUrls.slice(0, 8).map((imageUrl: string, index: number) => (
                   <ThumbnailItem

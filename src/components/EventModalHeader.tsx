@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { FiX, FiEdit, FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
+import { FiX, FiEdit, FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiDollarSign } from 'react-icons/fi';
 import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
@@ -66,22 +66,26 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
         <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-1.5">
           {/* Pricing */}
           {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-            <span className="inline-flex items-center px-2 py-1.5 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-semibold text-xs shadow-lg border border-white/30">
+              <FiDollarSign size={10} />
               Presale: K{selectedEvent.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-1.5 rounded-full bg-gray-100 text-gray-600 font-semibold text-xs shadow-sm">
-              Presale: None
+            <span className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white font-semibold text-xs shadow-lg border border-white/30">
+              <FiDollarSign size={10} />
+              Presale: Free
             </span>
           )}
 
           {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
-            <span className="inline-flex items-center px-2 py-1.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-semibold text-xs shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white font-semibold text-xs shadow-lg border border-white/30">
+              <FiDollarSign size={10} />
               Gate: K{selectedEvent.gate_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-1.5 rounded-full bg-gray-100 text-gray-600 font-semibold text-xs shadow-sm">
-              Gate: None
+            <span className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white font-semibold text-xs shadow-lg border border-white/30">
+              <FiDollarSign size={10} />
+              Gate: Free
             </span>
           )}
 
@@ -114,22 +118,26 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
         {/* Pricing and Category - Center */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-wrap justify-center items-center gap-2 xl:gap-3">
           {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-            <span className="inline-flex items-center px-3 py-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold text-sm shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-semibold text-sm shadow-lg border border-white/30">
+              <FiDollarSign size={12} />
               Presale: K{selectedEvent.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center px-3 py-2 rounded-full bg-gray-100 text-gray-600 font-semibold text-sm shadow-sm">
-              Presale: None
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white font-semibold text-sm shadow-lg border border-white/30">
+              <FiDollarSign size={12} />
+              Presale: Free
             </span>
           )}
 
           {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 ? (
-            <span className="inline-flex items-center px-3 py-2 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-semibold text-sm shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white font-semibold text-sm shadow-lg border border-white/30">
+              <FiDollarSign size={12} />
               Gate: K{selectedEvent.gate_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center px-3 py-2 rounded-full bg-gray-100 text-gray-600 font-semibold text-sm shadow-sm">
-              Gate: None
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white font-semibold text-sm shadow-lg border border-white/30">
+              <FiDollarSign size={12} />
+              Gate: Free
             </span>
           )}
 
