@@ -255,30 +255,43 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
           {event?.date && (
             <div className="flex flex-col gap-4 sm:gap-4 p-5 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-blue-50 border border-indigo-200/60 shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center shadow-sm">
-                  <FiCalendar size={18} className="text-indigo-600" />
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center shadow-sm">
+                  <FiCalendar size={18} className="text-red-600" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-heading-lg text-gray-900 mb-2">Date & Time</h3>
                   <div className="space-y-1">
-                    <p className="text-gray-700 text-base font-medium leading-relaxed">
-                      {new Date(event.date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                      {event.end_date ?
-                        ` - ${new Date(event.end_date).toLocaleDateString('en-US', {
+                    {event.end_date ? (
+                      <>
+                        <p className="text-gray-700 text-base font-medium leading-relaxed">
+                          <span className="font-semibold text-gray-600">Start:</span> {new Date(event.date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        <p className="text-gray-700 text-base font-medium leading-relaxed">
+                          <span className="font-semibold text-gray-600">End:</span> {new Date(event.end_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-700 text-base font-medium leading-relaxed">
+                        {new Date(event.date).toLocaleDateString('en-US', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
-                        })}`
-                        : ''}
-                    </p>
+                        })}
+                      </p>
+                    )}
                     <div className="flex items-center gap-2 text-gray-600">
-                      <FiClock size={14} />
+                      <FiClock size={14} className="text-orange-600" />
                       <p className="text-sm leading-relaxed">
                         {new Date(event.date).toLocaleTimeString('en-US', {
                           hour: '2-digit',

@@ -405,7 +405,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
           {/* Location and Venue */}
           <div className="space-y-1.5 sm:space-y-2 text-left mb-2 sm:mb-3">
             <div className="flex items-start gap-1.5 sm:gap-3">
-              <FiMapPin size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+              <FiMapPin size={12} className="text-blue-600 flex-shrink-0 mt-0.5" />
               <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">{event.location}</span>
             </div>
             {event.venue && (
@@ -420,14 +420,19 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
           {event.date && (
             <div className="space-y-1 sm:space-y-2 text-left">
               <div className="flex items-start gap-1.5 sm:gap-3">
-                <FiCalendar size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <FiCalendar size={12} className="text-red-600 flex-shrink-0 mt-0.5" />
                 <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">
-                  {formattedDate}
-                  {formattedEndDate ? ` - ${formattedEndDate}` : ''}
+                  {formattedEndDate ? (
+                    <>
+                      {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.end_date!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </>
+                  ) : (
+                    formattedDate
+                  )}
                 </span>
               </div>
               <div className="flex items-start gap-1.5 sm:gap-3">
-                <FiClock size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <FiClock size={12} className="text-orange-600 flex-shrink-0 mt-0.5" />
                 <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">
                   {formattedTime}
                   {formattedEndTime ? ` - ${formattedEndTime}` : ''}
