@@ -182,6 +182,17 @@ export function useOptimizedData<T>(
 
       const freshData: T[] = await response.json();
 
+      // Debug logging for data fetching
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[${new Date().toISOString()}] API Response for ${storeName}:`, {
+          count: freshData.length,
+          sample: freshData.slice(0, 2), // Show first 2 items as sample
+          hasImageUrls: freshData.some((item: any) => item.image_urls),
+          hasDescriptions: freshData.some((item: any) => item.description),
+          fields: freshData.length > 0 ? Object.keys(freshData[0] as any) : []
+        });
+      }
+
       // Update state
       setData(prevData => isLoadMore ? [...prevData, ...freshData] : freshData);
       setHasMore(freshData.length === (opts.limit || 50));

@@ -15,21 +15,45 @@ interface Event {
   created_by: string
   approved: boolean
   created_at: string
+  creator_name?: string
+  creator_avatar?: string
+  category_name?: string
+  saved_count?: number
+}
+
+interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
 }
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [categoryFilter, setCategoryFilter] = useState("all")
   const { toast } = useToast()
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (page = 1) => {
     try {
       setError(null)
-      const response = await fetch("/api/admin/events")
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50',
+        search: searchTerm,
+        status: statusFilter,
+        category: categoryFilter
+      })
+
+      const response = await fetch(`/api/admin/events?${params}`)
       const data = await response.json()
       if (response.ok) {
         setEvents(data.data || [])
+        setPagination(data.pagination)
       } else {
         setError("Failed to fetch events")
         toast({
@@ -48,6 +72,16 @@ export default function EventsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = () => {
+    setLoading(true)
+    fetchEvents(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setLoading(true)
+    fetchEvents(page)
   }
 
   useEffect(() => {
@@ -144,7 +178,48 @@ export default function EventsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg lg:text-xl font-bold text-gray-900">Event Management</h2>
         <div className="mt-2 sm:mt-0 text-sm text-gray-600">
-          {events.length} event{events.length !== 1 ? 's' : ''} total
+          {pagination ? `${pagination.total} event${pagination.total !== 1 ? 's' : ''} total` : `${events.length} event${events.length !== 1 ? 's' : ''} total`}
+        </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Categories</option>
+              {/* TODO: Load categories dynamically */}
+            </select>
+          </div>
+          <div>
+            <Button onClick={handleSearch} className="w-full">
+              Search
+            </Button>
+          </div>
         </div>
       </div>
 

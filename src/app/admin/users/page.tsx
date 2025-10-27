@@ -10,21 +10,43 @@ interface User {
   role: string
   approved: boolean
   created_at: string
+  events_created?: number
+  events_saved?: number
+}
+
+interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [roleFilter, setRoleFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
   const { toast } = useToast()
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page = 1) => {
     try {
       setError(null)
-      const response = await fetch("/api/admin/users")
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50',
+        search: searchTerm,
+        role: roleFilter,
+        status: statusFilter
+      })
+
+      const response = await fetch(`/api/admin/users?${params}`)
       const data = await response.json()
       if (response.ok) {
         setUsers(data.data || [])
+        setPagination(data.pagination)
       } else {
         setError("Failed to fetch users")
         toast({
@@ -43,6 +65,16 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = () => {
+    setLoading(true)
+    fetchUsers(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setLoading(true)
+    fetchUsers(page)
   }
 
   useEffect(() => {
@@ -139,7 +171,49 @@ export default function UsersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg lg:text-xl font-bold text-gray-900">User Management</h2>
         <div className="mt-2 sm:mt-0 text-sm text-gray-600">
-          {users.length} user{users.length !== 1 ? 's' : ''} total
+          {pagination ? `${pagination.total} user${pagination.total !== 1 ? 's' : ''} total` : `${users.length} user${users.length !== 1 ? 's' : ''} total`}
+        </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div>
+            <Button onClick={handleSearch} className="w-full">
+              Search
+            </Button>
+          </div>
         </div>
       </div>
 

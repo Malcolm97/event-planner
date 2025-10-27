@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiZoomIn, FiZoomOut, FiRotateCcw } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 
-import { getAllImageUrls } from '@/lib/utils';
+import { getValidImageUrls } from '@/lib/utils';
 
 interface ImageModalProps {
   event: EventItem;
@@ -74,7 +74,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
   onNextImage,
   onImageSelect
 }) => {
-  const allImageUrls = getAllImageUrls(event?.image_urls);
+  const allImageUrls = getValidImageUrls(event?.image_urls);
   const hasImages = allImageUrls.length > 0;
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);

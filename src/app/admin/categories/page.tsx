@@ -8,21 +8,40 @@ interface Category {
   id: string
   name: string
   description?: string
+  total_events?: number
+  approved_events?: number
+  pending_events?: number
+}
+
+interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
 }
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (page = 1) => {
     try {
       setError(null)
-      const response = await fetch("/api/admin/categories")
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50',
+        search: searchTerm
+      })
+
+      const response = await fetch(`/api/admin/categories?${params}`)
       const data = await response.json()
       if (response.ok) {
         setCategories(data.data || [])
+        setPagination(data.pagination)
       } else {
         setError("Failed to fetch categories")
         toast({
@@ -41,6 +60,16 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = () => {
+    setLoading(true)
+    fetchCategories(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setLoading(true)
+    fetchCategories(page)
   }
 
   useEffect(() => {
@@ -107,7 +136,27 @@ export default function CategoriesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg lg:text-xl font-bold text-gray-900">Category Management</h2>
         <div className="mt-2 sm:mt-0 text-sm text-gray-600">
-          {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'} total
+          {pagination ? `${pagination.total} categor${pagination.total !== 1 ? 'ies' : 'y'} total` : `${categories.length} categor${categories.length !== 1 ? 'ies' : 'y'} total`}
+        </div>
+      </div>
+
+      {/* Search Controls */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Search categories..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Button onClick={handleSearch} className="w-full md:w-auto">
+              Search
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -158,6 +207,15 @@ export default function CategoriesPage() {
                   Description
                 </th>
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Events
+                </th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Approved
+                </th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Pending
+                </th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -174,6 +232,19 @@ export default function CategoriesPage() {
                     <div className="text-sm text-gray-500 max-w-xs truncate">
                       {category.description || "No description"}
                     </div>
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {category.total_events || 0}
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      {category.approved_events || 0}
+                    </span>
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      {category.pending_events || 0}
+                    </span>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Button

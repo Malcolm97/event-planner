@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     const upcoming = searchParams.get('upcoming');
 
     // Define default fields for performance - only fetch what's needed
-    const defaultFields = 'id, name, date, end_date, location, venue, category, presale_price, gate_price, image_urls, featured, created_by, created_at, updated_at';
+    const defaultFields = 'id, name, description, date, end_date, location, venue, category, presale_price, gate_price, image_urls, featured, created_by, created_at, updated_at';
     const selectedFields = fields || defaultFields;
 
     let query = supabase

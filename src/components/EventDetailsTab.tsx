@@ -4,7 +4,7 @@ import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, TABLES } from '@/lib/supabase';
-import { getEventPrimaryImage, getAllImageUrls } from '@/lib/utils';
+import { getEventPrimaryImage, getValidImageUrls } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 interface EventDetailsTabProps {
@@ -216,9 +216,9 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
             </div>
 
             {/* Image counter */}
-            {getAllImageUrls(event?.image_urls).length > 1 && (
+            {getValidImageUrls(event?.image_urls).length > 1 && (
               <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
-                1 / {getAllImageUrls(event?.image_urls).length}
+                1 / {getValidImageUrls(event?.image_urls).length}
               </div>
             )}
           </div>
@@ -316,16 +316,16 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
       </div>
 
       {/* Additional Images Thumbnails */}
-      {getAllImageUrls(event?.image_urls).length > 1 && (
+      {getValidImageUrls(event?.image_urls).length > 1 && (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-          {getAllImageUrls(event?.image_urls).slice(1, 6).map((imageUrl: string, index: number) => (
+          {getValidImageUrls(event?.image_urls).slice(1, 6).map((imageUrl: string, index: number) => (
             <ThumbnailImage
               key={index}
               src={imageUrl}
               alt={event?.name ? `${event.name} image ${index + 2}` : `Event image ${index + 2}`}
               onClick={() => onImageExpand(index + 1)}
-              showMoreIndicator={index === 4 && getAllImageUrls(event?.image_urls).length > 6}
-              moreCount={getAllImageUrls(event?.image_urls).length - 6}
+              showMoreIndicator={index === 4 && getValidImageUrls(event?.image_urls).length > 6}
+              moreCount={getValidImageUrls(event?.image_urls).length - 6}
             />
           ))}
         </div>
