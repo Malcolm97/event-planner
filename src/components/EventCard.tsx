@@ -106,23 +106,12 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
   const imageSrc = useMemo(() => {
     try {
       const src = getEventPrimaryImage(event);
-
-      // Debug logging to help identify issues
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Event "${event.name}" image data:`, {
-          image_urls: event.image_urls,
-          primaryImage: src,
-          hasValidImage: src && src !== '/next.svg',
-          isPreviousEvent: event.date && new Date(event.date) < new Date()
-        });
-      }
-
       return src;
     } catch (error) {
       console.error('Error getting image for event:', event.name, error);
       return '/next.svg';
     }
-  }, [event.image_urls, event.name, event.date]);
+  }, [event.image_urls, event.name, event.date, event]);
 
   // Swipe gesture for sharing - disabled for now to avoid scroll conflicts
   // const swipeRef = useSwipe({
@@ -278,6 +267,10 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user || deleting || !isOwner) return;
+    
+
+// Set displayName for React DevTools
+(EventCard as React.FunctionComponent).displayName = "EventCard";
 
     // Show confirmation dialog with toast
     toast((t) => (
@@ -355,14 +348,24 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Hero Image Area */}
       <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-2xl">
-        <Image
-          src={imageSrc}
-          alt={`Event image for ${event.name}`}
-          fill
-          priority
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="transition-transform duration-500 group-hover:scale-110 object-cover object-center"
-        />
+        {imageSrc && (typeof imageSrc === 'string') ? (
+          // Use native <img> for data/blob URIs to avoid Next/Image constraints
+          (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
+            <img
+              src={imageSrc}
+              alt={`Event image for ${event.name}`}
+              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <Image
+              src={imageSrc}
+              alt={`Event image for ${event.name}`}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="transition-transform duration-500 group-hover:scale-110 object-cover object-center"
+            />
+          )
+        ) : null}
         {/* Price Badges - Bottom Left */}
         <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
           {event.presale_price !== undefined && event.presale_price !== null ? (
@@ -396,7 +399,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-        <div className="px-3 py-3 sm:px-5 sm:py-4 pb-8 sm:pb-14">
+  <div className="px-4 py-4 sm:px-6 sm:py-5 pb-8 sm:pb-14">
           {/* Event Title */}
           <h3 className="text-heading-xl text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 sm:mb-3 text-left">
             {event.name}
@@ -486,59 +489,58 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 });
 export default EventCard;
 
+
 // ShareButtons Component
 function ShareButtons({ event }: { event: EventItem }) {
-  const [showShareOptions, setShowShareOptions] = useState(false);
-  const [eventUrl, setEventUrl] = useState(''); // State for event URL
-  const [isClient, setIsClient] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState<boolean>(false);
+  const [eventUrl, setEventUrl] = useState<string>('');
+  const [isClient, setIsClient] = useState<boolean>(false);
 
-  // Use useEffect to construct the eventUrl safely on the client
   useEffect(() => {
     setIsClient(true);
     if (typeof window !== 'undefined') {
       setEventUrl(`${window.location.origin}/events/${event.id}`);
     }
-  }, [event.id]); // Re-run if event.id changes
+  }, [event.id]);
 
-  const shareText = `Check out this event: ${event.name} at ${event.location} on ${new Date(event.date).toLocaleDateString()}.`;
+  const shareText = `Check out this event: ${event.name ?? ''} at ${event.location ?? ''} on ${event.date ? new Date(event.date).toLocaleDateString() : ''}.`;
 
   const handleShare = async () => {
     if (isClient && navigator.share) {
       try {
         await navigator.share({
-          title: event.name,
+          title: event.name ?? '',
           text: shareText,
           url: eventUrl,
         });
-  // ...existing code...
       } catch (error) {
-  // ...existing code...
+        // Optionally handle error
       }
     } else {
-      setShowShareOptions(!showShareOptions); // Fallback to showing custom buttons
+      setShowShareOptions((prev) => !prev); // Fallback to showing custom buttons
     }
   };
 
   const shareOnFacebook = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+    if (typeof window !== 'undefined' && eventUrl) {
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
     }
   };
 
   const shareOnTwitter = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+    if (typeof window !== 'undefined' && eventUrl) {
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
     }
   };
 
   const shareOnLinkedIn = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
-      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name)}&summary=${encodeURIComponent(shareText)}`, '_blank');
+    if (typeof window !== 'undefined' && eventUrl) {
+      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name ?? '')}&summary=${encodeURIComponent(shareText)}`, '_blank');
     }
   };
 
   const shareOnWhatsApp = () => {
-    if (typeof window !== 'undefined' && eventUrl) { // Check for window and eventUrl
+    if (typeof window !== 'undefined' && eventUrl) {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
     }
   };
@@ -547,7 +549,7 @@ function ShareButtons({ event }: { event: EventItem }) {
     <div className="relative">
       <button
         onClick={(e) => {
-          e.stopPropagation(); // Prevent card click
+          e.stopPropagation();
           handleShare();
         }}
         className="p-2 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[36px] min-h-[36px] flex items-center justify-center"

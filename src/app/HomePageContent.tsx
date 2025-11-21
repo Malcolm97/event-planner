@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import EventCard from '@/components/EventCard';
 import Button from '@/components/Button';
@@ -120,7 +120,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     }
   }, [events, initialEvents]);
 
-  const fetchHost = async (userId: string) => {
+  const fetchHost = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from(TABLES.USERS)
@@ -128,7 +128,6 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         .eq('id', userId);
 
       if (error) {
-  // ...existing code...
         return;
       }
 
@@ -138,9 +137,9 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         setHost(null);
       }
     } catch (err: any) {
-  // ...existing code...
+      // ...existing code...
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (selectedEvent?.created_by) {
@@ -148,7 +147,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     } else {
       setHost(null);
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, fetchHost]);
 
   const upcomingEvents = useMemo(() => {
     const now = new Date();

@@ -1,0 +1,12 @@
+[
+  {
+    "file": "src\\app\\admin\\components\\AdminAccessModal.tsx",
+    "component": "Button",
+    "props": [
+      {
+        "name": "onClick",
+        "raw": "{onClose}"
+      }
+    ]
+  }
+]

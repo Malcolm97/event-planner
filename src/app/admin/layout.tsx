@@ -37,11 +37,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         // Handle case where profile doesn't exist or other errors
         if (profileError) {
-          // Check if it's a "no rows found" error or profile doesn't exist
-          const isProfileNotFound = profileError.code === 'PGRST116' ||
-                                   profileError.message?.includes('No rows found') ||
-                                   profileError.code === 'PGRST204' ||
-                                   !profileError.code; // Empty error object
+          // Check if it's a "no rows found" error or profile doesn't exist.
+          // Supabase may sometimes return an opaque/empty error object ({}), treat that as 'not found'.
+          const isEmptyErrorObject = typeof profileError === 'object' && Object.keys(profileError).length === 0
+          const isProfileNotFound = profileError?.code === 'PGRST116' ||
+                                   profileError?.message?.includes('No rows found') ||
+                                   profileError?.code === 'PGRST204' ||
+                                   isEmptyErrorObject;
 
           if (isProfileNotFound) {
             console.log("User profile not found - user needs to complete registration")
@@ -50,12 +52,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             setIsLoading(false)
             return
           } else {
-            // Only log actual errors, not empty objects
-            const isEmptyObject = Object.keys(profileError).length === 0
-            if (!isEmptyObject && (profileError.code || profileError.message)) {
-              console.error("Error fetching profile:", profileError)
+            // Only log real, actionable error details. If the error object lacks useful fields, use debug.
+            const hasUsefulInfo = Boolean(profileError && (profileError.code || profileError.message || (profileError as any).details))
+            if (hasUsefulInfo) {
+              // Log a sanitized view to avoid noisy raw objects
+              console.error("Error fetching profile:", {
+                code: (profileError as any).code,
+                message: (profileError as any).message,
+                details: (profileError as any).details,
+              })
             } else {
-              console.log("Profile lookup failed - treating as no profile found")
+              console.debug("Profile lookup returned no useful error info, treating as no profile found", profileError)
             }
             setIsAdmin(false)
             setShowAccessModal(true)
@@ -97,20 +104,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             .single()
 
           if (profileError) {
-            // Handle profile not found or other errors
-            const isProfileNotFound = profileError.code === 'PGRST116' ||
-                                     profileError.message?.includes('No rows found') ||
-                                     profileError.code === 'PGRST204' ||
-                                     !profileError.code; // Empty error object
+            const isEmptyErrorObject = typeof profileError === 'object' && Object.keys(profileError).length === 0
+            const isProfileNotFound = profileError?.code === 'PGRST116' ||
+                                     profileError?.message?.includes('No rows found') ||
+                                     profileError?.code === 'PGRST204' ||
+                                     isEmptyErrorObject;
 
             if (isProfileNotFound) {
               console.log("Profile not found during auth change")
             } else {
-              const isEmptyObject = Object.keys(profileError).length === 0
-              if (!isEmptyObject && (profileError.code || profileError.message)) {
-                console.error("Error during auth state change:", profileError)
+              const hasUsefulInfo = Boolean(profileError && (profileError.code || profileError.message || (profileError as any).details))
+              if (hasUsefulInfo) {
+                console.error("Error during auth state change:", {
+                  code: (profileError as any).code,
+                  message: (profileError as any).message,
+                  details: (profileError as any).details,
+                })
               } else {
-                console.log("Profile lookup failed during auth change")
+                console.debug("Profile lookup returned no useful error info during auth change", profileError)
               }
             }
             setIsAdmin(false)

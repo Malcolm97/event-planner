@@ -250,8 +250,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
       onClick={onClose}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-center">
-        {/* Top Controls Bar */}
-        <div className="flex-shrink-0 flex justify-between items-center p-4 z-30">
+  {/* Top Controls Bar - sticky for desktop */}
+  <div className="flex-shrink-0 flex justify-between items-center p-4 z-30 lg:sticky lg:top-4">
           {/* Zoom Controls */}
           <div className="flex gap-2">
             <button
@@ -280,10 +280,11 @@ const ImageModal: React.FC<ImageModalProps> = ({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
+            className="p-3 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-yellow-500 hover:text-black transition-all duration-200 shadow-2xl border-2 border-white/20 hover:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-70"
             aria-label="Close Image Viewer"
+            style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.5)' }}
           >
-            <FiX size={24} />
+            <FiX size={28} />
           </button>
         </div>
 
@@ -300,10 +301,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
             </svg>
           </button>
 
-          {/* Main Image Container */}
+          {/* Main Image Container - scale to full viewport for desktop */}
           <div
             ref={containerRef}
-            className="relative w-full max-w-5xl h-full max-h-[75vh] lg:max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
+            className="relative w-full max-w-7xl h-full max-h-[80vh] lg:max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={handleMouseDown}
             onMouseMove={(e) => {

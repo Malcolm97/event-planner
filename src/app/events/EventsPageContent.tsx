@@ -2,7 +2,7 @@
 
 
 import AppFooter from '@/components/AppFooter';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { FiSmile, FiFilter, FiX } from 'react-icons/fi';
 import EventCard from '../../components/EventCard';
 import EventModal from '../../components/EventModal';
@@ -84,7 +84,7 @@ export default function EventsPageContent() {
     new Date(event.date) >= oneWeekAgo
   );
 
-  const fetchHost = async (userId: string) => {
+  const fetchHost = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from(TABLES.USERS)
@@ -104,7 +104,7 @@ export default function EventsPageContent() {
     } catch (err: any) {
       console.error('Error fetching host:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (selectedEvent?.created_by) {
@@ -112,7 +112,7 @@ export default function EventsPageContent() {
     } else {
       setHost(null);
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, fetchHost]);
 
   return (
     <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">

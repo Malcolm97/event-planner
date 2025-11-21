@@ -3,7 +3,7 @@ import AppFooter from '@/components/AppFooter';
 
 // Offline mode detection
 const isOffline = typeof window !== 'undefined' && !navigator.onLine;
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '../../lib/types';
@@ -92,7 +92,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   const [host, setHost] = useState<User | null>(null);
 
   // Fetch host details based on the event's creator ID
-  const fetchHost = async (userId: string) => {
+  const fetchHost = useCallback(async (userId: string) => {
     try {
       // First try to find user in cached data
       const cachedUser = users.find(user => user.id === userId);
@@ -109,7 +109,6 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
           .eq('id', userId);
 
         if (error) {
-    // ...existing code...
           return;
         }
 
@@ -123,9 +122,9 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
         setHost(null);
       }
     } catch (err: any) {
-  // ...existing code...
+      // ...existing code...
     }
-  };
+  }, [users, isOnline]);
 
   // Effect to fetch host details when selectedEvent changes
   useEffect(() => {
@@ -134,7 +133,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
     } else {
       setHost(null);
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, fetchHost]);
 
   const filteredEvents = events.filter(event => {
     if (!selectedCategory || selectedCategory === 'All Events') return true;

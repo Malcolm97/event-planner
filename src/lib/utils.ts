@@ -10,7 +10,22 @@ export function cn(...inputs: ClassValue[]) {
 export function getAllImageUrls(imageUrls: string[] | string | null | undefined): string[] {
   if (!imageUrls) return []
   if (Array.isArray(imageUrls)) return imageUrls
-  if (typeof imageUrls === 'string') return [imageUrls]
+  if (typeof imageUrls === 'string') {
+    const trimmed = imageUrls.trim();
+    // If the string looks like JSON (array or single-quoted), try to parse it
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed)) return parsed
+        if (typeof parsed === 'string') return [parsed]
+      } catch (err) {
+        // Fall through to return raw string below
+        if (process.env.NODE_ENV === 'development') console.log('getAllImageUrls: failed to parse JSON image_urls', err)
+      }
+    }
+    // Otherwise, return the single string as an array
+    return [imageUrls]
+  }
   return []
 }
 
@@ -18,21 +33,15 @@ export function getEventPrimaryImage(event: EventItem): string {
   const images = getAllImageUrls(event?.image_urls)
 
   // Debug logging to help identify issues
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`Event "${event?.name || 'Unknown'}" image data:`, {
-      image_urls: event?.image_urls,
-      allImages: images,
-      imageCount: images.length,
-      hasValidImages: images.some(img => isValidUrl(img))
-    });
-  }
+    // Keep only minimal debug information in development
+    if (process.env.NODE_ENV === 'development' && images.length === 0) {
+      console.debug(`Event "${event?.name || 'Unknown'}" has no parsed images`) // helpful during debugging only
+    }
 
   // Filter out invalid URLs and return the first valid one
   for (const image of images) {
     if (isValidUrl(image)) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Found valid image URL: ${image}`);
-      }
+    if (isValidUrl(image)) return image
       return image
     } else {
       if (process.env.NODE_ENV === 'development') {
@@ -42,9 +51,6 @@ export function getEventPrimaryImage(event: EventItem): string {
   }
 
   // Fallback to default image if no valid URLs found
-  if (process.env.NODE_ENV === 'development') {
-    console.log('No valid images found, using fallback: /next.svg');
-  }
   return '/next.svg'
 }
 
@@ -61,31 +67,24 @@ function isValidUrl(urlString: string): boolean {
   if (!urlString || typeof urlString !== 'string' || urlString.trim() === '') {
     return false
   }
-
+  // Accept absolute HTTP/HTTPS URLs
   try {
-    // Check if it's a valid URL format
     const url = new URL(urlString)
-
-    // Ensure it has a protocol (http or https)
     const isValidProtocol = url.protocol === 'http:' || url.protocol === 'https:'
-
-    // Additional check: ensure it has a hostname
     const hasHostname = Boolean(url.hostname && url.hostname.length > 0)
-
     const isValid = Boolean(isValidProtocol && hasHostname)
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`URL validation for "${urlString}":`, { protocol: isValidProtocol, hostname: hasHostname, valid: isValid });
-    }
-
-    return isValid
-  } catch (error) {
-    // If URL constructor throws, it's invalid
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`URL validation failed for "${urlString}": ${error instanceof Error ? error.message : String(error)}`);
-    }
-    return false
+    if (isValid) return true
+  } catch {
+    // It's not an absolute URL — continue to other checks
   }
+
+  // Accept relative URLs (starting with '/')
+  if (urlString.startsWith('/')) return true
+
+  // Accept data URIs and blob URIs
+  if (urlString.startsWith('data:') || urlString.startsWith('blob:')) return true
+
+  return false
 }
 
 // Auto-sync utility functions
