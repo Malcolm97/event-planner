@@ -161,9 +161,9 @@ export default function PWAInstallPrompt() {
             </div>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-gray-900">Install PNG Events</h3>
+            <h3 className="text-sm font-medium text-gray-900">Save PNG Events</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Tap the share button <span className="inline-block w-4 h-4 bg-gray-300 rounded text-xs text-center">⬆</span> then "Add to Home Screen"
+              Keepim event long homskrin blong yu - isi tumas!
             </p>
           </div>
           <button
@@ -191,22 +191,22 @@ export default function PWAInstallPrompt() {
           </div>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-900">Install PNG Events</h3>
+          <h3 className="text-sm font-medium text-gray-900">Save PNG Events</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Add to your home screen for the best experience
+            Putim long homskrin blong yu - isi tumas!
           </p>
           <div className="flex space-x-2 mt-3">
             <button
               onClick={handleInstallClick}
               className="flex-1 bg-yellow-400 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-yellow-500 transition-colors"
             >
-              Install
+              Save
             </button>
             <button
               onClick={handleDismiss}
               className="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
             >
-              Not now
+              Maybe later
             </button>
           </div>
         </div>

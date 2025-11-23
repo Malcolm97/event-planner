@@ -285,13 +285,12 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
         <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center gap-8 sm:gap-10">
           <div className="animate-bounce-in">
-            <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
-              Local Events Near You
-            </h1>
-            <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
-              Discover concerts, festivals, workshops, and more happening in your area.
-              Create unforgettable memories with events that matter.
-            </p>
+          <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
+            PNG Events
+          </h1>
+          <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
+            Discover cultural festivals, rugby matches, community gatherings, and more happening across Papua New Guinea.
+          </p>
           </div>
 
           {/* Search and Filter Controls - Mobile Optimized */}

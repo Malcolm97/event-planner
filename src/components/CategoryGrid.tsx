@@ -6,34 +6,34 @@ import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'rea
 import type { IconType } from 'react-icons';
 import { EventItem } from '@/lib/types';
 
-// Define categories and their properties
+// Define PNG-specific categories and their properties
 const allCategories = [
-  { name: 'Music', icon: FiMusic, color: 'bg-purple-100 text-purple-600' },
-  { name: 'Art', icon: FiImage, color: 'bg-pink-100 text-pink-600' },
-  { name: 'Food', icon: FiCoffee, color: 'bg-orange-100 text-orange-600' },
-  { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
-  { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
-  { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Cultural Festivals', icon: FiMusic, color: 'bg-purple-100 text-purple-600' },
+  { name: 'Rugby & Sports', icon: FiHeart, color: 'bg-green-100 text-green-600' },
+  { name: 'Community Events', icon: FiCoffee, color: 'bg-orange-100 text-orange-600' },
+  { name: 'Music & Concerts', icon: FiMusic, color: 'bg-pink-100 text-pink-600' },
+  { name: 'Art & Exhibitions', icon: FiImage, color: 'bg-blue-100 text-blue-600' },
+  { name: 'Business & Tech', icon: FiCpu, color: 'bg-indigo-100 text-indigo-600' },
   { name: 'Other', icon: FiStar, color: 'bg-gray-100 text-gray-700' },
 ];
 
 const categoryIconMap: { [key: string]: IconType } = {
-  'Music': FiMusic,
-  'Art': FiImage,
-  'Food': FiCoffee,
-  'Technology': FiCpu,
-  'Wellness': FiHeart,
-  'Comedy': FiSmile,
+  'Cultural Festivals': FiMusic,
+  'Rugby & Sports': FiHeart,
+  'Community Events': FiCoffee,
+  'Music & Concerts': FiMusic,
+  'Art & Exhibitions': FiImage,
+  'Business & Tech': FiCpu,
   'Other': FiStar,
 };
 
 const categoryColorMap: { [key: string]: string } = {
-  'Music': 'bg-purple-100 text-purple-600',
-  'Art': 'bg-pink-100 text-pink-600',
-  'Food': 'bg-orange-100 text-orange-600',
-  'Technology': 'bg-blue-100 text-blue-600',
-  'Wellness': 'bg-green-100 text-green-600',
-  'Comedy': 'bg-yellow-100 text-yellow-600',
+  'Cultural Festivals': 'bg-purple-100 text-purple-600',
+  'Rugby & Sports': 'bg-green-100 text-green-600',
+  'Community Events': 'bg-orange-100 text-orange-600',
+  'Music & Concerts': 'bg-pink-100 text-pink-600',
+  'Art & Exhibitions': 'bg-blue-100 text-blue-600',
+  'Business & Tech': 'bg-indigo-100 text-indigo-600',
   'Other': 'bg-gray-100 text-gray-700',
 };
 

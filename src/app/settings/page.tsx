@@ -630,13 +630,9 @@ export default function SettingsPage() {
             <p className="text-gray-700 mb-4">
               Have suggestions or need help? We'd love to hear from you!
             </p>
-            <motion.a
-              href="mailto:support@pngevents.com"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Contact Support
-            </motion.a>
+            <div className="text-sm text-gray-600 mt-2">
+              Feature coming soon - stay tuned!
+            </div>
           </div>
         </motion.section>
         </div>
