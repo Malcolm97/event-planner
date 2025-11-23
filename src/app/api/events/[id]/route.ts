@@ -2,6 +2,58 @@ import { NextResponse } from 'next/server';
 import { supabase, TABLES } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
+// Function to send push notifications for updated events to users who saved them
+async function sendPushNotificationForUpdatedEvent(event: any) {
+  try {
+    // Get all users who saved this event
+    const { data: savedEvents, error: savedError } = await supabase
+      .from(TABLES.SAVED_EVENTS)
+      .select('user_id')
+      .eq('event_id', event.id);
+
+    if (savedError || !savedEvents || savedEvents.length === 0) {
+      console.log(`No users have saved event ${event.id}, skipping notifications`);
+      return;
+    }
+
+    // Get push subscriptions for these users
+    const userIds = savedEvents.map(se => se.user_id);
+    const { data: subscriptions, error: subError } = await supabase
+      .from('push_subscriptions')
+      .select('user_id, subscription')
+      .in('user_id', userIds);
+
+    if (subError || !subscriptions || subscriptions.length === 0) {
+      console.log(`No push subscriptions found for users who saved event ${event.id}`);
+      return;
+    }
+
+    // Call the send-push-notification API with targeted subscriptions
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-push-notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'Event Updated!',
+        body: `${event.name} has been updated`,
+        url: `/events/${event.id}`,
+        eventId: event.id,
+        targetSubscriptions: subscriptions // Send to specific users only
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send push notifications for updated event:', response.status);
+    } else {
+      const result = await response.json();
+      console.log(`Push notifications sent for updated event: ${result.sent || 0} successful`);
+    }
+  } catch (err) {
+    console.error('Error sending push notifications for updated event:', err);
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -278,6 +330,11 @@ export async function PUT(
       console.error('Error updating event:', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Trigger push notifications for updated event (don't await to avoid blocking response)
+    sendPushNotificationForUpdatedEvent(data).catch(err => {
+      console.error('Failed to send push notification for updated event:', err);
+    });
 
     return NextResponse.json(data);
   } catch (error: any) {

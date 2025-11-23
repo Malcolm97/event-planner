@@ -55,8 +55,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from(TABLES.EVENTS)
-      .select(selectedFields)
-      .order('date', { ascending: true });
+      .select(selectedFields);
 
     // Apply category filter if provided
     if (category) {
@@ -67,6 +66,11 @@ export async function GET(request: Request) {
     if (upcoming === 'true') {
       const now = new Date().toISOString();
       query = query.gte('date', now);
+      // Use optimized index for upcoming events
+      query = query.order('date', { ascending: true });
+    } else {
+      // For general queries, order by date
+      query = query.order('date', { ascending: true });
     }
 
     // Apply pagination

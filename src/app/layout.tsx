@@ -99,6 +99,25 @@ export default function RootLayout({
                 });
             });
           }
+
+          // Track user interactions and page load time for PWA install prompt timing
+          window.pageLoadTime = Date.now();
+          window.userHasInteracted = false;
+
+          // Track user interactions
+          const trackInteraction = () => {
+            window.userHasInteracted = true;
+            // Remove listeners after first interaction
+            document.removeEventListener('click', trackInteraction);
+            document.removeEventListener('touchstart', trackInteraction);
+            document.removeEventListener('keydown', trackInteraction);
+            document.removeEventListener('scroll', trackInteraction);
+          };
+
+          document.addEventListener('click', trackInteraction, { once: true });
+          document.addEventListener('touchstart', trackInteraction, { once: true });
+          document.addEventListener('keydown', trackInteraction, { once: true });
+          document.addEventListener('scroll', trackInteraction, { once: true });
           `}
         </Script>
         <Analytics />

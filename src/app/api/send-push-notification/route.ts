@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    const { title, body: messageBody, url, eventId } = body;
+    const { title, body: messageBody, url, eventId, targetSubscriptions } = body;
 
     // Validate required fields
     if (!title || !messageBody) {
@@ -25,14 +25,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all push subscriptions
-    const { data: subscriptions, error } = await supabase
-      .from('push_subscriptions')
-      .select('user_id, subscription');
+    let subscriptions;
 
-    if (error) {
-      console.error('Error fetching push subscriptions:', error);
-      return NextResponse.json({ error: 'Failed to fetch subscriptions' }, { status: 500 });
+    // If targetSubscriptions is provided, use those specific subscriptions
+    if (targetSubscriptions && Array.isArray(targetSubscriptions) && targetSubscriptions.length > 0) {
+      subscriptions = targetSubscriptions;
+      console.log(`Using ${subscriptions.length} targeted subscriptions`);
+    } else {
+      // Otherwise, get all push subscriptions (for new event announcements)
+      const { data: allSubscriptions, error } = await supabase
+        .from('push_subscriptions')
+        .select('user_id, subscription');
+
+      if (error) {
+        console.error('Error fetching push subscriptions:', error);
+        return NextResponse.json({ error: 'Failed to fetch subscriptions' }, { status: 500 });
+      }
+
+      subscriptions = allSubscriptions;
     }
 
     if (!subscriptions || subscriptions.length === 0) {

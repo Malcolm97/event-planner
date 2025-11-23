@@ -39,12 +39,28 @@ export default function PWAInstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
-      // Show prompt after a short delay to avoid being too intrusive
-      setTimeout(() => {
-        if (!isStandalone) {
-          setShowPrompt(true);
+      // Enhanced timing: Show prompt after user interaction and some time spent on site
+      const showPromptWithDelay = () => {
+        // Check if user has been on the site for at least 30 seconds
+        const timeOnSite = Date.now() - (window as any).pageLoadTime;
+        if (timeOnSite > 30000 && !isStandalone) {
+          // Check if user has scrolled or interacted with the page
+          const hasInteracted = (window as any).userHasInteracted;
+          if (hasInteracted) {
+            setShowPrompt(true);
+          } else {
+            // Wait a bit more for interaction
+            setTimeout(() => {
+              if ((window as any).userHasInteracted) {
+                setShowPrompt(true);
+              }
+            }, 10000);
+          }
         }
-      }, 3000);
+      };
+
+      // Wait for initial load and some user activity
+      setTimeout(showPromptWithDelay, 5000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);

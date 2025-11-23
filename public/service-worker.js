@@ -7,11 +7,11 @@ const APP_SHELL_CACHE = 'event-planner-app-shell-v9';
 
 // Cache size limits for better performance
 const CACHE_LIMITS = {
-  [STATIC_CACHE]: 100,
-  [DYNAMIC_CACHE]: 50,
-  [API_CACHE]: 30,
-  [PAGES_CACHE]: 10,
-  [APP_SHELL_CACHE]: 20
+  [STATIC_CACHE]: 150,    // Increased for better PWA performance
+  [DYNAMIC_CACHE]: 75,    // Increased for more dynamic content
+  [API_CACHE]: 50,        // Increased for better API caching
+  [PAGES_CACHE]: 15,      // Increased for more offline pages
+  [APP_SHELL_CACHE]: 25   // Increased for better app shell caching
 };
 
 // Core static assets to cache immediately - only critical ones
