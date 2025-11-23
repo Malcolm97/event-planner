@@ -6,7 +6,7 @@ import Link from "next/link";
 import Button from "@/components/Button";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import SuccessModal from '@/components/SuccessModal';
+
 import { getSigninRedirect, getSigninModalState, clearSigninRedirect, ModalState, safeRedirect } from '@/lib/utils';
 
 // Force dynamic rendering to prevent prerendering issues
@@ -233,7 +233,7 @@ export default function SignInPage() {
         </h1>
           <p className="text-gray-600 text-lg">Sign in to discover and create amazing events</p>
         </div>
-        
+
         {/* Tabs */}
         <div className="flex mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-1">
           <Button
@@ -257,7 +257,7 @@ export default function SignInPage() {
             Register
           </Button>
         </div>
-        
+
         <div className="flex flex-col gap-5">
           {isForgotPassword ? (
             <>
@@ -423,13 +423,13 @@ export default function SignInPage() {
             </>
           )}
         </div>
-        
+
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
             <p className="text-red-700 text-sm font-medium text-center">{error}</p>
           </div>
         )}
-        
+
         <Button
           type="submit"
           disabled={loading}
@@ -441,10 +441,15 @@ export default function SignInPage() {
       </form>
       </div>
       {showSuccessModal && (
-        <SuccessModal
-          message={successMessage}
-          onClose={handleCloseSuccessModal}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Success</h3>
+            <p className="text-gray-700 mb-6">{successMessage}</p>
+            <Button onClick={handleCloseSuccessModal} className="w-full">
+              OK
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

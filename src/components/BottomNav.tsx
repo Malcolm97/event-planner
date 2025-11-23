@@ -1,28 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu, FiUsers } from 'react-icons/fi';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { toast } from 'react-hot-toast';
-import { getLastCommitDate } from '@/lib/github';
 
 export default function BottomNav() {
   const { isOnline } = useNetworkStatus();
   const router = useRouter();
   const currentPath = usePathname();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
-  const [lastCommitDate, setLastCommitDate] = useState<string | null>(null);
-
-  // Fetch last commit date on mount
-  useEffect(() => {
-    const fetchCommitDate = async () => {
-      const date = await getLastCommitDate();
-      setLastCommitDate(date);
-    };
-    fetchCommitDate();
-  }, []);
 
   const navItems = [
     {
@@ -201,9 +190,6 @@ export default function BottomNav() {
               {/* Footer */}
               <div className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 space-y-1">
                 <p>Version 0.1.0</p>
-                {lastCommitDate && (
-                  <p>Last updated: {lastCommitDate}</p>
-                )}
                 <p className="mt-2">© 2025 PNG Events. All rights reserved.</p>
               </div>
             </div>

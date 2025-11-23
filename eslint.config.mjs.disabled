@@ -1,6 +1,0 @@
-export default {
-  extends: ['next/core-web-vitals', 'next/typescript'],
-  rules: {
-    // Add any custom rules here if needed
-  },
-};

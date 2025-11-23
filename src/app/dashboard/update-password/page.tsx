@@ -5,7 +5,7 @@ import { AuthChangeEvent } from '@supabase/supabase-js';
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
-import SuccessModal from '@/components/SuccessModal';
+
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
@@ -112,10 +112,18 @@ export default function UpdatePasswordPage() {
         </form>
       </div>
       {showSuccessModal && (
-        <SuccessModal
-          message={successMessage}
-          onClose={handleCloseSuccessModal}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-green-600 mb-2">Success!</h3>
+            <p className="text-gray-700 mb-4">{successMessage}</p>
+            <button
+              onClick={handleCloseSuccessModal}
+              className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

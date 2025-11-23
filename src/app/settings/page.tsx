@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { isAutoSyncEnabled } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
-import ToggleSwitch from "@/components/ToggleSwitch";
+
 import CustomSelect, { SelectOption } from "@/components/CustomSelect";
 
 export default function SettingsPage() {
@@ -421,12 +421,13 @@ export default function SettingsPage() {
                       )}
                     </div>
                   </div>
-                  <ToggleSwitch
+                  <input
+                    type="checkbox"
                     checked={pushSubscribed}
                     disabled={pushLoading || pushPermission === 'denied' || !isPWA}
-                    onChange={async (checked) => {
+                    onChange={async (e) => {
                       try {
-                        if (checked) {
+                        if (e.target.checked) {
                           await subscribeToPush();
                         } else {
                           await unsubscribeFromPush();
@@ -435,6 +436,7 @@ export default function SettingsPage() {
                         console.error('Push notification toggle failed:', error);
                       }
                     }}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
                 </div>
               </motion.div>
@@ -453,12 +455,14 @@ export default function SettingsPage() {
                   <p className="text-sm text-gray-600">Automatically sync data in background</p>
                 </div>
               </div>
-              <ToggleSwitch
+              <input
+                type="checkbox"
                 checked={autoSync}
-                onChange={(checked) => {
-                  setAutoSync(checked);
-                  savePreferences({ autoSync: checked });
+                onChange={(e) => {
+                  setAutoSync(e.target.checked);
+                  savePreferences({ autoSync: e.target.checked });
                 }}
+                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
               />
             </motion.div>
 

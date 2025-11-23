@@ -1,136 +1,158 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { supabase, TABLES } from '@/lib/supabase';
-import EventCard from './EventCard';
-import { getEvents as getCachedEvents, addEvents } from '@/lib/indexedDB';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { EventItem } from '@/lib/types';
-import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import EventCard from '@/components/EventCard';
+import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
+import Button from '@/components/Button';
 
-import React from 'react';
-const EventsList = React.memo(function EventsList() {
-  const [events, setEvents] = useState<EventItem[]>([]); // Use EventItem type
-  const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false); // State for syncing indicator
-  const { isOnline, setLastSyncTime } = useNetworkStatus();
+interface EventsListProps {
+  events: EventItem[];
+  loading?: boolean;
+  onEventClick: (event: EventItem) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  showViewAllButton?: boolean;
+  viewAllHref?: string;
+  emptyStateMessage?: string;
+  emptyStateIcon?: string;
+  emptyStateTitle?: string;
+}
 
+const EventsList = memo(function EventsList({
+  events,
+  loading = false,
+  onEventClick,
+  onLoadMore,
+  hasMore = false,
+  loadingMore = false,
+  showViewAllButton = true,
+  viewAllHref = '/events',
+  emptyStateMessage = 'Check back later for new events.',
+  emptyStateIcon = '📅',
+  emptyStateTitle = 'No upcoming events'
+}: EventsListProps) {
+  const [displayedEvents, setDisplayedEvents] = useState<EventItem[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Update displayed events when events prop changes
   useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      setIsSyncing(false); // Reset syncing state on initial load
-      try {
-        // 1. Try to load from cache first
-        let cachedEvents: EventItem[] = [];
-        try {
-          cachedEvents = await getCachedEvents();
-        } catch (cacheError) {
-          console.warn('Failed to load from cache:', cacheError);
-        }
-        
-        if (cachedEvents && cachedEvents.length > 0) {
-          setEvents(cachedEvents);
-          // If online, try to refresh from API in the background
-          if (isOnline) {
-            refreshEventsFromAPI(); // This will set isSyncing true internally
-          }
-        } else {
-          // If cache is empty, try to fetch from API
-          if (isOnline) {
-            await refreshEventsFromAPI(); // This will set isSyncing true internally
-          } else {
-            // Offline and no cache: show fallback message
-            setEvents([]); // Ensure events is empty for fallback display
-          }
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
-        // Handle cache read errors, potentially fall back to API or show error
-        if (isOnline) {
-          await refreshEventsFromAPI(); // This will set isSyncing true internally
-        } else {
-          setEvents([]); // Ensure events is empty for fallback display
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (events && events.length > 0) {
+      setDisplayedEvents(events);
+    } else {
+      setDisplayedEvents([]);
+    }
+  }, [events]);
 
-    const refreshEventsFromAPI = async () => {
-      if (!isOnline) return; // Only sync if online
+  const handleLoadMore = useCallback(async () => {
+    if (!onLoadMore || isLoadingMore || !hasMore) return;
 
-      setIsSyncing(true); // Start syncing
-      try {
-        const response = await fetch('/api/events');
-        if (!response.ok) {
-          throw new Error(`API error: ${response.statusText}`);
-        }
-        const data: EventItem[] = await response.json();
-        setEvents(data);
-        // Update cache with fresh data
-        try {
-          await addEvents(data);
-        } catch (cacheError) {
-          console.warn('Failed to update cache:', cacheError);
-        }
-        setLastSyncTime(new Date()); // Update last synced timestamp
-      } catch (error) {
-        console.error('Error fetching events from API:', error);
-        // If API fetch fails, and we have cached data, keep the cached data.
-        // If no cached data and API fails, the fallback message will be shown.
-      } finally {
-        setIsSyncing(false); // End syncing
-      }
-    };
+    setIsLoadingMore(true);
+    try {
+      await onLoadMore();
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [onLoadMore, isLoadingMore, hasMore]);
 
-    fetchEvents();
-  }, [isOnline]); // Re-run effect if online status changes
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!hasMore || !onLoadMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    const sentinel = document.getElementById('load-more-sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, [handleLoadMore, hasMore, isLoadingMore, onLoadMore]);
 
   if (loading) {
     return (
-      <div className="text-center py-16">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-        <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
-      </div>
+      <SkeletonGrid count={4}>
+        <SkeletonEventCard />
+      </SkeletonGrid>
     );
   }
 
-  // Show syncing indicator if syncing and no events are loaded yet
-  if (isSyncing && events.length === 0) {
+  if (displayedEvents.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="text-gray-500 mt-6 text-lg">Syncing events...</p>
-      </div>
-    );
-  }
-
-  // Modified empty state to show fallback message when offline and no cache
-  if (events.length === 0 && !isOnline) {
-    return (
-      <div className="text-center py-16">
-        <div className="text-6xl mb-4">❌</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">You are offline</h3>
-        <p className="text-gray-500">No events could be loaded. Please check your connection.</p>
-      </div>
-    );
-  }
-  
-  if (events.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <div className="text-6xl mb-4">📅</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
-        <p className="text-gray-500">Check back later for new events.</p>
+      <div className="col-span-full text-center py-20">
+        <div className="text-8xl mb-6">{emptyStateIcon}</div>
+        <h3 className="text-heading-lg mb-4">{emptyStateTitle}</h3>
+        <p className="text-body-sm text-gray-500">{emptyStateMessage}</p>
+        {showViewAllButton && (
+          <Button
+            variant="secondary"
+            size="lg"
+            className="mt-8"
+            aria-label="Retry loading events"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      {events.map(event => (
-        <EventCard key={event.id} event={event} />
-      ))}
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
+        {displayedEvents.map(event => (
+          <EventCard
+            key={event.id}
+            event={event}
+            onClick={() => onEventClick(event)}
+          />
+        ))}
+      </div>
+
+      {/* Load More Sentinel for Infinite Scroll */}
+      {hasMore && (
+        <div id="load-more-sentinel" className="flex justify-center py-8">
+          {isLoadingMore ? (
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-500"></div>
+              <span className="text-sm text-gray-600">Loading more events...</span>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+            >
+              Load More Events
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* View All Button */}
+      {showViewAllButton && !hasMore && (
+        <div className="flex justify-center mt-16">
+          <Button asChild size="lg">
+            <a href={viewAllHref}>
+              View all Events
+            </a>
+          </Button>
+        </div>
+      )}
     </div>
   );
 });
+
+EventsList.displayName = 'EventsList';
+
 export default EventsList;

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { useSwipe } from '@/hooks/useSwipe';
+
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {

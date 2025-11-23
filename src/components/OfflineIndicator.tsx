@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { getUploadQueueStats, getQueuedUploads } from '../lib/imageUpload';
-import QueueManagementModal from './QueueManagementModal';
 
 interface OfflineIndicatorProps {
   className?: string;
@@ -217,12 +216,6 @@ export default function OfflineIndicator({ className = '' }: OfflineIndicatorPro
             <div className="mt-3 flex justify-between items-center text-sm">
               <span>Total queued: {queueStats.total}</span>
               <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowQueueModal(true)}
-                  className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-xs font-medium transition-colors"
-                >
-                  Manage Queue
-                </button>
                 <span className="text-xs opacity-75">
                   Images will upload automatically when online
                 </span>
@@ -244,10 +237,6 @@ export default function OfflineIndicator({ className = '' }: OfflineIndicatorPro
       </div>
 
       {/* Queue Management Modal */}
-      <QueueManagementModal
-        isOpen={showQueueModal}
-        onClose={() => setShowQueueModal(false)}
-      />
     </div>
   );
 }

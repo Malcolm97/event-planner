@@ -6,12 +6,10 @@ import EventCard from '@/components/EventCard';
 import Button from '@/components/Button';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
-import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
-import type { IconType } from 'react-icons';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import { useEvents } from '@/hooks/useOfflineFirstData';
+import { useOptimizedData, useEvents } from '@/hooks/useOfflineFirstData';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 import ProgressiveLoader, { ProgressiveEnhancement } from '@/components/ProgressiveLoader';
 
@@ -22,42 +20,18 @@ const CustomSelect = dynamic(() => import('@/components/CustomSelect'), {
   ssr: false,
   loading: () => <div className="h-12 bg-gray-200 rounded-xl animate-pulse" />
 });
-
-// Define categories and their properties
-const allCategories = [
-  { name: 'Music', icon: FiMusic, color: 'bg-purple-100 text-purple-600' },
-  { name: 'Art', icon: FiImage, color: 'bg-pink-100 text-pink-600' },
-  { name: 'Food', icon: FiCoffee, color: 'bg-orange-100 text-orange-600' },
-  { name: 'Technology', icon: FiCpu, color: 'bg-blue-100 text-blue-600' },
-  { name: 'Wellness', icon: FiHeart, color: 'bg-green-100 text-green-600' },
-  { name: 'Comedy', icon: FiSmile, color: 'bg-yellow-100 text-yellow-600' },
-  { name: 'Other', icon: FiStar, color: 'bg-gray-100 text-gray-700' },
-];
-
-const categoryIconMap: { [key: string]: IconType } = {
-  'Music': FiMusic,
-  'Art': FiImage,
-  'Food': FiCoffee,
-  'Technology': FiCpu,
-  'Wellness': FiHeart,
-  'Comedy': FiSmile,
-  'Other': FiStar,
-};
-
-const serializableCategoryIconMap = Object.keys(categoryIconMap).reduce((acc, key) => {
-  acc[key] = key;
-  return acc;
-}, {} as { [key: string]: string });
-
-const categoryColorMap: { [key: string]: string } = {
-  'Music': 'bg-purple-100 text-purple-600',
-  'Art': 'bg-pink-100 text-pink-600',
-  'Food': 'bg-orange-100 text-orange-600',
-  'Technology': 'bg-blue-100 text-blue-600',
-  'Wellness': 'bg-green-100 text-green-600',
-  'Comedy': 'bg-yellow-100 text-yellow-600',
-  'Other': 'bg-gray-100 text-gray-700',
-};
+const CategoryGrid = dynamic(() => import('@/components/CategoryGrid'), {
+  ssr: false,
+  loading: () => <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} className="min-h-[140px] bg-gray-200 rounded-2xl animate-pulse" />
+    ))}
+  </div>
+});
+const EventsList = dynamic(() => import('@/components/EventsList'), {
+  ssr: false,
+  loading: () => <SkeletonGrid count={4}><SkeletonEventCard /></SkeletonGrid>
+});
 
 const popularPngCities = [
   "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
@@ -73,7 +47,7 @@ interface HomePageContentProps {
 }
 
 export default function HomePageContent({ initialEvents, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: HomePageContentProps) {
-  // Use the standardized offline-first data hook
+  // Use the optimized data hook for events with pagination support
   const { data: events, isLoading: loading, error: eventsError } = useEvents();
 
   const [filteredEvents, setFilteredEvents] = useState<EventItem[]>(initialEvents || []);
@@ -317,7 +291,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
               Discover concerts, festivals, workshops, and more happening in your area.
               Create unforgettable memories with events that matter.
-v            </p>
+            </p>
           </div>
 
           {/* Search and Filter Controls - Mobile Optimized */}
@@ -455,33 +429,7 @@ v            </p>
             <p className="text-body-sm text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
           <ProgressiveLoader priority="low" delay={200}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-              {allCategories
-                .filter(cat => {
-                  if (cat.name === 'Other') {
-                    const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
-                    return events.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
-                  } else {
-                    return events.some(ev => ev.category === cat.name);
-                  }
-                })
-                .map((cat) => {
-                  const Icon = categoryIconMap[cat.name] || FiStar;
-                  const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
-                  return (
-                    <Link
-                      href={`/categories?category=${encodeURIComponent(cat.name)}`}
-                      key={cat.name}
-                      className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${categoryColor} group`}
-                    >
-                      <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
-                        <Icon size={28} />
-                      </span>
-                      <span className="text-base font-bold text-center">{cat.name}</span>
-                    </Link>
-                  );
-                })}
-            </div>
+            <CategoryGrid events={events} />
           </ProgressiveLoader>
         </div>
       </section>
