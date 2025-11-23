@@ -36,74 +36,126 @@ async function checkAdminAccess() {
 }
 
 export async function GET(request: Request) {
-  // Check admin access for all admin API routes
-  const { isAdmin, error } = await checkAdminAccess()
-
-  if (!isAdmin) {
-    return NextResponse.json(
-      { error: 'Admin access required', details: error },
-      { status: 403 }
-    )
-  }
+  // Admin API routes are now publicly accessible - no authentication required
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const search = searchParams.get('search')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Max 100 items
+    const search = searchParams.get('search')?.trim()
 
-    let query = supabase
-      .from("categories")
-      .select(`
-        *,
-        events_count:events!category_id(count),
-        events_approved:events!category_id(approved)
-      `)
-
-    // Apply filters
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
-    }
-
-    // Get total count for pagination
-    const { count: totalCount, error: countError } = await supabase
-      .from("categories")
-      .select("*", { count: "exact", head: true })
-
-    if (countError) {
-      console.error("Error getting categories count:", countError)
-    }
-
-    // Apply pagination
-    const from = (page - 1) * limit
-    const to = from + limit - 1
-    query = query.range(from, to).order('name')
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error("Error fetching categories:", error)
+    // Validate pagination parameters
+    if (page < 1 || limit < 1) {
       return NextResponse.json(
-        { error: "Failed to fetch categories", details: error.message },
+        { error: "Invalid pagination parameters" },
+        { status: 400 }
+      )
+    }
+
+    // Build query to get all events with category data for aggregation
+    let eventsQuery = supabase
+      .from("events")
+      .select(`
+        category_id,
+        approved,
+        categories!inner (
+          id,
+          name,
+          description
+        )
+      `)
+      .not('category_id', 'is', null)
+
+    const { data: eventsData, error: eventsError } = await eventsQuery
+
+    if (eventsError) {
+      console.error("Error fetching events for categories:", eventsError)
+      return NextResponse.json(
+        { error: "Failed to fetch events data", details: eventsError.message },
         { status: 500 }
       )
     }
 
-    // Enrich data with usage statistics
-    const enrichedData = data?.map(category => {
-      const totalEvents = category.events_count?.[0]?.count || 0
-      const approvedEvents = category.events_approved?.filter((event: any) => event.approved).length || 0
+    // Aggregate categories and calculate event counts
+    const categoryStats = new Map<string, {
+      id: string
+      name: string
+      description: string | null
+      total_events: number
+      approved_events: number
+      pending_events: number
+    }>()
 
+    // Process events data to build category statistics
+    eventsData?.forEach((event: any) => {
+      const category = event.categories
+      if (!category) return
+
+      const categoryId = category.id
+      if (!categoryStats.has(categoryId)) {
+        categoryStats.set(categoryId, {
+          id: categoryId,
+          name: category.name,
+          description: category.description,
+          total_events: 0,
+          approved_events: 0,
+          pending_events: 0
+        })
+      }
+
+      const stats = categoryStats.get(categoryId)!
+      stats.total_events++
+
+      if (event.approved) {
+        stats.approved_events++
+      } else {
+        stats.pending_events++
+      }
+    })
+
+    // Get all categories (including those without events) for complete list
+    const { data: allCategories, error: categoriesError } = await supabase
+      .from("categories")
+      .select("id, name, description")
+      .order('name')
+
+    if (categoriesError) {
+      console.error("Error fetching all categories:", categoriesError)
+      return NextResponse.json(
+        { error: "Failed to fetch categories", details: categoriesError.message },
+        { status: 500 }
+      )
+    }
+
+    // Merge categories with stats (ensuring all categories are included)
+    const enrichedData = allCategories?.map(category => {
+      const stats = categoryStats.get(category.id)
       return {
-        ...category,
-        total_events: totalEvents,
-        approved_events: approvedEvents,
-        pending_events: totalEvents - approvedEvents,
-        events_count: undefined,
-        events_approved: undefined
+        id: category.id,
+        name: category.name,
+        description: category.description,
+        total_events: stats?.total_events || 0,
+        approved_events: stats?.approved_events || 0,
+        pending_events: stats?.pending_events || 0
       }
     }) || []
 
-    return NextResponse.json({
+    // Apply search filter to enriched data if needed
+    let filteredData = enrichedData
+    if (search && search.length > 0) {
+      filteredData = enrichedData.filter(category =>
+        category.name.toLowerCase().includes(search.toLowerCase()) ||
+        (category.description && category.description.toLowerCase().includes(search.toLowerCase()))
+      )
+    }
+
+    // Apply pagination
+    const totalCount = filteredData.length
+    const from = (page - 1) * limit
+    const to = Math.min(from + limit, totalCount)
+    const paginatedData = filteredData.slice(from, to)
+
+    // Add cache headers for better performance
+    const response = NextResponse.json({
       data: enrichedData,
       pagination: {
         page,
@@ -112,6 +164,11 @@ export async function GET(request: Request) {
         totalPages: Math.ceil((totalCount || 0) / limit)
       }
     })
+
+    // Cache for 30 seconds, revalidate on demand
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
+
+    return response
 
   } catch (error) {
     console.error("Unexpected error in categories API:", error)

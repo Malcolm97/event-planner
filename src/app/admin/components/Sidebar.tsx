@@ -25,7 +25,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       </div>
       <nav className="flex flex-col space-y-2">
         <Link
-          href="/admin"
+          href="/admin/dashboard"
           onClick={handleLinkClick}
           className="px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
         >
@@ -51,6 +51,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
           className="px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
         >
           Categories
+        </Link>
+        <Link
+          href="/admin/locations"
+          onClick={handleLinkClick}
+          className="px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          Locations
         </Link>
       </nav>
     </aside>

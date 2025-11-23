@@ -36,15 +36,7 @@ async function checkAdminAccess() {
 }
 
 export async function GET(request: Request) {
-  // Check admin access for all admin API routes
-  const { isAdmin, error } = await checkAdminAccess()
-
-  if (!isAdmin) {
-    return NextResponse.json(
-      { error: 'Admin access required', details: error },
-      { status: 403 }
-    )
-  }
+  // Admin API routes are now publicly accessible - no authentication required
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -53,28 +45,16 @@ export async function GET(request: Request) {
     const role = searchParams.get('role')
     const status = searchParams.get('status')
 
-    let query = supabase
-      .from("profiles")
-      .select("*")
+    // First, get users with pagination and search
+    let usersQuery = supabase.from("users").select("*")
 
-    // Apply filters
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)
+      usersQuery = usersQuery.or(`name.ilike.%${search}%,email.ilike.%${search}%`)
     }
 
-    if (role && role !== 'all') {
-      query = query.eq('role', role)
-    }
-
-    if (status === 'approved') {
-      query = query.eq('approved', true)
-    } else if (status === 'pending') {
-      query = query.eq('approved', false)
-    }
-
-    // Get total count for pagination
+    // Get total count
     const { count: totalCount, error: countError } = await supabase
-      .from("profiles")
+      .from("users")
       .select("*", { count: "exact", head: true })
 
     if (countError) {
@@ -84,24 +64,67 @@ export async function GET(request: Request) {
     // Apply pagination
     const from = (page - 1) * limit
     const to = from + limit - 1
-    query = query.range(from, to).order('updated_at', { ascending: false })
+    usersQuery = usersQuery.range(from, to).order('updated_at', { ascending: false })
 
-    const { data, error } = await query
+    const { data: usersData, error: usersError } = await usersQuery
 
-    if (error) {
-      console.error("Error fetching users:", error)
+    if (usersError) {
+      console.error("Error fetching users:", usersError)
       return NextResponse.json(
-        { error: "Failed to fetch users", details: error.message },
+        { error: "Failed to fetch users", details: usersError.message },
         { status: 500 }
       )
     }
 
-    // Enrich data with activity counts
-    const enrichedData = data?.map(user => ({
-      ...user,
+    // Get profiles data for all users
+    const userIds = usersData?.map(user => user.id) || []
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, role, approved, updated_at")
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError)
+    }
+
+    // Create a map of profiles by id
+    const profilesMap = (profilesData || []).reduce((acc: Record<string, any>, profile: any) => {
+      acc[profile.id] = profile
+      return acc
+    }, {})
+
+    // Apply role and status filters
+    let filteredUsers = usersData || []
+
+    if (role && role !== 'all') {
+      filteredUsers = filteredUsers.filter(user => profilesMap[user.id]?.role === role)
+    }
+
+    if (status === 'approved') {
+      filteredUsers = filteredUsers.filter(user => profilesMap[user.id]?.approved === true)
+    } else if (status === 'pending') {
+      filteredUsers = filteredUsers.filter(user => profilesMap[user.id]?.approved === false)
+    }
+
+    // Enrich data with activity counts and map fields
+    const enrichedData = filteredUsers.map(user => ({
+      id: user.id,
+      full_name: user.name,
+      email: user.email,
+      company: user.company,
+      phone: user.phone,
+      about: user.about,
+      photo_url: user.photo_url,
+      contact_method: user.contact_method,
+      whatsapp_number: user.whatsapp_number,
+      contact_visibility: user.contact_visibility,
+      role: profilesMap[user.id]?.role || 'user',
+      approved: profilesMap[user.id]?.approved || false,
+      created_at: profilesMap[user.id]?.updated_at || user.updated_at,
+      updated_at: user.updated_at,
       events_created: 0, // TODO: Calculate this separately if needed
       events_saved: 0 // TODO: Calculate this separately if needed
-    })) || []
+    }))
 
     return NextResponse.json({
       data: enrichedData,

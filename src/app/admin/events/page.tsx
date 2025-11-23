@@ -109,65 +109,7 @@ export default function EventsPage() {
     }
   }, [])
 
-  const handleApprove = async (eventId: string) => {
-    try {
-      const response = await fetch(`/api/admin/events/${eventId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ approved: true }),
-      })
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Event approved successfully",
-        })
-        fetchEvents() // Refresh the list
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to approve event",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to approve event",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDelete = async (eventId: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) return
-
-    try {
-      const response = await fetch(`/api/admin/events/${eventId}`, {
-        method: "DELETE",
-      })
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Event deleted successfully",
-        })
-        fetchEvents() // Refresh the list
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to delete event",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete event",
-        variant: "destructive",
-      })
-    }
-  }
 
   if (loading) {
     return <div className="text-center py-8">Loading events...</div>
@@ -245,25 +187,7 @@ export default function EventsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex space-x-2 ml-2">
-                      {!event.approved && (
-                        <Button
-                          onClick={() => handleApprove(event.id)}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
-                        >
-                          Approve
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => handleDelete(event.id)}
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 border-red-600 hover:bg-red-50 text-xs px-2 py-1"
-                      >
-                        Delete
-                      </Button>
-                    </div>
+
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <div className="flex items-center space-x-3">
@@ -301,9 +225,6 @@ export default function EventsPage() {
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -333,27 +254,6 @@ export default function EventsPage() {
                     }`}>
                       {event.approved ? 'Approved' : 'Pending'}
                     </span>
-                  </td>
-                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      {!event.approved && (
-                        <Button
-                          onClick={() => handleApprove(event.id)}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white min-w-[80px]"
-                        >
-                          Approve
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => handleDelete(event.id)}
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 border-red-600 hover:bg-red-50 min-w-[70px]"
-                      >
-                        Delete
-                      </Button>
-                    </div>
                   </td>
                 </tr>
               ))}

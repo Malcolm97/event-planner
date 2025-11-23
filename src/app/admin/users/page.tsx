@@ -80,9 +80,17 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers()
 
-    // Set up realtime subscription for profiles table
+    // Set up realtime subscription for users and profiles tables
     const channel = supabase
-      .channel('profiles_changes')
+      .channel('users_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'users' },
+        (payload) => {
+          console.log('Users change detected:', payload)
+          // Refresh data when changes occur
+          fetchUsers()
+        }
+      )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
         (payload) => {
@@ -102,65 +110,7 @@ export default function UsersPage() {
     }
   }, [])
 
-  const handleApprove = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ approved: true }),
-      })
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User approved successfully",
-        })
-        fetchUsers() // Refresh the list
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to approve user",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to approve user",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDelete = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return
-
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "DELETE",
-      })
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User deleted successfully",
-        })
-        fetchUsers() // Refresh the list
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to delete user",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      })
-    }
-  }
 
   if (loading) {
     return <div className="text-center py-8">Loading users...</div>
@@ -232,25 +182,6 @@ export default function UsersPage() {
                     <div className="font-medium text-gray-900">
                       {user.full_name || "No name"}
                     </div>
-                    <div className="flex space-x-2">
-                      {!user.approved && (
-                        <Button
-                          onClick={() => handleApprove(user.id)}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          Approve
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => handleDelete(user.id)}
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 border-red-600 hover:bg-red-50"
-                      >
-                        Delete
-                      </Button>
-                    </div>
                   </div>
                   <div className="flex items-center space-x-4 text-sm">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -294,9 +225,6 @@ export default function UsersPage() {
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -327,27 +255,6 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      {!user.approved && (
-                        <Button
-                          onClick={() => handleApprove(user.id)}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white min-w-[80px]"
-                        >
-                          Approve
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => handleDelete(user.id)}
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 border-red-600 hover:bg-red-50 min-w-[70px]"
-                      >
-                        Delete
-                      </Button>
-                    </div>
                   </td>
                 </tr>
               ))}

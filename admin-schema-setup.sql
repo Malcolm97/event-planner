@@ -13,6 +13,13 @@ CREATE TABLE IF NOT EXISTS public.categories (
   description text
 );
 
+-- Create locations table
+CREATE TABLE IF NOT EXISTS public.locations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text
+);
+
 -- Update events table to add admin fields
 ALTER TABLE public.events
 ADD COLUMN IF NOT EXISTS category_id uuid REFERENCES categories(id),
@@ -22,8 +29,22 @@ ADD COLUMN IF NOT EXISTS approved boolean DEFAULT false;
 -- Enable RLS on categories table
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
+-- Enable RLS on locations table
+ALTER TABLE public.locations ENABLE ROW LEVEL SECURITY;
+
 -- Categories policies: Allow admins to manage categories
 CREATE POLICY "Admins can manage categories" ON public.categories
+FOR ALL TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'admin'
+  )
+);
+
+-- Locations policies: Allow admins to manage locations
+CREATE POLICY "Admins can manage locations" ON public.locations
 FOR ALL TO authenticated
 USING (
   EXISTS (

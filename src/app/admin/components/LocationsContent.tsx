@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
 
-interface Category {
+interface Location {
   id: string
   name: string
   description?: string
@@ -20,15 +20,15 @@ interface PaginationInfo {
   totalPages: number
 }
 
-export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([])
+export default function LocationsContent() {
+  const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
-  const fetchCategories = async (page = 1) => {
+  const fetchLocations = async (page = 1, retryCount = 0) => {
     try {
       setError(null)
       const params = new URLSearchParams({
@@ -40,13 +40,20 @@ export default function CategoriesPage() {
       // Add cache busting for real-time updates
       params.append('_t', Date.now().toString())
 
-      const response = await fetch(`/api/admin/categories?${params}`, {
+      const response = await fetch(`/api/admin/locations?${params}`, {
         headers: {
           'Cache-Control': 'no-cache'
         }
       })
 
       if (!response.ok) {
+        // Handle specific HTTP status codes
+        if (response.status === 500 && retryCount < 2) {
+          // Retry on server errors up to 2 times
+          console.log(`Retrying locations fetch (attempt ${retryCount + 1})...`)
+          setTimeout(() => fetchLocations(page, retryCount + 1), 1000 * (retryCount + 1))
+          return
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
@@ -56,16 +63,22 @@ export default function CategoriesPage() {
         throw new Error(data.error)
       }
 
-      setCategories(data.data || [])
+      setLocations(data.data || [])
       setPagination(data.pagination)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to fetch categories"
-      setError(errorMessage)
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch locations"
+
+      // Only show error toast if this isn't a retry attempt
+      if (retryCount === 0) {
+        setError(errorMessage)
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      }
+
+      console.error("Locations fetch error:", error)
     } finally {
       setLoading(false)
     }
@@ -73,32 +86,32 @@ export default function CategoriesPage() {
 
   const handleSearch = () => {
     setLoading(true)
-    fetchCategories(1)
+    fetchLocations(1)
   }
 
   const handlePageChange = (page: number) => {
     setLoading(true)
-    fetchCategories(page)
+    fetchLocations(page)
   }
 
   useEffect(() => {
-    fetchCategories()
+    fetchLocations()
 
-    // Set up realtime subscription for categories table
+    // Set up realtime subscription for locations table
     const channel = supabase
-      .channel('categories_changes')
+      .channel('locations_changes')
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'categories' },
-        (payload: any) => {
-          console.log('Categories change detected:', payload)
+        { event: '*', schema: 'public', table: 'locations' },
+        (payload) => {
+          console.log('Locations change detected:', payload)
           // Refresh data when changes occur
-          fetchCategories()
+          fetchLocations()
         }
       )
       .subscribe()
 
     // Auto-refresh every 30 seconds as fallback
-    const interval = setInterval(fetchCategories, 30000)
+    const interval = setInterval(fetchLocations, 30000)
 
     return () => {
       channel.unsubscribe()
@@ -106,18 +119,16 @@ export default function CategoriesPage() {
     }
   }, [])
 
-
-
   if (loading) {
-    return <div className="text-center py-8">Loading categories...</div>
+    return <div className="text-center py-8">Loading locations...</div>
   }
 
   return (
     <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg lg:text-xl font-bold text-gray-900">Category Management</h2>
+        <h2 className="text-lg lg:text-xl font-bold text-gray-900">Location Management</h2>
         <div className="mt-2 sm:mt-0 text-sm text-gray-600">
-          {pagination ? `${pagination.total} categor${pagination.total !== 1 ? 'ies' : 'y'} total` : `${categories.length} categor${categories.length !== 1 ? 'ies' : 'y'} total`}
+          {pagination ? `${pagination.total} location${pagination.total !== 1 ? 's' : ''} total` : `${locations.length} location${locations.length !== 1 ? 's' : ''} total`}
         </div>
       </div>
 
@@ -127,7 +138,7 @@ export default function CategoriesPage() {
           <div>
             <input
               type="text"
-              placeholder="Search categories..."
+              placeholder="Search locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -144,20 +155,20 @@ export default function CategoriesPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {/* Mobile card view for very small screens */}
         <div className="block md:hidden">
-          {categories.length === 0 ? (
+          {locations.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No categories found
+              No locations found
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {categories.map((category) => (
-                <div key={category.id} className="p-4">
+              {locations.map((location) => (
+                <div key={location.id} className="p-4">
                   <div className="font-medium text-gray-900">
-                    {category.name}
+                    {location.name}
                   </div>
-                  {category.description && (
+                  {location.description && (
                     <div className="text-sm text-gray-500 mt-1">
-                      {category.description}
+                      {location.description}
                     </div>
                   )}
                 </div>
@@ -189,38 +200,38 @@ export default function CategoriesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {categories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-50">
+              {locations.map((location) => (
+                <tr key={location.id} className="hover:bg-gray-50">
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {category.name}
+                      {location.name}
                     </div>
                   </td>
                   <td className="px-4 lg:px-6 py-4">
                     <div className="text-sm text-gray-500 max-w-xs truncate">
-                      {category.description || "No description"}
+                      {location.description || "No description"}
                     </div>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {category.total_events || 0}
+                    {location.total_events || 0}
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      {category.approved_events || 0}
+                      {location.approved_events || 0}
                     </span>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      {category.pending_events || 0}
+                      {location.pending_events || 0}
                     </span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {categories.length === 0 && (
+          {locations.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              No categories found
+              No locations found
             </div>
           )}
         </div>

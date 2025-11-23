@@ -36,15 +36,7 @@ async function checkAdminAccess() {
 }
 
 export async function GET(request: Request) {
-  // Check admin access for all admin API routes
-  const { isAdmin, error } = await checkAdminAccess()
-
-  if (!isAdmin) {
-    return NextResponse.json(
-      { error: 'Admin access required', details: error },
-      { status: 403 }
-    )
-  }
+  // Admin API routes are now publicly accessible - no authentication required
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
