@@ -169,7 +169,7 @@ export default function TermsPage() {
                 <h3 className="text-xl font-medium text-gray-900">Platform IP</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
                   <li>The PNG Events platform, including software, design, logos, and branding, is protected by intellectual property laws</li>
-                  <li>You may not copy, modify, distribute, or reverse engineer our platform without permission</li>
+                  <li>You may not copy, modify, distribute or reverse engineer our platform without permission</li>
                   <li>Unauthorized use of our intellectual property may result in legal action</li>
                 </ul>
 
@@ -284,6 +284,8 @@ export default function TermsPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700"><strong>Address:</strong> Papua New Guinea</p>
               </div>
+            </section>
+          </div>
         </div>
       </div>
       <AppFooter />
