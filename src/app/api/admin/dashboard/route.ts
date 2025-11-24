@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
+import {
+  checkRateLimit,
+  createSecureResponse,
+  logSecurityEvent,
+  isSuspiciousRequest
+} from "@/lib/security"
 
 // Helper function to check admin access
 async function checkAdminAccess() {
@@ -35,8 +41,28 @@ async function checkAdminAccess() {
   }
 }
 
-export async function GET() {
-  // Admin API routes are now publicly accessible - no authentication required
+export async function GET(request: Request) {
+  // Check admin access
+  const adminCheck = await checkAdminAccess();
+  if (!adminCheck.isAdmin) {
+    logSecurityEvent('unauthorized_admin_access_attempt', {
+      path: '/api/admin/dashboard',
+      method: 'GET',
+    }, request as any);
+
+    return createSecureResponse(
+      { error: adminCheck.error || 'Admin access required' },
+      { status: 403 }
+    );
+  }
+
+  // Log successful admin access
+  logSecurityEvent('admin_access_granted', {
+    path: '/api/admin/dashboard',
+    method: 'GET',
+    userId: adminCheck.user?.id
+  }, request as any);
+
   try {
     // Get comprehensive dashboard statistics
     const [

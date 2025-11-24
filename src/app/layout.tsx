@@ -47,6 +47,12 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="PNG Events" />
 
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://dvqmdzzekmegwzcwfara.supabase.co" />
+        <link rel="preconnect" href="https://www.google.com" />
+        <link rel="preconnect" href="https://www.gstatic.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
         {/* iOS Icons */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png" />

@@ -134,6 +134,20 @@ const nextConfig = {
 
   // Enable React strict mode for better development experience
   reactStrictMode: true,
+
+  // Performance budgets
+  ...(process.env.NODE_ENV === 'production' && {
+    webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+      if (!dev && !isServer) {
+        config.performance = {
+          hints: 'warning',
+          maxEntrypointSize: 512000, // 512KB
+          maxAssetSize: 1024000,     // 1MB
+        };
+      }
+      return config;
+    },
+  }),
 };
 
 export default nextConfig;

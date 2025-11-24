@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "esliet . --slin.js,.jsx,.ts,. sx--ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "postcss:build": "postcss src/app/globals.css -o public/output.css"
   },
   "dependencies": {
@@ -18,6 +20,7 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/line-clamp": "^0.4.4",
+    "@types/react-google-recaptcha": "^2.1.9",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "class-variance-authority": "^0.7.1",
@@ -34,6 +37,7 @@
     "next": "^15.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-google-recaptcha": "^3.1.0",
     "react-hot-toast": "^2.6.0",
     "react-icons": "^4.10.1",
     "react-medium-image-zoom": "^5.4.0",
