@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "esliet . --slin.js,.jsx,.ts,. sx--ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "postcss:build": "postcss src/app/globals.css -o public/output.css"
   },
   "dependencies": {

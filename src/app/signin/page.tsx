@@ -15,6 +15,24 @@ export const dynamic = 'force-dynamic';
 export default function SignInPage() {
   const { isOnline } = useNetworkStatus(); // Get the network status
 
+  // All hooks must be called at the top level, before any conditional returns
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false); // New state for forgot password
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [phone, setPhone] = useState("");
+  const [about, setAbout] = useState("");
+  const [contactMethod, setContactMethod] = useState<'email' | 'phone' | 'both' | 'none'>('both');
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
+  const [successMessage, setSuccessMessage] = useState(""); // New state for success message
+  const router = useRouter();
+
   // If offline, show a message and a back button
   if (!isOnline) {
     return (
@@ -40,23 +58,6 @@ export default function SignInPage() {
       </div>
     );
   }
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isRegister, setIsRegister] = useState(false);
-  const [isForgotPassword, setIsForgotPassword] = useState(false); // New state for forgot password
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [phone, setPhone] = useState("");
-  const [about, setAbout] = useState("");
-  const [contactMethod, setContactMethod] = useState<'email' | 'phone' | 'both' | 'none'>('both');
-  const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
-  const [successMessage, setSuccessMessage] = useState(""); // New state for success message
-  const router = useRouter();
 
   useEffect(() => {
     // Check if user is already signed in

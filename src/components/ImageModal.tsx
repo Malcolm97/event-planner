@@ -76,6 +76,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
 }) => {
   const allImageUrls = getValidImageUrls(event?.image_urls);
   const hasImages = allImageUrls.length > 0;
+
+  // All hooks must be called before any conditional returns
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -85,8 +87,6 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  if (!hasImages) return null;
 
   // Determine the current image URL and alt text
   let currentImageUrl = '';
