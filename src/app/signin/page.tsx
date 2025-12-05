@@ -33,6 +33,17 @@ export default function SignInPage() {
   const [successMessage, setSuccessMessage] = useState(""); // New state for success message
   const router = useRouter();
 
+  useEffect(() => {
+    // Check if user is already signed in
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        router.push("/dashboard");
+      }
+    };
+    checkUser();
+  }, [router]);
+
   // If offline, show a message and a back button
   if (!isOnline) {
     return (
@@ -58,17 +69,6 @@ export default function SignInPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    // Check if user is already signed in
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        router.push("/dashboard");
-      }
-    };
-    checkUser();
-  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
