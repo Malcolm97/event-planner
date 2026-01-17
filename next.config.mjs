@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configure Turbopack (empty config to allow webpack config)
+  turbopack: {},
+
   // Production optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

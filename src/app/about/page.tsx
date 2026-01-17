@@ -18,8 +18,8 @@ import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 const team = [
   {
     name: 'Malcolm Sioni',
-    role: 'Founder & CEO',
-    bio: 'Passionate about connecting Papua New Guinean communities through technology. Leading the vision to make event discovery seamless and accessible to all.',
+    role: 'Founder',
+    bio: 'Passionate about connecting Papua New Guinean communities through technology.',
     image: '/window.svg' // Using a local image that's already cached by service worker
   }
 ];
