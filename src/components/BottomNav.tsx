@@ -190,7 +190,7 @@ export default function BottomNav() {
               {/* Footer */}
               <div className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 space-y-1">
                 <p>Version 0.1.0</p>
-                <p className="mt-2">© 2025 PNG Events. All rights reserved.</p>
+                <p className="mt-2">© 2026 PNG Events. All rights reserved.</p>
               </div>
             </div>
           </div>

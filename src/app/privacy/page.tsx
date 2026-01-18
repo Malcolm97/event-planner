@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       <div className="py-16 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
-          <p className="text-gray-600 mb-2">Last updated: November 23, 2025</p>
+          <p className="text-gray-600 mb-2">Last updated: January 18, 2026</p>
           <p className="text-gray-700 mb-8">
             PNG Events ("we," "us," or "our") is committed to protecting your privacy and personal information.
             This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our

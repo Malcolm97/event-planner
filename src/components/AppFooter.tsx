@@ -29,7 +29,7 @@ export default function AppFooter() {
 
           {/* Copyright */}
           <div className="text-gray-300 font-medium text-sm">
-            © 2025 PNG Events. All rights reserved.
+            © 2026 PNG Events. All rights reserved.
           </div>
         </div>
 
@@ -44,7 +44,7 @@ export default function AppFooter() {
             <Link href="/about" className="hover:text-yellow-400 text-gray-400 transition-colors" aria-label="About">About</Link>
           </div>
           <div className="text-gray-300 font-medium text-sm">
-            © 2025 PNG Events. All rights reserved.
+            © 2026 PNG Events. All rights reserved.
           </div>
         </div>
       </div>

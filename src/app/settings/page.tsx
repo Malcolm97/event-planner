@@ -598,7 +598,7 @@ export default function SettingsPage() {
               <span className="text-lg">📅</span>
               <div>
                 <span className="text-gray-800 font-medium">Last Updated</span>
-                <p className="text-sm text-gray-600">September 27, 2025</p>
+                <p className="text-sm text-gray-600">January 18, 2026</p>
               </div>
             </div>
 

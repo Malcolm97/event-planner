@@ -6,7 +6,7 @@ export default function TermsPage() {
       <div className="py-16 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-gray-900 mb-8">Terms of Service</h1>
-          <p className="text-gray-600 mb-2">Last updated: November 23, 2025</p>
+          <p className="text-gray-600 mb-2">Last updated: January 18, 2026</p>
           <p className="text-gray-700 mb-8">
             Welcome to PNG Events, Papua New Guinea's premier event discovery and management platform.
             By accessing or using our Progressive Web App (PWA), website, or services, you agree to be bound by these Terms of Service.

@@ -289,7 +289,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             PNG Events
           </h1>
           <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
-            Discover cultural festivals, rugby matches, community gatherings, and more happening across Papua New Guinea.
+            Discover cultural festivals, sporting events, community gatherings, and more happening across Papua New Guinea.
           </p>
           </div>
 
