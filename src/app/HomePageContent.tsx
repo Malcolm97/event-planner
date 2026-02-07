@@ -12,6 +12,7 @@ import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOptimizedData, useEvents } from '@/hooks/useOfflineFirstData';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 import ProgressiveLoader, { ProgressiveEnhancement } from '@/components/ProgressiveLoader';
+import { useNotificationClick } from '@/hooks/useNotificationClick';
 
 // Dynamic imports for better code splitting
 const EventModal = dynamic(() => import('@/components/EventModal'), { ssr: false });
@@ -114,6 +115,53 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       // ...existing code...
     }
   }, []);
+
+  // Handler for notification clicks - when user clicks a notification, open the event modal
+  const handleEventFromNotification = useCallback((eventId: string) => {
+    // Find the event in filtered events
+    const event = filteredEvents.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setDialogOpen(true);
+    } else {
+      // If event not in current list, fetch it from database
+      const fetchEventAndDisplay = async () => {
+        try {
+          const { data, error } = await supabase
+            .from(TABLES.EVENTS)
+            .select('*')
+            .eq('id', eventId)
+            .single();
+
+          if (!error && data) {
+            const eventItem: EventItem = {
+              ...data,
+              date: data.date ? String(data.date) : '',
+              id: String(data.id),
+              name: data.name,
+              location: data.location || '',
+              description: data.description || '',
+              category: data.category || 'Other',
+              presale_price: data.presale_price ?? 0,
+              gate_price: data.gate_price ?? 0,
+              image_urls: data.image_urls || [],
+              created_at: data.created_at || '',
+              featured: data.featured || false,
+              created_by: data.created_by || '',
+            };
+            setSelectedEvent(eventItem);
+            setDialogOpen(true);
+          }
+        } catch (error) {
+          console.error('Error fetching event from notification:', error);
+        }
+      };
+      fetchEventAndDisplay();
+    }
+  }, [filteredEvents]);
+
+  // Use the notification click hook to listen for clicks from service worker
+  useNotificationClick(handleEventFromNotification);
 
   useEffect(() => {
     if (selectedEvent?.created_by) {

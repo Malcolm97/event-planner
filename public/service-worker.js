@@ -756,3 +756,164 @@ self.addEventListener('message', (event) => {
     );
   }
 });
+
+// Handle incoming push notifications
+self.addEventListener('push', (event) => {
+  console.log('Push notification received:', event);
+
+  // Parse the push event data
+  let notificationData = {
+    title: 'Event Planner',
+    body: 'New event notification',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-96x96.png',
+    data: {
+      url: '/',
+      eventId: null
+    },
+    actions: [
+      {
+        action: 'view',
+        title: 'View Event'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss'
+      }
+    ]
+  };
+
+  // Parse event data if available
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+      notificationData = {
+        ...notificationData,
+        ...pushData,
+        data: {
+          ...notificationData.data,
+          ...(pushData.data || {})
+        }
+      };
+    } catch (error) {
+      console.error('Failed to parse push notification data:', error);
+      // Try text parsing as fallback for Android
+      try {
+        const textData = event.data.text();
+        console.log('Push data as text:', textData);
+      } catch (textError) {
+        console.error('Failed to parse push notification data as text:', textError);
+      }
+      // Continue with default notification data
+    }
+  }
+
+  // Display the notification with Android-optimized options
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      data: notificationData.data,
+      actions: notificationData.actions,
+      tag: 'event-notification', // Prevents duplicate notifications
+      requireInteraction: false, // Allow auto-close
+      vibrate: [200, 100, 200], // Vibration pattern for mobile
+      silent: false, // Enable sound on Android
+      timestamp: Date.now(), // Helps Android with notification time display
+    })
+    .catch((error) => {
+      console.error('Failed to show notification:', error);
+    })
+  );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event);
+
+  // Close the notification
+  event.notification.close();
+
+  // Get the event ID from notification data
+  const eventId = event.notification.data?.eventId;
+  const url = event.notification.data?.url || '/';
+
+  // Determine the action taken
+  if (event.action === 'dismiss') {
+    // User clicked dismiss - just close notification
+    return;
+  }
+
+  // Handle view action or general click
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        console.log(`Found ${clientList.length} open clients`);
+        
+        // Look for an existing window with the app
+        // Android may have different URL patterns, so check more broadly
+        for (let client of clientList) {
+          const clientUrl = new URL(client.url);
+          const clientPathname = clientUrl.pathname;
+          const isAppWindow = 
+            clientUrl.origin === new URL(url, self.location.href).origin ||
+            clientPathname === '/' || 
+            clientPathname.startsWith('/?') ||
+            clientUrl.hostname === 'localhost' ||
+            clientUrl.hostname === '127.0.0.1';
+          
+          if (isAppWindow) {
+            console.log('Found existing app window:', client.url);
+            // Focus existing window
+            client.focus();
+            
+            // Send message to client to open event modal
+            if (eventId) {
+              client.postMessage({
+                type: 'NOTIFICATION_CLICK',
+                eventId: eventId,
+                url: url
+              });
+            }
+            return client;
+          }
+        }
+
+        // If no window found, open a new one
+        console.log('No existing window found, opening new one:', url);
+        if (clients.openWindow) {
+          return clients.openWindow(url).then((client) => {
+            if (client && eventId) {
+              console.log('New window opened, sending notification message');
+              // Longer delay for Android to ensure app is fully loaded
+              setTimeout(() => {
+                client.postMessage({
+                  type: 'NOTIFICATION_CLICK',
+                  eventId: eventId,
+                  url: url
+                });
+              }, 1000); // Increased from 500ms to 1000ms for Android stability
+            } else if (client) {
+              console.log('Window opened but no eventId to send');
+            } else {
+              console.error('Failed to open window');
+            }
+            return client;
+          });
+        } else {
+          console.error('clients.openWindow not available');
+        }
+      })
+      .catch((error) => {
+        console.error('Error handling notification click:', error);
+      })
+  );
+});
+
+// Handle notification close events (user dismissed without clicking)
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed:', event.notification.data?.eventId);
+  // Could track dismissed notifications here if needed
+});

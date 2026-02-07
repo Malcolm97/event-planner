@@ -131,10 +131,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }
 
       // Get service worker registration
+      // On Android, ensure service worker is fully activated
       const registration = await navigator.serviceWorker.ready;
+      console.log('Service worker ready for subscription');
 
       // Check if already subscribed
       let subscription = await registration.pushManager.getSubscription();
+      console.log('Current subscription:', subscription ? 'exists' : 'none');
 
       if (!subscription) {
         // Subscribe with VAPID key
@@ -145,10 +148,15 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
 
+        // Subscribe with options that work well on Android
         subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
+          userVisibleOnly: true, // Required for Android
           applicationServerKey: applicationServerKey as BufferSource
         });
+        
+        console.log('Push subscription created successfully');
+      } else {
+        console.log('Already subscribed, reusing existing subscription');
       }
 
       if (!subscription) {
@@ -190,9 +198,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         throw new Error('Failed to save subscription');
       }
 
+      console.log('Subscription saved to database successfully');
       setIsSubscribed(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe';
+      console.error('Subscription error:', errorMessage);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -213,6 +223,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (subscription) {
         await subscription.unsubscribe();
+        console.log('Push subscription unsubscribed');
 
         // Remove from database
         const { data: { user } } = await supabase.auth.getUser();
@@ -223,15 +234,23 @@ export function usePushNotifications(): UsePushNotificationsReturn {
             .eq('user_id', user.id);
 
           if (dbError) {
-            console.error('Database error:', dbError);
+            console.error('Database error during unsubscribe:', dbError);
+            // Don't throw - subscription was already removed from browser
+          } else {
+            console.log('Subscription removed from database');
           }
         }
+      } else {
+        console.log('No subscription to unsubscribe from');
       }
 
       setIsSubscribed(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe';
+      console.error('Unsubscribe error:', errorMessage);
       setError(errorMessage);
+      // Still mark as unsubscribed even if database removal fails
+      setIsSubscribed(false);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);

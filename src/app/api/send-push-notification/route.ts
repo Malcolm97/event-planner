@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 const webpush = require('web-push');
 
 // Configure VAPID keys
@@ -32,10 +33,11 @@ export async function POST(request: NextRequest) {
       subscriptions = targetSubscriptions;
       console.log(`Using ${subscriptions.length} targeted subscriptions`);
     } else {
-      // Otherwise, get all push subscriptions (for new event announcements)
+      // Otherwise, get all push subscriptions from LOGGED-IN USERS ONLY (for new event announcements)
       const { data: allSubscriptions, error } = await supabase
         .from('push_subscriptions')
-        .select('user_id, subscription');
+        .select('user_id, subscription')
+        .not('user_id', 'is', null); // Ensure user_id is not null - must be logged-in users
 
       if (error) {
         console.error('Error fetching push subscriptions:', error);
@@ -50,10 +52,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'No subscribers to notify' });
     }
 
-    // Prepare notification payload
+    // Fetch event details if eventId is provided to include in notification
+    let eventDetails = null;
+    if (eventId) {
+      try {
+        const { data: eventData, error: eventError } = await supabase
+          .from('events')
+          .select('name, location, date, end_date')
+          .eq('id', eventId)
+          .single();
+
+        if (!eventError && eventData) {
+          eventDetails = eventData;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch event details for notification:', error);
+        // Continue without event details - not critical
+      }
+    }
+
+    // Format date/time for display
+    let dateTimeStr = '';
+    if (eventDetails) {
+      try {
+        const eventDate = new Date(eventDetails.date);
+        const options: Intl.DateTimeFormatOptions = {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        dateTimeStr = eventDate.toLocaleDateString('en-US', options);
+      } catch (error) {
+        console.warn('Failed to format event date:', error);
+      }
+    }
+
+    // Build enhanced notification body with event details
+    let enhancedBody = messageBody;
+    if (eventDetails) {
+      enhancedBody = `${eventDetails.name}\n📍 ${eventDetails.location}\n📅 ${dateTimeStr}`;
+    }
+
+    // Prepare notification payload with enhanced details
     const payload = JSON.stringify({
       title,
-      body: messageBody,
+      body: enhancedBody,
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-96x96.png',
       data: {
