@@ -36,7 +36,28 @@ export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
   const { toast } = useToast()
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const { data } = await supabase
+          .from('categories')
+          .select('id, name')
+          .order('name')
+
+        if (data) {
+          setCategories(data)
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   const fetchEvents = async (page = 1) => {
     try {
@@ -154,7 +175,11 @@ export default function EventsPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Categories</option>
-              {/* TODO: Load categories dynamically */}
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>

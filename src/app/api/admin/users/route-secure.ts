@@ -76,24 +76,38 @@ async function usersHandler(request: NextRequest) {
   }
 
   // Enrich data with activity counts and map fields
-  const enrichedData = filteredUsers.map(user => ({
-    id: user.id,
-    full_name: user.name,
-    email: user.email,
-    company: user.company,
-    phone: user.phone,
-    about: user.about,
-    photo_url: user.photo_url,
-    contact_method: user.contact_method,
-    whatsapp_number: user.whatsapp_number,
-    contact_visibility: user.contact_visibility,
-    role: profilesMap[user.id]?.role || 'user',
-    approved: profilesMap[user.id]?.approved || false,
-    created_at: profilesMap[user.id]?.updated_at || user.updated_at,
-    updated_at: user.updated_at,
-    events_created: 0, // TODO: Calculate this separately if needed
-    events_saved: 0 // TODO: Calculate this separately if needed
-  }))
+  const enrichedData = await Promise.all(filteredUsers.map(async (user) => {
+    // Count events created by this user
+    const { count: eventsCreated } = await supabase
+      .from('events')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', user.id);
+
+    // Count events saved by this user
+    const { count: eventsSaved } = await supabase
+      .from('saved_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    return {
+      id: user.id,
+      full_name: user.name,
+      email: user.email,
+      company: user.company,
+      phone: user.phone,
+      about: user.about,
+      photo_url: user.photo_url,
+      contact_method: user.contact_method,
+      whatsapp_number: user.whatsapp_number,
+      contact_visibility: user.contact_visibility,
+      role: profilesMap[user.id]?.role || 'user',
+      approved: profilesMap[user.id]?.approved || false,
+      created_at: profilesMap[user.id]?.updated_at || user.updated_at,
+      updated_at: user.updated_at,
+      events_created: eventsCreated || 0,
+      events_saved: eventsSaved || 0
+    };
+  }));
 
   return createAdminResponse({
     data: enrichedData,

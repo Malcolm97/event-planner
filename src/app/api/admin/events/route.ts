@@ -94,14 +94,32 @@ export async function GET(request: Request) {
     }
 
     // Enrich data with creator info and stats
-    const enrichedData = data?.map(event => ({
-      ...event,
-      creator_name: 'Unknown User', // TODO: Fetch creator info separately
-      creator_avatar: null,
-      category_name: event.categories?.name || 'Uncategorized',
-      saved_count: 0, // TODO: Calculate this separately if needed
-      categories: undefined
-    })) || []
+    // Fetch creator info and saved counts in parallel for better performance
+    const enrichedData = data ? await Promise.all(
+      data.map(async (event) => {
+        // Fetch creator name
+        const { data: creator } = await supabase
+          .from('users')
+          .select('name, photo_url')
+          .eq('id', event.created_by)
+          .single();
+
+        // Count how many users have saved this event
+        const { count: savedCount } = await supabase
+          .from('saved_events')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', event.id);
+
+        return {
+          ...event,
+          creator_name: creator?.name || 'Unknown User',
+          creator_avatar: creator?.photo_url || null,
+          category_name: event.categories?.name || 'Uncategorized',
+          saved_count: savedCount || 0,
+          categories: undefined
+        };
+      })
+    ) : [];
 
     return NextResponse.json({
       data: enrichedData,
