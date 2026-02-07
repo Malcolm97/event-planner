@@ -66,27 +66,35 @@ export default function SettingsPage() {
 
   // Load user and preferences from Supabase if logged in
   useEffect(() => {
+    let isMounted = true;
+
     const loadSettings = async () => {
       try {
         // Load sync status with error handling
         const status = await getSyncStatus();
-        if (status?.lastSync) {
+        if (isMounted && status?.lastSync) {
           setLastSync(new Date(status.lastSync).toLocaleString());
         }
       } catch (error) {
         console.error('Failed to load sync status:', error);
-        setLastSync("Error loading sync status");
+        if (isMounted) {
+          setLastSync("Error loading sync status");
+        }
       }
 
       // Load preferences from localStorage
-      setAutoSync(localStorage.getItem('autoSync') !== 'false');
-      setLanding(localStorage.getItem('landing') || 'home');
+      if (isMounted) {
+        setAutoSync(localStorage.getItem('autoSync') !== 'false');
+        setLanding(localStorage.getItem('landing') || 'home');
+      }
 
       // Load user and preferences from Supabase
       try {
         const { data } = await supabase.auth.getUser();
-        setUser(data.user);
-        if (data.user) {
+        if (isMounted) {
+          setUser(data.user);
+        }
+        if (data.user && isMounted) {
           const { data: profile, error } = await supabase
             .from('users')
             .select('preferences')
@@ -95,7 +103,7 @@ export default function SettingsPage() {
 
           if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
             console.error('Failed to load user preferences:', error);
-          } else if (profile?.preferences) {
+          } else if (profile?.preferences && isMounted) {
             try {
               const prefs = JSON.parse(profile.preferences);
               if (prefs.autoSync !== undefined) setAutoSync(prefs.autoSync);
@@ -111,6 +119,14 @@ export default function SettingsPage() {
     };
 
     loadSettings();
+
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+      if (saveTimeout.current) {
+        clearTimeout(saveTimeout.current);
+      }
+    };
   }, []);
 
   // Save preferences with proper error handling
@@ -118,16 +134,24 @@ export default function SettingsPage() {
     try {
       setSaveMsg('Saving preferences...');
 
-      // Save to localStorage immediately
+      // Save to localStorage immediately with error handling
       if (prefs.autoSync !== undefined) {
-        localStorage.setItem('autoSync', String(prefs.autoSync));
+        try {
+          localStorage.setItem('autoSync', String(prefs.autoSync));
+        } catch (storageError) {
+          console.error('Failed to save to localStorage:', storageError);
+        }
       }
       if (prefs.landing !== undefined) {
-        localStorage.setItem('landing', prefs.landing);
+        try {
+          localStorage.setItem('landing', prefs.landing);
+        } catch (storageError) {
+          console.error('Failed to save to localStorage:', storageError);
+        }
       }
 
       // Save to Supabase if user is logged in
-      if (user) {
+      if (user && user.id) {
         const currentPrefs = {
           autoSync: prefs.autoSync !== undefined ? prefs.autoSync : autoSync,
           landing: prefs.landing !== undefined ? prefs.landing : landing
@@ -154,7 +178,8 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Error saving preferences:', error);
       setSaveMsg('Failed to save preferences');
-      setTimeout(() => setSaveMsg(''), 3000);
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      saveTimeout.current = setTimeout(() => setSaveMsg(''), 3000);
     }
   };
 
@@ -168,23 +193,43 @@ export default function SettingsPage() {
     setError(null);
     try {
       // Clear IndexedDB data
-      await clearAllData();
+      try {
+        await clearAllData();
+      } catch (dbError) {
+        console.error('Failed to clear IndexedDB:', dbError);
+        throw new Error('Failed to clear local database');
+      }
 
       // Clear service worker cache
       if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('Service worker cache cleared');
+        try {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(name => 
+              caches.delete(name).catch(err => 
+                console.warn(`Failed to clear cache: ${name}`, err)
+              )
+            )
+          );
+          console.log('Service worker cache cleared');
+        } catch (cacheError) {
+          console.warn('Error clearing service worker cache:', cacheError);
+          // Continue even if service worker cache clearing fails
+        }
       }
 
       // Clear last sync status
-      setLastSync(null);
+      try {
+        setLastSync(null);
+      } catch (statusError) {
+        console.warn('Error clearing sync status:', statusError);
+      }
 
       setCleared(true);
       setTimeout(() => setCleared(false), 2000);
     } catch (e) {
       console.error('Failed to clear cache:', e);
-      setError("Failed to clear cache");
+      setError(e instanceof Error ? e.message : "Failed to clear cache");
     } finally {
       setClearing(false);
     }
@@ -199,33 +244,51 @@ export default function SettingsPage() {
 
     setSyncingNow(true);
     setSyncResult(null);
+    setError(null);
 
     try {
-      // Refresh events cache
-      await refreshEventsCache();
+      // Refresh events cache with error handling
+      try {
+        await refreshEventsCache();
+      } catch (cacheError) {
+        console.error('Error refreshing events cache:', cacheError);
+        // Continue with sync even if cache refresh fails
+      }
 
       // Process any queued operations
       await syncNow();
 
       // Update sync status with current timestamp
       const now = Date.now();
-      await updateSyncStatus({
-        lastSync: now,
-        inProgress: false
-      });
+      try {
+        await updateSyncStatus({
+          lastSync: now,
+          inProgress: false
+        });
+      } catch (statusError) {
+        console.error('Error updating sync status:', statusError);
+      }
 
       // Update UI
       setLastSync(new Date(now).toLocaleString());
       setSyncResult("Sync completed successfully!");
     } catch (error) {
       console.error('Sync failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Sync failed';
+      
       // Update sync status to reflect failure
-      await updateSyncStatus({
-        lastSync: Date.now(),
-        inProgress: false,
-        error: error instanceof Error ? error.message : 'Sync failed'
-      });
-      setSyncResult("Sync failed. Please try again.");
+      try {
+        await updateSyncStatus({
+          lastSync: Date.now(),
+          inProgress: false,
+          error: errorMessage
+        });
+      } catch (statusError) {
+        console.error('Error updating sync status after failure:', statusError);
+      }
+      
+      setSyncResult(`Sync failed: ${errorMessage}. Please try again.`);
+      setError(errorMessage);
     } finally {
       setSyncingNow(false);
       setTimeout(() => setSyncResult(null), 3000);
@@ -429,11 +492,17 @@ export default function SettingsPage() {
                       try {
                         if (e.target.checked) {
                           await subscribeToPush();
+                          setSaveMsg('Push notifications enabled!');
+                          setTimeout(() => setSaveMsg(''), 2000);
                         } else {
                           await unsubscribeFromPush();
+                          setSaveMsg('Push notifications disabled');
+                          setTimeout(() => setSaveMsg(''), 2000);
                         }
                       } catch (error) {
                         console.error('Push notification toggle failed:', error);
+                        setError(error instanceof Error ? error.message : 'Failed to update notification settings');
+                        setTimeout(() => setError(null), 3000);
                       }
                     }}
                     className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"

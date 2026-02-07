@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
       .upsert({
         user_id: user.id,
         subscription: subscription,
-        user_agent: userAgent || 'Unknown'
+        user_agent: userAgent || 'Unknown',
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -113,6 +114,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
     }
 
+    if (!data) {
+      console.error('No data returned from upsert operation');
+      return NextResponse.json({ error: 'Failed to confirm subscription' }, { status: 500 });
+    }
+
     return NextResponse.json({
       success: true,
       subscription: data,
@@ -120,7 +126,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Unexpected error saving push subscription:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 

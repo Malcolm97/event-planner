@@ -75,10 +75,41 @@ export default function SignInPage() {
     setLoading(true);
     setError("");
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      setLoading(false);
+      return;
+    }
+
     if (isRegister && password !== confirmPassword) {
       setError("Passwords do not match");
       setLoading(false);
       return;
+    }
+
+    // Validate registration fields
+    if (isRegister) {
+      if (!name.trim()) {
+        setError("Full name is required");
+        setLoading(false);
+        return;
+      }
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters long");
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Validate sign in fields
+    if (!isRegister && !isForgotPassword) {
+      if (!password) {
+        setError("Password is required");
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -102,6 +133,7 @@ export default function SignInPage() {
           // Create user profile
           const userProfile = {
             id: data.user.id,
+            name: name || "",
             company: company || "",
             phone: phone || "",
             about: about || "",
