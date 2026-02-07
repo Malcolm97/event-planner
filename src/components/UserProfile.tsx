@@ -29,6 +29,7 @@ export default function UserProfile({ onError }: UserProfileProps) {
 
     const fetchUserData = async () => {
       if (!user) {
+        setLoading(false);
         return; // Do not fetch if user is null
       }
 
@@ -44,6 +45,16 @@ export default function UserProfile({ onError }: UserProfileProps) {
           .single();
 
         if (fetchError) {
+          // If user not found, still allow display but show empty state
+          if (fetchError.code === 'PGRST116') {
+            console.warn('User profile not yet created:', user.id);
+            if (isMounted) {
+              setUserData(null);
+              setLoading(false);
+            }
+            return;
+          }
+          
           console.error('Error fetching user profile:', fetchError);
           setError('Failed to load user profile');
           stableOnError('Failed to load user profile');
@@ -60,8 +71,7 @@ export default function UserProfile({ onError }: UserProfileProps) {
             setHasRedirected(true);
           }
         } else if (isMounted) {
-          setError('User profile not found in database');
-          stableOnError('User profile not found in database');
+          setUserData(null);
         }
       } catch (err: any) {
         console.error('Error in UserProfile:', err);
@@ -74,21 +84,28 @@ export default function UserProfile({ onError }: UserProfileProps) {
       }
     };
 
-    if (!authLoading && user) {
+    // Start fetching immediately if user is available, don't wait for authLoading
+    if (user) {
       fetchUserData();
     }
 
     return () => {
       isMounted = false;
     };
-  }, [user, authLoading, stableOnError, router, hasRedirected]);
+  }, [user, stableOnError, router, hasRedirected]);
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
   };
 
   if (loading && !userData) {
-    return <p className="text-gray-500 text-sm text-center">Loading user data...</p>;
+    return (
+      <div className="text-center animate-pulse">
+        <div className="w-20 h-20 rounded-full bg-gray-300 mx-auto mb-4"></div>
+        <div className="h-6 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+      </div>
+    );
   }
 
   if (error) {
@@ -115,6 +132,32 @@ export default function UserProfile({ onError }: UserProfileProps) {
         >
           Retry
         </button>
+      </div>
+    );
+  }
+
+  // Handle case where user exists but profile not yet created
+  if (!userData && user) {
+    const displayName = user?.user_metadata?.name || 'Unnamed User';
+    const displayEmail = user?.email || 'No email available';
+    const displayPhotoUrl = user?.user_metadata?.avatar_url;
+
+    return (
+      <div className="text-center">
+        {displayPhotoUrl ? (
+          <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
+            <Image src={displayPhotoUrl} alt="User Photo" width={80} height={80} className="object-cover" />
+          </div>
+        ) : (
+          <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
+            <Image src={DEFAULT_AVATAR_SVG_BASE64} alt="Default User Avatar" width={80} height={80} />
+          </div>
+        )}
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{displayName}</h3>
+        <p className="text-gray-600 text-sm mb-4">{displayEmail}</p>
+        <p className="text-gray-500 text-xs text-center py-2">
+          Profile data coming soon...
+        </p>
       </div>
     );
   }

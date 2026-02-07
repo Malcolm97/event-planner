@@ -3,17 +3,37 @@ import { supabase } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 const webpush = require('web-push');
 
-// Configure VAPID keys
-if (process.env.VAPID_EMAIL && process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+// Configure VAPID keys - Check for missing configuration
+const hasVapidConfig = process.env.VAPID_EMAIL && process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+if (hasVapidConfig) {
   webpush.setVapidDetails(
     `mailto:${process.env.VAPID_EMAIL}`,
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );
+} else {
+  console.warn(
+    'VAPID keys not fully configured. Push notifications may not work. ' +
+    'Please ensure VAPID_EMAIL, VAPID_PRIVATE_KEY, and NEXT_PUBLIC_VAPID_PUBLIC_KEY are set in .env.local'
+  );
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify VAPID keys are configured before proceeding
+    if (!hasVapidConfig) {
+      console.error('VAPID keys not configured');
+      return NextResponse.json(
+        {
+          error: 'Push notification service not configured',
+          message: 'VAPID keys are missing. Please configure VAPID_EMAIL, VAPID_PRIVATE_KEY, and NEXT_PUBLIC_VAPID_PUBLIC_KEY in environment variables.',
+          success: false
+        },
+        { status: 503 }
+      );
+    }
+
     // Parse request body
     const body = await request.json();
     const { title, body: messageBody, url, eventId, targetSubscriptions } = body;

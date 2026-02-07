@@ -143,7 +143,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         // Subscribe with VAPID key
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
         if (!vapidPublicKey) {
-          throw new Error('VAPID public key not configured');
+          console.error('Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set');
+          throw new Error(
+            'Push notifications are not configured. ' +
+            'Please add NEXT_PUBLIC_VAPID_PUBLIC_KEY to your environment variables. ' +
+            'See the notification setup guide for details.'
+          );
         }
 
         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
