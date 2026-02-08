@@ -30,8 +30,22 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if push notifications are supported
+  // Check if push notifications are supported and register service worker
   useEffect(() => {
+    const registerServiceWorker = async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) {
+          await navigator.serviceWorker.register('/service-worker.js');
+          console.log('Service worker registered for push notifications');
+        } else {
+          console.log('Service worker already registered');
+        }
+      } catch (err) {
+        console.error('Service worker registration failed:', err);
+      }
+    };
+
     const checkSupport = () => {
       const supported = 'serviceWorker' in navigator &&
                        'PushManager' in window &&
@@ -41,6 +55,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (supported) {
         setPermission(Notification.permission);
+
+        // Ensure a service worker is registered (register if missing)
+        if ('serviceWorker' in navigator) {
+          registerServiceWorker().catch((err) =>
+            console.error('Error during service worker registration:', err)
+          );
+        }
       }
     };
 
