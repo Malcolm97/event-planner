@@ -163,16 +163,38 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       if (!subscription) {
         // Subscribe with VAPID key
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        console.log('VAPID Public Key from env:', vapidPublicKey);
+        
         if (!vapidPublicKey) {
           console.error('Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set');
           throw new Error(
             'Push notifications are not configured. ' +
-            'Please add NEXT_PUBLIC_VAPID_PUBLIC_KEY to your environment variables. ' +
-            'See the notification setup guide for details.'
+            'Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is missing. ' +
+            'Please check your .env.local file and restart the development server.'
           );
         }
 
-        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+        if (vapidPublicKey.length < 80) {
+          console.error('VAPID Public Key appears to be invalid or too short:', vapidPublicKey);
+          throw new Error(
+            'Push notifications are not configured correctly. ' +
+            'The VAPID public key appears to be invalid. ' +
+            'Please regenerate VAPID keys using: npx web-push generate-vapid-keys'
+          );
+        }
+
+        let applicationServerKey;
+        try {
+          applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+          console.log('VAPID key successfully converted to Uint8Array');
+        } catch (keyError) {
+          console.error('Failed to convert VAPID key to Uint8Array:', keyError);
+          throw new Error(
+            'Push notifications are not configured correctly. ' +
+            'Failed to process VAPID public key. ' +
+            'Please ensure the key is properly formatted.'
+          );
+        }
 
         // Subscribe with options that work well on Android
         subscription = await registration.pushManager.subscribe({

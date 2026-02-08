@@ -516,19 +516,48 @@ self.addEventListener('push', (event) => {
 
   let data = {};
   if (event.data) {
-    data = event.data.json();
+    try {
+      data = event.data.json();
+      console.log('Parsed JSON push data:', data);
+    } catch (jsonError) {
+      console.warn('Failed to parse JSON push data:', jsonError);
+      // Fallback for Android/iOS compatibility
+      try {
+        const textData = event.data.text();
+        console.log('Push data as text:', textData);
+        // Try to parse as JSON if it's a stringified JSON
+        if (textData && textData.startsWith('{')) {
+          data = JSON.parse(textData);
+        } else {
+          data = { body: textData || 'New event update available!' };
+        }
+      } catch (textError) {
+        console.error('Failed to parse push data as text:', textError);
+        data = { body: 'New event update available!' };
+      }
+    }
   }
 
+  // Platform-specific notification options
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  
   const options = {
     body: data.body || 'New event update available!',
     icon: data.icon || '/icons/icon-192x192.png',
     badge: data.badge || '/icons/icon-96x96.png',
-    vibrate: [100, 50, 100],
+    // Platform-specific vibration patterns
+    vibrate: isIOS 
+      ? [200, 100, 200] // iOS requires specific patterns
+      : isAndroid 
+      ? [200, 100, 200] // Android supports more complex patterns
+      : [100, 50, 100], // Default for other platforms
     data: {
       dateOfArrival: Date.now(),
       primaryKey: data.primaryKey || 1,
       url: data.data?.url || data.url || '/',
-      eventId: data.data?.eventId || null
+      eventId: data.data?.eventId || null,
+      platform: isIOS ? 'ios' : isAndroid ? 'android' : 'other'
     },
     actions: data.actions || [
       {
@@ -541,9 +570,29 @@ self.addEventListener('push', (event) => {
         title: 'Dismiss'
       }
     ],
-    requireInteraction: true, // Keep notification visible until user interacts
-    silent: false
+    // Platform-specific notification behavior
+    requireInteraction: isIOS ? true : false, // iOS often needs requireInteraction for actions to work
+    silent: false,
+    timestamp: Date.now(),
+    tag: 'event-notification',
+    // iOS specific options
+    ...(isIOS && {
+      // iOS may need these for better compatibility
+      renotify: true,
+      sound: '/notification-sound.mp3' // Optional: add a sound file for iOS
+    }),
+    // Android specific options
+    ...(isAndroid && {
+      // Android supports more notification features
+      image: data.image || null,
+      silent: false
+    })
   };
+
+  // Add sound for iOS if available
+  if (isIOS && data.sound) {
+    options.sound = data.sound;
+  }
 
   event.waitUntil(
     self.registration.showNotification(data.title || 'PNG Events', options)
@@ -757,76 +806,6 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Handle incoming push notifications
-self.addEventListener('push', (event) => {
-  console.log('Push notification received:', event);
-
-  // Parse the push event data
-  let notificationData = {
-    title: 'Event Planner',
-    body: 'New event notification',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
-    data: {
-      url: '/',
-      eventId: null
-    },
-    actions: [
-      {
-        action: 'view',
-        title: 'View Event'
-      },
-      {
-        action: 'dismiss',
-        title: 'Dismiss'
-      }
-    ]
-  };
-
-  // Parse event data if available
-  if (event.data) {
-    try {
-      const pushData = event.data.json();
-      notificationData = {
-        ...notificationData,
-        ...pushData,
-        data: {
-          ...notificationData.data,
-          ...(pushData.data || {})
-        }
-      };
-    } catch (error) {
-      console.error('Failed to parse push notification data:', error);
-      // Try text parsing as fallback for Android
-      try {
-        const textData = event.data.text();
-        console.log('Push data as text:', textData);
-      } catch (textError) {
-        console.error('Failed to parse push notification data as text:', textError);
-      }
-      // Continue with default notification data
-    }
-  }
-
-  // Display the notification with Android-optimized options
-  event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
-      data: notificationData.data,
-      actions: notificationData.actions,
-      tag: 'event-notification', // Prevents duplicate notifications
-      requireInteraction: false, // Allow auto-close
-      vibrate: [200, 100, 200], // Vibration pattern for mobile
-      silent: false, // Enable sound on Android
-      timestamp: Date.now(), // Helps Android with notification time display
-    })
-    .catch((error) => {
-      console.error('Failed to show notification:', error);
-    })
-  );
-});
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {

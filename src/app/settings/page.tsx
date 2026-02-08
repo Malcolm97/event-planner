@@ -501,8 +501,20 @@ export default function SettingsPage() {
                         }
                       } catch (error) {
                         console.error('Push notification toggle failed:', error);
-                        setError(error instanceof Error ? error.message : 'Failed to update notification settings');
-                        setTimeout(() => setError(null), 3000);
+                        const errorMessage = error instanceof Error ? error.message : 'Failed to update notification settings';
+                        
+                        // Provide more specific error messages for common issues
+                        if (errorMessage.includes('VAPID')) {
+                          setError('Push notifications are not configured correctly. Please check your VAPID keys in the environment variables.');
+                        } else if (errorMessage.includes('permission')) {
+                          setError('Please allow notification permission in your browser settings.');
+                        } else if (errorMessage.includes('not supported')) {
+                          setError('Push notifications are not supported in this browser.');
+                        } else {
+                          setError(errorMessage);
+                        }
+                        
+                        setTimeout(() => setError(null), 5000); // Show error for 5 seconds
                       }
                     }}
                     className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
