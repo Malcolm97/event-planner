@@ -25,6 +25,19 @@ const SupabaseStatusIndicator: React.FC = () => {
     return 'Checking database connection...';
   };
 
+  const getHelpText = () => {
+    if (supabaseError && supabaseError.includes('infinite recursion')) {
+      return '🚨 CRITICAL: RLS policy infinite recursion detected. Run the fix in your Supabase SQL Editor.';
+    }
+    if (supabaseError && supabaseError.includes('not properly configured')) {
+      return 'Please update your .env.local file with actual Supabase credentials.';
+    }
+    if (connectionStatus === 'error') {
+      return 'Check your Supabase dashboard for service issues or configuration problems.';
+    }
+    return 'Some features may be limited while database is unavailable.';
+  };
+
   return (
     <div className="fixed top-20 left-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-sm">
       <div className="flex items-center space-x-3">
@@ -39,7 +52,7 @@ const SupabaseStatusIndicator: React.FC = () => {
         </div>
       </div>
       <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        Some features may be limited while database is unavailable.
+        {getHelpText()}
       </div>
     </div>
   );

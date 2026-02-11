@@ -9,8 +9,8 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-// Load environment variables
-require('dotenv').config();
+// Load environment variables from .env.local (Next.js convention)
+require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

@@ -82,7 +82,11 @@ export const handleSupabaseError = (error: any, operation: string) => {
   } else if (error?.code === 'PGRST301') {
     console.error(`Database connection error. Please check your Supabase configuration. Operation: ${operation}`)
   } else if (error?.message?.includes('infinite recursion')) {
-    console.error(`RLS policy error detected. Please run the RLS policy fix in your Supabase SQL Editor. Operation: ${operation}`)
+    console.error(`🚨 CRITICAL: RLS policy infinite recursion detected!`)
+    console.error(`   This is preventing all database operations.`)
+    console.error(`   Solution: Run the RLS policy fix in your Supabase SQL Editor`)
+    console.error(`   File: fix-rls-policies.sql contains the exact SQL to run`)
+    console.error(`   Operation: ${operation}`)
   }
   
   return error
