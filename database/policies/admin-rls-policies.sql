@@ -74,38 +74,38 @@ END $$;
 -- Ensure admin policies for profiles are comprehensive
 -- (These should already exist from admin-schema-setup.sql, but ensuring they're correct)
 
--- Allow admins to view all profiles (confirming this exists)
-DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
-CREATE POLICY "Admins can view all profiles" ON public.profiles
-FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
-    AND p.role = 'admin'
-  )
-);
+-- Note: Profile policies are now defined in admin-schema-setup.sql to avoid conflicts
+-- The policies below are commented out to prevent duplication and conflicts
 
--- Allow admins to update any profile (confirming this exists)
-DROP POLICY IF EXISTS "Admins can update profiles" ON public.profiles;
-CREATE POLICY "Admins can update profiles" ON public.profiles
-FOR UPDATE TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
-    AND p.role = 'admin'
-  )
-);
+-- Allow admins to view all profiles (already defined in admin-schema-setup.sql)
+-- DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+-- CREATE POLICY "Admins can view all profiles" ON public.profiles
+-- FOR SELECT TO authenticated
+-- USING (
+--   auth.uid() IN (
+--     SELECT id FROM public.profiles 
+--     WHERE role = 'admin'
+--   )
+-- );
 
--- Allow admins to delete profiles (confirming this exists)
-DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
-CREATE POLICY "Admins can delete profiles" ON public.profiles
-FOR DELETE TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
-    AND p.role = 'admin'
-  )
-);
+-- Allow admins to update any profile (already defined in admin-schema-setup.sql)
+-- DROP POLICY IF EXISTS "Admins can update profiles" ON public.profiles;
+-- CREATE POLICY "Admins can update profiles" ON public.profiles
+-- FOR UPDATE TO authenticated
+-- USING (
+--   auth.uid() IN (
+--     SELECT id FROM public.profiles 
+--     WHERE role = 'admin'
+--   )
+-- );
+
+-- Allow admins to delete profiles (already defined in admin-schema-setup.sql)
+-- DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
+-- CREATE POLICY "Admins can delete profiles" ON public.profiles
+-- FOR DELETE TO authenticated
+-- USING (
+--   auth.uid() IN (
+--     SELECT id FROM public.profiles 
+--     WHERE role = 'admin'
+--   )
+-- );

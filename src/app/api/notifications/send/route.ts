@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       .select('subscription');
 
     if (fetchError) {
-      console.error('Error fetching subscriptions:', fetchError);
+      console.error('Error fetching subscriptions:', fetchError?.message || fetchError);
       return NextResponse.json(
         { error: 'Failed to fetch subscriptions' },
         { status: 500 }

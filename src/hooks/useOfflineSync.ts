@@ -63,7 +63,8 @@ export function useOfflineSync() {
           await removeFromQueue(operation.id!);
 
         } catch (error) {
-          console.error('Failed to process operation:', operation, error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error('Failed to process operation:', operation?.id || 'unknown', errorMessage);
 
           const retryCount = (operation.retryCount || 0) + 1;
           if (retryCount < 3) {

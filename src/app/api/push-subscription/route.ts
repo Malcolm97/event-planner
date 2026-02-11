@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-      console.error('Error fetching push subscription:', error);
+      console.error('Error fetching push subscription:', error?.message || error);
       return NextResponse.json({ error: 'Failed to fetch subscription' }, { status: 500 });
     }
 

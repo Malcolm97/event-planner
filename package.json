@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "postcss:build": "postcss src/app/globals.css -o public/output.css"
+    "postcss:build": "postcss src/app/globals.css -o public/output.css",
+    "test:supabase": "node scripts/test-supabase-connection.js"
   },
   "dependencies": {
     "@eslint/config-array": "^0.21.0",

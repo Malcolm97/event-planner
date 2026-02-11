@@ -451,7 +451,7 @@ export default function EditProfilePage() {
             {/* Password Change Section */}
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
                     Current Password
@@ -503,13 +503,14 @@ export default function EditProfilePage() {
                 </div>
 
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handlePasswordSubmit}
                   disabled={submitting}
                   className="w-full rounded-lg px-6 py-3 bg-gray-600 text-white font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Updating Password...' : 'Update Password'}
                 </button>
-              </form>
+              </div>
             </div>
 
             {error && (

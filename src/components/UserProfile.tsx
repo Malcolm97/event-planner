@@ -55,9 +55,9 @@ export default function UserProfile({ onError }: UserProfileProps) {
             return;
           }
           
-          console.error('Error fetching user profile:', fetchError);
-          setError('Failed to load user profile');
-          stableOnError('Failed to load user profile');
+          console.error('Error fetching user profile:', fetchError?.message || fetchError);
+          setError(fetchError?.message || 'Failed to load user profile');
+          stableOnError(fetchError?.message || 'Failed to load user profile');
           return;
         }
 

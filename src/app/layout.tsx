@@ -14,6 +14,7 @@ import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnlineBadge from '@/components/OnlineBadge';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import SupabaseStatusIndicator from '@/components/SupabaseStatusIndicator';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -90,6 +91,7 @@ export default function RootLayout({
             <BottomNav />
             <PWAInstallPrompt />
             <OnlineBadge />
+            <SupabaseStatusIndicator />
           </ClientProviders>
         </EnhancedErrorBoundary>
         <Script id="service-worker-script">

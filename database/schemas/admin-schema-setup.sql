@@ -80,10 +80,9 @@ FOR DELETE USING (
 CREATE POLICY "Admins can view all profiles" ON public.profiles
 FOR SELECT TO authenticated
 USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
-    AND p.role = 'admin'
+  auth.uid() IN (
+    SELECT id FROM public.profiles 
+    WHERE role = 'admin'
   )
 );
 
@@ -91,10 +90,9 @@ USING (
 CREATE POLICY "Admins can update profiles" ON public.profiles
 FOR UPDATE TO authenticated
 USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
-    AND p.role = 'admin'
+  auth.uid() IN (
+    SELECT id FROM public.profiles 
+    WHERE role = 'admin'
   )
 );
 
@@ -102,9 +100,8 @@ USING (
 CREATE POLICY "Admins can delete profiles" ON public.profiles
 FOR DELETE TO authenticated
 USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
-    AND p.role = 'admin'
+  auth.uid() IN (
+    SELECT id FROM public.profiles 
+    WHERE role = 'admin'
   )
 );

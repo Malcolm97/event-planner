@@ -12,13 +12,81 @@ export const isSupabaseConfigured = () => {
   return supabaseUrl && 
          supabaseAnonKey && 
          !supabaseUrl.includes('your-project-id') && 
-         !supabaseAnonKey.includes('your-anon-key')
+         !supabaseAnonKey.includes('your-anon-key') &&
+         supabaseUrl.trim() !== '' &&
+         supabaseAnonKey.trim() !== ''
 }
 
+// Enhanced Supabase client with better error handling and connection validation
 export const supabase = createClient(
   supabaseUrl || 'https://your-project-id.supabase.co',
   supabaseAnonKey || 'your-anon-key-here'
 )
+
+// Connection status tracking
+let connectionStatus: 'unknown' | 'connected' | 'disconnected' | 'error' = 'unknown'
+let connectionCheckPromise: Promise<void> | null = null
+
+// Test database connectivity
+export const testSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase is not properly configured. Please check your environment variables.');
+      connectionStatus = 'error'
+      return false
+    }
+
+    // Test connection by making a simple query
+    const { error } = await supabase.from('users').select('id').limit(1)
+    
+    if (error) {
+      console.error('Supabase connection test failed:', error.message)
+      connectionStatus = 'error'
+      return false
+    }
+
+    connectionStatus = 'connected'
+    console.log('Supabase connection test successful')
+    return true
+  } catch (error) {
+    console.error('Supabase connection test failed:', error)
+    connectionStatus = 'error'
+    return false
+  }
+}
+
+// Get current connection status
+export const getSupabaseConnectionStatus = () => connectionStatus
+
+// Initialize connection check (runs once)
+export const initializeSupabaseConnection = async (): Promise<void> => {
+  if (connectionCheckPromise) {
+    await connectionCheckPromise
+    return
+  }
+  
+  const connectionResult = await testSupabaseConnection()
+  connectionCheckPromise = Promise.resolve()
+  return
+}
+
+// Enhanced error handler for Supabase operations
+export const handleSupabaseError = (error: any, operation: string) => {
+  console.error(`Supabase ${operation} failed:`, error)
+  
+  // Provide user-friendly error messages based on error type
+  if (error?.code === 'PGRST116') {
+    console.error(`Table not found. Please ensure the required tables exist in your database. Operation: ${operation}`)
+  } else if (error?.code === '42501') {
+    console.error(`Permission denied. Please check Row Level Security policies. Operation: ${operation}`)
+  } else if (error?.code === 'PGRST301') {
+    console.error(`Database connection error. Please check your Supabase configuration. Operation: ${operation}`)
+  } else if (error?.message?.includes('infinite recursion')) {
+    console.error(`RLS policy error detected. Please run the RLS policy fix in your Supabase SQL Editor. Operation: ${operation}`)
+  }
+  
+  return error
+}
 
 // Database table names
 export const TABLES = {
