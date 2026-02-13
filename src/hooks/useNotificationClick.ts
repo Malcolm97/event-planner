@@ -15,9 +15,8 @@ interface NotificationMessage {
 export function useNotificationClick(onEventSelected?: (eventId: string) => void) {
   const router = useRouter();
 
-  const handleNotificationMessage = useCallback((event: Event) => {
-    const messageEvent = event as MessageEvent<NotificationMessage>;
-    const message = messageEvent.data;
+  const handleNotificationMessage = useCallback((event: MessageEvent<NotificationMessage>) => {
+    const message = event.data;
 
     // Check if this is a notification click event from service worker
     if (message && message.type === 'NOTIFICATION_CLICK' && message.eventId) {
@@ -34,12 +33,13 @@ export function useNotificationClick(onEventSelected?: (eventId: string) => void
   }, [router, onEventSelected]);
 
   useEffect(() => {
-    // Listen for messages from service worker on window object
-    window.addEventListener('message', handleNotificationMessage);
+    // Listen for messages from service worker
+    // The service worker sends messages via client.postMessage()
+    navigator.serviceWorker.addEventListener('message', handleNotificationMessage);
 
     // Cleanup listener on unmount
     return () => {
-      window.removeEventListener('message', handleNotificationMessage);
+      navigator.serviceWorker.removeEventListener('message', handleNotificationMessage);
     };
   }, [handleNotificationMessage]);
 }
