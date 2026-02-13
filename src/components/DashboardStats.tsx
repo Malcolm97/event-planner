@@ -1,7 +1,7 @@
 'use client';
 
-import { FiCalendar, FiClock, FiBookmark, FiTrendingUp, FiBarChart } from 'react-icons/fi';
 import { Event } from '@/lib/supabase';
+import { FiCalendar, FiClock, FiBookmark, FiCheckCircle } from 'react-icons/fi';
 
 interface DashboardStatsProps {
   userEvents: Event[];
@@ -10,88 +10,79 @@ interface DashboardStatsProps {
 }
 
 export default function DashboardStats({ userEvents, savedEvents, loading = false }: DashboardStatsProps) {
-  // Calculate real statistics
-  const upcomingEvents = userEvents.filter(event => new Date(event.date) >= new Date());
+  // Calculate statistics from events
+  const now = new Date();
   const totalEvents = userEvents.length;
-  const totalSavedEvents = savedEvents.length;
+  const upcomingEvents = userEvents.filter(event => new Date(event.date) >= now).length;
+  const pastEvents = userEvents.filter(event => new Date(event.date) < now).length;
+  const totalSaved = savedEvents.length;
 
-  const thisMonthEvents = upcomingEvents.filter(event => {
-    const eventDate = new Date(event.date);
-    const now = new Date();
-    return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
-  }).length;
-
-  // Calculate growth (this could be enhanced with historical data)
-  const recentEvents = userEvents.filter(event => {
-    const eventDate = new Date(event.created_at || event.date);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return eventDate >= weekAgo;
-  }).length;
-
-  const stats = [
-    {
-      icon: FiCalendar,
-      label: 'Total Events',
-      value: totalEvents,
-      color: 'blue',
-      trend: recentEvents > 0 ? `+${recentEvents} this week` : 'No new events'
-    },
-    {
-      icon: FiClock,
-      label: 'Upcoming',
-      value: upcomingEvents.length,
-      color: 'green',
-      trend: upcomingEvents.length > 0 ? `Next: ${new Date(upcomingEvents[0].date).toLocaleDateString()}` : 'None scheduled'
-    },
-    {
-      icon: FiBookmark,
-      label: 'Saved Events',
-      value: totalSavedEvents,
-      color: 'purple',
-      trend: `${Math.round((totalSavedEvents / Math.max(totalEvents, 1)) * 100)}% of total events`
-    },
-    {
-      icon: FiBarChart,
-      label: 'This Month',
-      value: thisMonthEvents,
-      color: 'orange',
-      trend: `${thisMonthEvents} event${thisMonthEvents !== 1 ? 's' : ''} planned`
-    }
-  ];
-
+  // Show loading skeleton
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="card p-6 animate-pulse">
-            <div className="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-xl mx-auto mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded"></div>
+          <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+            </div>
           </div>
         ))}
       </div>
     );
   }
 
+  // Stats data - always show stats (zeros if no data)
+  const stats = [
+    {
+      label: 'Total Events',
+      value: totalEvents,
+      icon: FiCalendar,
+      color: 'bg-blue-500',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      label: 'Upcoming',
+      value: upcomingEvents,
+      icon: FiClock,
+      color: 'bg-green-500',
+      bgColor: 'bg-green-50',
+    },
+    {
+      label: 'Past Events',
+      value: pastEvents,
+      icon: FiCheckCircle,
+      color: 'bg-gray-500',
+      bgColor: 'bg-gray-50',
+    },
+    {
+      label: 'Saved Events',
+      value: totalSaved,
+      icon: FiBookmark,
+      color: 'bg-purple-500',
+      bgColor: 'bg-purple-50',
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <div key={index} className="card p-6 text-center hover:shadow-lg transition-shadow">
-            <div className={`flex items-center justify-center w-12 h-12 bg-${stat.color}-100 rounded-xl mx-auto mb-4`}>
-              <Icon className={`text-${stat.color}-600`} size={24} />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-            <div className="text-gray-600 text-sm mb-1">{stat.label}</div>
-            <div className={`text-${stat.color}-600 text-xs flex items-center justify-center gap-1`}>
-              <FiTrendingUp size={12} />
-              {stat.trend}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      {stats.map((stat, index) => (
+        <div 
+          key={index}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-gray-600">{stat.label}</span>
+            <div className={`p-2 rounded-xl ${stat.bgColor}`}>
+              <stat.icon className={`w-4 h-4 ${stat.color} text-white`} />
             </div>
           </div>
-        );
-      })}
+          <div className="text-3xl font-bold text-gray-900">
+            {stat.value}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

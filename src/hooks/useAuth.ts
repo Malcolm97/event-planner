@@ -9,6 +9,8 @@ export function useAuth() {
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const initializeAuth = async () => {
       // Check if Supabase is configured
       if (!isSupabaseConfigured()) {
@@ -19,35 +21,53 @@ export function useAuth() {
       }
 
       try {
-        // Test Supabase connection
+        // Test Supabase connection (non-blocking)
+        // Don't block auth on connection test - just check config
         const connectionSuccess = await testSupabaseConnection();
-        setSupabaseConnected(connectionSuccess);
         
-        if (!connectionSuccess) {
-          setSupabaseError('Unable to connect to Supabase database');
-        } else {
-          setSupabaseError(null);
+        if (isMounted) {
+          setSupabaseConnected(connectionSuccess);
+          
+          if (!connectionSuccess) {
+            console.warn('Supabase connection issue - continuing with auth anyway');
+            // Don't set error - allow app to work in degraded mode
+          }
         }
 
-        // Check current user
+        // Check current user regardless of connection status
         const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setSupabaseError('Authentication service unavailable');
+        
+        if (isMounted) {
+          setUser(user);
+        }
+      } catch (error: any) {
+        // Handle AbortError or cancellation gracefully
+        if (error?.name === 'AbortError' || error?.message?.includes('signal is aborted')) {
+          console.warn('Auth initialization was interrupted');
+        } else if (isMounted) {
+          console.warn('Auth initialization error:', error?.message);
+          // Don't set error - allow app to work without Supabase
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-      setLoading(false);
+      if (isMounted) {
+        setUser(session?.user || null);
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { 

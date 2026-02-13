@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, userEvents, savedEvents, activities, loading, error, refetch } = useDashboardData();
+  const { user, userProfile, userEvents, savedEvents, activities, loading, error, refetch } = useDashboardData();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -105,7 +105,7 @@ export default function DashboardPage() {
                   Edit Profile
                 </Link>
               </div>
-              <UserProfile />
+              <UserProfile userProfile={userProfile} />
             </div>
 
             {/* Quick Actions */}

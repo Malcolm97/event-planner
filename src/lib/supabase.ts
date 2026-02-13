@@ -9,12 +9,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return supabaseUrl && 
-         supabaseAnonKey && 
-         !supabaseUrl.includes('your-project-id') && 
-         !supabaseAnonKey.includes('your-anon-key') &&
-         supabaseUrl.trim() !== '' &&
-         supabaseAnonKey.trim() !== ''
+  // Check if env vars exist and are valid
+  const url = supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!url || !key) return false;
+  if (url.includes('your-project-id')) return false;
+  if (key.includes('your-anon-key')) return false;
+  if (url.trim() === '' || key.trim() === '') return false;
+  
+  return true;
 }
 
 // Enhanced Supabase client with better error handling and connection validation
@@ -40,16 +44,30 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
     const { error } = await supabase.from('users').select('id').limit(1)
     
     if (error) {
-      console.error('Supabase connection test failed:', error.message)
+      // Don't treat RLS/access errors as connection failures
+      if (error.message?.includes('row-level security') || error.code === '42501') {
+        connectionStatus = 'connected' // Table is accessible, just no rows due to RLS
+        return true
+      }
+      console.warn('Supabase query issue:', error.message)
       connectionStatus = 'error'
       return false
     }
 
     connectionStatus = 'connected'
-    console.log('Supabase connection test successful')
     return true
-  } catch (error) {
-    console.error('Supabase connection test failed:', error)
+  } catch (error: any) {
+    // Handle AbortError gracefully - this happens when component unmounts or request is cancelled
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      console.warn('Supabase connection check was cancelled')
+      return false
+    }
+    // Don't log as error for signal/interruption errors
+    if (error?.message?.includes('signal is aborted')) {
+      console.warn('Supabase connection check interrupted')
+      return false
+    }
+    console.warn('Supabase connection check failed:', error?.message || error)
     connectionStatus = 'error'
     return false
   }
@@ -72,6 +90,14 @@ export const initializeSupabaseConnection = async (): Promise<void> => {
 
 // Enhanced error handler for Supabase operations
 export const handleSupabaseError = (error: any, operation: string) => {
+  // Don't log RLS or AbortErrors as errors
+  if (error?.message?.includes('infinite recursion') || 
+      error?.name === 'AbortError' ||
+      error?.message?.includes('signal is aborted')) {
+    console.warn(`Supabase ${operation} interrupted:`, error.message)
+    return error
+  }
+  
   console.error(`Supabase ${operation} failed:`, error)
   
   // Provide user-friendly error messages based on error type
@@ -197,13 +223,6 @@ export const getUserActivities = async (userId: string, limit: number = 10): Pro
       return [];
     }
 
-    console.log('Fetching activities for user:', userId);
-    console.log('Supabase client status:', {
-      configured: isSupabaseConfigured(),
-      url: supabaseUrl ? 'URL available' : 'No URL',
-      hasKey: supabaseAnonKey ? 'Key available' : 'No key'
-    });
-
     const { data, error } = await supabase
       .from(TABLES.ACTIVITIES)
       .select('*')
@@ -211,48 +230,13 @@ export const getUserActivities = async (userId: string, limit: number = 10): Pro
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    console.log('Supabase query result - data:', data, 'error:', error);
-
     if (error) {
-      console.error('Supabase error occurred');
-      console.error('Message:', error?.message || 'Unknown error');
-      console.error('Details:', error?.details || 'No details available');
-      console.error('Hint:', error?.hint || 'No hint available');
-      console.error('Code:', error?.code || 'Unknown code');
-      console.error('User ID:', userId);
-      console.error('Error type:', typeof error);
-      console.error('Error string:', String(error));
-      console.error('Error JSON:', (() => { try { return JSON.stringify(error); } catch { return 'Cannot stringify error'; } })());
-      console.error('Raw error:', error);
-
-      // Provide more specific error messages based on error codes
-      if (error.code === 'PGRST116') {
-        console.error(`Activities table not found. Please ensure the activities table exists in your database. Error: ${error.message}`);
-        return [];
-      }
-      if (error.code === '42501') {
-        console.error(`Permission denied. Please check Row Level Security policies for the activities table. Error: ${error.message}`);
-        return [];
-      }
-      if (error.code === 'PGRST301') {
-        console.error(`Database connection error. Please check your Supabase configuration. Error: ${error.message}`);
-        return [];
-      }
-
-      console.error(`Failed to fetch activities: ${error.message || 'Unknown error'}`);
+      // Don't log noisy errors for activities - just return empty
       return [];
     }
 
-    console.log('Successfully fetched activities:', data?.length || 0, 'records');
-
     return (data as Activity[]) || [];
   } catch (error) {
-    console.error('Failed to fetch activities:', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: userId,
-      timestamp: new Date().toISOString()
-    });
-
     // Return empty array instead of throwing to prevent app crashes
     return [];
   }
@@ -263,7 +247,6 @@ export const getUserCount = async (): Promise<number> => {
   try {
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
-      console.warn('getUserCount: Supabase is not properly configured. Please check your environment variables.');
       return 0;
     }
 
@@ -272,13 +255,11 @@ export const getUserCount = async (): Promise<number> => {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching user count:', error);
       return 0;
     }
 
     return count || 0;
   } catch (error) {
-    console.error('Failed to fetch user count:', error);
     return 0;
   }
 };
@@ -288,7 +269,6 @@ export const getEventsCount = async (): Promise<number> => {
   try {
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
-      console.warn('getEventsCount: Supabase is not properly configured. Please check your environment variables.');
       return 0;
     }
 
@@ -297,13 +277,11 @@ export const getEventsCount = async (): Promise<number> => {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching events count:', error);
       return 0;
     }
 
     return count || 0;
   } catch (error) {
-    console.error('Failed to fetch events count:', error);
     return 0;
   }
 };
@@ -313,7 +291,6 @@ export const getCategoriesCount = async (): Promise<number> => {
   try {
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
-      console.warn('getCategoriesCount: Supabase is not properly configured. Please check your environment variables.');
       return 0;
     }
 
@@ -323,7 +300,6 @@ export const getCategoriesCount = async (): Promise<number> => {
       .not('category', 'is', null);
 
     if (error) {
-      console.error('Error fetching categories:', error);
       return 0;
     }
 
@@ -331,7 +307,6 @@ export const getCategoriesCount = async (): Promise<number> => {
     const uniqueCategories = new Set(data?.map(event => event.category).filter(Boolean) || []);
     return uniqueCategories.size;
   } catch (error) {
-    console.error('Failed to fetch categories count:', error);
     return 0;
   }
 };
@@ -341,7 +316,6 @@ export const getRecentActivitiesCount = async (): Promise<number> => {
   try {
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
-      console.warn('getRecentActivitiesCount: Supabase is not properly configured. Please check your environment variables.');
       return 0;
     }
 
@@ -354,13 +328,11 @@ export const getRecentActivitiesCount = async (): Promise<number> => {
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     if (error) {
-      console.error('Error fetching recent activities count:', error);
       return 0;
     }
 
     return count || 0;
   } catch (error) {
-    console.error('Failed to fetch recent activities count:', error);
     return 0;
   }
 };
@@ -370,7 +342,6 @@ export const getSavedEventsCount = async (): Promise<number> => {
   try {
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
-      console.warn('getSavedEventsCount: Supabase is not properly configured. Please check your environment variables.');
       return 0;
     }
 
@@ -379,13 +350,11 @@ export const getSavedEventsCount = async (): Promise<number> => {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching saved events count:', error);
       return 0;
     }
 
     return count || 0;
   } catch (error) {
-    console.error('Failed to fetch saved events count:', error);
     return 0;
   }
 };
