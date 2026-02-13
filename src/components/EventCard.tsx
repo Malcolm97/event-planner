@@ -322,32 +322,32 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       }}
     >
       {/* Top Badges Row */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex flex-col items-start gap-1 sm:gap-2 min-w-[0]">
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-col items-start gap-1 min-w-[0]">
         {/* Featured Badge - Priority 1 */}
         {event.featured && (
-          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
         )}
         {/* Popular Badge - Priority 2 */}
         {isPopular && (
-          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
         )}
         {/* New Badge - Priority 3 */}
         {isNew && (
-          <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold bg-green-200 text-green-800 shadow-md">New</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-green-200 text-green-800 shadow-md">New</span>
         )}
       </div>
 
       {/* Category Badge - Top Right */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-        <span className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
-          <Icon size={12} className="sm:w-4 sm:h-4" />
+      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
+          <Icon size={10} />
           <span className="hidden sm:inline">{categoryLabel}</span>
           <span className="sm:hidden sr-only">{categoryLabel}</span>
         </span>
       </div>
 
       {/* Hero Image Area */}
-      <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-2xl">
+      <div className="relative h-24 sm:h-28 md:h-32 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-lg">
         {imageSrc && (typeof imageSrc === 'string') ? (
           // Use native <img> for data/blob URIs to avoid Next/Image constraints
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
@@ -367,30 +367,30 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
           )
         ) : null}
         {/* Price Badges - Bottom Left */}
-        <div className="absolute bottom-3 left-3 flex flex-col items-start gap-2">
+        <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex flex-col items-start gap-1 sm:gap-2">
           {event.presale_price !== undefined && event.presale_price !== null ? (
             event.presale_price === 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={10} />
-                Presale: Free
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={8} />
+                Free
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={10} />
-                Presale: K{event.presale_price.toFixed(0)}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={8} />
+                K{event.presale_price.toFixed(0)}
               </span>
             )
           ) : null}
           {event.gate_price !== undefined && event.gate_price !== null ? (
             event.gate_price === 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={10} />
-                Gate: Free
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={8} />
+                Free
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={10} />
-                Gate: K{event.gate_price.toFixed(0)}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg border border-white/30 backdrop-blur-sm">
+                <FiDollarSign size={8} />
+                K{event.gate_price.toFixed(0)}
               </span>
             )
           ) : null}
@@ -399,32 +399,26 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-  <div className="px-4 py-4 sm:px-6 sm:py-5 pb-8 sm:pb-14">
+  <div className="px-2 py-2 sm:px-3 sm:py-3 pb-10 sm:pb-12">
           {/* Event Title */}
-          <h3 className="text-heading-xl text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-2 sm:mb-3 text-left">
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-0.5 text-left">
             {event.name}
           </h3>
 
           {/* Location and Venue */}
-          <div className="space-y-1.5 sm:space-y-2 text-left mb-2 sm:mb-3">
-            <div className="flex items-start gap-1.5 sm:gap-3">
-              <FiMapPin size={12} className="text-blue-600 flex-shrink-0 mt-0.5" />
-              <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">{event.location}</span>
+          <div className="space-y-0.5 text-left mb-0.5 sm:mb-1">
+            <div className="flex items-start gap-1">
+              <FiMapPin size={10} className="text-blue-600 flex-shrink-0 mt-0.5" />
+              <span className="font-medium text-gray-700 text-[10px] sm:text-xs leading-snug">{event.location}</span>
             </div>
-            {event.venue && (
-              <div className="flex items-start gap-1.5 sm:gap-3">
-                <FiHome size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">{event.venue}</span>
-              </div>
-            )}
           </div>
 
           {/* Date and Time */}
           {event.date && (
-            <div className="space-y-1 sm:space-y-2 text-left">
-              <div className="flex items-start gap-1.5 sm:gap-3">
-                <FiCalendar size={12} className="text-red-600 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">
+            <div className="space-y-0.5 text-left">
+              <div className="flex items-start gap-1">
+                <FiCalendar size={10} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-[10px] sm:text-xs leading-snug">
                   {formattedEndDate ? (
                     <>
                       {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.end_date!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -434,9 +428,9 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
                   )}
                 </span>
               </div>
-              <div className="flex items-start gap-1.5 sm:gap-3">
-                <FiClock size={12} className="text-orange-600 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-xs sm:text-sm leading-snug">
+              <div className="flex items-start gap-1">
+                <FiClock size={10} className="text-orange-600 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-gray-700 text-[10px] sm:text-xs leading-snug">
                   {formattedTime}
                   {formattedEndTime ? ` - ${formattedEndTime}` : ''}
                 </span>
@@ -446,33 +440,33 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         </div>
 
         {/* Action Buttons - positioned in bottom area */}
-        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 flex items-center gap-2 sm:gap-3">
+        <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 z-10 flex items-center gap-1">
           {/* Delete button for event owners */}
           {isOwner && (
             <button
-              className={`p-3 sm:p-2.5 rounded-full bg-red-50 hover:bg-red-100 shadow border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center ${deleting ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}`}
+              className={`p-1.5 sm:p-2 rounded-full bg-red-50 hover:bg-red-100 shadow border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 min-w-[28px] min-h-[28px] flex items-center justify-center ${deleting ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}`}
               aria-label="Delete Event"
               onClick={handleDelete}
               disabled={deleting}
               tabIndex={0}
             >
-              <FiTrash2 size={18} />
+              <FiTrash2 size={12} />
             </button>
           )}
 
           {/* Save/Bookmark button for logged-in users */}
           {user && (
             <button
-              className={`p-2 sm:p-2 rounded-full bg-white/90 hover:bg-yellow-100 shadow-lg border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-[36px] min-h-[36px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-1.5 sm:p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow-lg border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-[28px] min-h-[28px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
               onClick={handleBookmark}
               disabled={loading}
               tabIndex={0}
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-yellow-600"></div>
+                <div className="animate-spin rounded-full h-2 w-2 sm:h-3 sm:w-3 border-b-2 border-yellow-600"></div>
               ) : (
-                <FiBookmark size={16} className={bookmarked ? 'fill-current' : ''} />
+                <FiBookmark size={12} className={bookmarked ? 'fill-current' : ''} />
               )}
             </button>
           )}
@@ -552,25 +546,25 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation();
           handleShare();
         }}
-        className="p-2 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[36px] min-h-[36px] flex items-center justify-center"
+        className="p-1.5 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[28px] min-h-[28px] flex items-center justify-center"
         aria-label="Share Event"
       >
-        <FiShare2 size={16} />
+        <FiShare2 size={12} />
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-3 w-auto bg-white rounded-xl shadow-xl border border-gray-200 p-3 flex gap-2 z-20 animate-slide-up">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
-            <FaFacebook size={20} />
+        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex gap-1 z-20 animate-slide-up">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
+            <FaFacebook size={14} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
-            <FaTwitter size={20} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
+            <FaTwitter size={14} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
-            <FaLinkedin size={20} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
+            <FaLinkedin size={14} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2.5 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
-            <FaWhatsapp size={20} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-1.5 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
+            <FaWhatsapp size={14} />
           </button>
         </div>
       )}

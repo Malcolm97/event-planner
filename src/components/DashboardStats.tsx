@@ -20,9 +20,9 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
   // Show loading skeleton
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 lg:mb-10">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div key={i} className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
               <div className="h-8 bg-gray-200 rounded w-3/4"></div>
@@ -66,19 +66,19 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 lg:mb-10">
       {stats.map((stat, index) => (
         <div 
           key={index}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+          className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-600">{stat.label}</span>
-            <div className={`p-2 rounded-xl ${stat.bgColor}`}>
-              <stat.icon className={`w-4 h-4 ${stat.color} text-white`} />
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-xs sm:text-sm font-medium text-gray-600">{stat.label}</span>
+            <div className={`p-1.5 sm:p-2 rounded-lg ${stat.bgColor}`}>
+              <stat.icon className={`w-3 h-3 sm:w-4 sm:h-4 text-white`} />
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900">
             {stat.value}
           </div>
         </div>

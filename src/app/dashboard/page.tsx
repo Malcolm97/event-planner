@@ -69,20 +69,20 @@ export default function DashboardPage() {
   const expiredEvents = userEvents.filter(event => new Date(event.date) < new Date());
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-8">
+          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-5">
             <div>
-            <h1 className="text-display-lg text-gray-900 mb-2">Dashboard</h1>
-              <p className="text-gray-600 text-lg">Manage your events and profile</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">Manage your events and profile</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5">
         {/* Statistics Overview */}
         <DashboardStats
           userEvents={userEvents}
@@ -90,48 +90,48 @@ export default function DashboardPage() {
           loading={loading}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 mt-3 sm:mt-4 lg:mt-5">
           {/* Left Column - Profile & Actions */}
-          <div className="lg:col-span-1 space-y-8">
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
             {/* Profile Section */}
-            <div className="card p-8">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-heading-2xl text-gray-900">Profile</h2>
+            <div className="card p-4 sm:p-6 lg:p-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Profile</h2>
                 <Link
                   href="/dashboard/edit-profile"
-                  className="btn-ghost text-sm gap-2"
+                  className="btn-ghost text-xs sm:text-sm gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2"
                 >
-                  <FiEdit size={16} />
-                  Edit Profile
+                  <FiEdit size={14} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Edit Profile</span>
                 </Link>
               </div>
               <UserProfile userProfile={userProfile} />
             </div>
 
             {/* Quick Actions */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
+            <div className="card p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h3>
+              <div className="space-y-2 sm:space-y-3">
                 <Link
                   href="/create-event"
-                  className="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group"
+                  className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group"
                 >
-                  <FiPlus className="text-blue-600" size={18} />
-                  <span className="text-blue-700 font-medium group-hover:text-blue-800">Create New Event</span>
+                  <FiPlus className="text-blue-600" size={16} />
+                  <span className="text-blue-700 text-sm font-medium group-hover:text-blue-800">Create Event</span>
                 </Link>
                 <Link
                   href="/events"
-                  className="flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-xl transition-colors group"
+                  className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-green-50 hover:bg-green-100 rounded-xl transition-colors group"
                 >
-                  <FiCalendar className="text-green-600" size={18} />
-                  <span className="text-green-700 font-medium group-hover:text-green-800">Browse Events</span>
+                  <FiCalendar className="text-green-600" size={16} />
+                  <span className="text-green-700 text-sm font-medium group-hover:text-green-800">Browse Events</span>
                 </Link>
                 <Link
                   href="/dashboard/edit-profile"
-                  className="flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors group"
+                  className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors group"
                 >
-                  <FiEdit className="text-purple-600" size={18} />
-                  <span className="text-purple-700 font-medium group-hover:text-purple-800">Edit Profile</span>
+                  <FiEdit className="text-purple-600" size={16} />
+                  <span className="text-purple-700 text-sm font-medium group-hover:text-purple-800">Edit Profile</span>
                 </Link>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column - Events */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-5">
             {/* My Upcoming Events */}
             <DashboardEventsSection
               title="My Upcoming Events"
@@ -157,6 +157,7 @@ export default function DashboardPage() {
               isOwner={true}
               onDelete={handleEventDelete}
               loading={loading}
+              sectionType="upcoming"
             />
 
             {/* Saved Events */}
@@ -173,6 +174,7 @@ export default function DashboardPage() {
               }}
               loading={loading}
               maxVisible={4}
+              sectionType="saved"
             />
 
             {/* Previous Events */}
@@ -191,6 +193,7 @@ export default function DashboardPage() {
               collapsible={true}
               defaultExpanded={false}
               maxVisible={3}
+              sectionType="previous"
             />
           </div>
         </div>

@@ -33,7 +33,6 @@ export default function EditProfilePage() {
     contactVisibility: true
   });
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -167,7 +166,11 @@ export default function EditProfilePage() {
 
       setSuccess('Profile updated successfully!');
       setPhotoUrl(newPhotoUrl); // Update state with new photo URL
-      setTimeout(() => {
+      
+      // Wait a moment for the success message to be seen, then refresh and navigate
+      setTimeout(async () => {
+        // Refresh the router to ensure fresh server data
+        router.refresh();
         router.push('/dashboard');
       }, 1500);
     } catch (err: any) {
@@ -206,7 +209,7 @@ export default function EditProfilePage() {
       }
 
       // Validate password fields
-      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      if (!passwordData.newPassword || !passwordData.confirmPassword) {
         setError('Please fill in all password fields');
         return;
       }
@@ -240,7 +243,6 @@ export default function EditProfilePage() {
 
       setSuccess('Password updated successfully!');
       setPasswordData({
-        currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
@@ -452,22 +454,6 @@ export default function EditProfilePage() {
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    name="currentPassword"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    placeholder="Enter your current password"
-                    required
-                  />
-                </div>
-
                 <div className="flex flex-wrap -mx-2">
                   <div className="w-full md:w-1/2 px-2">
                     <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">

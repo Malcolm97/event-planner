@@ -140,6 +140,21 @@ export function useDashboardData(): UseDashboardDataResult {
     }
   }, []);
 
+  // Function to fetch all dashboard data
+  const fetchAllData = useCallback(async (authUser: any) => {
+    try {
+      // Fetch all data in parallel with fresh fetch
+      await Promise.all([
+        fetchUserEvents(authUser.id),
+        fetchSavedEvents(authUser.id),
+        fetchUserActivities(authUser.id),
+        fetchUserProfile(authUser.id)
+      ]);
+    } catch (err) {
+      console.warn('Error fetching dashboard data:', err);
+    }
+  }, [fetchUserEvents, fetchSavedEvents, fetchUserActivities, fetchUserProfile]);
+
   const refetch = useCallback(async () => {
     if (!user) return;
 
@@ -147,18 +162,13 @@ export function useDashboardData(): UseDashboardDataResult {
     setError(null);
 
     try {
-      await Promise.all([
-        fetchUserEvents(user.id),
-        fetchSavedEvents(user.id),
-        fetchUserActivities(user.id),
-        fetchUserProfile(user.id)
-      ]);
+      await fetchAllData(user);
     } catch (err) {
       // Error is already handled in individual fetch functions
     } finally {
       setLoading(false);
     }
-  }, [user, fetchUserEvents, fetchSavedEvents, fetchUserActivities, fetchUserProfile]);
+  }, [user, fetchAllData]);
 
   useEffect(() => {
     const initializeDashboard = async () => {
@@ -177,12 +187,7 @@ export function useDashboardData(): UseDashboardDataResult {
         setUser(authUser);
 
         // Fetch all data in parallel
-        await Promise.all([
-          fetchUserEvents(authUser.id),
-          fetchSavedEvents(authUser.id),
-          fetchUserActivities(authUser.id),
-          fetchUserProfile(authUser.id)
-        ]);
+        await fetchAllData(authUser);
 
       } catch (err) {
         const appError = err instanceof Error ? err : new Error(String(err));
@@ -193,7 +198,27 @@ export function useDashboardData(): UseDashboardDataResult {
     };
 
     initializeDashboard();
-  }, [fetchUserEvents, fetchSavedEvents, fetchUserActivities, fetchUserProfile]);
+  }, [fetchAllData]);
+
+  // Refetch data when window gains focus (user returns from edit-profile or other pages)
+  useEffect(() => {
+    const handleFocus = async () => {
+      if (user) {
+        // Refresh auth state and fetch latest data
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          await fetchAllData(currentUser);
+        }
+      }
+    };
+
+    // Add focus listener
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, fetchAllData]);
 
   return {
     user,

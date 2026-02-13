@@ -3,15 +3,29 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu, FiUsers } from 'react-icons/fi';
+import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu, FiUsers, FiLogIn, FiLogOut } from 'react-icons/fi';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 
 export default function BottomNav() {
   const { isOnline } = useNetworkStatus();
+  const { user } = useAuth();
   const router = useRouter();
   const currentPath = usePathname();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
+  
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+    setIsHamburgerOpen(false);
+  };
+  
+  const handleSignIn = () => {
+    router.push('/signin');
+    setIsHamburgerOpen(false);
+  };
 
   const navItems = [
     {
@@ -150,6 +164,25 @@ export default function BottomNav() {
 
               {/* Menu Items */}
               <div className="space-y-4">
+                {/* Sign In / Sign Out Button */}
+                {user ? (
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <FiLogOut size={20} />
+                    <span className="font-medium">Sign Out</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSignIn}
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-left text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                  >
+                    <FiLogIn size={20} />
+                    <span className="font-medium">Sign In</span>
+                  </button>
+                )}
+                
                 <button
                   onClick={() => { router.push('/about'); setIsHamburgerOpen(false); }}
                   className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
