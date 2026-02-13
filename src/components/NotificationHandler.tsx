@@ -1,65 +1,108 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useCallback, useState, useRef } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 interface NotificationMessage {
   type: 'NOTIFICATION_CLICK';
-  eventId: string;
-  url: string;
+  eventId?: string;
+  url?: string;
+}
+
+// Global state to share notification events across components
+let notificationCallback: ((eventId: string) => void) | null = null;
+
+export function setNotificationCallback(callback: (eventId: string) => void) {
+  notificationCallback = callback;
+}
+
+export function clearNotificationCallback() {
+  notificationCallback = null;
 }
 
 /**
  * NotificationHandler component
  * Handles notification click events from the service worker
  * This component should be placed in the root layout to handle notifications app-wide
+ * Also handles eventId from URL params when app is opened from notification
  */
 export default function NotificationHandler() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [eventToOpen, setEventToOpen] = useState<string | null>(null);
+  const hasHandledInitialEvent = useRef(false);
 
-  // Check for event ID in URL query params (from notification click)
+  // Handle event ID from URL params - this happens when app is opened from notification
   useEffect(() => {
     const eventId = searchParams.get('eventId');
-    if (eventId) {
-      console.log('Opening event from URL:', eventId);
+    if (eventId && !hasHandledInitialEvent.current) {
+      console.log('Opening event from URL params:', eventId);
+      hasHandledInitialEvent.current = true;
       setEventToOpen(eventId);
-      // Clear the URL param after reading
-      router.replace('/');
+      
+      // Call global callback if set (for components like EventModal)
+      if (notificationCallback) {
+        notificationCallback(eventId);
+      }
+      
+      // Clean up URL after reading
+      router.replace(pathname);
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, pathname]);
 
-  // Handle service worker messages
+  // Handle service worker messages - this happens when app is already open
   const handleServiceWorkerMessage = useCallback((event: MessageEvent<NotificationMessage>) => {
     const message = event.data;
 
     // Check if this is a notification click event from service worker
-    if (message && message.type === 'NOTIFICATION_CLICK' && message.eventId) {
-      console.log('Notification click received in NotificationHandler:', message.eventId);
+    if (message && message.type === 'NOTIFICATION_CLICK') {
+      console.log('Notification click received in NotificationHandler:', message);
       
-      // Navigate to the event - we'll use URL params to pass the event ID
-      // This avoids complex state management between components
-      const baseUrl = message.url || '/';
-      const urlWithEvent = `${baseUrl}?eventId=${message.eventId}`;
-      router.push(urlWithEvent);
+      const eventId = message.eventId;
+      const url = message.url || '/';
+      
+      if (eventId) {
+        // Call global callback if set (for components like EventModal)
+        if (notificationCallback) {
+          notificationCallback(eventId);
+        }
+        
+        // Also navigate to the event page
+        const urlWithEvent = `${url}?eventId=${eventId}`;
+        router.push(urlWithEvent);
+      } else {
+        // Just navigate to the URL if no eventId
+        router.push(url);
+      }
     }
   }, [router]);
 
   useEffect(() => {
     // Listen for messages from service worker
-    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    const serviceWorkerHandler = (event: MessageEvent<NotificationMessage>) => {
+      handleServiceWorkerMessage(event);
+    };
 
-    // Also listen for window messages as fallback
-    window.addEventListener('message', handleServiceWorkerMessage as EventListener);
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', serviceWorkerHandler);
+    }
+
+    // Also listen for window messages as fallback (for some browser configurations)
+    const windowHandler = (event: MessageEvent<NotificationMessage>) => {
+      handleServiceWorkerMessage(event);
+    };
+    window.addEventListener('message', windowHandler);
 
     // Cleanup
     return () => {
-      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
-      window.removeEventListener('message', handleServiceWorkerMessage as EventListener);
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', serviceWorkerHandler);
+      }
+      window.removeEventListener('message', windowHandler);
     };
   }, [handleServiceWorkerMessage]);
 
-  // This component doesn't render anything
+  // This component doesn't render anything - it's purely functional
   return null;
 }

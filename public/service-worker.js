@@ -539,94 +539,52 @@ self.addEventListener('push', (event) => {
   }
 
   // Platform-specific notification options
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
+  const userAgent = self.navigator?.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+  const isAndroid = /Android/.test(userAgent);
+  
+  // Get eventId from various possible locations
+  const eventId = data.eventId || data.data?.eventId || null;
+  const url = data.url || data.data?.url || '/';
   
   const options = {
     body: data.body || 'New event update available!',
-    icon: data.icon || '/icons/icon-192x192.png',
-    badge: data.badge || '/icons/icon-96x96.png',
-    // Platform-specific vibration patterns
-    vibrate: isIOS 
-      ? [200, 100, 200] // iOS requires specific patterns
-      : isAndroid 
-      ? [200, 100, 200] // Android supports more complex patterns
-      : [100, 50, 100], // Default for other platforms
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-96x96.png',
+    // Universal vibration pattern that works on most devices
+    vibrate: [200, 100, 200],
     data: {
       dateOfArrival: Date.now(),
       primaryKey: data.primaryKey || 1,
-      url: data.data?.url || data.url || '/',
-      eventId: data.data?.eventId || null,
+      url: url,
+      eventId: eventId,
       platform: isIOS ? 'ios' : isAndroid ? 'android' : 'other'
     },
-    actions: data.actions || [
+    actions: [
       {
         action: 'view',
-        title: 'View Event',
-        icon: '/icons/icon-96x96.png'
+        title: 'View Event'
       },
       {
         action: 'dismiss',
         title: 'Dismiss'
       }
     ],
-    // Platform-specific notification behavior
-    requireInteraction: isIOS ? true : false, // iOS often needs requireInteraction for actions to work
-    silent: false,
-    timestamp: Date.now(),
+    // Use tag to prevent duplicate notifications
     tag: 'event-notification',
-    // iOS specific options
-    ...(isIOS && {
-      // iOS may need these for better compatibility
-      renotify: true,
-      sound: '/notification-sound.mp3' // Optional: add a sound file for iOS
-    }),
-    // Android specific options
-    ...(isAndroid && {
-      // Android supports more notification features
-      image: data.image || null,
-      silent: false
-    })
+    // Auto-close after 5 seconds for better UX
+    timeout: 5000,
+    // Renotify for new notifications
+    renotify: true,
+    // iOS often needs requireInteraction for actions to work
+    requireInteraction: isIOS,
+    // Not silent - should make sound
+    silent: false,
+    timestamp: Date.now()
   };
-
-  // Add sound for iOS if available
-  if (isIOS && data.sound) {
-    options.sound = data.sound;
-  }
 
   event.waitUntil(
     self.registration.showNotification(data.title || 'PNG Events', options)
-  );
-});
-
-// Handle notification clicks
-self.addEventListener('notificationclick', (event) => {
-  console.log('Notification click received:', event);
-
-  event.notification.close();
-
-  if (event.action === 'dismiss') {
-    return;
-  }
-
-  // Default action or 'view' action
-  const urlToOpen = event.notification.data?.url || '/';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((windowClients) => {
-        // Check if there is already a window/tab open with the target URL
-        for (let client of windowClients) {
-          if (client.url === urlToOpen && 'focus' in client) {
-            return client.focus();
-          }
-        }
-
-        // If not, open a new window/tab with the target URL
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
   );
 });
 

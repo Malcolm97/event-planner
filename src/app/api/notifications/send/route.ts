@@ -7,14 +7,36 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Configure web-push with VAPID keys
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+// Configure web-push with VAPID keys - with proper validation
+const vapidEmail = process.env.VAPID_EMAIL || '';
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+
+const hasVapidConfig = vapidEmail && vapidPrivateKey && vapidPublicKey;
+
+if (hasVapidConfig) {
+  // Ensure email is in mailto format
+  const emailForVapid = vapidEmail.startsWith('mailto:') ? vapidEmail : `mailto:${vapidEmail}`;
+  webpush.setVapidDetails(
+    emailForVapid,
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+  console.log('VAPID configured successfully for notifications/send');
+} else {
+  console.warn(
+    'VAPID keys not fully configured in notifications/send. Push notifications may not work.'
+  );
+}
 
 export async function POST(request: NextRequest) {
+  // Check VAPID config before proceeding
+  if (!hasVapidConfig) {
+    return NextResponse.json(
+      { error: 'Push notification service not configured' },
+      { status: 503 }
+    );
+  }
   try {
     const { title, body, icon, badge, tag } = await request.json();
 

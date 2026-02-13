@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { createClient } from '@supabase/supabase-js';
 const webpush = require('web-push');
 
 // Configure VAPID keys - Check for missing configuration
-const hasVapidConfig = process.env.VAPID_EMAIL && process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+// VAPID_EMAIL should be in format "mailto:email@example.com" or just "email@example.com"
+const vapidEmail = process.env.VAPID_EMAIL || '';
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+
+const hasVapidConfig = vapidEmail && vapidPrivateKey && vapidPublicKey;
 
 if (hasVapidConfig) {
+  // Ensure email is in mailto format
+  const emailForVapid = vapidEmail.startsWith('mailto:') ? vapidEmail : `mailto:${vapidEmail}`;
   webpush.setVapidDetails(
-    `mailto:${process.env.VAPID_EMAIL}`,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
+    emailForVapid,
+    vapidPublicKey,
+    vapidPrivateKey
   );
+  console.log('VAPID configured successfully');
 } else {
   console.warn(
     'VAPID keys not fully configured. Push notifications may not work. ' +
-    'Please ensure VAPID_EMAIL, VAPID_PRIVATE_KEY, and NEXT_PUBLIC_VAPID_PUBLIC_KEY are set in .env.local'
+    'Please ensure VAPID_EMAIL (with mailto: prefix), VAPID_PRIVATE_KEY, and NEXT_PUBLIC_VAPID_PUBLIC_KEY are set in .env.local'
   );
 }
 

@@ -44,12 +44,20 @@ export default function SettingsPage() {
   const [isPWA, setIsPWA] = useState(false);
 
 
-  // Detect PWA mode
+  // Detect PWA mode with improved detection
   useEffect(() => {
     const checkPWAMode = () => {
+      // Check for standalone display mode
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      // Check for iOS standalone mode
       const isIOSStandalone = (window.navigator as any).standalone === true;
-      setIsPWA(isStandalone || isIOSStandalone);
+      // Check for iOS iPad Safari fullscreen
+      const isIPadSafari = /iPad/i.test(navigator.userAgent) && /Safari/i.test(navigator.userAgent);
+      const isIPadFullscreen = window.matchMedia('(display-mode: fullscreen)').matches || 
+                               window.matchMedia('(display-mode: minimal-ui)').matches;
+      
+      setIsPWA(isStandalone || isIOSStandalone || (isIPadSafari && isIPadFullscreen));
+      console.log('PWA Mode Check:', { isStandalone, isIOSStandalone, isIPadSafari, isIPadFullscreen });
     };
 
     checkPWAMode();
@@ -57,11 +65,21 @@ export default function SettingsPage() {
     // Listen for changes in display mode
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
     const handleChange = (e: MediaQueryListEvent) => {
-      setIsPWA(e.matches || (window.navigator as any).standalone === true);
+      checkPWAMode();
+    };
+
+    // Also check on focus (user might have installed PWA)
+    const handleFocus = () => {
+      checkPWAMode();
     };
 
     mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Load user and preferences from Supabase if logged in

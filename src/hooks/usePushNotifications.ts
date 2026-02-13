@@ -32,14 +32,35 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
   // Check if push notifications are supported and register service worker
   useEffect(() => {
+    let isMounted = true;
+
     const registerServiceWorker = async () => {
+      if (!('serviceWorker' in navigator)) {
+        console.log('Service workers not supported');
+        return;
+      }
+
       try {
-        const reg = await navigator.serviceWorker.getRegistration();
+        // Check if service worker is already registered
+        let reg = await navigator.serviceWorker.getRegistration();
+        
         if (!reg) {
-          await navigator.serviceWorker.register('/service-worker.js');
-          console.log('Service worker registered for push notifications');
+          // Register new service worker
+          reg = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/'
+          });
+          console.log('Service worker registered for push notifications:', reg.scope);
+          
+          // Wait for the service worker to be ready
+          await navigator.serviceWorker.ready;
+          console.log('Service worker is ready');
         } else {
-          console.log('Service worker already registered');
+          console.log('Service worker already registered:', reg.scope);
+          
+          // Ensure it's ready
+          if (!reg.active) {
+            await navigator.serviceWorker.ready;
+          }
         }
       } catch (err) {
         console.error('Service worker registration failed:', err);
@@ -52,11 +73,16 @@ export function usePushNotifications(): UsePushNotificationsReturn {
                        'Notification' in window;
 
       setIsSupported(supported);
+      console.log('Push notifications supported:', supported);
 
       if (supported) {
-        setPermission(Notification.permission);
+        // Check current permission
+        if ('Notification' in window) {
+          setPermission(Notification.permission);
+          console.log('Current notification permission:', Notification.permission);
+        }
 
-        // Ensure a service worker is registered (register if missing)
+        // Register service worker
         if ('serviceWorker' in navigator) {
           registerServiceWorker().catch((err) =>
             console.error('Error during service worker registration:', err)
@@ -66,6 +92,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     };
 
     checkSupport();
+
+    // Cleanup
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Check current subscription status

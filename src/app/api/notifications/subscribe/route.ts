@@ -27,23 +27,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Store the subscription in the database
-    const { data, error } = await supabase
+    // Check if subscription already exists for this user
+    const { data: existingSub } = await supabase
       .from('push_subscriptions')
-      .upsert({
-        user_id: session.user.id,
-        subscription: subscription,
-        endpoint: subscription.endpoint,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'endpoint,user_id'
-      });
+      .select('id, endpoint')
+      .eq('user_id', session.user.id)
+      .single();
+
+    let data, error;
+
+    if (existingSub) {
+      // Update existing subscription
+      const { data: updateData, error: updateError } = await supabase
+        .from('push_subscriptions')
+        .update({
+          subscription: subscription,
+          endpoint: subscription.endpoint,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', session.user.id)
+        .select();
+
+      data = updateData;
+      error = updateError;
+    } else {
+      // Insert new subscription
+      const { data: insertData, error: insertError } = await supabase
+        .from('push_subscriptions')
+        .insert({
+          user_id: session.user.id,
+          subscription: subscription,
+          endpoint: subscription.endpoint,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select();
+
+      data = insertData;
+      error = insertError;
+    }
 
     if (error) {
       console.error('Supabase error:', error);
       return NextResponse.json(
-        { error: 'Failed to save subscription' },
+        { error: 'Failed to save subscription', details: error.message },
         { status: 500 }
       );
     }
