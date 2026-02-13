@@ -47,22 +47,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all push subscriptions
+    // Get all push subscriptions - use subscription->'endpoint' for JSONB query
     const { data: subscriptions, error: fetchError } = await supabase
       .from('push_subscriptions')
-      .select('subscription');
+      .select('id, subscription');
 
     if (fetchError) {
       console.error('Error fetching subscriptions:', fetchError?.message || fetchError);
       return NextResponse.json(
-        { error: 'Failed to fetch subscriptions' },
+        { error: 'Failed to fetch subscriptions', details: fetchError.message },
         { status: 500 }
       );
     }
 
     if (!subscriptions || subscriptions.length === 0) {
       return NextResponse.json(
-        { message: 'No subscriptions found' },
+        { message: 'No subscriptions found', successCount: 0, failureCount: 0 },
         { status: 200 }
       );
     }
@@ -80,10 +80,17 @@ export async function POST(request: NextRequest) {
     const errors: string[] = [];
 
     // Send notification to all subscriptions
-    for (const { subscription } of subscriptions) {
+    for (const sub of subscriptions) {
       try {
+        const subscriptionObj = sub.subscription;
+        if (!subscriptionObj || !subscriptionObj.endpoint) {
+          console.warn('Skipping subscription with missing endpoint:', sub.id);
+          failureCount++;
+          continue;
+        }
+        
         await webpush.sendNotification(
-          subscription,
+          subscriptionObj,
           JSON.stringify(notificationPayload)
         );
         successCount++;
@@ -94,7 +101,7 @@ export async function POST(request: NextRequest) {
           await supabase
             .from('push_subscriptions')
             .delete()
-            .eq('subscription', subscription);
+            .eq('id', sub.id);
         }
         errors.push(`Failed to send to endpoint: ${error.message}`);
       }

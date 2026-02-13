@@ -63,12 +63,12 @@ export async function POST(request: NextRequest) {
       // Otherwise, get all push subscriptions from LOGGED-IN USERS ONLY (for new event announcements)
       const { data: allSubscriptions, error } = await supabase
         .from('push_subscriptions')
-        .select('user_id, subscription')
+        .select('id, user_id, subscription')
         .not('user_id', 'is', null); // Ensure user_id is not null - must be logged-in users
 
       if (error) {
         console.error('Error fetching push subscriptions:', error);
-        return NextResponse.json({ error: 'Failed to fetch subscriptions' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to fetch subscriptions', details: error.message }, { status: 500 });
       }
 
       subscriptions = allSubscriptions;

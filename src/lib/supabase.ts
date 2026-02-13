@@ -118,13 +118,13 @@ export const handleSupabaseError = (error: any, operation: string) => {
   return error
 }
 
-// Database table names
+// Database table names - all tables used in the app
 export const TABLES = {
   EVENTS: 'events',
   USERS: 'users',
-  USERS_BY_EMAIL: 'users_by_email',
   SAVED_EVENTS: 'saved_events',
-  ACTIVITIES: 'activities'
+  ACTIVITIES: 'activities',
+  PUSH_SUBSCRIPTIONS: 'push_subscriptions'
 } as const
 
 // Event interface for Supabase

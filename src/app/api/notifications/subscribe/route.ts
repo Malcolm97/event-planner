@@ -27,12 +27,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if subscription already exists for this user
-    const { data: existingSub } = await supabase
+    // Check if subscription already exists for this user by checking subscription->'endpoint'
+    const { data: existingSubs } = await supabase
       .from('push_subscriptions')
-      .select('id, endpoint')
+      .select('id')
       .eq('user_id', session.user.id)
-      .single();
+      .limit(1);
+
+    const existingSub = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
 
     let data, error;
 
@@ -42,8 +44,7 @@ export async function POST(request: NextRequest) {
         .from('push_subscriptions')
         .update({
           subscription: subscription,
-          endpoint: subscription.endpoint,
-          updated_at: new Date().toISOString(),
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
         })
         .eq('user_id', session.user.id)
         .select();
@@ -57,10 +58,7 @@ export async function POST(request: NextRequest) {
         .insert({
           user_id: session.user.id,
           subscription: subscription,
-          endpoint: subscription.endpoint,
           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         })
         .select();
 

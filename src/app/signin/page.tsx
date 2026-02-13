@@ -153,21 +153,6 @@ export default function SignInPage() {
             console.error('Error creating profile:', JSON.stringify(profileError));
           }
 
-          // Insert into users_by_email table
-          const emailKey = email.replace(/\./g, ',');
-          const { error: emailError } = await supabase
-            .from(TABLES.USERS_BY_EMAIL)
-            .insert([{
-              email: emailKey,
-              user_id: data.user.id,
-              ...userProfile,
-              name: name || "", // Add name here for users_by_email if needed for search/display
-            }]);
-
-          if (emailError) {
-            console.error('Error creating email record:', JSON.stringify(emailError));
-          }
-
           setError("");
 
           // Check if we should redirect after registration

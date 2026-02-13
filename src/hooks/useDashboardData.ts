@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, TABLES, Event, Activity, User, getUserActivities } from '@/lib/supabase';
+import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, testSupabaseConnection, getSupabaseConnectionStatus } from '@/lib/supabase';
 
 interface UseDashboardDataResult {
   user: any;
@@ -12,6 +12,8 @@ interface UseDashboardDataResult {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  isConnected: boolean;
+  connectionError: string | null;
 }
 
 export function useDashboardData(): UseDashboardDataResult {
@@ -220,6 +222,10 @@ export function useDashboardData(): UseDashboardDataResult {
     };
   }, [user, fetchAllData]);
 
+  // Connection status
+  const isConnected = getSupabaseConnectionStatus() === 'connected';
+  const connectionError = !isSupabaseConfigured() ? 'Supabase is not configured' : null;
+
   return {
     user,
     userProfile,
@@ -228,6 +234,8 @@ export function useDashboardData(): UseDashboardDataResult {
     activities,
     loading,
     error,
-    refetch
+    refetch,
+    isConnected,
+    connectionError
   };
 }
