@@ -6,6 +6,7 @@ import RecentActivity from "../components/RecentActivity"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
+import { getUserFriendlyError } from "@/lib/userMessages"
 
 interface DashboardData {
   stats: {
@@ -44,18 +45,20 @@ export default function AdminDashboard() {
       if (response.ok) {
         setDashboardData(data.data)
       } else {
-        setError("Failed to fetch dashboard data")
+        const userMessage = getUserFriendlyError(data, "Unable to load dashboard. Please try again.")
+        setError(userMessage)
         toast({
           title: "Error",
-          description: "Failed to fetch dashboard data",
+          description: userMessage,
           variant: "destructive",
         })
       }
     } catch (error) {
-      setError("Network error occurred")
+      const userMessage = getUserFriendlyError(error, "Unable to connect. Please check your internet connection.")
+      setError(userMessage)
       toast({
         title: "Error",
-        description: "Failed to fetch dashboard data",
+        description: userMessage,
         variant: "destructive",
       })
     } finally {

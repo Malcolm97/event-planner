@@ -293,10 +293,10 @@ export async function PUT(
     let validatedImageUrls = undefined;
     if (image_urls !== undefined) {
       if (!Array.isArray(image_urls)) {
-        return NextResponse.json({ error: 'image_urls must be an array' }, { status: 400 });
+        return NextResponse.json({ error: 'There was a problem with your images. Please try selecting them again.' }, { status: 400 });
       }
       if (image_urls.length > 3) {
-        return NextResponse.json({ error: 'Maximum 3 images allowed' }, { status: 400 });
+        return NextResponse.json({ error: 'You can only upload up to 3 images per event.' }, { status: 400 });
       }
       validatedImageUrls = image_urls.filter(url => typeof url === 'string' && url.trim().length > 0);
     }

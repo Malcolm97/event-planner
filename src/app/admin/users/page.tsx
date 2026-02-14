@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
+import { getUserFriendlyError } from "@/lib/userMessages"
 
 interface User {
   id: string
@@ -48,18 +49,20 @@ export default function UsersPage() {
         setUsers(data.data || [])
         setPagination(data.pagination)
       } else {
-        setError("Failed to fetch users")
+        const userMessage = getUserFriendlyError(data, "Unable to load users. Please try again.")
+        setError(userMessage)
         toast({
           title: "Error",
-          description: "Failed to fetch users",
+          description: userMessage,
           variant: "destructive",
         })
       }
     } catch (error) {
-      setError("Network error occurred")
+      const userMessage = getUserFriendlyError(error, "Unable to connect. Please check your internet connection.")
+      setError(userMessage)
       toast({
         title: "Error",
-        description: "Failed to fetch users",
+        description: userMessage,
         variant: "destructive",
       })
     } finally {

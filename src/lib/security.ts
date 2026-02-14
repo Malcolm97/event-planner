@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from './supabase';
+import { getUserFriendlyError } from './userMessages';
 
 // Rate limiting store
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -78,7 +79,7 @@ export async function checkAdminAccess(request?: NextRequest): Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return { isAdmin: false, error: 'Not authenticated' };
+      return { isAdmin: false, error: 'Please sign in to continue.' };
     }
 
     const { data: userData, error: userError } = await supabase
@@ -94,15 +95,15 @@ export async function checkAdminAccess(request?: NextRequest): Promise<{
                                !userError.code;
 
       if (isUserNotFound) {
-        return { isAdmin: false, error: 'User profile not found' };
+        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' };
       } else {
-        return { isAdmin: false, error: 'Database error' };
+        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') };
       }
     }
 
     return { isAdmin: userData?.role === 'admin', user };
   } catch (error) {
-    return { isAdmin: false, error: 'Unexpected error' };
+    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') };
   }
 }
 

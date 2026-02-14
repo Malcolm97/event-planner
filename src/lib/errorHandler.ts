@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getUserFriendlyError } from './userMessages';
 
 // Error types
 export enum ErrorType {
@@ -16,13 +17,14 @@ export enum ErrorType {
 // Error response interface
 export interface ErrorResponse {
   error: string;
+  userMessage: string; // User-friendly message
   type: ErrorType;
   details?: any;
   timestamp: string;
   requestId?: string;
 }
 
-// Create standardized error response
+// Create standardized error response with user-friendly message
 export function createErrorResponse(
   type: ErrorType,
   message: string,
@@ -30,8 +32,12 @@ export function createErrorResponse(
   details?: any,
   requestId?: string
 ): NextResponse<ErrorResponse> {
+  // Convert technical message to user-friendly message
+  const userMessage = getUserFriendlyError(message);
+
   const errorResponse: ErrorResponse = {
-    error: message,
+    error: message, // Keep technical message for debugging
+    userMessage, // User-friendly message for display
     type,
     timestamp: new Date().toISOString(),
     ...(details && { details }),
@@ -49,36 +55,38 @@ export function createErrorResponse(
   return NextResponse.json(errorResponse, { status: statusCode });
 }
 
-// Validation error helper
+// Validation error helper - user-friendly
 export function validationError(message: string, details?: any): NextResponse<ErrorResponse> {
   return createErrorResponse(ErrorType.VALIDATION_ERROR, message, 400, details);
 }
 
-// Authentication error helper
-export function authenticationError(message: string = 'Authentication required'): NextResponse<ErrorResponse> {
+// Authentication error helper - user-friendly
+export function authenticationError(message: string = 'Please sign in to continue'): NextResponse<ErrorResponse> {
   return createErrorResponse(ErrorType.AUTHENTICATION_ERROR, message, 401);
 }
 
-// Authorization error helper
-export function authorizationError(message: string = 'Insufficient permissions'): NextResponse<ErrorResponse> {
+// Authorization error helper - user-friendly
+export function authorizationError(message: string = "You're not allowed to do that. Please sign in or contact support."): NextResponse<ErrorResponse> {
   return createErrorResponse(ErrorType.AUTHORIZATION_ERROR, message, 403);
 }
 
-// Not found error helper
-export function notFoundError(resource: string = 'Resource'): NextResponse<ErrorResponse> {
-  return createErrorResponse(ErrorType.NOT_FOUND_ERROR, `${resource} not found`, 404);
+// Not found error helper - user-friendly
+export function notFoundError(resource: string = 'Item'): NextResponse<ErrorResponse> {
+  const message = `We couldn't find that ${resource.toLowerCase()}. It may have been removed or you may not have access.`;
+  return createErrorResponse(ErrorType.NOT_FOUND_ERROR, message, 404);
 }
 
-// Conflict error helper
+// Conflict error helper - user-friendly
 export function conflictError(message: string): NextResponse<ErrorResponse> {
   return createErrorResponse(ErrorType.CONFLICT_ERROR, message, 409);
 }
 
-// Rate limit error helper
+// Rate limit error helper - user-friendly
 export function rateLimitError(retryAfter: number): NextResponse<ErrorResponse> {
+  const message = "You're doing that too quickly. Please wait a moment before trying again.";
   const response = createErrorResponse(
     ErrorType.RATE_LIMIT_ERROR,
-    'Too many requests',
+    message,
     429,
     { retryAfter }
   );
@@ -89,49 +97,48 @@ export function rateLimitError(retryAfter: number): NextResponse<ErrorResponse> 
   return response;
 }
 
-// Database error helper
-export function databaseError(message: string = 'Database operation failed'): NextResponse<ErrorResponse> {
+// Database error helper - user-friendly
+export function databaseError(message: string = "We're having trouble saving your data. Please try again."): NextResponse<ErrorResponse> {
   return createErrorResponse(ErrorType.DATABASE_ERROR, message, 500);
 }
 
-// External service error helper
+// External service error helper - user-friendly
 export function externalServiceError(service: string, details?: any): NextResponse<ErrorResponse> {
-  return createErrorResponse(
-    ErrorType.EXTERNAL_SERVICE_ERROR,
-    `${service} service unavailable`,
-    502,
-    details
-  );
+  const message = "We're having some technical issues. Please try again in a few moments.";
+  return createErrorResponse(ErrorType.EXTERNAL_SERVICE_ERROR, message, 502, details);
 }
 
-// Internal error helper
-export function internalError(message: string = 'Internal server error'): NextResponse<ErrorResponse> {
+// Internal error helper - user-friendly
+export function internalError(message: string = "Something unexpected happened. Please try again."): NextResponse<ErrorResponse> {
   return createErrorResponse(ErrorType.INTERNAL_ERROR, message, 500);
 }
 
-// Handle Supabase errors
+// Handle Supabase errors with user-friendly messages
 export function handleSupabaseError(error: any): NextResponse<ErrorResponse> {
   console.error('Supabase error:', error);
 
-  // Handle specific Supabase error codes
+  // Get user-friendly message for this error
+  const userMessage = getUserFriendlyError(error);
+
+  // Handle specific Supabase error codes with user-friendly messages
   switch (error.code) {
     case 'PGRST116': // Not found
       return notFoundError();
 
     case '23505': // Unique constraint violation
-      return conflictError('Resource already exists');
+      return conflictError("This already exists. You may have already saved this.");
 
     case '42501': // Insufficient privilege
-      return authorizationError('Database access denied');
+      return authorizationError("You don't have permission to do that. Please contact the event organizer.");
 
     case '23503': // Foreign key constraint violation
-      return validationError('Invalid reference to related resource');
+      return validationError("Something went wrong with your request. Please try again.");
 
     case '23514': // Check constraint violation
-      return validationError('Data validation failed');
+      return validationError("The information provided isn't valid. Please check and try again.");
 
     default:
-      return databaseError('Database operation failed');
+      return databaseError(userMessage);
   }
 }
 

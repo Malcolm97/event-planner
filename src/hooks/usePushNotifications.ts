@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getUserFriendlyError } from '@/lib/userMessages';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -150,7 +151,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   // Request notification permission
   const requestPermission = useCallback(async (): Promise<NotificationPermission> => {
     if (!isSupported) {
-      throw new Error('Push notifications are not supported');
+      throw new Error('Your browser doesn\'t support notifications.');
     }
 
     try {
@@ -158,7 +159,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       setPermission(result);
       return result;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to request permission';
+      const errorMessage = getUserFriendlyError(err, 'Failed to request permission');
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -167,7 +168,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   // Subscribe to push notifications
   const subscribe = useCallback(async () => {
     if (!isSupported) {
-      throw new Error('Push notifications are not supported');
+      throw new Error("Your browser doesn't support notifications.");
     }
 
     setIsLoading(true);
@@ -178,7 +179,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       if (Notification.permission !== 'granted') {
         const newPermission = await requestPermission();
         if (newPermission !== 'granted') {
-          throw new Error('Notification permission denied');
+          throw new Error("Please enable notifications in your browser settings to get updates.");
         }
       }
 
@@ -198,20 +199,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         
         if (!vapidPublicKey) {
           console.error('Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set');
-          throw new Error(
-            'Push notifications are not configured. ' +
-            'Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is missing. ' +
-            'Please check your .env.local file and restart the development server.'
-          );
+          throw new Error("Notifications aren't set up properly. Please contact support.");
         }
 
         if (vapidPublicKey.length < 80) {
           console.error('VAPID Public Key appears to be invalid or too short:', vapidPublicKey);
-          throw new Error(
-            'Push notifications are not configured correctly. ' +
-            'The VAPID public key appears to be invalid. ' +
-            'Please regenerate VAPID keys using: npx web-push generate-vapid-keys'
-          );
+          throw new Error("Notifications aren't set up correctly. Please contact support.");
         }
 
         let applicationServerKey;
@@ -220,11 +213,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           console.log('VAPID key successfully converted to Uint8Array');
         } catch (keyError) {
           console.error('Failed to convert VAPID key to Uint8Array:', keyError);
-          throw new Error(
-            'Push notifications are not configured correctly. ' +
-            'Failed to process VAPID public key. ' +
-            'Please ensure the key is properly formatted.'
-          );
+          throw new Error("Notifications aren't working properly. Please try again later.");
         }
 
         // Subscribe with options that work well on Android
@@ -239,7 +228,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }
 
       if (!subscription) {
-        throw new Error('Failed to create push subscription');
+        throw new Error("Couldn't set up notifications. Please try again.");
       }
 
       // Convert subscription to JSON
@@ -247,7 +236,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const authKey = subscription.getKey('auth');
 
       if (!p256dhKey || !authKey) {
-        throw new Error('Failed to get subscription keys');
+        throw new Error("Couldn't complete notification setup. Please try again.");
       }
 
       const subscriptionData: PushSubscriptionData = {
@@ -261,7 +250,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Save subscription to database
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('User not authenticated');
+        throw new Error("Please sign in to continue.");
       }
 
       const { error: dbError } = await supabase
@@ -274,13 +263,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (dbError) {
         console.error('Database error:', dbError);
-        throw new Error('Failed to save subscription');
+        throw new Error("Couldn't save your notification settings. Please try again.");
       }
 
       console.log('Subscription saved to database successfully');
       setIsSubscribed(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe';
+      const errorMessage = getUserFriendlyError(err, "Couldn't set up notifications. Please try again.");
       console.error('Subscription error:', errorMessage);
       setError(errorMessage);
       throw new Error(errorMessage);

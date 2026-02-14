@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiArrowLeft, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiX, FiImage } from 'react-icons/fi';
 import Link from "next/link";
 import Image from 'next/image';
 
@@ -20,13 +20,13 @@ export default function EditEventPage() {
   const [venue, setVenue] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby');
   const [customLocation, setCustomLocation] = useState('');
-  const [presale_price, setPresale_price] = useState<number>(0); // Changed from price
-  const [gate_price, setGate_price] = useState<number>(0); // Added gate_price
+  const [presale_price, setPresale_price] = useState<number>(0);
+  const [gate_price, setGate_price] = useState<number>(0);
   const [category, setCategory] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]); // State to hold temporary URLs for new images
-  const [imageUrls, setImageUrls] = useState<string[]>([]); // Existing image URLs from DB
-  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]); // State to track images to delete
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,22 +38,23 @@ export default function EditEventPage() {
     "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau", "Other"
   ];
 
+  // Cleanup object URLs on unmount
   useEffect(() => {
-    // Cleanup function for object URLs when component unmounts or id changes
     return () => {
       newImagePreviews.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [newImagePreviews]); // Depend on newImagePreviews to revoke URLs when they are no longer needed
+  }, []);
 
   useEffect(() => {
     const fetchEvent = async () => {
       setLoading(true);
       setError(null);
-      // Clear any previous new image selections and previews when fetching a new event
+      
+      // Clear previous state
       setImageFiles([]);
-      newImagePreviews.forEach(url => URL.revokeObjectURL(url)); // Revoke old previews
+      newImagePreviews.forEach(url => URL.revokeObjectURL(url));
       setNewImagePreviews([]);
-      setImagesToDelete([]); // Clear images to delete
+      setImagesToDelete([]);
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -66,7 +67,7 @@ export default function EditEventPage() {
           .from(TABLES.EVENTS)
           .select('*')
           .eq('id', id)
-          .eq('created_by', user.id) // Ensure only event creator can edit
+          .eq('created_by', user.id)
           .single();
 
         if (fetchError) {
@@ -80,10 +81,9 @@ export default function EditEventPage() {
           setDescription(eventData.description || '');
           setDate(eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : '');
           setEndDate(eventData.end_date ? new Date(eventData.end_date).toISOString().slice(0, 16) : '');
-          setPresale_price(eventData.presale_price || 0); // Changed from price
-          setGate_price(eventData.gate_price || 0); // Added gate_price
+          setPresale_price(eventData.presale_price || 0);
+          setGate_price(eventData.gate_price || 0);
           setCategory(eventData.category || '');
-          // Ensure imageUrls is always an array, even if eventData.image_urls is null or undefined
           setImageUrls(Array.isArray(eventData.image_urls) ? eventData.image_urls : (eventData.image_url ? [eventData.image_url] : []));
           setVenue(eventData.venue || '');
 
@@ -111,14 +111,14 @@ export default function EditEventPage() {
 
   const handleDeleteImage = (urlToDelete: string, isNew: boolean = false) => {
     if (isNew) {
-      // If it's a new image, remove it from imageFiles and newImagePreviews
       const index = newImagePreviews.indexOf(urlToDelete);
       if (index > -1) {
+        // Revoke the URL to free memory
+        URL.revokeObjectURL(newImagePreviews[index]);
         setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
         setImageFiles(prev => prev.filter((_, i) => i !== index));
       }
     } else {
-      // If it's an existing image, mark it for deletion and remove from imageUrls
       setImagesToDelete(prev => [...prev, urlToDelete]);
       setImageUrls(prev => prev.filter(url => url !== urlToDelete));
     }
@@ -134,27 +134,24 @@ export default function EditEventPage() {
 
       if (remainingSlots <= 0) {
         setError(`You have already reached the maximum number of ${maxAllowed} images.`);
-        e.target.value = ''; // Clear the input
+        e.target.value = '';
         return;
       }
 
       const filesToProcess = newFilesArray.slice(0, remainingSlots);
-
-      // Generate temporary URLs for new files
       const newPreviews = filesToProcess.map(file => URL.createObjectURL(file));
 
       setImageFiles(prev => [...prev, ...filesToProcess]);
       setNewImagePreviews(prev => [...prev, ...newPreviews]);
-      setError(null); // Clear any previous error
-      e.target.value = ''; // Clear the input to allow selecting the same file again if needed
+      setError(null);
+      e.target.value = '';
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Revoke object URLs after submission to free up memory
     newImagePreviews.forEach(url => URL.revokeObjectURL(url));
-    setNewImagePreviews([]); // Clear previews after submission attempt
+    setNewImagePreviews([]);
     setSubmitting(true);
     setError(null);
 
@@ -166,7 +163,6 @@ export default function EditEventPage() {
         return;
       }
 
-      // Get the session token for API authentication
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError('Authentication session expired. Please sign in again.');
@@ -185,8 +181,7 @@ export default function EditEventPage() {
         return;
       }
 
-      // Handle image uploads first (since we need the URLs for the API call)
-      let finalImageUrls: string[] = [...imageUrls]; // Start with currently displayed images (after local deletions)
+      let finalImageUrls: string[] = [...imageUrls];
 
       if (imageFiles.length > 0) {
         for (const imageFile of imageFiles) {
@@ -215,7 +210,6 @@ export default function EditEventPage() {
         }
       }
 
-      // Prepare the update data
       const updateData = {
         name: name.trim(),
         description: description ? description.trim() : '',
@@ -229,7 +223,6 @@ export default function EditEventPage() {
         image_urls: finalImageUrls.length > 0 ? finalImageUrls : null,
       };
 
-      // Make API call to update event
       const response = await fetch(`/api/events/${id}`, {
         method: 'PUT',
         headers: {
@@ -246,28 +239,22 @@ export default function EditEventPage() {
         return;
       }
 
-      // Handle image deletions after successful update
       if (imagesToDelete.length > 0) {
         const filePathsToDelete = imagesToDelete.map(url => {
-          // Extract the file path from the public URL
           const pathSegments = url.split('/');
-          // Assuming the path is '.../storage/v1/object/public/event-images/fileName.ext'
-          // We need 'event-images/fileName.ext'
           const bucketIndex = pathSegments.indexOf('event-images');
           if (bucketIndex > -1 && bucketIndex + 1 < pathSegments.length) {
             return pathSegments.slice(bucketIndex).join('/');
           }
-          return ''; // Should not happen if URLs are consistent
-        }).filter(Boolean); // Remove empty strings
+          return '';
+        }).filter(Boolean);
 
         if (filePathsToDelete.length > 0) {
-          // Delete images asynchronously - don't block the success flow
           supabase.storage
             .from('event-images')
             .remove(filePathsToDelete)
             .catch(deleteError => {
               console.error('Error deleting old images:', deleteError);
-              // Don't show error to user as the event was successfully updated
             });
         }
       }
@@ -291,9 +278,11 @@ export default function EditEventPage() {
     );
   }
 
+  const totalImages = imageUrls.length + imageFiles.length;
+  const remainingSlots = 3 - totalImages;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-  {/* Header removed, now rendered globally in layout */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
@@ -371,25 +360,28 @@ export default function EditEventPage() {
                 </div>
                 <div>
                   <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
-                    Event Images (Up to 3)
+                    Event Images ({totalImages}/3)
                   </label>
+                  
+                  {/* Current Images from Database */}
                   {imageUrls.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-2">Current images:</p>
+                      <p className="text-xs text-gray-500 mb-2">Current images (click X to remove):</p>
                       <div className="grid grid-cols-3 gap-2">
                         {imageUrls.map((url, index) => (
-                          <div key={index} className="relative group">
+                          <div key={`existing-${index}`} className="relative group">
                             <Image
                               src={url}
                               alt={`Event image ${index + 1}`}
                               width={100}
                               height={80}
-                              className="rounded-md object-cover"
+                              className="rounded-md object-cover w-full h-20"
                             />
                             <button
                               type="button"
-                              onClick={() => handleDeleteImage(url)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
+                              onClick={() => handleDeleteImage(url, false)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
+                              title="Remove image"
                             >
                               <FiX size={14} />
                             </button>
@@ -398,39 +390,62 @@ export default function EditEventPage() {
                       </div>
                     </div>
                   )}
-                  <input
-                    type="file"
-                    id="images"
-                    accept="image/*"
-                    multiple
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
-                        const newFiles = Array.from(files);
-                        const currentImageCount = imageUrls.length; // imageUrls already reflects deletions
-                        const maxNewFiles = 3 - currentImageCount;
 
-                        if (maxNewFiles <= 0) {
-                          setError('You have already reached the maximum number of images.');
-                          e.target.value = ''; // Clear the input
-                          return;
-                        }
-
-                        const filesToUpload = newFiles.slice(0, maxNewFiles);
-                        setImageFiles(prev => [...prev, ...filesToUpload]);
-                        // Optionally, you could also generate temporary URLs here if needed for preview
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    You can add up to {Math.max(0, 3 - imageUrls.length - imageFiles.length)} more image{Math.max(0, 3 - imageUrls.length - imageFiles.length) !== 1 ? 's' : ''}.
-                    The first image will be the primary image.
-                  </p>
-                  {imageFiles.length > 0 && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      Selected {imageFiles.length} new image{imageFiles.length > 1 ? 's' : ''}
+                  {/* New Images Preview */}
+                  {newImagePreviews.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs text-gray-500 mb-2">New images to upload (click X to remove):</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {newImagePreviews.map((previewUrl, index) => (
+                          <div key={`new-${index}`} className="relative group">
+                            <img
+                              src={previewUrl}
+                              alt={`New image ${index + 1}`}
+                              className="rounded-md object-cover w-full h-20"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteImage(previewUrl, true)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
+                              title="Remove image"
+                            >
+                              <FiX size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+                  )}
+
+                  {/* File Input - Only show if we can add more images */}
+                  {remainingSlots > 0 ? (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-yellow-400 transition-colors">
+                      <input
+                        type="file"
+                        id="images"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                      <label htmlFor="images" className="cursor-pointer">
+                        <FiImage className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-500 block">
+                          Click to add up to {remainingSlots} more image{remainingSlots > 1 ? 's' : ''}
+                        </span>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 text-center py-2 bg-gray-100 rounded-lg">
+                      Maximum of 3 images reached
+                    </div>
+                  )}
+
+                  {/* Image count indicator */}
+                  {totalImages > 0 && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      {totalImages} of 3 images selected
+                    </p>
                   )}
                 </div>
               </div>
@@ -533,8 +548,6 @@ export default function EditEventPage() {
                 </div>
               </div>
             </div>
-
-
 
             <button
               type="submit"
