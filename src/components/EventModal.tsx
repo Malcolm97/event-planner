@@ -71,18 +71,23 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
     }
   }, [selectedEvent]);
 
-  // Set initial tab when modal opens
+  // Set initial tab when modal opens and reset when closed
   useEffect(() => {
-    if (dialogOpen && initialTab) {
-      setActiveTab(initialTab);
+    if (dialogOpen) {
+      setActiveTab(initialTab || 'event-details');
+    } else {
+      // Reset tab when dialog closes
+      setActiveTab('event-details');
     }
   }, [dialogOpen, initialTab]);
 
-  // Reset image modal state when event changes
+  // Reset image modal state when event changes or dialog closes
   useEffect(() => {
-    setImageExpanded(false);
-    setActiveImageIndex(0);
-  }, [selectedEvent]);
+    if (!dialogOpen) {
+      setImageExpanded(false);
+      setActiveImageIndex(0);
+    }
+  }, [selectedEvent, dialogOpen]);
 
   // Navigation helper functions
   const handlePrevImage = () => {
@@ -148,8 +153,8 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       <div
         className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
         style={{
-          minHeight: 'calc(80vh - 6rem)', // Reduced height for mobile - account for header + padding
-          maxHeight: 'calc(85vh - 6rem)', // Same calculation for max height
+          minHeight: 'calc(80vh - 6rem)',
+          maxHeight: 'calc(85vh - 6rem)',
           boxSizing: 'border-box',
         }}
       >
