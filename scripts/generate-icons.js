@@ -46,31 +46,31 @@ async function generateIcons() {
     // Load source logo
     const sourceLogo = await loadSourceLogo();
     
-    // Generate all PNG sizes for PWA
+    // Generate all PNG sizes for PWA (with black background)
     console.log('🖼️  Generating PWA PNG icons...');
     for (const size of CONFIG.sizes.png) {
       const outputPath = path.join(CONFIG.outputDir, `icon-${size}x${size}.png`);
       await sourceLogo
         .clone()
-        .resize(size, size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
         .png({ quality: 90 })
         .toFile(outputPath);
       console.log(`✅ Created icon-${size}x${size}.png`);
     }
     
-    // Generate Apple touch icons
+    // Generate Apple touch icons (with black background)
     console.log('🍎 Generating Apple touch icons...');
     for (const size of CONFIG.sizes.apple) {
       const outputPath = path.join(CONFIG.outputDir, `apple-touch-icon-${size}x${size}.png`);
       await sourceLogo
         .clone()
-        .resize(size, size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
         .png({ quality: 90 })
         .toFile(outputPath);
       console.log(`✅ Created apple-touch-icon-${size}x${size}.png`);
     }
     
-    // Create maskable icons (with transparency)
+    // Create maskable icons (with transparency - keep as is)
     console.log('🎭 Generating maskable icons...');
     for (const size of CONFIG.sizes.maskable) {
       const outputPath = path.join(CONFIG.outputDir, `icon-maskable-${size}x${size}.png`);
@@ -82,21 +82,21 @@ async function generateIcons() {
       console.log(`✅ Created icon-maskable-${size}x${size}.png`);
     }
     
-    // Generate favicon.png (32x32)
+    // Generate favicon.png (32x32 with black background)
     console.log('🌟 Generating favicon...');
     const faviconPngPath = path.join(__dirname, '../public/favicon.png');
     await sourceLogo
       .clone()
-      .resize(32, 32, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+      .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
       .png({ quality: 90 })
       .toFile(faviconPngPath);
     console.log('✅ Created favicon.png (32x32)');
     
-    // Also create favicon.ico from the 32x32 version
+    // Also create favicon.ico from the 32x32 version (with black background)
     const faviconIcoPath = path.join(__dirname, '../public/favicon.ico');
     await sourceLogo
       .clone()
-      .resize(32, 32, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+      .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
       .png({ quality: 90 })
       .toFile(faviconIcoPath);
     console.log('✅ Created favicon.ico');

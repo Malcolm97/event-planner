@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, Zap } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { RefreshCw, X, Zap, Check, AlertCircle } from 'lucide-react';
 
 interface UpdatePromptProps {
   /**
@@ -32,6 +32,11 @@ interface UpdatePromptProps {
   dismissButtonText?: string;
 }
 
+interface SWVersion {
+  version: string;
+  buildTimestamp: string;
+}
+
 export function UpdatePrompt({
   autoShow = true,
   showDelay = 3000,
@@ -42,20 +47,51 @@ export function UpdatePrompt({
   const [showUpdate, setShowUpdate] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [currentVersion, setCurrentVersion] = useState<string>('');
+  const [latestVersion, setLatestVersion] = useState<string>('');
+  const [isChecking, setIsChecking] = useState(false);
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check for updates and set up listeners
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
     // Function to handle service worker updates
-    const handleUpdate = (reg: ServiceWorkerRegistration) => {
+    const handleUpdate = (reg: ServiceWorkerRegistration, version?: string) => {
       setRegistration(reg);
+      if (version) {
+        setLatestVersion(version);
+      }
       if (autoShow) {
         setTimeout(() => {
           setShowUpdate(true);
         }, showDelay);
       }
     };
+
+    // Get current version from service worker
+    const getVersion = async () => {
+      try {
+        const channel = new MessageChannel();
+        const port = channel.port1;
+        
+        port.onmessage = (event) => {
+          if (event.data.version) {
+            setCurrentVersion(event.data.version);
+            setLatestVersion(event.data.version);
+          }
+        };
+        
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg?.active) {
+          reg.active.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+        }
+      } catch (error) {
+        console.warn('Could not get version:', error);
+      }
+    };
+
+    getVersion();
 
     // Check if there's an existing registration
     navigator.serviceWorker.getRegistration().then((reg) => {
@@ -84,6 +120,7 @@ export function UpdatePrompt({
       // Page was updated, reload to get fresh content
       console.log('Service worker controller changed, content updated');
       setShowUpdate(false);
+      getVersion();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
@@ -91,15 +128,35 @@ export function UpdatePrompt({
     // Listen for messages from service worker
     const handleMessage = (event: MessageEvent) => {
       if (event.data && (event.data.type === 'SW_ACTIVATED' || event.data.type === 'SW_UPDATE')) {
-        handleUpdate(event.data.registration);
+        handleUpdate(event.data.registration, event.data.version);
+      }
+      
+      // Handle version response
+      if (event.data && event.data.version && event.data.buildTimestamp) {
+        setCurrentVersion(event.data.version);
       }
     };
 
     navigator.serviceWorker.addEventListener('message', handleMessage);
 
+    // Start periodic update checking (every 5 minutes)
+    checkIntervalRef.current = setInterval(async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          await reg.update();
+        }
+      } catch (error) {
+        console.warn('Periodic update check failed:', error);
+      }
+    }, 5 * 60 * 1000);
+
     return () => {
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
       navigator.serviceWorker.removeEventListener('message', handleMessage);
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
     };
   }, [autoShow, showDelay]);
 
@@ -128,6 +185,28 @@ export function UpdatePrompt({
     setShowUpdate(false);
   }, []);
 
+  // Manually check for updates
+  const checkForUpdates = useCallback(async () => {
+    if (!('serviceWorker' in navigator)) return;
+    
+    setIsChecking(true);
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        await reg.update();
+        
+        // Check if there's a new waiting worker
+        if (reg.waiting) {
+          setShowUpdate(true);
+        }
+      }
+    } catch (error) {
+      console.warn('Manual update check failed:', error);
+    } finally {
+      setIsChecking(false);
+    }
+  }, []);
+
   if (!showUpdate) return null;
 
   return (
@@ -145,6 +224,11 @@ export function UpdatePrompt({
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Get the latest features and bug fixes
             </p>
+            {currentVersion && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Current version: {currentVersion}
+              </p>
+            )}
           </div>
 
           <button
@@ -187,10 +271,14 @@ export function UpdatePrompt({
   );
 }
 
-// Hook for programmatic update control
+// Enhanced hook for programmatic update control with periodic checking
 export function useServiceWorkerUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [version, setVersion] = useState<SWVersion | null>(null);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -223,7 +311,29 @@ export function useServiceWorkerUpdate() {
       }
     };
 
+    // Get version info
+    const getVersion = async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg?.active) {
+          const channel = new MessageChannel();
+          channel.port1.onmessage = (event) => {
+            if (event.data.version) {
+              setVersion({
+                version: event.data.version,
+                buildTimestamp: event.data.buildTimestamp || ''
+              });
+            }
+          };
+          reg.active.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+        }
+      } catch (error) {
+        console.warn('Could not get version:', error);
+      }
+    };
+
     checkForUpdates();
+    getVersion();
 
     // Listen for messages from service worker
     const handleMessage = (event: MessageEvent) => {
@@ -232,13 +342,35 @@ export function useServiceWorkerUpdate() {
         if (event.data.registration) {
           setRegistration(event.data.registration);
         }
+        if (event.data.version) {
+          setVersion({
+            version: event.data.version,
+            buildTimestamp: event.data.buildTimestamp || ''
+          });
+        }
       }
     };
 
     navigator.serviceWorker.addEventListener('message', handleMessage);
 
+    // Start periodic checking (every 5 minutes)
+    checkIntervalRef.current = setInterval(async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          await reg.update();
+          setLastChecked(new Date());
+        }
+      } catch (error) {
+        console.warn('Periodic update check failed:', error);
+      }
+    }, 5 * 60 * 1000);
+
     return () => {
       navigator.serviceWorker.removeEventListener('message', handleMessage);
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
     };
   }, []);
 
@@ -253,11 +385,37 @@ export function useServiceWorkerUpdate() {
     setUpdateAvailable(false);
   }, []);
 
+  // Manual check for updates
+  const checkForUpdates = useCallback(async () => {
+    if (!('serviceWorker' in navigator)) return;
+    
+    setIsChecking(true);
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        await reg.update();
+        setLastChecked(new Date());
+        
+        if (reg.waiting) {
+          setUpdateAvailable(true);
+        }
+      }
+    } catch (error) {
+      console.warn('Manual update check failed:', error);
+    } finally {
+      setIsChecking(false);
+    }
+  }, []);
+
   return {
     updateAvailable,
     updateNow,
     dismissUpdate,
-    registration
+    registration,
+    version,
+    lastChecked,
+    checkForUpdates,
+    isChecking
   };
 }
 

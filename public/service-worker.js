@@ -1,9 +1,16 @@
-const CACHE_NAME = 'event-planner-cache-v10';
-const STATIC_CACHE = 'event-planner-static-v10';
-const DYNAMIC_CACHE = 'event-planner-dynamic-v10';
-const API_CACHE = 'event-planner-api-v10';
-const PAGES_CACHE = 'event-planner-pages-v10';
-const APP_SHELL_CACHE = 'event-planner-app-shell-v10';
+// Dynamic versioning based on build timestamp
+const BUILD_TIMESTAMP = '20260214'; // Update this when deploying new versions
+const APP_VERSION = '10.0.1';
+
+const CACHE_NAME = `event-planner-cache-v${BUILD_TIMESTAMP}`;
+const STATIC_CACHE = `event-planner-static-v${BUILD_TIMESTAMP}`;
+const DYNAMIC_CACHE = `event-planner-dynamic-v${BUILD_TIMESTAMP}`;
+const API_CACHE = `event-planner-api-v${BUILD_TIMESTAMP}`;
+const PAGES_CACHE = `event-planner-pages-v${BUILD_TIMESTAMP}`;
+const APP_SHELL_CACHE = `event-planner-app-shell-v${BUILD_TIMESTAMP}`;
+
+// Update check interval (in milliseconds) - check every 5 minutes
+const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 
 // Cache size limits for better performance
 const CACHE_LIMITS = {
@@ -487,20 +494,62 @@ self.addEventListener('activate', (event) => {
     ])
   );
 
-  console.log('Service worker activated v10');
+  console.log(`Service worker activated v${APP_VERSION}`);
 
   // Notify all clients that update is ready
   self.clients.matchAll().then(clients => {
     clients.forEach(client => {
       client.postMessage({
         type: 'SW_ACTIVATED',
-        version: '10.0.0'
+        version: APP_VERSION,
+        buildTimestamp: BUILD_TIMESTAMP
       });
     });
   });
 
   registerBackgroundSync();
+  startPeriodicUpdateCheck();
 });
+
+// Start periodic update checking
+let updateCheckInterval = null;
+
+function startPeriodicUpdateCheck() {
+  if (updateCheckInterval) {
+    clearInterval(updateCheckInterval);
+  }
+  
+  // Check for updates periodically
+  updateCheckInterval = setInterval(async () => {
+    try {
+      console.log('Checking for service worker updates...');
+      const registration = await self.registration.update();
+      
+      if (registration.installing) {
+        console.log('New service worker installing...');
+        registration.installing.addEventListener('statechange', () => {
+          if (registration.installing.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('New service worker ready');
+            // Notify clients about the update
+            self.clients.matchAll().then(clients => {
+              clients.forEach(client => {
+                client.postMessage({
+                  type: 'SW_UPDATE_AVAILABLE',
+                  version: APP_VERSION,
+                  buildTimestamp: BUILD_TIMESTAMP
+                });
+              });
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Update check failed:', error);
+    }
+  }, UPDATE_CHECK_INTERVAL);
+  
+  console.log(`Periodic update check started (every ${UPDATE_CHECK_INTERVAL / 60000} minutes)`);
+}
 
 async function registerBackgroundSync() {
   console.log('Background sync ready');
@@ -696,24 +745,27 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: '10.0.0' });
+    event.ports[0].postMessage({ 
+      version: APP_VERSION,
+      buildTimestamp: BUILD_TIMESTAMP
+    });
   }
 
   if (event.data && event.data.type === 'CHECK_FOR_UPDATE') {
     // Trigger update check by getting the latest version
     event.waitUntil(
-      fetch('/service-worker.js')
-        .then(response => {
-          event.ports[0].postMessage({ 
-            updateAvailable: true,
-            version: '10.0.0'
-          });
-        })
-        .catch(() => {
-          event.ports[0].postMessage({ 
-            updateAvailable: false 
-          });
-        })
+      self.registration.update().then(() => {
+        event.ports[0].postMessage({ 
+          updateAvailable: false,
+          version: APP_VERSION,
+          buildTimestamp: BUILD_TIMESTAMP
+        });
+      }).catch((error) => {
+        event.ports[0].postMessage({ 
+          updateAvailable: false,
+          error: error.message
+        });
+      })
     );
   }
 

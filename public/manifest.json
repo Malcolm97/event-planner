@@ -13,6 +13,8 @@
   "dir": "ltr",
   "categories": ["lifestyle", "entertainment", "social", "events", "productivity"],
   "iarc_rating_id": "",
+  "version": "10.0.1",
+  "updateViaCache": "none",
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
