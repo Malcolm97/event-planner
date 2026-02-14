@@ -8,20 +8,51 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { endpoint } = await request.json();
+    const { endpoint, user_id, device_id } = await request.json();
 
-    if (!endpoint) {
+    if (!endpoint && !user_id && !device_id) {
       return NextResponse.json(
-        { error: 'Missing endpoint' },
+        { error: 'Missing endpoint, user_id, or device_id' },
         { status: 400 }
       );
     }
 
-    // Delete the subscription from the database
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .delete()
-      .eq('endpoint', endpoint);
+    // Get the user from the auth session (optional)
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    let error;
+
+    if (session) {
+      // Logged-in user - delete by user_id
+      const { error: deleteError } = await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_id', session.user.id);
+      
+      error = deleteError;
+    } else if (device_id) {
+      // Anonymous PWA user - delete by device_id
+      const { error: deleteError } = await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('device_id', device_id);
+      
+      error = deleteError;
+    } else if (endpoint) {
+      // Fallback: try to delete by endpoint (stored in subscription JSON)
+      // This requires a different approach since it's in JSONB
+      const { error: deleteError } = await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('subscription->>endpoint', endpoint);
+      
+      error = deleteError;
+    } else {
+      return NextResponse.json(
+        { error: 'Unauthorized - either login or provide device_id' },
+        { status: 401 }
+      );
+    }
 
     if (error) {
       console.error('Supabase error:', error);

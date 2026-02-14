@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppFooter from '@/components/AppFooter';
 import { supabase, TABLES, User } from '@/lib/supabase';
-import { FiSearch, FiUser } from 'react-icons/fi';
+import { FiSearch, FiUser, FiCalendar, FiMapPin, FiClock } from 'react-icons/fi';
 import Image from 'next/image';
 import Link from 'next/link';
 import CreatorModal from '@/components/CreatorModal';
@@ -12,11 +12,21 @@ import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 // Base64 encoded SVG for a default user avatar
-const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
+const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIjk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
+
+// Default placeholder image for events
+const DEFAULT_EVENT_IMAGE = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgODAwIDYwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiNlN2U3ZTciLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiM5Y2EzYWYiPkV2ZW50PC90ZXh0Pjwvc3ZnPg==`;
 
 interface CreatorWithEvents extends User {
   eventsCount: number;
   latestEvent?: any;
+  allEvents?: any[];
+  hasUpcomingEvent?: boolean;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+  };
 }
 
 export default function CreatorsPage() {
@@ -56,14 +66,18 @@ export default function CreatorsPage() {
         const creatorsWithData = creatorsData.map(creator => {
           const creatorEvents = events.filter((event: any) => event.created_by === creator.id);
           const eventsCount = creatorEvents.length;
-          const latestEvent = creatorEvents.find((event: any) =>
+          const upcomingEvents = creatorEvents.filter((event: any) =>
             event.date && new Date(event.date) >= new Date()
           );
+          const latestEvent = upcomingEvents[0] || creatorEvents[0];
+          const hasUpcomingEvent = upcomingEvents.length > 0;
 
           return {
             ...creator,
             eventsCount,
-            latestEvent
+            latestEvent,
+            allEvents: creatorEvents,
+            hasUpcomingEvent
           };
         });
 
@@ -79,21 +93,22 @@ export default function CreatorsPage() {
     processCreators();
   }, [users, events, usersLoading]);
 
-  // Filter creators based on search term
-  useEffect(() => {
-    if (!searchTerm) {
-      setFilteredCreators(creators);
-      return;
-    }
-
-    const filtered = creators.filter(creator =>
-      creator.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      creator.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      creator.about?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoized filtered creators list with proper dependency array
+  const filteredCreatorsList = useMemo(() => {
+    if (!searchTerm) return creators;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return creators.filter(creator =>
+      creator.name?.toLowerCase().includes(searchLower) ||
+      creator.company?.toLowerCase().includes(searchLower) ||
+      creator.about?.toLowerCase().includes(searchLower)
     );
-
-    setFilteredCreators(filtered);
   }, [creators, searchTerm]);
+
+  // Sync memoized result to state for rendering
+  useEffect(() => {
+    setFilteredCreators(filteredCreatorsList);
+  }, [filteredCreatorsList]);
 
   // Check for modal state in URL parameters (after sign-in redirect)
   useEffect(() => {
@@ -182,45 +197,80 @@ export default function CreatorsPage() {
                 <div
                   key={creator.id}
                   onClick={() => handleCreatorClick(creator)}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-200 hover:border-yellow-300 group p-4"
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-yellow-400 group p-5 sm:p-6 transform hover:scale-[1.02]"
                 >
                   <div className="text-center">
-                    {/* Profile Picture */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center mx-auto mb-3 overflow-hidden">
-                      {creator.photo_url ? (
-                        <Image
-                          src={creator.photo_url}
-                          alt={creator.name || 'Creator'}
-                          width={80}
-                          height={80}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Image
-                          src={DEFAULT_AVATAR_SVG_BASE64}
-                          alt="Default avatar"
-                          width={80}
-                          height={80}
-                          className="w-full h-full object-cover"
-                        />
+                    {/* Profile Picture with Status Indicator */}
+                    <div className="relative inline-block mb-4">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center mx-auto overflow-hidden shadow-md border-4 border-white">
+                        {creator.photo_url ? (
+                          <Image
+                            src={creator.photo_url}
+                            alt={creator.name || 'Creator'}
+                            width={96}
+                            height={96}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Image
+                            src={DEFAULT_AVATAR_SVG_BASE64}
+                            alt="Default avatar"
+                            width={96}
+                            height={96}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      {/* Status Indicator - Green dot for upcoming events */}
+                      {creator.hasUpcomingEvent && (
+                        <div className="absolute bottom-1 right-1 sm:bottom-1 sm:right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" title="Has upcoming events"></div>
                       )}
                     </div>
 
                     {/* Name */}
-                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-2 group-hover:text-yellow-600 transition-colors">
+                    <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-yellow-600 transition-colors">
                       {creator.name || 'Unnamed Creator'}
                     </h3>
 
+                    {/* Company */}
+                    {creator.company && (
+                      <p className="text-gray-500 text-sm mb-2 truncate px-2">
+                        {creator.company}
+                      </p>
+                    )}
+
                     {/* Bio */}
                     {creator.about && (
-                      <p className="text-gray-600 text-xs sm:text-sm leading-relaxed line-clamp-3">
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-3">
                         {creator.about}
                       </p>
                     )}
 
-                    {/* Events Count */}
-                    <div className="mt-2 text-xs text-yellow-600">
-                      {creator.eventsCount} event{creator.eventsCount !== 1 ? 's' : ''}
+                    {/* Event Preview Thumbnail */}
+                    {creator.latestEvent && creator.latestEvent.image_url && (
+                      <div className="relative h-24 w-full rounded-lg overflow-hidden mb-3 shadow-sm">
+                        <Image
+                          src={creator.latestEvent.image_url}
+                          alt={creator.latestEvent.name || 'Event'}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        <div className="absolute bottom-2 left-2 right-2 text-white text-xs font-medium truncate">
+                          {creator.latestEvent.name}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quick Stats Badge */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-full shadow-sm">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
+                        <FiCalendar size={14} className="text-white" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {creator.eventsCount} event{creator.eventsCount !== 1 ? 's' : ''}
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -60,11 +60,10 @@ export async function POST(request: NextRequest) {
       subscriptions = targetSubscriptions;
       console.log(`Using ${subscriptions.length} targeted subscriptions`);
     } else {
-      // Otherwise, get all push subscriptions from LOGGED-IN USERS ONLY (for new event announcements)
+      // Get ALL push subscriptions - both logged-in users AND anonymous PWA users
       const { data: allSubscriptions, error } = await supabase
         .from('push_subscriptions')
-        .select('id, user_id, subscription')
-        .not('user_id', 'is', null); // Ensure user_id is not null - must be logged-in users
+        .select('id, user_id, device_id, subscription');
 
       if (error) {
         console.error('Error fetching push subscriptions:', error);
@@ -72,6 +71,7 @@ export async function POST(request: NextRequest) {
       }
 
       subscriptions = allSubscriptions;
+      console.log(`Found ${subscriptions.length} total push subscriptions (including anonymous PWA users)`);
     }
 
     if (!subscriptions || subscriptions.length === 0) {

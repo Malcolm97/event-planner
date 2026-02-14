@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const subscription = await request.json();
+    const { subscription, device_id } = await request.json();
 
     if (!subscription || !subscription.endpoint) {
       return NextResponse.json(
@@ -17,49 +17,84 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the user from the auth session
+    // Get the user from the auth session (optional - can be logged in or anonymous)
     const { data: { session } } = await supabase.auth.getSession();
     
-    if (!session) {
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+    
+    let dbData: any = {
+      subscription: subscription,
+      user_agent: userAgent
+    };
+
+    let existingSub = null;
+
+    if (session) {
+      // Logged-in user - save with user_id
+      dbData.user_id = session.user.id;
+      
+      // Check if subscription already exists for this user
+      const { data: existingSubs } = await supabase
+        .from('push_subscriptions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .limit(1);
+
+      existingSub = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
+    } else if (device_id) {
+      // Anonymous PWA user - save with device_id
+      dbData.device_id = device_id;
+      
+      // Check if subscription already exists for this device
+      const { data: existingSubs } = await supabase
+        .from('push_subscriptions')
+        .select('id')
+        .eq('device_id', device_id)
+        .limit(1);
+
+      existingSub = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
+    } else {
+      // No session and no device_id - require one or the other
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - either login or provide device_id for anonymous subscription' },
         { status: 401 }
       );
     }
-
-    // Check if subscription already exists for this user by checking subscription->'endpoint'
-    const { data: existingSubs } = await supabase
-      .from('push_subscriptions')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .limit(1);
-
-    const existingSub = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
 
     let data, error;
 
     if (existingSub) {
       // Update existing subscription
-      const { data: updateData, error: updateError } = await supabase
-        .from('push_subscriptions')
-        .update({
-          subscription: subscription,
-          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-        })
-        .eq('user_id', session.user.id)
-        .select();
+      if (session) {
+        const { data: updateData, error: updateError } = await supabase
+          .from('push_subscriptions')
+          .update({
+            subscription: subscription,
+            user_agent: userAgent,
+          })
+          .eq('user_id', session.user.id)
+          .select();
 
-      data = updateData;
-      error = updateError;
+        data = updateData;
+        error = updateError;
+      } else {
+        const { data: updateData, error: updateError } = await supabase
+          .from('push_subscriptions')
+          .update({
+            subscription: subscription,
+            user_agent: userAgent,
+          })
+          .eq('device_id', device_id)
+          .select();
+
+        data = updateData;
+        error = updateError;
+      }
     } else {
       // Insert new subscription
       const { data: insertData, error: insertError } = await supabase
         .from('push_subscriptions')
-        .insert({
-          user_id: session.user.id,
-          subscription: subscription,
-          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-        })
+        .insert(dbData)
         .select();
 
       data = insertData;

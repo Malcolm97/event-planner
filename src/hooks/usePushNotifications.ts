@@ -12,6 +12,28 @@ interface PushSubscriptionData {
   };
 }
 
+// Generate or retrieve a unique device ID for anonymous users
+function getDeviceId(): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  const DEVICE_ID_KEY = 'pwa_device_id';
+  
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  if (!deviceId) {
+    // Generate a new UUID-like device ID
+    deviceId = 'device_' + crypto.randomUUID() + '_' + Date.now();
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
+}
+
+// Check if PWA is installed (standalone mode)
+function isPWAInstalled(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
+}
+
 interface UsePushNotificationsReturn {
   isSupported: boolean;
   isSubscribed: boolean;
@@ -247,19 +269,31 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         }
       };
 
-      // Save subscription to database
+      // Save subscription to database - support both logged-in users and anonymous PWA users
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("Please sign in to continue.");
+      
+      let dbData: any = {
+        subscription: subscriptionData,
+        user_agent: navigator.userAgent
+      };
+
+      if (user) {
+        // Logged-in user - save with user_id
+        dbData.user_id = user.id;
+        console.log('Saving subscription for logged-in user:', user.id);
+      } else {
+        // Anonymous PWA user - save with device_id
+        const deviceId = getDeviceId();
+        if (!deviceId) {
+          throw new Error("Couldn't generate device ID. Please try again.");
+        }
+        dbData.device_id = deviceId;
+        console.log('Saving subscription for anonymous device:', deviceId);
       }
 
       const { error: dbError } = await supabase
         .from('push_subscriptions')
-        .upsert({
-          user_id: user.id,
-          subscription: subscriptionData,
-          user_agent: navigator.userAgent
-        });
+        .upsert(dbData);
 
       if (dbError) {
         console.error('Database error:', dbError);
@@ -293,9 +327,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         await subscription.unsubscribe();
         console.log('Push subscription unsubscribed');
 
-        // Remove from database
+        // Remove from database - support both logged-in and anonymous users
         const { data: { user } } = await supabase.auth.getUser();
+        
         if (user) {
+          // Logged-in user - delete by user_id
           const { error: dbError } = await supabase
             .from('push_subscriptions')
             .delete()
@@ -305,7 +341,23 @@ export function usePushNotifications(): UsePushNotificationsReturn {
             console.error('Database error during unsubscribe:', dbError);
             // Don't throw - subscription was already removed from browser
           } else {
-            console.log('Subscription removed from database');
+            console.log('Subscription removed from database for user:', user.id);
+          }
+        } else {
+          // Anonymous user - delete by device_id
+          const deviceId = getDeviceId();
+          if (deviceId) {
+            const { error: dbError } = await supabase
+              .from('push_subscriptions')
+              .delete()
+              .eq('device_id', deviceId);
+
+            if (dbError) {
+              console.error('Database error during unsubscribe:', dbError);
+              // Don't throw - subscription was already removed from browser
+            } else {
+              console.log('Subscription removed from database for device:', deviceId);
+            }
           }
         }
       } else {
@@ -316,8 +368,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe';
       console.error('Unsubscribe error:', errorMessage);
-      setError(errorMessage);
       // Still mark as unsubscribed even if database removal fails
+      setError(errorMessage);
       setIsSubscribed(false);
       throw new Error(errorMessage);
     } finally {

@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useAutoPushSubscription } from '@/hooks/useAutoPushSubscription';
 
 interface NotificationMessage {
   type: 'NOTIFICATION_CLICK';
@@ -32,6 +33,13 @@ export default function NotificationHandler() {
   const searchParams = useSearchParams();
   const [eventToOpen, setEventToOpen] = useState<string | null>(null);
   const hasHandledInitialEvent = useRef(false);
+
+  // Auto-subscribe PWA users to push notifications (works for anonymous users too!)
+  // This will automatically subscribe PWA users when they install the app
+  useAutoPushSubscription({
+    delay: 2000, // Wait 2 seconds after app loads
+    showPrompt: true
+  });
 
   // Handle event ID from URL params - this happens when app is opened from notification
   useEffect(() => {

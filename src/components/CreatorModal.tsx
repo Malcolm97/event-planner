@@ -2,20 +2,28 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/supabase';
-import { FiUser, FiBriefcase, FiMail, FiPhone, FiArrowLeft, FiExternalLink } from 'react-icons/fi';
+import { 
+  FiUser, FiBriefcase, FiMail, FiPhone, 
+  FiExternalLink, FiCalendar, FiChevronRight, FiX
+} from 'react-icons/fi';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { storeSigninRedirect, ModalState } from '@/lib/utils';
-import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { storeSigninRedirect } from '@/lib/utils';
 
 // Base64 encoded SVG for a default user avatar
-const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
+const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIjk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
 
 interface CreatorWithEvents extends User {
   eventsCount: number;
   latestEvent?: any;
+  allEvents?: any[];
+  hasUpcomingEvent?: boolean;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+  };
 }
 
 interface CreatorModalProps {
@@ -28,7 +36,18 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
   const { user: authUser } = useAuth();
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const lastActiveElement = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Animation on mount
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setIsVisible(true), 10);
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
 
   // Focus trap and keyboard navigation
   useEffect(() => {
@@ -36,7 +55,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
     lastActiveElement.current = document.activeElement as HTMLElement;
     if (modalRef.current) modalRef.current.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -45,17 +64,31 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
     };
   }, [isOpen, onClose]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !creator) return null;
 
+  // Get up to 4 events for the gallery
+  const galleryEvents = creator.allEvents?.slice(0, 4) || [];
+  const hasUpcomingEvents = creator.allEvents?.some(e => e.date && new Date(e.date) >= new Date()) || false;
+
   const handleViewFullProfile = () => {
-    // Store scroll position for back navigation
     sessionStorage.setItem('creatorsScrollPosition', window.scrollY.toString());
     router.push(`/profile/${creator.id}`);
-    onClose();
+    handleClose();
   };
 
   const handleSignInClick = () => {
-    // Store current URL and modal state for redirect after sign-in
     const currentUrl = window.location.pathname + window.location.search;
     storeSigninRedirect(currentUrl, {
       type: 'creator-modal',
@@ -65,179 +98,333 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
     router.push('/signin');
   };
 
+  const handleViewAllEvents = () => {
+    sessionStorage.setItem('creatorsScrollPosition', window.scrollY.toString());
+    router.push(`/events?creator=${creator.id}`);
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 200);
+  };
+
   return (
     <div
-      ref={modalRef}
-      className="fixed inset-x-0 top-16 sm:top-20 lg:top-0 bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 md:p-6 animate-fade-in"
-      tabIndex={-1}
-      aria-modal="true"
-      role="dialog"
-      aria-labelledby="creator-modal-title"
-      aria-describedby="creator-modal-desc"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 transition-all duration-300 ${
+        isVisible 
+          ? 'bg-black/60 backdrop-blur-sm opacity-100' 
+          : 'bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none'
+      }`}
+      onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-2xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
-        style={{
-          minHeight: 'calc(80vh - 6rem)', // Reduced height for mobile - account for header + padding
-          maxHeight: 'calc(85vh - 6rem)', // Same calculation for max height
-          boxSizing: 'border-box',
-        }}
+        ref={modalRef}
+        tabIndex={-1}
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="creator-modal-title"
+        aria-describedby="creator-modal-desc"
+        onClick={(e) => e.stopPropagation()}
+        className={`relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-out ${
+          isVisible 
+            ? 'translate-y-0 opacity-100 scale-100' 
+            : 'translate-y-8 opacity-0 scale-95'
+        }`}
+        style={{ maxHeight: '90vh' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 id="creator-modal-title" className="text-lg sm:text-xl font-bold text-gray-900">
-            Event Creator
-          </h2>
+        {/* Header with gradient */}
+        <div className="relative h-20 sm:h-24 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full blur-xl" />
+            <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
+          </div>
+          
+          {/* Close button */}
           <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+            onClick={handleClose}
+            className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200 hover:rotate-90 min-w-[36px] min-h-[36px] flex items-center justify-center z-10"
             aria-label="Close modal"
           >
-            <FiArrowLeft size={18} className="text-gray-500" />
+            <FiX size={18} />
           </button>
-        </div>
 
-        {/* Content */}
-        <div className="p-3 sm:p-4 space-y-4 overflow-y-auto flex-1">
-          {/* Creator Profile Section */}
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden shadow-md border-3 border-white">
-                {creator.photo_url ? (
-                  <Image
-                    src={creator.photo_url}
-                    alt={creator.name || 'Creator'}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Image
-                    src={DEFAULT_AVATAR_SVG_BASE64}
-                    alt="Default avatar"
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                {creator.name || 'Unnamed Creator'}
-              </h3>
-
-              {creator.company && (
-                <div className="flex items-center gap-2 mb-2">
-                  <FiBriefcase size={16} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-gray-700 font-medium">{creator.company}</span>
-                </div>
-              )}
-
-              <div className="text-sm text-gray-600">
-                {creator.eventsCount} event{creator.eventsCount !== 1 ? 's' : ''} created
-              </div>
+          {/* Title badge */}
+          <div className="absolute bottom-3 left-4 sm:left-5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/25 backdrop-blur-md text-white text-xs font-semibold">
+              <FiUser size={11} />
+              Event Creator
             </div>
           </div>
+        </div>
 
-          {/* Bio */}
-          {creator.about && (
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-2">About</h4>
-              <p className="text-gray-700 leading-relaxed">{creator.about}</p>
-            </div>
-          )}
+        {/* Scrollable Content */}
+        <div 
+          ref={contentRef}
+          className="overflow-y-auto"
+          style={{ maxHeight: 'calc(90vh - 5rem)' }}
+        >
+          <div className="p-4 sm:p-5 space-y-4">
+            {/* Avatar Section */}
+            <div className="flex items-start gap-4">
+              <div className="relative flex-shrink-0 -mt-8 sm:-mt-10">
+                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white p-1 shadow-lg">
+                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    {creator.photo_url ? (
+                      <Image
+                        src={creator.photo_url}
+                        alt={creator.name || 'Creator'}
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100">
+                        <FiUser size={28} className="text-orange-400" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Online/Active indicator */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+              </div>
 
-          {/* Latest Upcoming Event */}
-          {creator.latestEvent && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-lg">📅</span>
-                Latest Upcoming Event
-              </h4>
-
-              <div className="space-y-2">
-                <h5 className="font-medium text-gray-900">{creator.latestEvent.name}</h5>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <div>📍 {creator.latestEvent.location || 'Location TBA'}</div>
-                  <div>🕒 {creator.latestEvent.date ? new Date(creator.latestEvent.date).toLocaleDateString() : 'Date TBA'}</div>
+              <div className="flex-1 min-w-0 pt-1">
+                <h2 id="creator-modal-title" className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                  {creator.name || 'Unnamed Creator'}
+                </h2>
+                {creator.company && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <FiBriefcase size={13} className="text-gray-500 flex-shrink-0" />
+                    <span className="text-gray-600 font-medium text-sm truncate">{creator.company}</span>
+                  </div>
+                )}
+                {/* Stats row */}
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <FiCalendar size={13} />
+                    <span className="font-medium">{creator.eventsCount}</span>
+                    <span className="hidden sm:inline">events</span>
+                  </div>
+                  {hasUpcomingEvents && (
+                    <div className="flex items-center gap-1 text-sm text-green-600">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                      Active
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Contact Information - Only for logged-in users */}
-          {authUser ? (
-            <div className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-200 shadow-sm">
-              <h4 className="font-semibold text-gray-900 mb-3">Contact Information</h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {creator.email ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <FiMail size={16} className="text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-blue-900 text-sm">Email</p>
-                      <p className="text-blue-700 font-medium text-sm">{creator.email}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <FiMail size={16} className="text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-600 text-sm">Email</p>
-                      <p className="text-gray-500 text-sm">Not available</p>
-                    </div>
-                  </div>
+            {/* Social Links */}
+            {creator.socialLinks && Object.keys(creator.socialLinks).length > 0 && (
+              <div className="flex gap-2">
+                {creator.socialLinks.facebook && (
+                  <a
+                    href={creator.socialLinks.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all duration-200 hover:scale-105"
+                    aria-label="Facebook"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C23.027 19.612 24 18.062 24 12.073z"/>
+                    </svg>
+                  </a>
                 )}
-
-                {creator.phone ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                      <FiPhone size={16} className="text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-green-900 text-sm">Phone</p>
-                      <p className="text-green-700 font-medium text-sm">{creator.phone}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <FiPhone size={16} className="text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-600 text-sm">Phone</p>
-                      <p className="text-gray-500 text-sm">Not available</p>
-                    </div>
-                  </div>
+                {creator.socialLinks.instagram && (
+                  <a
+                    href={creator.socialLinks.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:scale-105 transition-all duration-200"
+                    aria-label="Instagram"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </a>
+                )}
+                {creator.socialLinks.twitter && (
+                  <a
+                    href={creator.socialLinks.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-black hover:scale-105 transition-all duration-200"
+                    aria-label="Twitter/X"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </a>
                 )}
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-6 px-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/60 rounded-xl">
-              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <FiUser size={18} className="text-yellow-600" />
+            )}
+
+            {/* Bio */}
+            {creator.about && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">About</h4>
+                <p className="text-gray-700 leading-relaxed text-sm">{creator.about}</p>
               </div>
-              <h4 className="font-semibold text-yellow-900 mb-1 text-base">Sign In Required</h4>
-              <p className="text-yellow-800 text-sm mb-4">
-                Please <span className="font-bold">log in</span> to your account to view contact information and access full profiles.
-              </p>
-              <button
-                onClick={handleSignInClick}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
-              >
-                Sign In
-                <FiExternalLink size={14} />
-              </button>
+            )}
+
+            {/* Events Gallery */}
+            {galleryEvents.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Events
+                  </h4>
+                  {creator.eventsCount > 4 && (
+                    <button
+                      onClick={handleViewAllEvents}
+                      className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-0.5 transition-colors"
+                    >
+                      View all
+                      <FiChevronRight size={12} />
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {galleryEvents.map((event, index) => {
+                    const isUpcoming = event.date && new Date(event.date) >= new Date();
+                    return (
+                      <div
+                        key={event.id || index}
+                        className="relative rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="aspect-[4/3] relative">
+                          {event.image_url ? (
+                            <Image
+                              src={event.image_url}
+                              alt={event.name || 'Event'}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 640px) 50vw, 25vw"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <FiCalendar size={20} className="text-gray-400" />
+                            </div>
+                          )}
+                          {/* Gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                          
+                          {/* Upcoming badge */}
+                          {isUpcoming && (
+                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[9px] font-bold rounded-full flex items-center gap-0.5">
+                              <span className="w-1 h-1 bg-white rounded-full" />
+                              UPCOMING
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Event info */}
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-white font-semibold text-xs truncate">{event.name}</p>
+                          {event.date && (
+                            <p className="text-white/70 text-[10px] flex items-center gap-0.5 mt-0.5">
+                              <FiCalendar size={8} />
+                              {new Date(event.date).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* View All CTA */}
+                {creator.eventsCount > 4 && (
+                  <button
+                    onClick={handleViewAllEvents}
+                    className="w-full mt-3 py-2.5 px-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm shadow-md hover:shadow-lg"
+                  >
+                    <FiCalendar size={14} />
+                    View All {creator.eventsCount} Events
+                    <FiChevronRight size={12} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Contact Section */}
+            <div className={`${authUser ? '' : 'bg-gradient-to-br from-gray-50 to-white'} rounded-xl p-3.5 border border-gray-100`}>
+              {authUser ? (
+                <>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
+                    Contact Information
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {creator.email && (
+                      <a
+                        href={`mailto:${creator.email}`}
+                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-blue-500 text-white flex items-center justify-center flex-shrink-0">
+                          <FiMail size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-blue-600 font-medium">Email</p>
+                          <p className="text-blue-900 font-semibold text-xs truncate">{creator.email}</p>
+                        </div>
+                      </a>
+                    )}
+                    {creator.phone && (
+                      <a
+                        href={`tel:${creator.phone}`}
+                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-green-50 border border-green-100 hover:bg-green-100 transition-colors"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-green-500 text-white flex items-center justify-center flex-shrink-0">
+                          <FiPhone size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-green-600 font-medium">Phone</p>
+                          <p className="text-green-900 font-semibold text-xs truncate">{creator.phone}</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-2">
+                  <div className="w-11 h-11 mx-auto mb-2 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
+                    <FiUser size={18} className="text-orange-500" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm mb-0.5">Sign In to Connect</h4>
+                  <p className="text-gray-500 text-xs mb-3">
+                    Log in to view contact details
+                  </p>
+                  <button
+                    onClick={handleSignInClick}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all duration-200 text-sm min-h-[40px]"
+                  >
+                    Sign In
+                    <FiExternalLink size={12} />
+                  </button>
+                </div>
+              )}
             </div>
-          )}
 
-
+            {/* View Full Profile CTA */}
+            <button
+              onClick={handleViewFullProfile}
+              className="w-full py-2.5 px-3 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm"
+            >
+              View Full Profile
+              <FiChevronRight size={14} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
