@@ -82,6 +82,18 @@ export default function CreateEventPage() {
         return;
       }
 
+      // Validate end date is after start date
+      if (date && endDate) {
+        const startDateTime = new Date(date);
+        const endDateTime = new Date(endDate);
+        
+        if (endDateTime <= startDateTime) {
+          setError('End date must be after the start date.');
+          setLoading(false);
+          return;
+        }
+      }
+
       let finalLocation = selectedLocationType;
       if (selectedLocationType === 'Other') {
         finalLocation = customLocation;

@@ -3,6 +3,7 @@
 
 import AppFooter from '@/components/AppFooter';
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FiSmile, FiFilter, FiX } from 'react-icons/fi';
 import EventCard from '../../components/EventCard';
 import EventModal from '../../components/EventModal';
@@ -10,19 +11,29 @@ import { useEvents } from '@/hooks/useOfflineFirstData';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
-import CustomSelect, { SelectOption } from '@/components/CustomSelect';
+import CustomSelect from '@/components/CustomSelect';
 
 
 
 export default function EventsPageContent() {
   const { data: events = [], isLoading: loading } = useEvents();
   const { isSyncing, syncError, lastSyncTime } = useNetworkStatus();
+  const searchParams = useSearchParams();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [host, setHost] = useState<User | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const [initialTab, setInitialTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
   const now = new Date();
+
+  // Read initialTab from URL params (for deep linking)
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam === 'about-event' || tabParam === 'host-details') {
+      setInitialTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Extract unique locations from CURRENT/UPCOMING events only
   const { availableLocations, hasOtherLocations } = useMemo(() => {
@@ -128,8 +139,6 @@ export default function EventsPageContent() {
         </div>
       </section>
 
-
-
       {/* Location Filter */}
       {!loading && events.length > 0 && (availableLocations.length > 0 || hasOtherLocations) && (
         <section className="py-4 sm:py-6 bg-white border-b border-gray-200">
@@ -231,10 +240,15 @@ export default function EventsPageContent() {
         </section>
       )}
 
-      <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
+      <EventModal 
+        selectedEvent={selectedEvent} 
+        host={host} 
+        dialogOpen={dialogOpen} 
+        setDialogOpen={setDialogOpen}
+        initialTab={initialTab}
+      />
 
       <AppFooter />
     </div>
   );
 }
-// All code below this line has been removed to eliminate duplicates and errors.

@@ -33,15 +33,13 @@ export function getEventPrimaryImage(event: EventItem): string {
   const images = getAllImageUrls(event?.image_urls)
 
   // Debug logging to help identify issues
-    // Keep only minimal debug information in development
-    if (process.env.NODE_ENV === 'development' && images.length === 0) {
-      console.debug(`Event "${event?.name || 'Unknown'}" has no parsed images`) // helpful during debugging only
-    }
+  if (process.env.NODE_ENV === 'development' && images.length === 0) {
+    console.debug(`Event "${event?.name || 'Unknown'}" has no parsed images`)
+  }
 
   // Filter out invalid URLs and return the first valid one
   for (const image of images) {
     if (isValidUrl(image)) {
-    if (isValidUrl(image)) return image
       return image
     } else {
       if (process.env.NODE_ENV === 'development') {
@@ -177,10 +175,17 @@ export function safeRedirect(url: string, router: any): void {
 export function isEventCurrentOrUpcoming(event: EventItem): boolean {
   if (!event?.date) return false
 
-  const eventDate = new Date(event.date)
   const now = new Date()
+  const eventDate = new Date(event.date)
 
-  // Consider events current if they're within 24 hours of starting
+  // Check if event has ended
+  if (event.end_date) {
+    const endDate = new Date(event.end_date)
+    // Event is current if now is between start and end date
+    return now >= eventDate && now <= endDate
+  }
+
+  // For events without end_date, consider events current if they're within 24 hours of starting
   const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
   return eventDate >= now && eventDate <= twentyFourHoursFromNow
