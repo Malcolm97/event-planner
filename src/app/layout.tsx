@@ -84,7 +84,7 @@ export default function RootLayout({
           <ClientProviders>
             <OfflineIndicator />
             <Header />
-            <main id="main-content" role="main" className="pb-20 lg:pb-0 min-h-screen">
+            <main id="main-content" role="main" className="pb-16 sm:pb-20 md:pb-20 lg:pb-0 min-h-screen">
               {children}
             </main>
             <BottomNav />

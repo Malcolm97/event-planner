@@ -39,11 +39,11 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
   const Icon = categoryIconMap[categoryLabel] || FiStar;
 
   return (
-    <div className="relative border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/30 to-white p-5 sm:p-6 lg:p-8">
+    <div className="relative border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/30 to-white p-4 sm:p-5 md:p-6 lg:p-8">
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-20 p-2.5 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+        className="absolute top-3 sm:top-4 right-3 sm:right-4 z-20 p-2 sm:p-2.5 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
         aria-label="Close Modal"
       >
         <FiX size={20} className="text-gray-600" />
@@ -53,7 +53,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       {authUser && selectedEvent?.created_by === authUser.id && (
         <Link
           href={`/dashboard/edit-event/${selectedEvent.id}`}
-          className="absolute top-4 right-16 z-20 p-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+          className="absolute top-3 sm:top-4 right-14 sm:right-16 z-20 p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
           aria-label="Manage Event"
         >
           <FiEdit size={18} />
@@ -61,7 +61,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       )}
 
       {/* Mobile/Tablet Layout */}
-      <div className="lg:hidden flex flex-col gap-4 pr-24">
+      <div className="lg:hidden flex flex-col gap-3 sm:gap-4 pr-20 sm:pr-24">
         {/* Event Title */}
         <div className="text-center pt-2">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight break-words">

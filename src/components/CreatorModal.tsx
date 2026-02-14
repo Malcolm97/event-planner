@@ -111,7 +111,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 transition-all duration-300 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 transition-all duration-300 ${
         isVisible 
           ? 'bg-black/60 backdrop-blur-sm opacity-100' 
           : 'bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none'
@@ -126,12 +126,12 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         aria-labelledby="creator-modal-title"
         aria-describedby="creator-modal-desc"
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-out ${
+        className={`relative w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-out ${
           isVisible 
             ? 'translate-y-0 opacity-100 scale-100' 
             : 'translate-y-8 opacity-0 scale-95'
         }`}
-        style={{ maxHeight: '90vh' }}
+        style={{ maxHeight: '85dvh' }}
       >
         {/* Header with gradient */}
         <div className="relative h-20 sm:h-24 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
@@ -163,7 +163,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         <div 
           ref={contentRef}
           className="overflow-y-auto"
-          style={{ maxHeight: 'calc(90vh - 5rem)' }}
+          style={{ maxHeight: 'calc(85dvh - 6rem)' }}
         >
           <div className="p-4 sm:p-5 space-y-4">
             {/* Avatar Section */}

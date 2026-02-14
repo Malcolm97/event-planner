@@ -246,12 +246,12 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-black bg-opacity-95 backdrop-blur-md pt-16 sm:pt-20 lg:pt-24 pb-32 sm:pb-36 lg:pb-4 animate-fade-in flex items-center justify-center"
+      className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md pt-14 sm:pt-16 md:pt-20 lg:pt-24 pb-20 sm:pb-24 md:pb-28 lg:pb-4 animate-fade-in flex items-center justify-center"
       onClick={onClose}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-center">
   {/* Top Controls Bar - sticky for desktop */}
-  <div className="flex-shrink-0 flex justify-between items-center p-4 z-30 lg:sticky lg:top-4">
+  <div className="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 z-30 lg:sticky lg:top-4">
           {/* Zoom Controls */}
           <div className="flex gap-2">
             <button

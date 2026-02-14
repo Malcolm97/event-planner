@@ -117,10 +117,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   if (loading) {
     return (
-      <div className="fixed inset-x-0 top-16 sm:top-20 lg:top-0 bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 md:p-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto mb-6"></div>
-          <p className="text-lg text-gray-700">Loading event details...</p>
+      <div className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center max-w-sm">
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-yellow-600 mx-auto mb-4 sm:mb-6"></div>
+          <p className="text-base sm:text-lg text-gray-700">Loading event details...</p>
         </div>
       </div>
     );
@@ -128,11 +128,11 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   if (error) {
     return (
-      <div className="fixed inset-x-0 top-16 sm:top-20 lg:top-0 bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 md:p-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 text-center">
-          <div className="text-6xl mb-4">❌</div>
-          <h3 className="text-xl font-semibold text-red-600 mb-2">Error</h3>
-          <p className="text-gray-500">{error}</p>
+      <div className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center max-w-sm">
+          <div className="text-5xl sm:text-6xl mb-3 sm:mb-4">❌</div>
+          <h3 className="text-lg sm:text-xl font-semibold text-red-600 mb-2">Error</h3>
+          <p className="text-gray-500 text-sm sm:text-base">{error}</p>
         </div>
       </div>
     );
@@ -143,7 +143,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-x-0 top-16 sm:top-20 lg:top-0 bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md p-2 sm:p-4 md:p-6 animate-fade-in"
+      className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
@@ -153,8 +153,8 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       <div
         className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
         style={{
-          minHeight: 'calc(80vh - 6rem)',
-          maxHeight: 'calc(85vh - 6rem)',
+          minHeight: 'calc(80dvh - 7rem)',
+          maxHeight: 'calc(90dvh - 8rem)',
           boxSizing: 'border-box',
         }}
       >
