@@ -131,10 +131,10 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
             ? 'translate-y-0 opacity-100 scale-100' 
             : 'translate-y-8 opacity-0 scale-95'
         }`}
-        style={{ maxHeight: '85dvh' }}
+        style={{ maxHeight: '90dvh' }}
       >
         {/* Header with gradient */}
-        <div className="relative h-20 sm:h-24 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
+        <div className="relative h-16 sm:h-20 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
           {/* Decorative elements */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full blur-xl" />
@@ -144,16 +144,16 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200 hover:rotate-90 min-w-[36px] min-h-[36px] flex items-center justify-center z-10"
+            className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200 hover:rotate-90 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] flex items-center justify-center z-10"
             aria-label="Close modal"
           >
-            <FiX size={18} />
+            <FiX size={16} className="sm:size-18" />
           </button>
 
           {/* Title badge */}
-          <div className="absolute bottom-3 left-4 sm:left-5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/25 backdrop-blur-md text-white text-xs font-semibold">
-              <FiUser size={11} />
+          <div className="absolute bottom-2 sm:left-4 left-3">
+            <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/25 backdrop-blur-md text-white text-[10px] sm:text-xs font-semibold">
+              <FiUser size={10} className="sm:size-11" />
               Event Creator
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         <div 
           ref={contentRef}
           className="overflow-y-auto"
-          style={{ maxHeight: 'calc(85dvh - 6rem)' }}
+          style={{ maxHeight: 'calc(90dvh - 5rem)' }}
         >
           <div className="p-4 sm:p-5 space-y-4">
             {/* Avatar Section */}

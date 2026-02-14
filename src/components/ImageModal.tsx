@@ -378,11 +378,11 @@ const ImageModal: React.FC<ImageModalProps> = ({
         </div>
 
         {/* Bottom UI Section */}
-        <div className="flex-shrink-0 z-30">
+        <div className="flex-shrink-0 z-30 pb-4 sm:pb-6 md:pb-8">
           {/* Image Counter and Title */}
-          <div className="px-4 pb-3 lg:pb-6">
-            <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-2xl px-6 py-4 shadow-2xl mx-auto max-w-lg border border-white/10">
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 truncate text-center text-white leading-tight">{event?.name}</h3>
+          <div className="px-4 mb-3 sm:mb-4">
+            <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl mx-auto max-w-lg border border-white/10">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 truncate text-center text-white leading-tight">{event?.name}</h3>
               {allImageUrls.length > 1 && (
                 <div className="flex items-center justify-center gap-2">
                   <div className="flex gap-1">
@@ -405,8 +405,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
           {/* Thumbnail Strip */}
           {allImageUrls.length > 1 && (
-            <div className="px-4 pb-6 lg:pb-8">
-              <div className="flex gap-3 sm:gap-4 flex-wrap justify-center max-w-4xl mx-auto">
+            <div className="px-4">
+              <div className="flex gap-2 sm:gap-3 flex-wrap justify-center max-w-4xl mx-auto">
                 {allImageUrls.slice(0, 8).map((imageUrl: string, index: number) => (
                   <ThumbnailItem
                     key={index}
@@ -417,8 +417,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
                   />
                 ))}
                 {allImageUrls.length > 8 && (
-                  <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-black/60 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm font-bold">+{allImageUrls.length - 8}</span>
+                  <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl bg-black/60 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center shadow-lg">
+                    <span className="text-white text-xs sm:text-sm font-bold">+{allImageUrls.length - 8}</span>
                   </div>
                 )}
               </div>

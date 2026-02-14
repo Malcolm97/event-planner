@@ -102,7 +102,6 @@ self.addEventListener('fetch', (event) => {
       '/',
       '/events',
       '/categories',
-      '/creators',
       '/about',
       '/settings',
       '/terms',
@@ -337,8 +336,7 @@ async function cacheDataPeriodically(isPWA = false) {
 // Lighter caching for PWA mode
 async function cacheEssentialDataOnly() {
   const essentialUrls = [
-    '/api/events?limit=20',
-    '/api/users?limit=10'
+    '/api/events?limit=20'
   ];
 
   for (const url of essentialUrls) {
@@ -358,8 +356,7 @@ async function cacheEssentialDataOnly() {
 async function cacheApiData() {
   const apiUrls = [
     '/api/events',
-    '/api/events?limit=50',
-    '/api/users?limit=50'
+    '/api/events?limit=50'
   ];
 
   for (const url of apiUrls) {
@@ -381,7 +378,6 @@ async function cachePages() {
     '/',
     '/events',
     '/categories',
-    '/creators',
     '/about',
     '/settings',
     '/terms',
@@ -436,23 +432,6 @@ async function cacheModalData() {
           }
         } catch (error) {
           console.warn(`Failed to cache event ${event.id}:`, error);
-        }
-      }
-    }
-
-    const creatorsResponse = await fetch('/api/users?limit=20');
-    if (creatorsResponse.ok) {
-      const creators = await creatorsResponse.json();
-
-      for (const creator of creators) {
-        try {
-          const creatorDetailResponse = await fetch(`/api/users/${creator.id}`);
-          if (creatorDetailResponse.ok) {
-            const cache = await caches.open(API_CACHE);
-            await cache.put(`/api/users/${creator.id}`, creatorDetailResponse);
-          }
-        } catch (error) {
-          console.warn(`Failed to cache creator ${creator.id}:`, error);
         }
       }
     }

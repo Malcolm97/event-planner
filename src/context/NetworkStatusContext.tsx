@@ -41,54 +41,68 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
 
   // Connection quality detection using Network Information API
   const updateConnectionQuality = useCallback(() => {
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+    try {
+      if ('connection' in navigator) {
+        const connection = (navigator as any).connection;
 
-      // Update connection type and metrics
-      setConnectionType(connection.effectiveType || 'unknown');
-      setDownlink(connection.downlink || 0);
-      setRtt(connection.rtt || 0);
+        // Update connection type and metrics with error handling
+        try {
+          setConnectionType(connection?.effectiveType || 'unknown');
+          setDownlink(connection?.downlink || 0);
+          setRtt(connection?.rtt || 0);
+        } catch (e) {
+          // Some properties might not be available
+          console.warn('Error reading connection properties:', e);
+        }
 
-      // Determine connection quality based on effectiveType and downlink
-      let quality: 'poor' | 'fair' | 'good' | 'excellent' | 'unknown' = 'unknown';
+        // Determine connection quality based on effectiveType and downlink
+        let quality: 'poor' | 'fair' | 'good' | 'excellent' | 'unknown' = 'unknown';
 
-      if (connection.effectiveType) {
-        switch (connection.effectiveType) {
-          case 'slow-2g':
-          case '2g':
+        if (connection?.effectiveType) {
+          switch (connection.effectiveType) {
+            case 'slow-2g':
+            case '2g':
+              quality = 'poor';
+              break;
+            case '3g':
+              quality = (connection.downlink >= 1) ? 'fair' : 'poor';
+              break;
+            case '4g':
+              if (connection.downlink >= 5) {
+                quality = 'excellent';
+              } else if (connection.downlink >= 2) {
+                quality = 'good';
+              } else {
+                quality = 'fair';
+              }
+              break;
+            default:
+              quality = 'unknown';
+          }
+        } else if (connection?.downlink > 0) {
+          // Fallback to downlink speed if effectiveType not available
+          if (connection.downlink >= 5) {
+            quality = 'excellent';
+          } else if (connection.downlink >= 2) {
+            quality = 'good';
+          } else if (connection.downlink >= 0.5) {
+            quality = 'fair';
+          } else {
             quality = 'poor';
-            break;
-          case '3g':
-            quality = connection.downlink >= 1 ? 'fair' : 'poor';
-            break;
-          case '4g':
-            if (connection.downlink >= 5) {
-              quality = 'excellent';
-            } else if (connection.downlink >= 2) {
-              quality = 'good';
-            } else {
-              quality = 'fair';
-            }
-            break;
-          default:
-            quality = 'unknown';
+          }
         }
-      } else if (connection.downlink > 0) {
-        // Fallback to downlink speed if effectiveType not available
-        if (connection.downlink >= 5) {
-          quality = 'excellent';
-        } else if (connection.downlink >= 2) {
-          quality = 'good';
-        } else if (connection.downlink >= 0.5) {
-          quality = 'fair';
-        } else {
-          quality = 'poor';
-        }
-      }
 
-      setConnectionQuality(quality);
-    } else {
-      // Fallback for browsers without Network Information API
+        setConnectionQuality(quality);
+      } else {
+        // Fallback for browsers without Network Information API
+        setConnectionQuality('unknown');
+        setConnectionType('unknown');
+        setDownlink(0);
+        setRtt(0);
+      }
+    } catch (error) {
+      // Fallback for any errors
+      console.warn('Error detecting connection quality:', error);
       setConnectionQuality('unknown');
       setConnectionType('unknown');
       setDownlink(0);
@@ -116,19 +130,23 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
         '/api/health'
       ];
 
-      // Use service worker to cache these URLs
-      if ('serviceWorker' in navigator && 'caches' in window) {
-        const cache = await caches.open('event-planner-cache-v4');
-        for (const url of essentialUrls) {
-          try {
-            const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
-            if (response.ok) {
-              // Cache the successful response
-              await cache.put(url, response);
+      // Use service worker to cache these URLs - with error handling
+      if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'caches' in window) {
+        try {
+          const cache = await caches.open('event-planner-cache-v4');
+          for (const url of essentialUrls) {
+            try {
+              const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+              if (response.ok) {
+                // Cache the successful response
+                await cache.put(url, response);
+              }
+            } catch (error) {
+              console.warn(`Failed to pre-cache ${url}:`, error);
             }
-          } catch (error) {
-            console.warn(`Failed to pre-cache ${url}:`, error);
           }
+        } catch (cacheError) {
+          console.warn('Failed to open cache:', cacheError);
         }
       }
     } catch (error) {

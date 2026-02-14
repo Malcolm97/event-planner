@@ -113,22 +113,27 @@ export default function SettingsPage() {
           setUser(data.user);
         }
         if (data.user && isMounted) {
-          const { data: profile, error } = await supabase
-            .from('users')
-            .select('preferences')
-            .eq('id', data.user.id)
-            .single();
+          try {
+            const { data: profile, error } = await supabase
+              .from('users')
+              .select('preferences')
+              .eq('id', data.user.id)
+              .single();
 
-          if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-            console.error('Failed to load user preferences:', error);
-          } else if (profile?.preferences && isMounted) {
-            try {
-              const prefs = JSON.parse(profile.preferences);
-              if (prefs.autoSync !== undefined) setAutoSync(prefs.autoSync);
-              if (prefs.landing) setLanding(prefs.landing);
-            } catch (parseError) {
-              console.error('Failed to parse user preferences:', parseError);
+            // Ignore all errors - preferences are optional and localStorage is fallback
+            // This handles missing table, missing column, not found, etc.
+            if (!error && profile?.preferences && isMounted) {
+              try {
+                const prefs = JSON.parse(profile.preferences);
+                if (prefs.autoSync !== undefined) setAutoSync(prefs.autoSync);
+                if (prefs.landing) setLanding(prefs.landing);
+              } catch (parseError) {
+                console.error('Failed to parse user preferences:', parseError);
+              }
             }
+          } catch (prefsError) {
+            // Silently ignore - localStorage preferences will be used as fallback
+            console.debug('Could not load preferences from Supabase, using localStorage');
           }
         }
       } catch (authError) {

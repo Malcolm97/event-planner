@@ -228,7 +228,7 @@ export default function OfflineIndicator({ className = '' }: OfflineIndicatorPro
         {!isOnline && (
           <div className="mt-2 text-sm opacity-90">
             <div className="flex items-center space-x-4">
-              <span>✨ Browse cached events and creators</span>
+              <span>✨ Browse cached events</span>
               <span>📝 Create events (saved for later)</span>
               <span>🖼️ Upload images (queued automatically)</span>
             </div>

@@ -274,7 +274,7 @@
             <p>PNG Events is temporarily unavailable. Some features may be limited while offline.</p>
 
             <div class="features">
-                <div class="feature">Browse cached events, creators, and categories below</div>
+                <div class="feature">Browse cached events and categories below</div>
                 <div class="feature">Create events (will sync when online)</div>
                 <div class="feature">View your dashboard (if logged in)</div>
                 <div class="feature">Connection quality indicators for mobile users</div>
@@ -296,14 +296,6 @@
                 </div>
 
                 <div class="section-title">
-                    <span class="section-icon">👥</span>
-                    Cached Creators
-                </div>
-                <div id="creators-list">
-                    <div class="loading">Loading cached creators...</div>
-                </div>
-
-                <div class="section-title">
                     <span class="section-icon">🏷️</span>
                     Cached Categories
                 </div>
@@ -315,7 +307,7 @@
     </div>
 
     <script>
-        let cachedStats = { events: 0, creators: 0, categories: 0 };
+        let cachedStats = { events: 0, categories: 0 };
 
         // Load cached data from IndexedDB
         async function loadCachedData() {
@@ -329,9 +321,6 @@
 
                 // Load cached events
                 await loadCachedEvents(db);
-
-                // Load cached users/creators
-                await loadCachedCreators(db);
 
                 // Load cached categories
                 await loadCachedCategories();
@@ -352,10 +341,6 @@
                 <div class="stat-card">
                     <div class="stat-number">${cachedStats.events}</div>
                     <div class="stat-label">Saved Events</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${cachedStats.creators}</div>
-                    <div class="stat-label">Cached Creators</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${cachedStats.categories}</div>
@@ -414,57 +399,6 @@
                 console.error('Failed to load cached events:', error);
                 document.getElementById('events-list').innerHTML =
                     '<p class="no-events">Unable to load saved events. Please try refreshing the page.</p>';
-            }
-        }
-
-        async function loadCachedCreators(db) {
-            try {
-                const creatorsList = document.getElementById('creators-list');
-
-                // Get users from store
-                const transaction = db.transaction(['users'], 'readonly');
-                const store = transaction.objectStore('users');
-                const request = store.getAll();
-
-                const allUsers = await new Promise((resolve, reject) => {
-                    request.onsuccess = () => {
-                        const allItems = request.result;
-                        // Filter out metadata and return users
-                        const users = allItems.filter(item => item.id !== 'cache-meta');
-                        resolve(users);
-                    };
-                    request.onerror = () => reject(request.error);
-                });
-
-                cachedStats.creators = allUsers.length;
-                const users = allUsers.slice(0, 8); // Show max 8
-
-                if (users.length === 0) {
-                    creatorsList.innerHTML = '<p class="no-events">No cached creators available.</p>';
-                    return;
-                }
-
-                // Display creators
-                const creatorsHtml = users.map(user => `
-                    <div class="event-item">
-                        <div class="event-title">${user.name || 'Anonymous Creator'}</div>
-                        <div class="event-meta">
-                            ${user.bio ? `👤 ${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}` : 'Event creator'}
-                            ${user.email ? `✉️ ${user.email}` : ''}
-                        </div>
-                        <div class="event-tags">
-                            ${user.location ? `<span class="event-category">${user.location}</span>` : ''}
-                            ${user.role ? `<span class="event-category">${user.role}</span>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-
-                creatorsList.innerHTML = creatorsHtml;
-
-            } catch (error) {
-                console.error('Failed to load cached creators:', error);
-                document.getElementById('creators-list').innerHTML =
-                    '<p class="no-events">Unable to load cached creators.</p>';
             }
         }
 

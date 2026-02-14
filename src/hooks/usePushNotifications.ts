@@ -68,15 +68,21 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         let reg = await navigator.serviceWorker.getRegistration();
         
         if (!reg) {
-          // Register new service worker
-          reg = await navigator.serviceWorker.register('/service-worker.js', {
-            scope: '/'
-          });
-          console.log('Service worker registered for push notifications:', reg.scope);
-          
-          // Wait for the service worker to be ready
-          await navigator.serviceWorker.ready;
-          console.log('Service worker is ready');
+          // Register new service worker - with error handling for production
+          try {
+            reg = await navigator.serviceWorker.register('/service-worker.js', {
+              scope: '/'
+            });
+            console.log('Service worker registered for push notifications:', reg.scope);
+            
+            // Wait for the service worker to be ready
+            await navigator.serviceWorker.ready;
+            console.log('Service worker is ready');
+          } catch (regError) {
+            // Service worker registration failed - this is common in some browsers
+            console.warn('Service worker registration failed (non-critical):', regError);
+            return; // Don't throw, just return silently
+          }
         } else {
           console.log('Service worker already registered:', reg.scope);
           
@@ -86,7 +92,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           }
         }
       } catch (err) {
-        console.error('Service worker registration failed:', err);
+        // Catch any other errors but don't crash - service worker is optional
+        console.warn('Service worker setup error (non-critical):', err);
+        return;
       }
     };
 

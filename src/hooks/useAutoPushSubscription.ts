@@ -43,7 +43,14 @@ export function useAutoPushSubscription(options: UseAutoPushSubscriptionOptions 
     }
 
     // Skip if already attempted recently (within last hour)
-    const lastAttempt = localStorage.getItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+    let lastAttempt: string | null = null;
+    try {
+      lastAttempt = localStorage.getItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+    } catch (e) {
+      // localStorage not available - skip
+      console.log('LocalStorage not available, skipping auto-subscribe tracking');
+    }
+    
     if (lastAttempt) {
       const attemptTime = parseInt(lastAttempt, 10);
       const hourAgo = Date.now() - (60 * 60 * 1000);
@@ -58,7 +65,12 @@ export function useAutoPushSubscription(options: UseAutoPushSubscriptionOptions 
     hasAttemptedRef.current = true;
 
     // Mark that we've attempted
-    localStorage.setItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY, Date.now().toString());
+    try {
+      localStorage.setItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY, Date.now().toString());
+    } catch (e) {
+      // localStorage not available - continue anyway
+      console.warn('Could not save auto-subscribe attempt to localStorage');
+    }
 
     // Check if PWA is installed or being used
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
@@ -76,13 +88,29 @@ export function useAutoPushSubscription(options: UseAutoPushSubscriptionOptions 
         // For PWA users, auto-subscribe without explicit prompt
         if (isPWA || showPrompt) {
           console.log('Auto-subscribing to push notifications...');
-          await subscribe();
-          console.log('Successfully auto-subscribed to push notifications');
+          try {
+            await subscribe();
+            console.log('Successfully auto-subscribed to push notifications');
+          } catch (subscribeError) {
+            // Subscribe failed - this is non-critical, just log it
+            console.warn('Auto-subscribe failed (non-critical):', subscribeError);
+            // Clear the attempted flag so it can be tried again later
+            try {
+              localStorage.removeItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+            } catch (e) {
+              // Ignore
+            }
+          }
         }
       } catch (error) {
-        console.error('Auto-subscribe failed:', error);
+        // Catch any outer errors but don't crash
+        console.warn('Auto-subscribe error (non-critical):', error);
         // Clear the attempted flag so it can be tried again later
-        localStorage.removeItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+        try {
+          localStorage.removeItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+        } catch (e) {
+          // Ignore
+        }
       }
     }, delay);
 
@@ -93,7 +121,11 @@ export function useAutoPushSubscription(options: UseAutoPushSubscriptionOptions 
 
   // Function to reset auto-subscribe (useful for settings)
   const resetAutoSubscribe = () => {
-    localStorage.removeItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+    try {
+      localStorage.removeItem(AUTO_SUBSCRIBE_ATTEMPTED_KEY);
+    } catch (e) {
+      // Ignore localStorage errors
+    }
     hasAttemptedRef.current = false;
   };
 
