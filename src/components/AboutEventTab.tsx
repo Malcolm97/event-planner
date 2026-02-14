@@ -11,26 +11,26 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
   const hasValidDescription = event?.description && typeof event.description === 'string' && event.description.trim().length > 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {hasValidDescription ? (
-        <div className="flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br from-gray-50 via-white to-gray-50 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center shadow-sm">
-            <FiInfo size={18} className="text-yellow-600" />
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-br from-gray-50 via-white to-gray-50 border border-gray-200/60 shadow-sm">
+          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
+            <FiInfo size={14} className="text-yellow-600" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-gray-900 text-xl mb-3">About This Event</h3>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
+            <h3 className="font-semibold text-gray-900 text-sm mb-2">About This Event</h3>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-xs sm:text-sm">
               {event.description.trim()}
             </p>
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200/60 text-gray-600 px-6 py-8 rounded-2xl text-center shadow-md">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center shadow-sm">
-            <FiInfo size={20} className="text-gray-500" />
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200/60 text-gray-600 px-4 py-5 rounded-xl text-center">
+          <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+            <FiInfo size={16} className="text-gray-500" />
           </div>
-          <h3 className="font-semibold text-lg mb-2">No Description Available</h3>
-          <p className="text-base">This event doesn't have a description yet.</p>
+          <h3 className="font-medium text-sm mb-1">No Description Available</h3>
+          <p className="text-xs">This event doesn't have a description yet.</p>
         </div>
       )}
     </div>

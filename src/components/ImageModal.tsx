@@ -26,10 +26,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ src, alt, isActive, onCli
 
   return (
     <div
-      className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg sm:rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border-2 shadow-lg ${
+      className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
         isActive
-          ? 'border-white scale-110 shadow-white/50'
-          : 'border-white/30 hover:border-white/70 hover:scale-105'
+          ? 'border-white scale-105 shadow-white/50'
+          : 'border-white/30 hover:border-white/70'
       }`}
       onClick={(e) => {
         e.stopPropagation();
@@ -246,83 +246,81 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md pt-14 sm:pt-16 md:pt-20 lg:pt-24 pb-20 sm:pb-24 md:pb-28 lg:pb-4 animate-fade-in flex items-center justify-center"
+      className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-0 z-[110] bg-black/95 backdrop-blur-md animate-fade-in flex flex-col"
       onClick={onClose}
     >
-      <div className="relative w-full h-full flex flex-col items-center justify-center">
-  {/* Top Controls Bar - sticky for desktop */}
-  <div className="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 z-30 lg:sticky lg:top-4">
-          {/* Zoom Controls */}
-          <div className="flex gap-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
-              className="p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
-              aria-label="Zoom Out"
-            >
-              <FiZoomOut size={20} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
-              className="px-4 py-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110 text-sm font-medium"
-              aria-label="Reset Zoom"
-            >
-              {Math.round(zoom * 100)}%
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
-              className="p-3 rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-all duration-200 shadow-lg hover:scale-110"
-              aria-label="Zoom In"
-            >
-              <FiZoomIn size={20} />
-            </button>
-          </div>
-
-          {/* Close button */}
+      {/* Top Controls Bar - Fixed at top */}
+      <div className="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 md:p-5">
+        {/* Left side - Zoom Controls */}
+        <div className="flex gap-2">
           <button
-            onClick={onClose}
-            className="p-3 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-yellow-500 hover:text-black transition-all duration-200 shadow-2xl border-2 border-white/20 hover:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-70"
-            aria-label="Close Image Viewer"
-            style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.5)' }}
+            onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
+            className="p-2 sm:p-2.5 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 shadow-lg"
+            aria-label="Zoom Out"
           >
-            <FiX size={28} />
+            <FiZoomOut size={18} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
+            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 text-sm font-medium shadow-lg"
+            aria-label="Reset Zoom"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
+            className="p-2 sm:p-2.5 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 shadow-lg"
+            aria-label="Zoom In"
+          >
+            <FiZoomIn size={18} />
           </button>
         </div>
 
-        {/* Main Image Area */}
-        <div className="flex-1 relative flex items-center justify-center p-4">
-          {/* Navigation Buttons */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onPrevImage(); }}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
-            aria-label="Previous Image"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+        {/* Right side - Close button - always visible */}
+        <button
+          onClick={onClose}
+          className="p-2.5 sm:p-3 md:p-3.5 rounded-full bg-black/80 backdrop-blur-xl text-white hover:bg-yellow-500 hover:text-black transition-all duration-200 shadow-xl border-2 border-white/20 hover:border-yellow-400"
+          aria-label="Close Image Viewer"
+        >
+          <FiX size={22} className="sm:size-24 md:size-26" />
+        </button>
+      </div>
 
-          {/* Main Image Container - scale to full viewport for desktop */}
-          <div
-            ref={containerRef}
-            className="relative w-full max-w-7xl h-full max-h-[80vh] lg:max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={handleMouseDown}
-            onMouseMove={(e) => {
-              // Track mouse position for zoom centering
-              if (containerRef.current) {
-                const rect = containerRef.current.getBoundingClientRect();
-                setMousePos({
-                  x: e.clientX - rect.left - rect.width / 2,
-                  y: e.clientY - rect.top - rect.height / 2
-                });
-              }
-              handleMouseMove(e);
-            }}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onWheel={handleWheel}
-            style={{ touchAction: 'none' }}
-          >
+      {/* Main Image Area - Takes remaining space */}
+      <div className="flex-1 relative flex items-center justify-center px-12 sm:px-16 md:px-20 lg:px-24 w-full min-h-0">
+        {/* Navigation Buttons - visible on tablet+ */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrevImage(); }}
+          className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-black/70 backdrop-blur-lg hover:bg-black/80 text-white p-2 sm:p-3 rounded-full transition-all duration-200 z-20 shadow-lg"
+          aria-label="Previous Image"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Main Image Container */}
+        <div
+          ref={containerRef}
+          className="relative w-full h-full max-h-full overflow-hidden rounded-lg sm:rounded-xl shadow-2xl cursor-grab active:cursor-grabbing"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={handleMouseDown}
+          onMouseMove={(e) => {
+            // Track mouse position for zoom centering
+            if (containerRef.current) {
+              const rect = containerRef.current.getBoundingClientRect();
+              setMousePos({
+                x: e.clientX - rect.left - rect.width / 2,
+                y: e.clientY - rect.top - rect.height / 2
+              });
+            }
+            handleMouseMove(e);
+          }}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+          style={{ touchAction: 'none' }}
+        >
             {/* Loading State */}
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900 rounded-2xl">
@@ -366,65 +364,47 @@ const ImageModal: React.FC<ImageModalProps> = ({
             )}
           </div>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); onNextImage(); }}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white p-4 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
-            aria-label="Next Image"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onNextImage(); }}
+          className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-black/70 backdrop-blur-lg hover:bg-black/80 text-white p-2 sm:p-3 rounded-full transition-all duration-200 z-20 shadow-lg"
+          aria-label="Next Image"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
 
-        {/* Bottom UI Section */}
-        <div className="flex-shrink-0 z-30 pb-4 sm:pb-6 md:pb-8">
-          {/* Image Counter and Title */}
-          <div className="px-4 mb-3 sm:mb-4">
-            <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl mx-auto max-w-lg border border-white/10">
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 truncate text-center text-white leading-tight">{event?.name}</h3>
-              {allImageUrls.length > 1 && (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="flex gap-1">
-                    {allImageUrls.slice(0, 5).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          index === activeImageIndex % 5 ? 'bg-white scale-125' : 'bg-white/40'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm md:text-base text-white/90 font-medium ml-2">
-                    {activeImageIndex + 1} / {allImageUrls.length}
-                  </p>
-                </div>
-              )}
-            </div>
+      {/* Bottom UI Section - Fixed at bottom with spacing for mobile nav */}
+      <div className="flex-shrink-0 p-3 sm:p-4 pb-16 sm:pb-6 md:pb-4">
+        {/* Image Counter */}
+        <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-xl px-4 py-2 mx-auto max-w-md border border-white/10 mb-3">
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-xs sm:text-sm text-white/90 font-medium">
+              {activeImageIndex + 1} / {allImageUrls.length}
+            </p>
           </div>
-
-          {/* Thumbnail Strip */}
-          {allImageUrls.length > 1 && (
-            <div className="px-4">
-              <div className="flex gap-2 sm:gap-3 flex-wrap justify-center max-w-4xl mx-auto">
-                {allImageUrls.slice(0, 8).map((imageUrl: string, index: number) => (
-                  <ThumbnailItem
-                    key={index}
-                    src={imageUrl}
-                    alt={`${event?.name} image ${index + 1}`}
-                    isActive={activeImageIndex === index}
-                    onClick={() => onImageSelect(index)}
-                  />
-                ))}
-                {allImageUrls.length > 8 && (
-                  <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl bg-black/60 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center shadow-lg">
-                    <span className="text-white text-xs sm:text-sm font-bold">+{allImageUrls.length - 8}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Thumbnail Strip */}
+        {allImageUrls.length > 1 && (
+          <div className="flex gap-2 justify-center max-w-2xl mx-auto">
+            {allImageUrls.slice(0, 6).map((imageUrl: string, index: number) => (
+              <ThumbnailItem
+                key={index}
+                src={imageUrl}
+                alt={`${event?.name} image ${index + 1}`}
+                isActive={activeImageIndex === index}
+                onClick={() => onImageSelect(index)}
+              />
+            ))}
+            {allImageUrls.length > 6 && (
+              <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-black/60 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">+{allImageUrls.length - 6}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

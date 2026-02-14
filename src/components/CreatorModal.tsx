@@ -134,26 +134,20 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         style={{ maxHeight: '90dvh' }}
       >
         {/* Header with gradient */}
-        <div className="relative h-16 sm:h-20 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
-          {/* Decorative elements */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full blur-xl" />
-            <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-          </div>
-          
+        <div className="relative h-14 sm:h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200 hover:rotate-90 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] flex items-center justify-center z-10"
+            className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200"
             aria-label="Close modal"
           >
-            <FiX size={16} className="sm:size-18" />
+            <FiX size={16} />
           </button>
 
           {/* Title badge */}
-          <div className="absolute bottom-2 sm:left-4 left-3">
-            <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/25 backdrop-blur-md text-white text-[10px] sm:text-xs font-semibold">
-              <FiUser size={10} className="sm:size-11" />
+          <div className="absolute bottom-3 left-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/25 backdrop-blur-md text-white text-xs font-medium">
+              <FiUser size={12} />
               Event Creator
             </div>
           </div>
@@ -163,20 +157,20 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         <div 
           ref={contentRef}
           className="overflow-y-auto"
-          style={{ maxHeight: 'calc(90dvh - 5rem)' }}
+          style={{ maxHeight: 'calc(90dvh - 4rem)' }}
         >
           <div className="p-4 sm:p-5 space-y-4">
             {/* Avatar Section */}
             <div className="flex items-start gap-4">
-              <div className="relative flex-shrink-0 -mt-8 sm:-mt-10">
-                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white p-1 shadow-lg">
-                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+              <div className="relative flex-shrink-0">
+                <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-xl bg-white p-1 shadow-md">
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                     {creator.photo_url ? (
                       <Image
                         src={creator.photo_url}
                         alt={creator.name || 'Creator'}
-                        width={80}
-                        height={80}
+                        width={72}
+                        height={72}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -187,31 +181,26 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                   </div>
                 </div>
                 {/* Online/Active indicator */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
               </div>
 
               <div className="flex-1 min-w-0 pt-1">
-                <h2 id="creator-modal-title" className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                <h2 id="creator-modal-title" className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                   {creator.name || 'Unnamed Creator'}
                 </h2>
                 {creator.company && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <FiBriefcase size={13} className="text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-600 font-medium text-sm truncate">{creator.company}</span>
-                  </div>
+                  <span className="text-gray-600 text-sm truncate block">{creator.company}</span>
                 )}
                 {/* Stats row */}
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <FiCalendar size={13} />
+                <div className="flex items-center gap-3 mt-1.5">
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                    <FiCalendar size={14} />
                     <span className="font-medium">{creator.eventsCount}</span>
                     <span className="hidden sm:inline">events</span>
                   </div>
                   {hasUpcomingEvents && (
-                    <div className="flex items-center gap-1 text-sm text-green-600">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                    <div className="flex items-center gap-1.5 text-sm text-green-600">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                       Active
                     </div>
                   )}
@@ -269,36 +258,26 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
 
             {/* Bio */}
             {creator.about && (
-              <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">About</h4>
+              <div className="py-2">
                 <p className="text-gray-700 leading-relaxed text-sm">{creator.about}</p>
               </div>
             )}
 
             {/* Events Gallery */}
             {galleryEvents.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-2.5">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Events
+              <div className="py-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-500">
+                    Events ({creator.eventsCount})
                   </h4>
-                  {creator.eventsCount > 4 && (
-                    <button
-                      onClick={handleViewAllEvents}
-                      className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-0.5 transition-colors"
-                    >
-                      View all
-                      <FiChevronRight size={12} />
-                    </button>
-                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-3">
                   {galleryEvents.map((event, index) => {
                     const isUpcoming = event.date && new Date(event.date) >= new Date();
                     return (
                       <div
                         key={event.id || index}
-                        className="relative rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
+                        className="relative rounded-xl overflow-hidden group cursor-pointer shadow-md"
                       >
                         <div className="aspect-[4/3] relative">
                           {event.image_url ? (
@@ -306,7 +285,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                               src={event.image_url}
                               alt={event.name || 'Event'}
                               fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="object-cover"
                               sizes="(max-width: 640px) 50vw, 25vw"
                             />
                           ) : (
@@ -319,19 +298,17 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                           
                           {/* Upcoming badge */}
                           {isUpcoming && (
-                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[9px] font-bold rounded-full flex items-center gap-0.5">
-                              <span className="w-1 h-1 bg-white rounded-full" />
+                            <div className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-[9px] font-bold rounded-full">
                               UPCOMING
                             </div>
                           )}
                         </div>
                         
                         {/* Event info */}
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <div className="absolute bottom-0 left-0 right-0 p-2.5">
                           <p className="text-white font-semibold text-xs truncate">{event.name}</p>
                           {event.date && (
-                            <p className="text-white/70 text-[10px] flex items-center gap-0.5 mt-0.5">
-                              <FiCalendar size={8} />
+                            <p className="text-white/70 text-[10px] mt-0.5">
                               {new Date(event.date).toLocaleDateString('en-US', { 
                                 month: 'short', 
                                 day: 'numeric' 
@@ -343,74 +320,47 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                     );
                   })}
                 </div>
-                
-                {/* View All CTA */}
-                {creator.eventsCount > 4 && (
-                  <button
-                    onClick={handleViewAllEvents}
-                    className="w-full mt-3 py-2.5 px-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm shadow-md hover:shadow-lg"
-                  >
-                    <FiCalendar size={14} />
-                    View All {creator.eventsCount} Events
-                    <FiChevronRight size={12} />
-                  </button>
-                )}
               </div>
             )}
 
             {/* Contact Section */}
-            <div className={`${authUser ? '' : 'bg-gradient-to-br from-gray-50 to-white'} rounded-xl p-3.5 border border-gray-100`}>
+            <div className={`${authUser ? '' : 'bg-gradient-to-br from-gray-50 to-white'} rounded-xl p-4 border border-gray-100`}>
               {authUser ? (
-                <>
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
-                    Contact Information
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {creator.email && (
-                      <a
-                        href={`mailto:${creator.email}`}
-                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors"
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-blue-500 text-white flex items-center justify-center flex-shrink-0">
-                          <FiMail size={14} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-blue-600 font-medium">Email</p>
-                          <p className="text-blue-900 font-semibold text-xs truncate">{creator.email}</p>
-                        </div>
-                      </a>
-                    )}
-                    {creator.phone && (
-                      <a
-                        href={`tel:${creator.phone}`}
-                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-green-50 border border-green-100 hover:bg-green-100 transition-colors"
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-green-500 text-white flex items-center justify-center flex-shrink-0">
-                          <FiPhone size={14} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-green-600 font-medium">Phone</p>
-                          <p className="text-green-900 font-semibold text-xs truncate">{creator.phone}</p>
-                        </div>
-                      </a>
-                    )}
-                  </div>
-                </>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {creator.email && (
+                    <a
+                      href={`mailto:${creator.email}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <FiMail size={14} className="text-blue-600" />
+                      </div>
+                      <span className="text-blue-700 text-sm truncate">{creator.email}</span>
+                    </a>
+                  )}
+                  {creator.phone && (
+                    <a
+                      href={`tel:${creator.phone}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-100"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                        <FiPhone size={14} className="text-green-600" />
+                      </div>
+                      <span className="text-green-700 text-sm truncate">{creator.phone}</span>
+                    </a>
+                  )}
+                </div>
               ) : (
                 <div className="text-center py-2">
-                  <div className="w-11 h-11 mx-auto mb-2 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
-                    <FiUser size={18} className="text-orange-500" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 text-sm mb-0.5">Sign In to Connect</h4>
-                  <p className="text-gray-500 text-xs mb-3">
-                    Log in to view contact details
+                  <p className="text-gray-500 text-sm mb-3">
+                    <span className="font-semibold">Sign in</span> to view contact details
                   </p>
                   <button
                     onClick={handleSignInClick}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all duration-200 text-sm min-h-[40px]"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-medium"
                   >
                     Sign In
-                    <FiExternalLink size={12} />
+                    <FiExternalLink size={14} />
                   </button>
                 </div>
               )}
@@ -419,10 +369,10 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
             {/* View Full Profile CTA */}
             <button
               onClick={handleViewFullProfile}
-              className="w-full py-2.5 px-3 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm"
+              className="w-full py-3 px-4 bg-white border-2 border-gray-200 text-gray-700 font-medium rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
             >
               View Full Profile
-              <FiChevronRight size={14} />
+              <FiChevronRight size={16} />
             </button>
           </div>
         </div>

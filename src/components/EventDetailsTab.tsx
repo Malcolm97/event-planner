@@ -152,14 +152,14 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* Event Image and Details Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
         {/* Left Column: Event Images */}
         <div className="order-2 lg:order-1 h-full">
           {/* Primary Image */}
           <div
-            className="relative group rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 cursor-pointer border border-gray-200/50 bg-gradient-to-br from-gray-50 to-white h-full"
+            className="relative group rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200/50 bg-gradient-to-br from-gray-50 to-white aspect-[4/3] lg:aspect-auto"
             onClick={() => onImageExpand(0)}
           >
             {/* Loading skeleton */}
@@ -225,89 +225,53 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
         </div>
 
         {/* Right Column: Location and Date/Time */}
-        <div className="order-1 lg:order-2 space-y-4 sm:space-y-4">
+        <div className="order-1 lg:order-2 space-y-2 sm:space-y-3">
           {/* Location Card */}
-          <div className="flex flex-col gap-4 sm:gap-4 p-5 sm:p-5 rounded-2xl bg-gradient-to-br from-gray-50 via-white to-gray-50 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shadow-sm">
-                <FiMapPin size={18} className="text-blue-600" />
-              </div>
-              <div className="flex-1 space-y-2">
-                <div>
-                  <h3 className="text-heading-lg text-gray-900">Location</h3>
-                  <p className="text-gray-700 text-base leading-relaxed font-medium">
-                    {event?.location || 'Not specified'}
-                  </p>
-                </div>
-                {event?.venue && (
-                  <div>
-                    <h3 className="text-heading-md text-gray-900">Venue</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {event.venue}
-                    </p>
-                  </div>
-                )}
-              </div>
+          <div className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-gray-50 via-white to-gray-50 border border-gray-200/60 shadow-sm">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+              <FiMapPin size={14} className="text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-700 text-xs sm:text-sm font-medium">
+                {event?.location || 'Not specified'}
+              </p>
+              {event?.venue && (
+                <p className="text-gray-500 text-xs mt-0.5">{event.venue}</p>
+              )}
             </div>
           </div>
 
           {/* Date & Time Card */}
           {event?.date && (
-            <div className="flex flex-col gap-4 sm:gap-4 p-5 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-blue-50 border border-indigo-200/60 shadow-md hover:shadow-lg transition-all duration-300">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center shadow-sm">
-                  <FiCalendar size={18} className="text-red-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-heading-lg text-gray-900 mb-2">Date & Time</h3>
-                  <div className="space-y-1">
-                    {event.end_date ? (
-                      <>
-                        <p className="text-gray-700 text-base font-medium leading-relaxed">
-                          <span className="font-semibold text-gray-600">Start:</span> {new Date(event.date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                        <p className="text-gray-700 text-base font-medium leading-relaxed">
-                          <span className="font-semibold text-gray-600">End:</span> {new Date(event.end_date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-gray-700 text-base font-medium leading-relaxed">
-                        {new Date(event.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <FiClock size={14} className="text-orange-600" />
-                      <p className="text-sm leading-relaxed">
-                        {new Date(event.date).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                        {event.end_date ?
-                          ` - ${new Date(event.end_date).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}`
-                          : ''}
-                      </p>
-                    </div>
-                  </div>
+            <div className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-indigo-50 via-white to-blue-50 border border-indigo-200/60 shadow-sm">
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+                <FiCalendar size={14} className="text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-700 text-xs sm:text-sm font-medium">
+                  {new Date(event.date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                  {event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })}`}
+                </p>
+                <div className="flex items-center gap-1 text-gray-500 text-xs mt-0.5">
+                  <FiClock size={10} className="text-orange-600" />
+                  {new Date(event.date).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                  })}
+                  {event.end_date &&
+                    ` - ${new Date(event.end_date).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}`}
                 </div>
               </div>
             </div>
@@ -317,7 +281,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
 
       {/* Additional Images Thumbnails */}
       {getValidImageUrls(event?.image_urls).length > 1 && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
           {getValidImageUrls(event?.image_urls).slice(1, 6).map((imageUrl: string, index: number) => (
             <ThumbnailImage
               key={index}
@@ -332,19 +296,19 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
       )}
 
       {/* Action Buttons Section */}
-      <div className="pt-4 border-t border-gray-200/60 flex justify-center sm:justify-end gap-3">
+      <div className="pt-2 border-t border-gray-200/60 flex justify-center sm:justify-end gap-2">
         {/* Save/Bookmark button for logged-in users */}
         {user && (
           <button
             onClick={handleBookmark}
-            className={`p-3 sm:p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-yellow-100 shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[48px] min-h-[48px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : ''} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-yellow-100 shadow-md hover:shadow-lg transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 w-9 h-9 flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : ''} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
             disabled={loading}
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
             ) : (
-              <FiBookmark size={20} className={bookmarked ? 'fill-current' : ''} />
+              <FiBookmark size={16} className={bookmarked ? 'fill-current' : ''} />
             )}
           </button>
         )}

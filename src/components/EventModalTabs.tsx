@@ -29,7 +29,7 @@ const tabs = [
   ];
 
   return (
-    <div className="flex gap-1 sm:gap-2 p-1.5 mx-3 sm:mx-4 mb-4 sm:mb-6 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 rounded-2xl shadow-sm">
+    <div className="flex gap-1 p-1 mx-2 sm:mx-3 mb-2 sm:mb-3 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 rounded-xl shadow-sm">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -39,21 +39,16 @@ const tabs = [
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={`
-              flex-1 flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 font-semibold rounded-xl transition-all duration-300 text-sm sm:text-base touch-manipulation
+              flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2 font-medium rounded-lg transition-all duration-300 text-xs sm:text-sm touch-manipulation
               ${isActive
-                ? 'bg-white text-gray-900 shadow-lg border border-gray-200 transform scale-[1.02]'
+                ? 'bg-white text-gray-900 shadow border border-gray-200'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
               }
             `}
           >
-            <Icon size={16} className={isActive ? 'text-yellow-500' : ''} />
+            <Icon size={14} className={isActive ? 'text-yellow-500' : ''} />
             <span className="hidden sm:inline">{tab.label}</span>
             <span className="sm:hidden">{tab.shortLabel}</span>
-            
-            {/* Active indicator dot */}
-            {isActive && (
-              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full" />
-            )}
           </button>
         );
       })}

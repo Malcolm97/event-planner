@@ -39,7 +39,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
   const Icon = categoryIconMap[categoryLabel] || FiStar;
 
   return (
-    <div className="relative border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/30 to-white px-4 sm:px-5 md:px-6 lg:px-8 pt-6 sm:pt-7 pb-4 sm:pb-5">
+    <div className="relative border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/30 to-white px-4 sm:px-6 pt-5 pb-4 sm:pt-6 sm:pb-4">
       {/* Close Button */}
       <button
         onClick={onClose}
@@ -60,64 +60,64 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
         </Link>
       )}
 
-      {/* Mobile/Tablet Layout - Compact horizontal layout */}
-      <div className="lg:hidden flex flex-col gap-2 sm:gap-3 pr-24 sm:pr-28 overflow-hidden">
-        {/* Event Title */}
-        <div className="text-center">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 leading-tight break-words px-2">
+      {/* Mobile/Tablet Layout - Centered with proper spacing */}
+      <div className="lg:hidden flex flex-col items-center gap-3 pr-24 sm:pr-28">
+        {/* Event Title - Centered */}
+        <div className="text-center w-full px-8">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 leading-tight break-words">
             {selectedEvent?.name}
           </h1>
         </div>
 
-        {/* Pricing and Category - Single line compact */}
-        <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-1.5">
+        {/* Pricing and Category - Centered below title */}
+        <div className="flex flex-wrap justify-center items-center gap-2">
           {/* Presale Price */}
           {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow">
-              <FiDollarSign size={8} className="sm:size-10" />
-              <span className="hidden xs:inline">Presale:</span> K{selectedEvent.presale_price.toFixed(0)}
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md">
+              <FiDollarSign size={12} />
+              Presale: K{selectedEvent.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow">
-              <FiDollarSign size={8} className="sm:size-10" />
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md">
+              <FiDollarSign size={12} />
               Free
             </span>
           )}
 
           {/* Gate Price */}
           {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 && (
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow border border-gray-200">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-md border border-gray-200">
               Gate: K{selectedEvent.gate_price.toFixed(0)}
             </span>
           )}
 
           {/* Category */}
-          <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold ${categoryColor} shadow`}>
-            <Icon size={8} className="sm:size-10" />
+          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold ${categoryColor} shadow-md`}>
+            <Icon size={12} />
             {categoryLabel}
           </span>
         </div>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden lg:flex justify-between items-center gap-6">
-        {/* Event Title - Left */}
-        <div className="flex-1 min-w-0 pr-40">
-          <h1 className="text-xl xl:text-2xl 2xl:text-3xl font-bold text-gray-900 leading-tight break-words">
+      {/* Desktop Layout - Centered with proper spacing */}
+      <div className="hidden lg:flex flex-col items-center gap-3">
+        {/* Event Title - Centered */}
+        <div className="text-center w-full px-16">
+          <h1 className="text-xl xl:text-2xl font-bold text-gray-900 leading-tight break-words">
             {selectedEvent?.name}
           </h1>
         </div>
 
-        {/* Pricing and Category - Right */}
-        <div className="flex flex-wrap items-center gap-2 xl:gap-3 flex-shrink-0">
+        {/* Pricing and Category - Centered below title */}
+        <div className="flex flex-wrap justify-center items-center gap-2">
           {/* Presale Price */}
           {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
               <FiDollarSign size={14} />
               Presale: K{selectedEvent.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
               <FiDollarSign size={14} />
               Free Event
             </span>
@@ -125,13 +125,13 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
 
           {/* Gate Price */}
           {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-sm font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg border border-gray-200">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg border border-gray-200">
               Gate: K{selectedEvent.gate_price.toFixed(0)}
             </span>
           )}
 
           {/* Category */}
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-sm font-semibold ${categoryColor} shadow-lg`}>
+          <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold ${categoryColor} shadow-lg`}>
             <Icon size={14} />
             {categoryLabel}
           </span>

@@ -151,10 +151,10 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       aria-describedby="event-modal-desc"
     >
       <div
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-5xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
         style={{
-          minHeight: 'calc(80dvh - 7rem)',
-          maxHeight: 'calc(90dvh - 8rem)',
+          minHeight: 'auto',
+          maxHeight: 'calc(90dvh - 5rem)',
           boxSizing: 'border-box',
         }}
       >
