@@ -1,3 +1,6 @@
 {
-    "CodeGPT.apiKey": "Ollama"
+    "CodeGPT.apiKey": "Ollama",
+    "css.validate": false,
+    "less.validate": false,
+    "scss.validate": false
 }

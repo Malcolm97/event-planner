@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from './supabase';
 
-// Rate limiting store (in production, use Redis or similar)
+// Rate limiting store
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 // Rate limit configuration
 const RATE_LIMITS = {
-  // General API limits
-  api: { maxRequests: 100, windowMs: 15 * 60 * 1000 }, // 100 requests per 15 minutes
-
-  // Admin routes - stricter limits
-  admin: { maxRequests: 50, windowMs: 15 * 60 * 1000 }, // 50 requests per 15 minutes
-
-  // Authentication routes
-  auth: { maxRequests: 10, windowMs: 15 * 60 * 1000 }, // 10 requests per 15 minutes
-
-  // File upload limits
-  upload: { maxRequests: 20, windowMs: 60 * 60 * 1000 }, // 20 uploads per hour
+  api: { maxRequests: 100, windowMs: 15 * 60 * 1000 },
+  admin: { maxRequests: 50, windowMs: 15 * 60 * 1000 },
+  auth: { maxRequests: 10, windowMs: 15 * 60 * 1000 },
+  upload: { maxRequests: 20, windowMs: 60 * 60 * 1000 },
 };
 
 // Security headers
@@ -56,7 +49,6 @@ export function checkRateLimit(
   const current = rateLimitStore.get(key);
 
   if (!current || now > current.resetTime) {
-    // Reset or initialize
     rateLimitStore.set(key, {
       count: 1,
       resetTime: now + limit.windowMs,
@@ -76,7 +68,7 @@ export function checkRateLimit(
   };
 }
 
-// Check admin access
+// Check admin access - uses 'users' table
 export async function checkAdminAccess(request?: NextRequest): Promise<{
   isAdmin: boolean;
   user?: any;
@@ -89,75 +81,63 @@ export async function checkAdminAccess(request?: NextRequest): Promise<{
       return { isAdmin: false, error: 'Not authenticated' };
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    const { data: userData, error: userError } = await supabase
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
-      const isProfileNotFound = profileError.code === 'PGRST116' ||
-                               profileError.message?.includes('No rows found') ||
-                               profileError.code === 'PGRST204' ||
-                               !profileError.code;
+    if (userError) {
+      const isUserNotFound = userError.code === 'PGRST116' ||
+                               userError.message?.includes('No rows found') ||
+                               userError.code === 'PGRST204' ||
+                               !userError.code;
 
-      if (isProfileNotFound) {
-        return { isAdmin: false, error: 'Profile not found' };
+      if (isUserNotFound) {
+        return { isAdmin: false, error: 'User profile not found' };
       } else {
         return { isAdmin: false, error: 'Database error' };
       }
     }
 
-    return { isAdmin: profile?.role === 'admin', user };
+    return { isAdmin: userData?.role === 'admin', user };
   } catch (error) {
     return { isAdmin: false, error: 'Unexpected error' };
   }
 }
 
-// Validate API key (for future use)
+// Validate API key
 export function validateApiKey(request: NextRequest): boolean {
   const apiKey = request.headers.get('x-api-key');
   const validApiKey = process.env.API_KEY;
 
-  if (!validApiKey) return true; // No API key required in development
+  if (!validApiKey) return true;
   if (!apiKey) return false;
 
   return apiKey === validApiKey;
 }
 
-// Sanitize input more thoroughly
+// Sanitize input
 export function sanitizeInput(input: string): string {
   if (typeof input !== 'string') return '';
 
   return input
     .trim()
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: URLs
-    .replace(/data:/gi, '') // Remove data: URLs
-    .slice(0, 10000); // Reasonable length limit
+    .replace(/[<>]/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .slice(0, 10000);
 }
 
-// Check for suspicious patterns (basic bot detection)
+// Check for suspicious patterns
 export function isSuspiciousRequest(request: NextRequest): boolean {
   const userAgent = request.headers.get('user-agent') || '';
   const suspiciousPatterns = [
-    /bot/i,
-    /crawler/i,
-    /spider/i,
-    /scraper/i,
-    /python/i, // Often used for scraping
-    /curl/i,
-    /wget/i,
+    /bot/i, /crawler/i, /spider/i, /scraper/i, /python/i, /curl/i, /wget/i,
   ];
 
-  // Allow legitimate bots
   const allowedBots = [
-    /googlebot/i,
-    /bingbot/i,
-    /slurp/i, // Yahoo
-    /duckduckbot/i,
-    /baiduspider/i,
-    /yandexbot/i,
+    /googlebot/i, /bingbot/i, /slurp/i, /duckduckbot/i, /baiduspider/i, /yandexbot/i,
   ];
 
   const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(userAgent));
@@ -173,7 +153,6 @@ export function createSecureResponse(
 ): NextResponse {
   const response = NextResponse.json(data, options);
 
-  // Add security headers
   Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
@@ -181,7 +160,7 @@ export function createSecureResponse(
   return response;
 }
 
-// Log security events (in production, send to monitoring service)
+// Log security events
 export function logSecurityEvent(
   event: string,
   details: Record<string, any>,
