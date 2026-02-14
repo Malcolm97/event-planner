@@ -14,6 +14,7 @@ import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnlineBadge from '@/components/OnlineBadge';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import UpdatePrompt from '@/components/UpdatePrompt';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -90,6 +91,7 @@ export default function RootLayout({
             <BottomNav />
             <PWAInstallPrompt />
             <OnlineBadge />
+            <UpdatePrompt />
           </ClientProviders>
         </EnhancedErrorBoundary>
         <Script id="service-worker-script">
@@ -99,10 +101,41 @@ export default function RootLayout({
               navigator.serviceWorker.register('/service-worker.js')
                 .then((registration) => {
                   console.log('ServiceWorker registration successful with scope:', registration.scope);
+                  
+                  // Check for updates immediately after registration
+                  if (registration.update) {
+                    registration.update();
+                  }
+                  
+                  // Listen for updates
+                  registration.addEventListener('updatefound', () => {
+                    console.log('New service worker found, installing...');
+                    const newWorker = registration.installing;
+                    if (newWorker) {
+                      newWorker.addEventListener('statechange', () => {
+                        console.log('Service worker state changed:', newWorker.state);
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                          console.log('New service worker is ready to activate');
+                          // The UpdatePrompt component will handle showing the update prompt
+                        }
+                      });
+                    }
+                  });
                 })
                 .catch((error) => {
                   console.log('ServiceWorker registration failed:', error);
                 });
+            });
+            
+            // Listen for controller changes (new SW activated)
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              console.log('Service worker controller changed');
+              if (!refreshing) {
+                refreshing = true;
+                // Reload to get fresh content
+                window.location.reload();
+              }
             });
           }
 

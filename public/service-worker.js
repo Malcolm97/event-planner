@@ -1,17 +1,17 @@
-const CACHE_NAME = 'event-planner-cache-v9';
-const STATIC_CACHE = 'event-planner-static-v9';
-const DYNAMIC_CACHE = 'event-planner-dynamic-v9';
-const API_CACHE = 'event-planner-api-v9';
-const PAGES_CACHE = 'event-planner-pages-v9';
-const APP_SHELL_CACHE = 'event-planner-app-shell-v9';
+const CACHE_NAME = 'event-planner-cache-v10';
+const STATIC_CACHE = 'event-planner-static-v10';
+const DYNAMIC_CACHE = 'event-planner-dynamic-v10';
+const API_CACHE = 'event-planner-api-v10';
+const PAGES_CACHE = 'event-planner-pages-v10';
+const APP_SHELL_CACHE = 'event-planner-app-shell-v10';
 
 // Cache size limits for better performance
 const CACHE_LIMITS = {
-  [STATIC_CACHE]: 150,    // Increased for better PWA performance
-  [DYNAMIC_CACHE]: 75,    // Increased for more dynamic content
-  [API_CACHE]: 50,        // Increased for better API caching
-  [PAGES_CACHE]: 15,      // Increased for more offline pages
-  [APP_SHELL_CACHE]: 25   // Increased for better app shell caching
+  [STATIC_CACHE]: 150,
+  [DYNAMIC_CACHE]: 75,
+  [API_CACHE]: 50,
+  [PAGES_CACHE]: 15,
+  [APP_SHELL_CACHE]: 25
 };
 
 // Core static assets to cache immediately - only critical ones
@@ -24,12 +24,12 @@ const urlsToCache = [
   '/icons/icon-maskable-512x512.png'
 ];
 
-// Cache expiration times (in milliseconds)
+// Cache expiration times (in milliseconds) - REDUCED for fresher content
 const CACHE_EXPIRATION = {
-  API: 5 * 60 * 1000,      // 5 minutes for API responses
-  PAGES: 15 * 60 * 1000,   // 15 minutes for pages
+  API: 60 * 1000,           // 1 minute for API responses (reduced from 5 min)
+  PAGES: 5 * 60 * 1000,     // 5 minutes for pages (reduced from 15 min)
   STATIC: 24 * 60 * 60 * 1000, // 24 hours for static assets
-  DYNAMIC: 60 * 60 * 1000  // 1 hour for dynamic content
+  DYNAMIC: 30 * 60 * 1000   // 30 minutes for dynamic content (reduced from 1 hour)
 };
 
 self.addEventListener('install', (event) => {
@@ -40,14 +40,11 @@ self.addEventListener('install', (event) => {
 
   event.waitUntil(
     Promise.all([
-      // Cache core assets
       caches.open(CACHE_NAME)
         .then((cache) => {
           console.log('Opened cache');
           return cache.addAll(urlsToCache.filter(url => !url.includes('**')));
         }),
-
-      // Cache app shell for PWA users
       cacheAppShell()
     ])
     .catch((error) => {
@@ -60,8 +57,6 @@ self.addEventListener('install', (event) => {
 async function cacheAppShell() {
   const appShellUrls = [
     '/',
-    '/_next/static/css/app/layout.css',
-    '/_next/static/chunks/webpack.js',
     '/manifest.json'
   ];
 
@@ -94,9 +89,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests (Next.js routes)
+  // Handle navigation requests (Next.js routes) - NETWORK FIRST for freshness
   if (request.mode === 'navigate') {
-    // Define pages that are available offline
     const offlinePages = [
       '/',
       '/events',
@@ -112,33 +106,30 @@ self.addEventListener('fetch', (event) => {
     const isOfflinePage = offlinePages.some(page => url.pathname === page);
 
     if (isOfflinePage) {
-      // For offline pages: try cache first, then network
+      // NETWORK FIRST for pages - always try network, fallback to cache
       event.respondWith(
-        caches.match(request, { cacheName: PAGES_CACHE })
-          .then(cachedResponse => {
-            if (cachedResponse) {
-              console.log(`Serving cached offline page: ${request.url}`);
-              // Also try to update cache in background
-              fetch(request).then(response => {
-                if (response.ok) {
-                  const responseClone = response.clone();
-                  caches.open(PAGES_CACHE).then(cache => {
-                    cache.put(request, responseClone);
-                  });
-                }
-              }).catch(() => {
-                // Silently fail background update
+        fetch(request)
+          .then(response => {
+            // Clone and cache the fresh response
+            if (response.ok) {
+              const responseClone = response.clone();
+              caches.open(PAGES_CACHE).then(cache => {
+                cache.put(request, responseClone);
               });
-              return cachedResponse;
             }
-
-            // Not in cache, try network
-            return fetch(request).then(response => {
-              if (response.ok) {
-                cacheWithMetadata(PAGES_CACHE, request, response.clone());
-              }
-              return response;
-            });
+            return response;
+          })
+          .catch(() => {
+            // Network failed, try cache
+            return caches.match(request, { cacheName: PAGES_CACHE })
+              .then(cachedResponse => {
+                if (cachedResponse) {
+                  console.log(`Serving cached offline page: ${request.url}`);
+                  return cachedResponse;
+                }
+                // Return offline page if nothing in cache
+                return caches.match('/offline.html');
+              });
           })
       );
     } else {
@@ -146,11 +137,9 @@ self.addEventListener('fetch', (event) => {
       event.respondWith(
         fetch(request)
           .then(response => {
-            // Don't cache these pages
             return response;
           })
           .catch(() => {
-            // Return custom offline page for non-offline pages
             const offlineMessage = `
             <!DOCTYPE html>
             <html lang="en">
@@ -219,32 +208,58 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle API requests - Network first with intelligent caching
+  // Handle API requests - NETWORK FIRST for freshness
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Cache successful API responses with metadata
           if (response.status === 200) {
             cacheWithMetadata(API_CACHE, request, response.clone());
           }
           return response;
         })
         .catch(() => {
-          // Return cached version if available
+          // Return cached version if network fails
           return caches.match(request, { cacheName: API_CACHE });
         })
     );
     return;
   }
 
-  // Handle static assets (CSS, JS, images) - Cache first
+  // Handle static assets with hashed filenames (immutable) - CACHE FIRST
+  // These include Next.js build artifacts with content hashes
+  if (
+    url.pathname.startsWith('/_next/static/') && 
+    (url.pathname.includes('.js') || url.pathname.includes('.css')) &&
+    (url.pathname.includes('_next/static/chunks/') || url.pathname.includes('_next/static/css/'))
+  ) {
+    event.respondWith(
+      caches.match(request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          // Not in cache, fetch and cache
+          return fetch(request).then(response => {
+            if (response.status === 200) {
+              const responseClone = response.clone();
+              caches.open(STATIC_CACHE).then(cache => {
+                cache.put(request, responseClone);
+              });
+            }
+            return response;
+          });
+        })
+    );
+    return;
+  }
+
+  // Handle other static assets (images, fonts, etc.) - NETWORK FIRST with cache fallback
   if (
     request.destination === 'style' ||
     request.destination === 'script' ||
     request.destination === 'image' ||
     request.destination === 'font' ||
-    url.pathname.startsWith('/_next/static/') ||
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.js') ||
     url.pathname.endsWith('.png') ||
@@ -256,21 +271,19 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.woff2')
   ) {
     event.respondWith(
-      caches.match(request)
+      fetch(request)
         .then(response => {
-          if (response) {
-            return response; // Return cached version
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseClone);
+            });
           }
-          // Fetch and cache
-          return fetch(request).then(response => {
-            if (response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, responseClone);
-              });
-            }
-            return response;
-          });
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache
+          return caches.match(request);
         })
     );
     return;
@@ -280,7 +293,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then(response => {
-        // Cache successful responses for other assets
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -295,8 +307,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-
-
 // Periodic caching mechanism - triggered by messages from main thread
 async function cacheDataPeriodically(isPWA = false) {
   try {
@@ -304,10 +314,8 @@ async function cacheDataPeriodically(isPWA = false) {
 
     if (isPWA) {
       console.log('PWA mode detected - using lighter caching strategy');
-      // In PWA mode, only cache essential data and less frequently
       await cacheEssentialDataOnly();
     } else {
-      // Browser mode - full caching
       await cacheApiData();
       await cachePages();
       await cacheModalData();
@@ -319,11 +327,11 @@ async function cacheDataPeriodically(isPWA = false) {
   }
 }
 
-// Lighter caching for PWA mode to avoid conflicts with app data loading
+// Lighter caching for PWA mode
 async function cacheEssentialDataOnly() {
   const essentialUrls = [
-    '/api/events?limit=20', // Only recent events for PWA
-    '/api/users?limit=10'   // Only recent users for PWA
+    '/api/events?limit=20',
+    '/api/users?limit=10'
   ];
 
   for (const url of essentialUrls) {
@@ -343,8 +351,8 @@ async function cacheEssentialDataOnly() {
 async function cacheApiData() {
   const apiUrls = [
     '/api/events',
-    '/api/events?limit=50', // Recent events
-    '/api/users?limit=50'   // Recent users
+    '/api/events?limit=50',
+    '/api/users?limit=50'
   ];
 
   for (const url of apiUrls) {
@@ -362,7 +370,6 @@ async function cacheApiData() {
 }
 
 async function cachePages() {
-  // Only cache these specific pages for offline access
   const offlinePages = [
     '/',
     '/events',
@@ -379,16 +386,14 @@ async function cachePages() {
 
   for (const url of offlinePages) {
     try {
-      // Only cache if not already cached or if cache is stale
       const cachedResponse = await cache.match(url);
       const now = Date.now();
 
       if (!cachedResponse || !cachedResponse.headers.get('sw-cache-time') ||
-          (now - parseInt(cachedResponse.headers.get('sw-cache-time'))) > 300000) { // 5 minutes
+          (now - parseInt(cachedResponse.headers.get('sw-cache-time'))) > 300000) {
 
         const response = await fetch(url);
         if (response.ok) {
-          // Clone the response and add cache timestamp
           const responseClone = response.clone();
           const newResponse = new Response(responseClone.body, {
             status: responseClone.status,
@@ -411,19 +416,16 @@ async function cachePages() {
 
 async function cacheModalData() {
   try {
-    // Cache recent events for modals
     const eventsResponse = await fetch('/api/events?limit=20');
     if (eventsResponse.ok) {
       const events = await eventsResponse.json();
 
-      // Cache individual event details that might be shown in modals
       for (const event of events) {
         try {
           const eventDetailResponse = await fetch(`/api/events/${event.id}`);
           if (eventDetailResponse.ok) {
             const cache = await caches.open(API_CACHE);
             await cache.put(`/api/events/${event.id}`, eventDetailResponse);
-            console.log(`Cached event modal data: ${event.id}`);
           }
         } catch (error) {
           console.warn(`Failed to cache event ${event.id}:`, error);
@@ -431,7 +433,6 @@ async function cacheModalData() {
       }
     }
 
-    // Cache creators for offline use (remove unsupported role parameter)
     const creatorsResponse = await fetch('/api/users?limit=20');
     if (creatorsResponse.ok) {
       const creators = await creatorsResponse.json();
@@ -442,7 +443,6 @@ async function cacheModalData() {
           if (creatorDetailResponse.ok) {
             const cache = await caches.open(API_CACHE);
             await cache.put(`/api/users/${creator.id}`, creatorDetailResponse);
-            console.log(`Cached creator modal data: ${creator.id}`);
           }
         } catch (error) {
           console.warn(`Failed to cache creator ${creator.id}:`, error);
@@ -450,13 +450,11 @@ async function cacheModalData() {
       }
     }
 
-    // Cache categories for offline use
     try {
       const categoriesResponse = await fetch('/api/categories');
       if (categoriesResponse.ok) {
         const cache = await caches.open(API_CACHE);
         await cache.put('/api/categories', categoriesResponse);
-        console.log('Cached categories data');
       }
     } catch (error) {
       console.warn('Failed to cache categories:', error);
@@ -469,14 +467,13 @@ async function cacheModalData() {
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating...');
 
-  // Take control of all clients immediately for PWA
+  // Notify all clients about the update
   event.waitUntil(
     Promise.all([
       // Clean up old caches
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            // Keep only current version caches
             if (![CACHE_NAME, PAGES_CACHE, APP_SHELL_CACHE, API_CACHE, STATIC_CACHE, DYNAMIC_CACHE].includes(cacheName)) {
               console.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
@@ -490,20 +487,25 @@ self.addEventListener('activate', (event) => {
     ])
   );
 
-  console.log('Service worker activated');
+  console.log('Service worker activated v10');
 
-  // Register background sync for PWA users
+  // Notify all clients that update is ready
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'SW_ACTIVATED',
+        version: '10.0.0'
+      });
+    });
+  });
+
   registerBackgroundSync();
 });
 
-// Register background sync for periodic updates when PWA is installed
 async function registerBackgroundSync() {
-  // This function is now empty - background sync registration moved to client-side
-  // The service worker will still handle sync events when they occur
-  console.log('Background sync registration moved to client-side');
+  console.log('Background sync ready');
 }
 
-// Handle background sync for when connection is restored
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-cache-sync') {
     event.waitUntil(cacheDataPeriodically());
@@ -521,11 +523,9 @@ self.addEventListener('push', (event) => {
       console.log('Parsed JSON push data:', data);
     } catch (jsonError) {
       console.warn('Failed to parse JSON push data:', jsonError);
-      // Fallback for Android/iOS compatibility
       try {
         const textData = event.data.text();
         console.log('Push data as text:', textData);
-        // Try to parse as JSON if it's a stringified JSON
         if (textData && textData.startsWith('{')) {
           data = JSON.parse(textData);
         } else {
@@ -538,12 +538,10 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  // Platform-specific notification options
   const userAgent = self.navigator?.userAgent || '';
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
   const isAndroid = /Android/.test(userAgent);
   
-  // Get eventId from various possible locations
   const eventId = data.eventId || data.data?.eventId || null;
   const url = data.url || data.data?.url || '/';
   
@@ -551,7 +549,6 @@ self.addEventListener('push', (event) => {
     body: data.body || 'New event update available!',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-96x96.png',
-    // Universal vibration pattern that works on most devices
     vibrate: [200, 100, 200],
     data: {
       dateOfArrival: Date.now(),
@@ -561,24 +558,13 @@ self.addEventListener('push', (event) => {
       platform: isIOS ? 'ios' : isAndroid ? 'android' : 'other'
     },
     actions: [
-      {
-        action: 'view',
-        title: 'View Event'
-      },
-      {
-        action: 'dismiss',
-        title: 'Dismiss'
-      }
+      { action: 'view', title: 'View Event' },
+      { action: 'dismiss', title: 'Dismiss' }
     ],
-    // Use tag to prevent duplicate notifications
     tag: 'event-notification',
-    // Auto-close after 5 seconds for better UX
     timeout: 5000,
-    // Renotify for new notifications
     renotify: true,
-    // iOS often needs requireInteraction for actions to work
     requireInteraction: isIOS,
-    // Not silent - should make sound
     silent: false,
     timestamp: Date.now()
   };
@@ -595,7 +581,6 @@ async function enforceCacheLimit(cacheName, maxEntries) {
     const keys = await cache.keys();
 
     if (keys.length > maxEntries) {
-      // Sort by age (oldest first) and remove excess entries
       const entriesToDelete = keys
         .sort((a, b) => {
           const timeA = parseInt(a.headers.get('sw-cache-time') || '0');
@@ -638,32 +623,28 @@ async function cleanupExpiredCache(cacheName, maxAge) {
   }
 }
 
-// Enhanced cache storage with metadata
 async function cacheWithMetadata(cacheName, request, response) {
   try {
     const cache = await caches.open(cacheName);
     const responseClone = response.clone();
 
-    // Add cache metadata
     const newResponse = new Response(responseClone.body, {
       status: responseClone.status,
       statusText: responseClone.statusText,
       headers: {
         ...Object.fromEntries(responseClone.headers.entries()),
         'sw-cache-time': Date.now().toString(),
-        'sw-cache-version': 'v9'
+        'sw-cache-version': 'v10'
       }
     });
 
     await cache.put(request, newResponse);
 
-    // Enforce cache limits
     const limit = CACHE_LIMITS[cacheName];
     if (limit) {
       await enforceCacheLimit(cacheName, limit);
     }
 
-    // Cleanup expired entries
     const expiration = getCacheExpiration(cacheName);
     if (expiration) {
       await cleanupExpiredCache(cacheName, expiration);
@@ -684,22 +665,18 @@ function getCacheExpiration(cacheName) {
   }
 }
 
-// Periodic cache cleanup
 async function performCacheMaintenance() {
   console.log('Performing cache maintenance...');
 
   try {
-    // Clean up all caches
     const cacheNames = Object.values({ CACHE_NAME, STATIC_CACHE, DYNAMIC_CACHE, API_CACHE, PAGES_CACHE, APP_SHELL_CACHE });
 
     for (const cacheName of cacheNames) {
-      // Enforce size limits
       const limit = CACHE_LIMITS[cacheName];
       if (limit) {
         await enforceCacheLimit(cacheName, limit);
       }
 
-      // Clean up expired entries
       const expiration = getCacheExpiration(cacheName);
       if (expiration) {
         await cleanupExpiredCache(cacheName, expiration);
@@ -719,7 +696,25 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: '9.0.0' });
+    event.ports[0].postMessage({ version: '10.0.0' });
+  }
+
+  if (event.data && event.data.type === 'CHECK_FOR_UPDATE') {
+    // Trigger update check by getting the latest version
+    event.waitUntil(
+      fetch('/service-worker.js')
+        .then(response => {
+          event.ports[0].postMessage({ 
+            updateAvailable: true,
+            version: '10.0.0'
+          });
+        })
+        .catch(() => {
+          event.ports[0].postMessage({ 
+            updateAvailable: false 
+          });
+        })
+    );
   }
 
   if (event.data && event.data.type === 'TRIGGER_CACHE_UPDATE') {
@@ -764,33 +759,25 @@ self.addEventListener('message', (event) => {
   }
 });
 
-
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
 
-  // Close the notification
   event.notification.close();
 
-  // Get the event ID from notification data
   const eventId = event.notification.data?.eventId;
   const url = event.notification.data?.url || '/';
 
-  // Determine the action taken
   if (event.action === 'dismiss') {
-    // User clicked dismiss - just close notification
     return;
   }
 
-  // Handle view action or general click
   event.waitUntil(
     clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
         console.log(`Found ${clientList.length} open clients`);
         
-        // Look for an existing window with the app
-        // Android may have different URL patterns, so check more broadly
         for (let client of clientList) {
           const clientUrl = new URL(client.url);
           const clientPathname = clientUrl.pathname;
@@ -803,10 +790,8 @@ self.addEventListener('notificationclick', (event) => {
           
           if (isAppWindow) {
             console.log('Found existing app window:', client.url);
-            // Focus existing window
             client.focus();
             
-            // Send message to client to open event modal
             if (eventId) {
               client.postMessage({
                 type: 'NOTIFICATION_CLICK',
@@ -818,29 +803,20 @@ self.addEventListener('notificationclick', (event) => {
           }
         }
 
-        // If no window found, open a new one
         console.log('No existing window found, opening new one:', url);
         if (clients.openWindow) {
           return clients.openWindow(url).then((client) => {
             if (client && eventId) {
-              console.log('New window opened, sending notification message');
-              // Longer delay for Android to ensure app is fully loaded
               setTimeout(() => {
                 client.postMessage({
                   type: 'NOTIFICATION_CLICK',
                   eventId: eventId,
                   url: url
                 });
-              }, 1000); // Increased from 500ms to 1000ms for Android stability
-            } else if (client) {
-              console.log('Window opened but no eventId to send');
-            } else {
-              console.error('Failed to open window');
+              }, 1000);
             }
             return client;
           });
-        } else {
-          console.error('clients.openWindow not available');
         }
       })
       .catch((error) => {
@@ -849,8 +825,6 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Handle notification close events (user dismissed without clicking)
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification closed:', event.notification.data?.eventId);
-  // Could track dismissed notifications here if needed
 });
