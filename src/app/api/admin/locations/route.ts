@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabase, TABLES } from "@/lib/supabase"
+import { getUserFriendlyError } from "@/lib/userMessages"
 
-// Helper function to check admin access
+// Helper function to check admin access - uses 'users' table
 async function checkAdminAccess() {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -10,34 +11,44 @@ async function checkAdminAccess() {
       return { isAdmin: false, error: 'Not authenticated' }
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    const { data: userData, error: userError } = await supabase
+      .from(TABLES.USERS)
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profileError) {
-      const isProfileNotFound = profileError.code === 'PGRST116' ||
-                               profileError.message?.includes('No rows found') ||
-                               profileError.code === 'PGRST204' ||
-                               !profileError.code
+    if (userError) {
+      const isUserNotFound = userError.code === 'PGRST116' ||
+                               userError.message?.includes('No rows found') ||
+                               userError.code === 'PGRST204' ||
+                               !userError.code
 
-      if (isProfileNotFound) {
-        return { isAdmin: false, error: 'Profile not found' }
+      if (isUserNotFound) {
+        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' }
       } else {
-        return { isAdmin: false, error: 'Database error' }
+        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') }
       }
     }
 
-    return { isAdmin: profile?.role === 'admin', user }
+    return { isAdmin: userData?.role === 'admin', user }
   } catch (error) {
-    return { isAdmin: false, error: 'Unexpected error' }
+    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
   }
 }
 
 export async function GET(request: Request) {
-  // Admin API routes are now publicly accessible - no authentication required
+  // Admin API routes require authentication
   try {
+    // Check admin access
+    const adminCheck = await checkAdminAccess()
+    
+    if (!adminCheck.isAdmin) {
+      return NextResponse.json(
+        { error: adminCheck.error || 'Access denied. Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Max 100 items
@@ -53,7 +64,7 @@ export async function GET(request: Request) {
 
     // Build query to get all events with location data
     let query = supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .select(`
         location,
         approved
@@ -139,7 +150,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Unexpected error in locations API:", error)
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: getUserFriendlyError(error, "Internal server error") },
       { status: 500 }
     )
   }

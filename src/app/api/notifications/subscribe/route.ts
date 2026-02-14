@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { TABLES } from '@/lib/supabase';
+import { getUserFriendlyError } from '@/lib/userMessages';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
       
       // Check if subscription already exists for this user
       const { data: existingSubs } = await supabase
-        .from('push_subscriptions')
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .select('id')
         .eq('user_id', session.user.id)
         .limit(1);
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
       
       // Check if subscription already exists for this device
       const { data: existingSubs } = await supabase
-        .from('push_subscriptions')
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .select('id')
         .eq('device_id', device_id)
         .limit(1);
@@ -64,28 +66,32 @@ export async function POST(request: NextRequest) {
     let data, error;
 
     if (existingSub) {
-      // Update existing subscription
+      // Update existing subscription - FIXED: added .select() to get updated data
       if (session) {
         const { data: updateData, error: updateError } = await supabase
-          .from('push_subscriptions')
+          .from(TABLES.PUSH_SUBSCRIPTIONS)
           .update({
             subscription: subscription,
             user_agent: userAgent,
+            updated_at: new Date().toISOString()
           })
           .eq('user_id', session.user.id)
-          .select();
+          .select()
+          .single();
 
         data = updateData;
         error = updateError;
       } else {
         const { data: updateData, error: updateError } = await supabase
-          .from('push_subscriptions')
+          .from(TABLES.PUSH_SUBSCRIPTIONS)
           .update({
             subscription: subscription,
             user_agent: userAgent,
+            updated_at: new Date().toISOString()
           })
           .eq('device_id', device_id)
-          .select();
+          .select()
+          .single();
 
         data = updateData;
         error = updateError;
@@ -93,7 +99,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Insert new subscription
       const { data: insertData, error: insertError } = await supabase
-        .from('push_subscriptions')
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .insert(dbData)
         .select();
 
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Supabase error:', error);
       return NextResponse.json(
-        { error: 'Failed to save subscription', details: error.message },
+        { error: getUserFriendlyError(error, 'Failed to save subscription') },
         { status: 500 }
       );
     }
@@ -116,7 +122,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Subscribe error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: getUserFriendlyError(error, 'Internal server error') },
       { status: 500 }
     );
   }

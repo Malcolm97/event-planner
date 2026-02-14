@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabase, TABLES } from "@/lib/supabase"
+import { getUserFriendlyError } from "@/lib/userMessages"
 
-// Helper function to check admin access
+// Helper function to check admin access - uses 'users' table
 async function checkAdminAccess() {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -10,55 +11,55 @@ async function checkAdminAccess() {
       return { isAdmin: false, error: 'Not authenticated' }
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    const { data: userData, error: userError } = await supabase
+      .from(TABLES.USERS)
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profileError) {
-      const isProfileNotFound = profileError.code === 'PGRST116' ||
-                               profileError.message?.includes('No rows found') ||
-                               profileError.code === 'PGRST204' ||
-                               !profileError.code
+    if (userError) {
+      const isUserNotFound = userError.code === 'PGRST116' ||
+                               userError.message?.includes('No rows found') ||
+                               userError.code === 'PGRST204' ||
+                               !userError.code
 
-      if (isProfileNotFound) {
-        return { isAdmin: false, error: 'Profile not found' }
+      if (isUserNotFound) {
+        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' }
       } else {
-        return { isAdmin: false, error: 'Database error' }
+        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') }
       }
     }
 
-    return { isAdmin: profile?.role === 'admin', user }
+    return { isAdmin: userData?.role === 'admin', user }
   } catch (error) {
-    return { isAdmin: false, error: 'Unexpected error' }
+    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
   }
 }
 
 export async function GET(request: Request) {
-  // Admin API routes are now publicly accessible - no authentication required
+  // Admin API routes require authentication
   try {
+    // Check admin access
+    const adminCheck = await checkAdminAccess()
+    
+    if (!adminCheck.isAdmin) {
+      return NextResponse.json(
+        { error: adminCheck.error || 'Access denied. Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Cap at 100
     const search = searchParams.get('search')
     const role = searchParams.get('role')
-    const status = searchParams.get('status')
 
     // First, get users with pagination and search
-    let usersQuery = supabase.from("users").select("*")
+    let usersQuery = supabase.from(TABLES.USERS).select("*", { count: 'exact' })
 
     if (search) {
       usersQuery = usersQuery.or(`name.ilike.%${search}%,email.ilike.%${search}%`)
-    }
-
-    // Get total count
-    const { count: totalCount, error: countError } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true })
-
-    if (countError) {
-      console.error("Error getting user count:", countError)
     }
 
     // Apply pagination
@@ -66,79 +67,78 @@ export async function GET(request: Request) {
     const to = from + limit - 1
     usersQuery = usersQuery.range(from, to).order('updated_at', { ascending: false })
 
-    const { data: usersData, error: usersError } = await usersQuery
+    const { data: usersData, error: usersError, count: totalCount } = await usersQuery
 
     if (usersError) {
       console.error("Error fetching users:", usersError)
       return NextResponse.json(
-        { error: "Failed to fetch users", details: usersError.message },
+        { error: getUserFriendlyError(usersError, "Failed to fetch users") },
         { status: 500 }
       )
     }
 
-    // Get profiles data for all users
-    const userIds = usersData?.map(user => user.id) || []
-    const { data: profilesData, error: profilesError } = await supabase
-      .from("profiles")
-      .select("id, role, approved, updated_at")
-      .in('id', userIds)
-
-    if (profilesError) {
-      console.error("Error fetching profiles:", profilesError)
+    if (!usersData || usersData.length === 0) {
+      return NextResponse.json({
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: totalCount || 0,
+          totalPages: Math.ceil((totalCount || 0) / limit)
+        }
+      })
     }
 
-    // Create a map of profiles by id
-    const profilesMap = (profilesData || []).reduce((acc: Record<string, any>, profile: any) => {
-      acc[profile.id] = profile
-      return acc
-    }, {})
+    // Get user IDs for batch queries
+    const userIds = usersData.map(user => user.id)
 
-    // Apply role and status filters
-    let filteredUsers = usersData || []
+    // OPTIMIZATION: Batch fetch events created and saved counts
+    const { data: eventsCreatedData } = await supabase
+      .from(TABLES.EVENTS)
+      .select('created_by')
+      .in('created_by', userIds)
 
+    const { data: savedEventsData } = await supabase
+      .from(TABLES.SAVED_EVENTS)
+      .select('user_id')
+      .in('user_id', userIds)
+
+    // Count events created per user
+    const eventsCreatedMap = new Map<string, number>()
+    eventsCreatedData?.forEach(event => {
+      eventsCreatedMap.set(event.created_by, (eventsCreatedMap.get(event.created_by) || 0) + 1)
+    })
+
+    // Count events saved per user
+    const eventsSavedMap = new Map<string, number>()
+    savedEventsData?.forEach(save => {
+      eventsSavedMap.set(save.user_id, (eventsSavedMap.get(save.user_id) || 0) + 1)
+    })
+
+    // Apply role filter
+    let filteredUsers = usersData
     if (role && role !== 'all') {
-      filteredUsers = filteredUsers.filter(user => profilesMap[user.id]?.role === role)
+      filteredUsers = filteredUsers.filter(user => user.role === role)
     }
 
-    if (status === 'approved') {
-      filteredUsers = filteredUsers.filter(user => profilesMap[user.id]?.approved === true)
-    } else if (status === 'pending') {
-      filteredUsers = filteredUsers.filter(user => profilesMap[user.id]?.approved === false)
-    }
-
-    // Enrich data with activity counts and map fields
-    const enrichedData = await Promise.all(filteredUsers.map(async (user) => {
-      // Count events created by this user
-      const { count: eventsCreated } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true })
-        .eq('created_by', user.id);
-
-      // Count events saved by this user
-      const { count: eventsSaved } = await supabase
-        .from('saved_events')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      return {
-        id: user.id,
-        full_name: user.name,
-        email: user.email,
-        company: user.company,
-        phone: user.phone,
-        about: user.about,
-        photo_url: user.photo_url,
-        contact_method: user.contact_method,
-        whatsapp_number: user.whatsapp_number,
-        contact_visibility: user.contact_visibility,
-        role: profilesMap[user.id]?.role || 'user',
-        approved: profilesMap[user.id]?.approved || false,
-        created_at: profilesMap[user.id]?.updated_at || user.updated_at,
-        updated_at: user.updated_at,
-        events_created: eventsCreated || 0,
-        events_saved: eventsSaved || 0
-      };
-    }));
+    // Enrich data with activity counts
+    const enrichedData = filteredUsers.map(user => ({
+      id: user.id,
+      full_name: user.name,
+      email: user.email,
+      company: user.company,
+      phone: user.phone,
+      about: user.about,
+      photo_url: user.photo_url,
+      contact_method: user.contact_method,
+      whatsapp_number: user.whatsapp_number,
+      contact_visibility: user.contact_visibility,
+      role: user.role || 'user',
+      created_at: user.updated_at,
+      updated_at: user.updated_at,
+      events_created: eventsCreatedMap.get(user.id) || 0,
+      events_saved: eventsSavedMap.get(user.id) || 0
+    }))
 
     return NextResponse.json({
       data: enrichedData,
@@ -153,7 +153,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Unexpected error in users API:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: getUserFriendlyError(error, "Internal server error") },
       { status: 500 }
     )
   }

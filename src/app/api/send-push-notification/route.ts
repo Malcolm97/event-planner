@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
+import { getUserFriendlyError } from '@/lib/userMessages';
+
 const webpush = require('web-push');
 
 // Configure VAPID keys - Check for missing configuration
@@ -26,6 +28,40 @@ if (hasVapidConfig) {
   );
 }
 
+// Helper function to check admin access
+async function checkAdminAccess() {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return { isAdmin: false, error: 'Not authenticated' }
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from(TABLES.USERS)
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (userError) {
+      const isUserNotFound = userError.code === 'PGRST116' ||
+                               userError.message?.includes('No rows found') ||
+                               userError.code === 'PGRST204' ||
+                               !userError.code
+
+      if (isUserNotFound) {
+        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' }
+      } else {
+        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') }
+      }
+    }
+
+    return { isAdmin: userData?.role === 'admin', user }
+  } catch (error) {
+    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Verify VAPID keys are configured before proceeding
@@ -39,6 +75,16 @@ export async function POST(request: NextRequest) {
         },
         { status: 503 }
       );
+    }
+
+    // Check admin access - only admins can send push notifications
+    const adminCheck = await checkAdminAccess()
+    
+    if (!adminCheck.isAdmin) {
+      return NextResponse.json(
+        { error: adminCheck.error || 'Access denied. Admin privileges required.' },
+        { status: 403 }
+      )
     }
 
     // Parse request body
@@ -62,7 +108,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Get ALL push subscriptions - both logged-in users AND anonymous PWA users
       const { data: allSubscriptions, error } = await supabase
-        .from('push_subscriptions')
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .select('id, user_id, device_id, subscription');
 
       if (error) {
@@ -84,7 +130,7 @@ export async function POST(request: NextRequest) {
     if (eventId) {
       try {
         const { data: eventData, error: eventError } = await supabase
-          .from('events')
+          .from(TABLES.EVENTS)
           .select('name, location, date, end_date')
           .eq('id', eventId)
           .single();
@@ -156,19 +202,20 @@ export async function POST(request: NextRequest) {
           };
 
           const result = await webpush.sendNotification(pushSubscription, payload);
-          return { userId: sub.user_id, success: true, result };
+          return { id: sub.id, userId: sub.user_id, deviceId: sub.device_id, success: true, result };
         } catch (err: any) {
-          console.error(`Failed to send notification to user ${sub.user_id}:`, err.message);
+          console.error(`Failed to send notification to subscription ${sub.id}:`, err.message);
 
           // If subscription is invalid/expired, remove it from database
+          // FIXED: Delete by subscription ID, not user_id
           if (err.statusCode === 410 || err.statusCode === 400) {
             await supabase
-              .from('push_subscriptions')
+              .from(TABLES.PUSH_SUBSCRIPTIONS)
               .delete()
-              .eq('user_id', sub.user_id);
+              .eq('id', sub.id);
           }
 
-          return { userId: sub.user_id, success: false, error: err.message };
+          return { id: sub.id, userId: sub.user_id, deviceId: sub.device_id, success: false, error: err.message };
         }
       })
     );
@@ -193,7 +240,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error sending push notifications:', error);
     return NextResponse.json(
-      { error: 'Failed to send push notifications' },
+      { error: getUserFriendlyError(error, 'Failed to send push notifications') },
       { status: 500 }
     );
   }

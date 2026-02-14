@@ -5,7 +5,6 @@ import {
   handleSupabaseError,
   validationError,
   authenticationError,
-  authorizationError,
   databaseError,
   createdResponse,
   successResponse
@@ -95,7 +94,10 @@ export async function GET(request: Request) {
       return handleSupabaseError(error);
     }
 
-    return successResponse(data || []);
+    // Add caching headers for better performance
+    const response = successResponse(data || []);
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return response;
   } catch (error: any) {
     console.error('Unexpected error fetching events:', error.message);
     return databaseError('Failed to fetch events');

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabase, TABLES } from "@/lib/supabase"
+import { getUserFriendlyError } from "@/lib/userMessages"
 
-// Helper function to check admin access
+// Helper function to check admin access - uses 'users' table
 async function checkAdminAccess() {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -10,34 +11,44 @@ async function checkAdminAccess() {
       return { isAdmin: false, error: 'Not authenticated' }
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    const { data: userData, error: userError } = await supabase
+      .from(TABLES.USERS)
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profileError) {
-      const isProfileNotFound = profileError.code === 'PGRST116' ||
-                               profileError.message?.includes('No rows found') ||
-                               profileError.code === 'PGRST204' ||
-                               !profileError.code
+    if (userError) {
+      const isUserNotFound = userError.code === 'PGRST116' ||
+                               userError.message?.includes('No rows found') ||
+                               userError.code === 'PGRST204' ||
+                               !userError.code
 
-      if (isProfileNotFound) {
-        return { isAdmin: false, error: 'Profile not found' }
+      if (isUserNotFound) {
+        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' }
       } else {
-        return { isAdmin: false, error: 'Database error' }
+        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') }
       }
     }
 
-    return { isAdmin: profile?.role === 'admin', user }
+    return { isAdmin: userData?.role === 'admin', user }
   } catch (error) {
-    return { isAdmin: false, error: 'Unexpected error' }
+    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
   }
 }
 
 export async function GET(request: Request) {
-  // Admin API routes are now publicly accessible - no authentication required
+  // Admin API routes require authentication
   try {
+    // Check admin access
+    const adminCheck = await checkAdminAccess()
+    
+    if (!adminCheck.isAdmin) {
+      return NextResponse.json(
+        { error: adminCheck.error || 'Access denied. Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Max 100 items
@@ -53,17 +64,12 @@ export async function GET(request: Request) {
 
     // Build query to get all events with category data for aggregation
     let eventsQuery = supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .select(`
-        category_id,
-        approved,
-        categories!inner (
-          id,
-          name,
-          description
-        )
+        category,
+        approved
       `)
-      .not('category_id', 'is', null)
+      .not('category', 'is', null)
 
     const { data: eventsData, error: eventsError } = await eventsQuery
 
@@ -77,9 +83,7 @@ export async function GET(request: Request) {
 
     // Aggregate categories and calculate event counts
     const categoryStats = new Map<string, {
-      id: string
-      name: string
-      description: string | null
+      category: string
       total_events: number
       approved_events: number
       pending_events: number
@@ -87,22 +91,19 @@ export async function GET(request: Request) {
 
     // Process events data to build category statistics
     eventsData?.forEach((event: any) => {
-      const category = event.categories
+      const category = event.category
       if (!category) return
 
-      const categoryId = category.id
-      if (!categoryStats.has(categoryId)) {
-        categoryStats.set(categoryId, {
-          id: categoryId,
-          name: category.name,
-          description: category.description,
+      if (!categoryStats.has(category)) {
+        categoryStats.set(category, {
+          category,
           total_events: 0,
           approved_events: 0,
           pending_events: 0
         })
       }
 
-      const stats = categoryStats.get(categoryId)!
+      const stats = categoryStats.get(category)!
       stats.total_events++
 
       if (event.approved) {
@@ -112,39 +113,19 @@ export async function GET(request: Request) {
       }
     })
 
-    // Get all categories (including those without events) for complete list
-    const { data: allCategories, error: categoriesError } = await supabase
-      .from("categories")
-      .select("id, name, description")
-      .order('name')
+    // Convert map to array for response
+    let enrichedData = Array.from(categoryStats.values()).map(stats => ({
+      name: stats.category,
+      total_events: stats.total_events,
+      approved_events: stats.approved_events,
+      pending_events: stats.pending_events
+    }))
 
-    if (categoriesError) {
-      console.error("Error fetching all categories:", categoriesError)
-      return NextResponse.json(
-        { error: "Failed to fetch categories", details: categoriesError.message },
-        { status: 500 }
-      )
-    }
-
-    // Merge categories with stats (ensuring all categories are included)
-    const enrichedData = allCategories?.map(category => {
-      const stats = categoryStats.get(category.id)
-      return {
-        id: category.id,
-        name: category.name,
-        description: category.description,
-        total_events: stats?.total_events || 0,
-        approved_events: stats?.approved_events || 0,
-        pending_events: stats?.pending_events || 0
-      }
-    }) || []
-
-    // Apply search filter to enriched data if needed
+    // Apply search filter if needed
     let filteredData = enrichedData
     if (search && search.length > 0) {
       filteredData = enrichedData.filter(category =>
-        category.name.toLowerCase().includes(search.toLowerCase()) ||
-        (category.description && category.description.toLowerCase().includes(search.toLowerCase()))
+        category.name.toLowerCase().includes(search.toLowerCase())
       )
     }
 
@@ -156,7 +137,7 @@ export async function GET(request: Request) {
 
     // Add cache headers for better performance
     const response = NextResponse.json({
-      data: enrichedData,
+      data: paginatedData,
       pagination: {
         page,
         limit,
@@ -173,7 +154,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Unexpected error in categories API:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: getUserFriendlyError(error, "Internal server error") },
       { status: 500 }
     )
   }
