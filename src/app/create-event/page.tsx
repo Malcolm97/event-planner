@@ -292,13 +292,13 @@ export default function CreateEventPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="presale_price" className="block text-sm font-semibold text-gray-700 mb-1">Presale Fee (PGK)</label>
-                  <input type="number" id="presale_price" className="input-field" value={presale_price} onChange={(e) => setPresale_price(e.target.value)} min="0" step="0.01" placeholder="0" />
-                  <p className="text-xs text-gray-500 mt-1">Leave as 0 or empty for Free events</p>
+                  <input type="number" id="presale_price" className="input-field" value={presale_price} onChange={(e) => setPresale_price(e.target.value)} min="0" step="0.01" placeholder="Free" />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for Free events</p>
                 </div>
                 <div>
                   <label htmlFor="gate_price" className="block text-sm font-semibold text-gray-700 mb-1">Gate Fee (PGK)</label>
-                  <input type="number" id="gate_price" className="input-field" value={gate_price} onChange={(e) => setGate_price(e.target.value)} min="0" step="0.01" placeholder="0" />
-                  <p className="text-xs text-gray-500 mt-1">Leave as 0 or empty for Free events</p>
+                  <input type="number" id="gate_price" className="input-field" value={gate_price} onChange={(e) => setGate_price(e.target.value)} min="0" step="0.01" placeholder="Free" />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for Free events</p>
                 </div>
               </div>
             </div>

@@ -1,17 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiArrowLeft, FiX, FiImage } from 'react-icons/fi';
-import Link from "next/link";
+import { FiArrowLeft, FiX, FiImage, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import Link from 'next/link';
 import Image from 'next/image';
+import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
+import SkeletonLoader from '@/components/SkeletonLoader';
+import CustomSelect from '@/components/CustomSelect';
+import { SelectOption } from '@/components/CustomSelect';
 
 export const dynamic = 'force-dynamic';
+
+// Allowed image types and max file size (5MB)
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function EditEventPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const router = useRouter();
+  
+  // Network and offline support
+  const { isOnline } = useNetworkStatus();
+  const { queueOperation } = useOfflineSync();
+
+  // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
@@ -23,14 +39,22 @@ export default function EditEventPage() {
   const [presale_price, setPresale_price] = useState<number>(0);
   const [gate_price, setGate_price] = useState<number>(0);
   const [category, setCategory] = useState('');
+  
+  // Image state
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  
+  // Refs for memory management
+  const newImagePreviewsRef = useRef<string[]>([]);
+  
+  // UI state
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const popularPngCities = [
     "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
@@ -41,10 +65,16 @@ export default function EditEventPage() {
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
-      newImagePreviews.forEach(url => URL.revokeObjectURL(url));
+      newImagePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
+  // Sync ref with state
+  useEffect(() => {
+    newImagePreviewsRef.current = newImagePreviews;
+  }, [newImagePreviews]);
+
+  // Fetch event data
   useEffect(() => {
     const fetchEvent = async () => {
       setLoading(true);
@@ -52,7 +82,8 @@ export default function EditEventPage() {
       
       // Clear previous state
       setImageFiles([]);
-      newImagePreviews.forEach(url => URL.revokeObjectURL(url));
+      newImagePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
+      newImagePreviewsRef.current = [];
       setNewImagePreviews([]);
       setImagesToDelete([]);
 
@@ -84,8 +115,8 @@ export default function EditEventPage() {
           setPresale_price(eventData.presale_price || 0);
           setGate_price(eventData.gate_price || 0);
           setCategory(eventData.category || '');
-          setImageUrls(Array.isArray(eventData.image_urls) ? eventData.image_urls : (eventData.image_url ? [eventData.image_url] : []));
           setVenue(eventData.venue || '');
+          setImageUrls(Array.isArray(eventData.image_urls) ? eventData.image_urls : (eventData.image_url ? [eventData.image_url] : []));
 
           if (popularPngCities.includes(eventData.location)) {
             setSelectedLocationType(eventData.location);
@@ -109,12 +140,41 @@ export default function EditEventPage() {
     }
   }, [id, router]);
 
+  // Validate form data
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Validate end date is after start date
+    if (date && endDate) {
+      const startDateTime = new Date(date);
+      const endDateTime = new Date(endDate);
+      
+      if (endDateTime <= startDateTime) {
+        errors.endDate = 'End date must be after the start date';
+      }
+    }
+
+    // Validate location
+    let finalLocation = selectedLocationType;
+    if (selectedLocationType === 'Other') {
+      finalLocation = customLocation;
+    }
+    if (!finalLocation || !finalLocation.trim()) {
+      errors.location = 'Please provide a location for the event';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle image deletion
   const handleDeleteImage = (urlToDelete: string, isNew: boolean = false) => {
     if (isNew) {
       const index = newImagePreviews.indexOf(urlToDelete);
       if (index > -1) {
         // Revoke the URL to free memory
         URL.revokeObjectURL(newImagePreviews[index]);
+        newImagePreviewsRef.current = newImagePreviewsRef.current.filter((_, i) => i !== index);
         setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
         setImageFiles(prev => prev.filter((_, i) => i !== index));
       }
@@ -124,6 +184,18 @@ export default function EditEventPage() {
     }
   };
 
+  // Validate image file
+  const validateImageFile = (file: File): string | null => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return `Invalid file type: ${file.name}. Only JPG, PNG, GIF, and WebP are allowed.`;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      return `File too large: ${file.name}. Maximum size is 5MB.`;
+    }
+    return null;
+  };
+
+  // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -138,9 +210,25 @@ export default function EditEventPage() {
         return;
       }
 
+      // Validate all files first
+      const validationErrors: string[] = [];
+      for (const file of newFilesArray) {
+        const error = validateImageFile(file);
+        if (error) {
+          validationErrors.push(error);
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        setError(validationErrors[0]);
+        e.target.value = '';
+        return;
+      }
+
       const filesToProcess = newFilesArray.slice(0, remainingSlots);
       const newPreviews = filesToProcess.map(file => URL.createObjectURL(file));
 
+      newImagePreviewsRef.current = [...newImagePreviewsRef.current, ...newPreviews];
       setImageFiles(prev => [...prev, ...filesToProcess]);
       setNewImagePreviews(prev => [...prev, ...newPreviews]);
       setError(null);
@@ -148,12 +236,26 @@ export default function EditEventPage() {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    newImagePreviews.forEach(url => URL.revokeObjectURL(url));
-    setNewImagePreviews([]);
-    setSubmitting(true);
+    
+    // Clear previous messages
     setError(null);
+    setSuccessMessage(null);
+    setValidationErrors({});
+
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+
+    // Revoke object URLs
+    newImagePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
+    newImagePreviewsRef.current = [];
+    setNewImagePreviews([]);
+    
+    setSubmitting(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -175,38 +277,39 @@ export default function EditEventPage() {
         finalLocation = customLocation;
       }
 
-      if (!finalLocation) {
-        setError('Please provide a location for the event.');
-        setSubmitting(false);
-        return;
-      }
-
+      // Handle image uploads
       let finalImageUrls: string[] = [...imageUrls];
 
       if (imageFiles.length > 0) {
-        for (const imageFile of imageFiles) {
-          const fileExt = imageFile.name.split('.').pop();
-          const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-          const filePath = `event-images/${fileName}`;
+        // Check network status for image uploads
+        if (!isOnline) {
+          setError('Note: Images will be uploaded when you reconnect to the internet.');
+        } else {
+          for (const imageFile of imageFiles) {
+            const fileExt = imageFile.name.split('.').pop();
+            // Use same format as create-event: user.id/filename
+            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            const filePath = `event-images/${fileName}`;
 
-          const { error: uploadError } = await supabase.storage
-            .from('event-images')
-            .upload(filePath, imageFile, {
-              cacheControl: '3600',
-              upsert: false,
-            });
+            const { error: uploadError } = await supabase.storage
+              .from('event-images')
+              .upload(filePath, imageFile, {
+                cacheControl: '3600',
+                upsert: false,
+              });
 
-          if (uploadError) {
-            setError(`Error uploading image: ${uploadError.message}`);
-            setSubmitting(false);
-            return;
+            if (uploadError) {
+              setError(`Error uploading image: ${uploadError.message}`);
+              setSubmitting(false);
+              return;
+            }
+
+            const { data: publicUrlData } = supabase.storage
+              .from('event-images')
+              .getPublicUrl(filePath);
+
+            finalImageUrls.push(publicUrlData.publicUrl);
           }
-
-          const { data: publicUrlData } = supabase.storage
-            .from('event-images')
-            .getPublicUrl(filePath);
-
-          finalImageUrls.push(publicUrlData.publicUrl);
         }
       }
 
@@ -222,6 +325,17 @@ export default function EditEventPage() {
         category: category || '',
         image_urls: finalImageUrls.length > 0 ? finalImageUrls : null,
       };
+
+      // Check if we're online and queue for offline if needed
+      if (!isOnline) {
+        await queueOperation('update', TABLES.EVENTS, { id, ...updateData });
+        setSuccessMessage('Event saved offline. It will be updated when you reconnect.');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
+        setSubmitting(false);
+        return;
+      }
 
       const response = await fetch(`/api/events/${id}`, {
         method: 'PUT',
@@ -239,6 +353,7 @@ export default function EditEventPage() {
         return;
       }
 
+      // Handle image deletion from storage
       if (imagesToDelete.length > 0) {
         const filePathsToDelete = imagesToDelete.map(url => {
           const pathSegments = url.split('/');
@@ -259,7 +374,12 @@ export default function EditEventPage() {
         }
       }
 
-      router.push('/dashboard');
+      setSuccessMessage('Event updated successfully!');
+      
+      // Delay redirect to show success message
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
     } catch (err: any) {
       setError(err.message || 'An error occurred during update');
     } finally {
@@ -267,12 +387,22 @@ export default function EditEventPage() {
     }
   };
 
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-          <p className="text-gray-500 mt-6 text-lg">Loading event...</p>
+      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <SkeletonLoader className="h-10 w-40" />
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <SkeletonLoader className="h-10 w-48 mx-auto mb-6" />
+            <div className="space-y-6">
+              <SkeletonLoader className="h-64 w-full" />
+              <SkeletonLoader className="h-48 w-full" />
+              <SkeletonLoader className="h-32 w-full" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -284,6 +414,14 @@ export default function EditEventPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Offline indicator */}
+        {!isOnline && (
+          <div className="mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <FiAlertCircle size={18} />
+            <span>You're offline. Changes will be saved when you reconnect.</span>
+          </div>
+        )}
+
         <div className="mb-6">
           <Link
             href="/dashboard"
@@ -300,9 +438,30 @@ export default function EditEventPage() {
             <p className="text-gray-600 mt-2">Update your event details</p>
           </div>
 
+          {/* Error message */}
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <FiAlertCircle className="text-red-500 mt-0.5" size={18} />
               <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Success message */}
+          {successMessage && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+              <FiCheck className="text-green-500" size={18} />
+              <p className="text-green-700 text-sm">{successMessage}</p>
+            </div>
+          )}
+
+          {/* Validation errors */}
+          {Object.keys(validationErrors).length > 0 && (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <ul className="text-sm text-yellow-700 list-disc list-inside">
+                {Object.values(validationErrors).map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -312,7 +471,9 @@ export default function EditEventPage() {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Event Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     id="name"
@@ -320,26 +481,27 @@ export default function EditEventPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    aria-required="true"
                   />
                 </div>
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                  <select
-                    id="category"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  <CustomSelect
+                    label="Category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={setCategory}
+                    placeholder="Select a category"
                     required
-                  >
-                    <option value="">Select a category</option>
-                    <option value="Music">Music</option>
-                    <option value="Art">Art</option>
-                    <option value="Food">Food</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Wellness">Wellness</option>
-                    <option value="Comedy">Comedy</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    error={validationErrors.category}
+                    options={[
+                      { value: 'Music', label: 'Music' },
+                      { value: 'Art', label: 'Art' },
+                      { value: 'Food', label: 'Food' },
+                      { value: 'Technology', label: 'Technology' },
+                      { value: 'Wellness', label: 'Wellness' },
+                      { value: 'Comedy', label: 'Comedy' },
+                      { value: 'Other', label: 'Other' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
@@ -349,14 +511,16 @@ export default function EditEventPage() {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Event Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
                   <textarea
                     id="description"
                     rows={4}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                  ></textarea>
+                  />
                 </div>
                 <div>
                   <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
@@ -382,6 +546,7 @@ export default function EditEventPage() {
                               onClick={() => handleDeleteImage(url, false)}
                               className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
                               title="Remove image"
+                              aria-label={`Remove image ${index + 1}`}
                             >
                               <FiX size={14} />
                             </button>
@@ -408,6 +573,7 @@ export default function EditEventPage() {
                               onClick={() => handleDeleteImage(previewUrl, true)}
                               className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
                               title="Remove image"
+                              aria-label={`Remove new image ${index + 1}`}
                             >
                               <FiX size={14} />
                             </button>
@@ -423,15 +589,19 @@ export default function EditEventPage() {
                       <input
                         type="file"
                         id="images"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
                         multiple
                         className="hidden"
                         onChange={handleFileChange}
+                        aria-label="Upload event images"
                       />
                       <label htmlFor="images" className="cursor-pointer">
                         <FiImage className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                         <span className="text-sm text-gray-500 block">
                           Click to add up to {remainingSlots} more image{remainingSlots > 1 ? 's' : ''}
+                        </span>
+                        <span className="text-xs text-gray-400 block mt-1">
+                          JPG, PNG, GIF, WebP (max 5MB each)
                         </span>
                       </label>
                     </div>
@@ -456,7 +626,9 @@ export default function EditEventPage() {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Date & Location</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Start Date & Time</label>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                    Start Date & Time <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="datetime-local"
                     id="date"
@@ -464,30 +636,38 @@ export default function EditEventPage() {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
+                    aria-required="true"
                   />
-                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2 mt-4">End Date & Time <span className="text-xs text-gray-400">(optional)</span></label>
+                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2 mt-4">
+                    End Date & Time <span className="text-xs text-gray-400">(optional)</span>
+                  </label>
                   <input
                     type="datetime-local"
                     id="endDate"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className={`w-full rounded-lg border px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent ${
+                      validationErrors.endDate ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
+                    aria-describedby={validationErrors.endDate ? 'endDate-error' : undefined}
                   />
+                  {validationErrors.endDate && (
+                    <p id="endDate-error" className="text-red-500 text-xs mt-1">
+                      {validationErrors.endDate}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                  <select
-                    id="location"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  <CustomSelect
+                    label="Location"
                     value={selectedLocationType}
-                    onChange={(e) => setSelectedLocationType(e.target.value)}
+                    onChange={setSelectedLocationType}
+                    placeholder="Select a location"
                     required
-                  >
-                    {popularPngCities.map((city) => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
+                    error={validationErrors.location}
+                    options={popularPngCities.map(city => ({ value: city, label: city }))}
+                  />
                   {selectedLocationType === 'Other' && (
                     <input
                       type="text"
@@ -502,7 +682,9 @@ export default function EditEventPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">Venue</label>
+                  <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">
+                    Venue <span className="text-xs text-gray-400">(optional)</span>
+                  </label>
                   <input
                     type="text"
                     id="venue"
@@ -520,41 +702,54 @@ export default function EditEventPage() {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Pricing</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="presale_price" className="block text-sm font-medium text-gray-700 mb-2">Presale Fee (PGK)</label>
+                  <label htmlFor="presale_price" className="block text-sm font-medium text-gray-700 mb-2">
+                    Presale Fee (PGK)
+                  </label>
                   <input
                     type="number"
                     id="presale_price"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    value={presale_price}
-                    onChange={(e) => setPresale_price(parseFloat(e.target.value) || 0)}
+                    value={presale_price || ''}
+                    onChange={(e) => setPresale_price(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
                     min="0"
                     step="0.01"
+                    placeholder="Free"
                   />
-                  <p className="text-xs text-gray-500 mt-1">If 0 or empty, this event will be marked as "None".</p>
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for Free events</p>
                 </div>
 
                 <div>
-                  <label htmlFor="gate_price" className="block text-sm font-medium text-gray-700 mb-2">Gate Fee (PGK)</label>
+                  <label htmlFor="gate_price" className="block text-sm font-medium text-gray-700 mb-2">
+                    Gate Fee (PGK)
+                  </label>
                   <input
                     type="number"
                     id="gate_price"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    value={gate_price}
-                    onChange={(e) => setGate_price(parseFloat(e.target.value) || 0)}
+                    value={gate_price || ''}
+                    onChange={(e) => setGate_price(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
                     min="0"
                     step="0.01"
+                    placeholder="Free"
                   />
-                  <p className="text-xs text-gray-500 mt-1">If 0 or empty, this event will be marked as "None".</p>
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for Free events</p>
                 </div>
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               disabled={submitting}
             >
-              {submitting ? 'Updating Event...' : 'Update Event'}
+              {submitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                  Updating Event...
+                </>
+              ) : (
+                'Update Event'
+              )}
             </button>
           </form>
         </div>
