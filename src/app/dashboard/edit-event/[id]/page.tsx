@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiArrowLeft, FiX, FiImage, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileText, FiAlertCircle, FiCheck, FiEdit3 } from 'react-icons/fi';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import SkeletonLoader from '@/components/SkeletonLoader';
+import ImageUpload from '@/components/EventFormComponents';
+import { FormSection, FormField, LoadingButton, AlertBanner } from '@/components/EventFormComponents';
 import CustomSelect from '@/components/CustomSelect';
-import { SelectOption } from '@/components/CustomSelect';
+import SkeletonLoader from '@/components/SkeletonLoader';
 
 export const dynamic = 'force-dynamic';
 
-// Allowed image types and max file size (5MB)
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -23,7 +23,6 @@ export default function EditEventPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
   
-  // Network and offline support
   const { isOnline } = useNetworkStatus();
   const { queueOperation } = useOfflineSync();
 
@@ -32,22 +31,16 @@ export default function EditEventPage() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [location, setLocation] = useState('');
-  const [venue, setVenue] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('Port Moresby');
   const [customLocation, setCustomLocation] = useState('');
-  const [presale_price, setPresale_price] = useState<number>(0);
-  const [gate_price, setGate_price] = useState<number>(0);
+  const [presalePrice, setPresalePrice] = useState<number>(0);
+  const [gatePrice, setGatePrice] = useState<number>(0);
   const [category, setCategory] = useState('');
+  const [venue, setVenue] = useState('');
   
   // Image state
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
-  
-  // Refs for memory management
-  const newImagePreviewsRef = useRef<string[]>([]);
   
   // UI state
   const [loading, setLoading] = useState(true);
@@ -55,6 +48,9 @@ export default function EditEventPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  
+  // Image cleanup ref
+  const previewsRef = useRef<string[]>([]);
 
   const popularPngCities = [
     "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka", "Rabaul", "Wewak",
@@ -62,17 +58,22 @@ export default function EditEventPage() {
     "Kundiawa", "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau", "Other"
   ];
 
+  const categories = [
+    { value: 'Music', label: 'Music' },
+    { value: 'Art', label: 'Art' },
+    { value: 'Food', label: 'Food' },
+    { value: 'Technology', label: 'Technology' },
+    { value: 'Wellness', label: 'Wellness' },
+    { value: 'Comedy', label: 'Comedy' },
+    { value: 'Other', label: 'Other' },
+  ];
+
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
-      newImagePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
+      previewsRef.current.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
-
-  // Sync ref with state
-  useEffect(() => {
-    newImagePreviewsRef.current = newImagePreviews;
-  }, [newImagePreviews]);
 
   // Fetch event data
   useEffect(() => {
@@ -82,10 +83,8 @@ export default function EditEventPage() {
       
       // Clear previous state
       setImageFiles([]);
-      newImagePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
-      newImagePreviewsRef.current = [];
-      setNewImagePreviews([]);
-      setImagesToDelete([]);
+      previewsRef.current.forEach(url => URL.revokeObjectURL(url));
+      previewsRef.current = [];
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -112,12 +111,18 @@ export default function EditEventPage() {
           setDescription(eventData.description || '');
           setDate(eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : '');
           setEndDate(eventData.end_date ? new Date(eventData.end_date).toISOString().slice(0, 16) : '');
-          setPresale_price(eventData.presale_price || 0);
-          setGate_price(eventData.gate_price || 0);
+          setPresalePrice(eventData.presale_price || 0);
+          setGatePrice(eventData.gate_price || 0);
           setCategory(eventData.category || '');
           setVenue(eventData.venue || '');
-          setImageUrls(Array.isArray(eventData.image_urls) ? eventData.image_urls : (eventData.image_url ? [eventData.image_url] : []));
+          
+          // Handle image URLs - support both array and single string
+          const images = Array.isArray(eventData.image_urls) 
+            ? eventData.image_urls 
+            : (eventData.image_url ? [eventData.image_url] : []);
+          setImageUrls(images);
 
+          // Set location
           if (popularPngCities.includes(eventData.location)) {
             setSelectedLocationType(eventData.location);
             setCustomLocation('');
@@ -140,9 +145,20 @@ export default function EditEventPage() {
     }
   }, [id, router]);
 
-  // Validate form data
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     const errors: Record<string, string> = {};
+
+    if (!name.trim()) {
+      errors.name = 'Event name is required';
+    }
+    
+    if (!description.trim()) {
+      errors.description = 'Description is required';
+    }
+    
+    if (!date) {
+      errors.date = 'Start date is required';
+    }
 
     // Validate end date is after start date
     if (date && endDate) {
@@ -162,81 +178,19 @@ export default function EditEventPage() {
     if (!finalLocation || !finalLocation.trim()) {
       errors.location = 'Please provide a location for the event';
     }
+    
+    if (!category) {
+      errors.category = 'Please select a category';
+    }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
-  };
+  }, [name, description, date, endDate, selectedLocationType, customLocation, category]);
 
-  // Handle image deletion
-  const handleDeleteImage = (urlToDelete: string, isNew: boolean = false) => {
-    if (isNew) {
-      const index = newImagePreviews.indexOf(urlToDelete);
-      if (index > -1) {
-        // Revoke the URL to free memory
-        URL.revokeObjectURL(newImagePreviews[index]);
-        newImagePreviewsRef.current = newImagePreviewsRef.current.filter((_, i) => i !== index);
-        setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
-        setImageFiles(prev => prev.filter((_, i) => i !== index));
-      }
-    } else {
-      setImagesToDelete(prev => [...prev, urlToDelete]);
-      setImageUrls(prev => prev.filter(url => url !== urlToDelete));
-    }
-  };
+  const handleExistingImagesRemove = useCallback((urlToRemove: string) => {
+    setImageUrls(prev => prev.filter(url => url !== urlToRemove));
+  }, []);
 
-  // Validate image file
-  const validateImageFile = (file: File): string | null => {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return `Invalid file type: ${file.name}. Only JPG, PNG, GIF, and WebP are allowed.`;
-    }
-    if (file.size > MAX_IMAGE_SIZE) {
-      return `File too large: ${file.name}. Maximum size is 5MB.`;
-    }
-    return null;
-  };
-
-  // Handle file change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newFilesArray = Array.from(files);
-      const totalCurrentImages = imageUrls.length + imageFiles.length;
-      const maxAllowed = 3;
-      const remainingSlots = maxAllowed - totalCurrentImages;
-
-      if (remainingSlots <= 0) {
-        setError(`You have already reached the maximum number of ${maxAllowed} images.`);
-        e.target.value = '';
-        return;
-      }
-
-      // Validate all files first
-      const validationErrors: string[] = [];
-      for (const file of newFilesArray) {
-        const error = validateImageFile(file);
-        if (error) {
-          validationErrors.push(error);
-        }
-      }
-
-      if (validationErrors.length > 0) {
-        setError(validationErrors[0]);
-        e.target.value = '';
-        return;
-      }
-
-      const filesToProcess = newFilesArray.slice(0, remainingSlots);
-      const newPreviews = filesToProcess.map(file => URL.createObjectURL(file));
-
-      newImagePreviewsRef.current = [...newImagePreviewsRef.current, ...newPreviews];
-      setImageFiles(prev => [...prev, ...filesToProcess]);
-      setNewImagePreviews(prev => [...prev, ...newPreviews]);
-      setError(null);
-      e.target.value = '';
-    }
-  };
-
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -249,11 +203,6 @@ export default function EditEventPage() {
     if (!validateForm()) {
       return;
     }
-
-    // Revoke object URLs
-    newImagePreviewsRef.current.forEach(url => URL.revokeObjectURL(url));
-    newImagePreviewsRef.current = [];
-    setNewImagePreviews([]);
     
     setSubmitting(true);
 
@@ -281,13 +230,11 @@ export default function EditEventPage() {
       let finalImageUrls: string[] = [...imageUrls];
 
       if (imageFiles.length > 0) {
-        // Check network status for image uploads
         if (!isOnline) {
           setError('Note: Images will be uploaded when you reconnect to the internet.');
         } else {
           for (const imageFile of imageFiles) {
             const fileExt = imageFile.name.split('.').pop();
-            // Use same format as create-event: user.id/filename
             const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
             const filePath = `event-images/${fileName}`;
 
@@ -320,8 +267,8 @@ export default function EditEventPage() {
         end_date: endDate || null,
         location: finalLocation.trim(),
         venue: venue ? venue.trim() : '',
-        presale_price: presale_price || 0,
-        gate_price: gate_price || 0,
+        presale_price: presalePrice || 0,
+        gate_price: gatePrice || 0,
         category: category || '',
         image_urls: finalImageUrls.length > 0 ? finalImageUrls : null,
       };
@@ -353,33 +300,12 @@ export default function EditEventPage() {
         return;
       }
 
-      // Handle image deletion from storage
-      if (imagesToDelete.length > 0) {
-        const filePathsToDelete = imagesToDelete.map(url => {
-          const pathSegments = url.split('/');
-          const bucketIndex = pathSegments.indexOf('event-images');
-          if (bucketIndex > -1 && bucketIndex + 1 < pathSegments.length) {
-            return pathSegments.slice(bucketIndex).join('/');
-          }
-          return '';
-        }).filter(Boolean);
-
-        if (filePathsToDelete.length > 0) {
-          supabase.storage
-            .from('event-images')
-            .remove(filePathsToDelete)
-            .catch(deleteError => {
-              console.error('Error deleting old images:', deleteError);
-            });
-        }
-      }
-
       setSuccessMessage('Event updated successfully!');
       
       // Delay redirect to show success message
       setTimeout(() => {
         router.push('/dashboard');
-      }, 1000);
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'An error occurred during update');
     } finally {
@@ -390,17 +316,20 @@ export default function EditEventPage() {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 pb-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <div className="mb-6">
-            <SkeletonLoader className="h-10 w-40" />
+            <SkeletonLoader className="h-12 w-40 rounded-xl" />
           </div>
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <SkeletonLoader className="h-10 w-48 mx-auto mb-6" />
-            <div className="space-y-6">
-              <SkeletonLoader className="h-64 w-full" />
-              <SkeletonLoader className="h-48 w-full" />
-              <SkeletonLoader className="h-32 w-full" />
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-8 py-8">
+              <SkeletonLoader className="h-10 w-48 mx-auto rounded-lg" />
+            </div>
+            <div className="p-6 sm:p-8 space-y-6">
+              <SkeletonLoader className="h-48 w-full rounded-2xl" />
+              <SkeletonLoader className="h-48 w-full rounded-2xl" />
+              <SkeletonLoader className="h-32 w-full rounded-2xl" />
+              <SkeletonLoader className="h-16 w-full rounded-xl" />
             </div>
           </div>
         </div>
@@ -408,349 +337,277 @@ export default function EditEventPage() {
     );
   }
 
-  const totalImages = imageUrls.length + imageFiles.length;
-  const remainingSlots = 3 - totalImages;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Offline indicator */}
-        {!isOnline && (
-          <div className="mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg flex items-center gap-2">
-            <FiAlertCircle size={18} />
-            <span>You're offline. Changes will be saved when you reconnect.</span>
-          </div>
-        )}
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 pb-12">
+      {/* Offline Banner */}
+      {!isOnline && (
+        <div className="bg-yellow-400/90 backdrop-blur-sm text-yellow-900 px-4 py-3 text-center text-sm font-medium">
+          You're offline. Changes will be saved when you reconnect.
+        </div>
+      )}
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {/* Back Button */}
         <div className="mb-6">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors"
+          <Link 
+            href="/dashboard" 
+            className="inline-flex items-center gap-2 text-gray-900 hover:text-white bg-white/90 hover:bg-gray-900 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium"
           >
-            <FiArrowLeft size={16} />
+            <FiArrowLeft size={18} />
             Back to Dashboard
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Edit Event</h1>
-            <p className="text-gray-600 mt-2">Update your event details</p>
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-8 py-8 text-center">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FiEdit3 className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Edit Event</h1>
+            <p className="text-white/80">Update your event details</p>
           </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <FiAlertCircle className="text-red-500 mt-0.5" size={18} />
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+            {/* Error & Success Messages */}
+            {error && (
+              <AlertBanner 
+                type="error" 
+                message={error} 
+                onClose={() => setError(null)} 
+              />
+            )}
+            
+            {successMessage && (
+              <AlertBanner 
+                type="success" 
+                message={successMessage} 
+              />
+            )}
 
-          {/* Success message */}
-          {successMessage && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-              <FiCheck className="text-green-500" size={18} />
-              <p className="text-green-700 text-sm">{successMessage}</p>
-            </div>
-          )}
-
-          {/* Validation errors */}
-          {Object.keys(validationErrors).length > 0 && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <ul className="text-sm text-yellow-700 list-disc list-inside">
-                {Object.values(validationErrors).map((err, idx) => (
-                  <li key={idx}>{err}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Event Basic Information */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
+            {/* Basic Information */}
+            <FormSection
+              title="Basic Information"
+              description="Tell us about your event"
+              icon={<FiFileText size={20} />}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Event Name <span className="text-red-500">*</span>
-                  </label>
+                <FormField 
+                  label="Event Name" 
+                  required 
+                  error={validationErrors.name}
+                  hint="Give your event a catchy name"
+                >
                   <input
                     type="text"
                     id="name"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className={`input-field ${validationErrors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. PNG Music Festival 2024"
+                    maxLength={100}
                     required
-                    aria-required="true"
                   />
-                </div>
-                <div>
+                </FormField>
+
+                <FormField 
+                  label="Category" 
+                  required 
+                  error={validationErrors.category}
+                >
                   <CustomSelect
-                    label="Category"
                     value={category}
                     onChange={setCategory}
                     placeholder="Select a category"
+                    options={categories}
                     required
-                    error={validationErrors.category}
-                    options={[
-                      { value: 'Music', label: 'Music' },
-                      { value: 'Art', label: 'Art' },
-                      { value: 'Food', label: 'Food' },
-                      { value: 'Technology', label: 'Technology' },
-                      { value: 'Wellness', label: 'Wellness' },
-                      { value: 'Comedy', label: 'Comedy' },
-                      { value: 'Other', label: 'Other' },
-                    ]}
                   />
-                </div>
+                </FormField>
               </div>
-            </div>
+            </FormSection>
 
             {/* Event Details */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Event Details</h2>
+            <FormSection
+              title="Event Details"
+              description="Describe what attendees can expect"
+              icon={<FiTag size={20} />}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
+                <FormField 
+                  label="Description" 
+                  required 
+                  error={validationErrors.description}
+                  hint="Describe your event in detail"
+                >
                   <textarea
                     id="description"
                     rows={4}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    className={`input-field resize-none ${validationErrors.description ? 'border-red-500 focus:ring-red-500' : ''}`}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
-                    Event Images ({totalImages}/3)
-                  </label>
-                  
-                  {/* Current Images from Database */}
-                  {imageUrls.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs text-gray-500 mb-2">Current images (click X to remove):</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {imageUrls.map((url, index) => (
-                          <div key={`existing-${index}`} className="relative group">
-                            <Image
-                              src={url}
-                              alt={`Event image ${index + 1}`}
-                              width={100}
-                              height={80}
-                              className="rounded-md object-cover w-full h-20"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteImage(url, false)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
-                              title="Remove image"
-                              aria-label={`Remove image ${index + 1}`}
-                            >
-                              <FiX size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* New Images Preview */}
-                  {newImagePreviews.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs text-gray-500 mb-2">New images to upload (click X to remove):</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {newImagePreviews.map((previewUrl, index) => (
-                          <div key={`new-${index}`} className="relative group">
-                            <img
-                              src={previewUrl}
-                              alt={`New image ${index + 1}`}
-                              className="rounded-md object-cover w-full h-20"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteImage(previewUrl, true)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
-                              title="Remove image"
-                              aria-label={`Remove new image ${index + 1}`}
-                            >
-                              <FiX size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* File Input - Only show if we can add more images */}
-                  {remainingSlots > 0 ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-yellow-400 transition-colors">
-                      <input
-                        type="file"
-                        id="images"
-                        accept="image/jpeg,image/png,image/gif,image/webp"
-                        multiple
-                        className="hidden"
-                        onChange={handleFileChange}
-                        aria-label="Upload event images"
-                      />
-                      <label htmlFor="images" className="cursor-pointer">
-                        <FiImage className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500 block">
-                          Click to add up to {remainingSlots} more image{remainingSlots > 1 ? 's' : ''}
-                        </span>
-                        <span className="text-xs text-gray-400 block mt-1">
-                          JPG, PNG, GIF, WebP (max 5MB each)
-                        </span>
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 text-center py-2 bg-gray-100 rounded-lg">
-                      Maximum of 3 images reached
-                    </div>
-                  )}
-
-                  {/* Image count indicator */}
-                  {totalImages > 0 && (
-                    <p className="text-xs text-gray-400 mt-2">
-                      {totalImages} of 3 images selected
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Date & Location */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Date & Location</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Date & Time <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="date"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    placeholder="What's special about this event?"
+                    maxLength={2000}
                     required
-                    aria-required="true"
                   />
-                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2 mt-4">
-                    End Date & Time <span className="text-xs text-gray-400">(optional)</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="endDate"
-                    className={`w-full rounded-lg border px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent ${
-                      validationErrors.endDate ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    aria-describedby={validationErrors.endDate ? 'endDate-error' : undefined}
-                  />
-                  {validationErrors.endDate && (
-                    <p id="endDate-error" className="text-red-500 text-xs mt-1">
-                      {validationErrors.endDate}
-                    </p>
-                  )}
-                </div>
+                </FormField>
 
-                <div>
-                  <CustomSelect
-                    label="Location"
-                    value={selectedLocationType}
-                    onChange={setSelectedLocationType}
-                    placeholder="Select a location"
-                    required
-                    error={validationErrors.location}
-                    options={popularPngCities.map(city => ({ value: city, label: city }))}
-                  />
-                  {selectedLocationType === 'Other' && (
+                <div className="space-y-4">
+                  <FormField 
+                    label="Venue" 
+                    hint="Where will the event take place?"
+                  >
                     <input
                       type="text"
-                      id="customLocation"
-                      className="mt-2 block w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                      placeholder="Enter custom location"
-                      value={customLocation}
-                      onChange={(e) => setCustomLocation(e.target.value)}
+                      id="venue"
+                      className="input-field"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      placeholder="e.g. Grand Papua Hotel Ballroom"
+                    />
+                  </FormField>
+
+                  <FormField 
+                    label="Event Images" 
+                    hint="Up to 3 images • Max 5MB each"
+                  >
+                    <ImageUpload
+                      images={imageFiles}
+                      existingImages={imageUrls}
+                      onImagesChange={setImageFiles}
+                      onExistingImagesRemove={handleExistingImagesRemove}
+                      maxImages={3}
+                    />
+                  </FormField>
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Date & Location */}
+            <FormSection
+              title="Date & Location"
+              description="When and where is your event?"
+              icon={<FiCalendar size={20} />}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <FormField 
+                    label="Start Date & Time" 
+                    required 
+                    error={validationErrors.date}
+                  >
+                    <input
+                      type="datetime-local"
+                      id="date"
+                      className={`input-field ${validationErrors.date ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
                       required
                     />
+                  </FormField>
+
+                  <FormField 
+                    label="End Date & Time" 
+                    error={validationErrors.endDate}
+                    hint="Optional - for multi-day or long events"
+                  >
+                    <input
+                      type="datetime-local"
+                      id="endDate"
+                      className={`input-field ${validationErrors.endDate ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </FormField>
+                </div>
+
+                <div className="space-y-4">
+                  <FormField 
+                    label="Location" 
+                    required 
+                    error={validationErrors.location}
+                  >
+                    <CustomSelect
+                      value={selectedLocationType}
+                      onChange={setSelectedLocationType}
+                      placeholder="Select a location"
+                      options={popularPngCities.map(city => ({ value: city, label: city }))}
+                      required
+                    />
+                  </FormField>
+
+                  {selectedLocationType === 'Other' && (
+                    <FormField 
+                      label="Custom Location" 
+                      required
+                      hint="Enter the location name"
+                    >
+                      <input
+                        type="text"
+                        id="customLocation"
+                        className="input-field"
+                        placeholder="Enter location name"
+                        value={customLocation}
+                        onChange={(e) => setCustomLocation(e.target.value)}
+                      />
+                    </FormField>
                   )}
                 </div>
-
-                <div>
-                  <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">
-                    Venue <span className="text-xs text-gray-400">(optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="venue"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    placeholder="Enter venue name"
-                    value={venue}
-                    onChange={(e) => setVenue(e.target.value)}
-                  />
-                </div>
               </div>
-            </div>
+            </FormSection>
 
             {/* Pricing */}
-            <div className="p-6 rounded-lg border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pricing</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="presale_price" className="block text-sm font-medium text-gray-700 mb-2">
-                    Presale Fee (PGK)
-                  </label>
-                  <input
-                    type="number"
-                    id="presale_price"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    value={presale_price || ''}
-                    onChange={(e) => setPresale_price(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                    placeholder="Free"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty for Free events</p>
-                </div>
-
-                <div>
-                  <label htmlFor="gate_price" className="block text-sm font-medium text-gray-700 mb-2">
-                    Gate Fee (PGK)
-                  </label>
-                  <input
-                    type="number"
-                    id="gate_price"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                    value={gate_price || ''}
-                    onChange={(e) => setGate_price(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                    placeholder="Free"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty for Free events</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              disabled={submitting}
+            <FormSection
+              title="Pricing"
+              description="Set ticket prices for your event"
+              icon={<FiDollarSign size={20} />}
             >
-              {submitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
-                  Updating Event...
-                </>
-              ) : (
-                'Update Event'
-              )}
-            </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField 
+                  label="Presale Price (PGK)" 
+                  hint="Leave empty for free events"
+                >
+                  <input
+                    type="number"
+                    id="presalePrice"
+                    className="input-field"
+                    value={presalePrice || ''}
+                    onChange={(e) => setPresalePrice(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                  />
+                </FormField>
+
+                <FormField 
+                  label="Gate Price (PGK)" 
+                  hint="Leave empty for free events"
+                >
+                  <input
+                    type="number"
+                    id="gatePrice"
+                    className="input-field"
+                    value={gatePrice || ''}
+                    onChange={(e) => setGatePrice(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                  />
+                </FormField>
+              </div>
+            </FormSection>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <LoadingButton
+                type="submit"
+                loading={submitting}
+                loadingText="Saving Changes..."
+                icon={<FiSave size={20} />}
+              >
+                Save Changes
+              </LoadingButton>
+            </div>
           </form>
         </div>
       </div>

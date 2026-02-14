@@ -30,7 +30,7 @@ export default function EventsPageContent() {
   // Read initialTab from URL params (for deep linking)
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam === 'about-event' || tabParam === 'host-details') {
+    if (tabParam === 'about-event') {
       setInitialTab(tabParam);
     }
   }, [searchParams]);

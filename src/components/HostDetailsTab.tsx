@@ -31,8 +31,6 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Host</h2>
-
       {host ? (
         <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl p-6 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300">
           {/* Host Profile Section */}
@@ -73,7 +71,7 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
           {/* Host Bio */}
           {host?.about && (
             <div className="mb-6">
-              <h3 className="font-bold text-lg text-gray-900 mb-2">About the Host</h3>
+              <h3 className="font-bold text-lg text-gray-900 mb-2">About</h3>
               <p className="text-gray-700 text-base leading-relaxed">{host.about}</p>
             </div>
           )}

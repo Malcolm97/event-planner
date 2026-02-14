@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiBookmark, FiTrash2, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiBookmark, FiTrash2, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiUsers, FiEye } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
@@ -11,13 +11,13 @@ import { toast } from 'react-hot-toast';
 
 // Define category mappings directly in this component
 const categoryColorMap: { [key: string]: string } = {
-  'Music': 'bg-purple-100 text-purple-600',
-  'Art': 'bg-pink-100 text-pink-600',
-  'Food': 'bg-orange-100 text-orange-600',
-  'Technology': 'bg-blue-100 text-blue-600',
-  'Wellness': 'bg-green-100 text-green-600',
-  'Comedy': 'bg-yellow-100 text-yellow-600',
-  'Other': 'bg-gray-100 text-gray-700',
+  'Music': 'bg-purple-500/90 text-white',
+  'Art': 'bg-pink-500/90 text-white',
+  'Food': 'bg-orange-500/90 text-white',
+  'Technology': 'bg-blue-500/90 text-white',
+  'Wellness': 'bg-emerald-500/90 text-white',
+  'Comedy': 'bg-yellow-500/90 text-white',
+  'Other': 'bg-gray-500/90 text-white',
 };
 
 const categoryIconMap: { [key: string]: React.ComponentType<{ size?: number; className?: string }> } = {
@@ -30,13 +30,12 @@ const categoryIconMap: { [key: string]: React.ComponentType<{ size?: number; cla
   'Other': FiStar,
 };
 
-// Helper function to format date as "16th September, 2025"
+// Helper function to format date
 const formatDate = (date: Date): string => {
   const day = date.getDate();
   const month = date.toLocaleDateString('en-US', { month: 'long' });
   const year = date.getFullYear();
 
-  // Add ordinal suffix
   const getOrdinalSuffix = (day: number): string => {
     if (day > 3 && day < 21) return 'th';
     switch (day % 10) {
@@ -50,7 +49,7 @@ const formatDate = (date: Date): string => {
   return `${day}${getOrdinalSuffix(day)} ${month}, ${year}`;
 };
 
-// ShareButtons Component - defined first to avoid issues
+// ShareButtons Component
 function ShareButtons({ event }: { event: EventItem }) {
   const [showShareOptions, setShowShareOptions] = useState<boolean>(false);
   const [eventUrl, setEventUrl] = useState<string>('');
@@ -112,25 +111,25 @@ function ShareButtons({ event }: { event: EventItem }) {
           e.stopPropagation();
           handleShare();
         }}
-        className="p-1.5 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[28px] min-h-[28px] flex items-center justify-center"
+        className="p-2 rounded-xl bg-white/95 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 border border-gray-200/50 min-w-[36px] min-h-[36px] flex items-center justify-center"
         aria-label="Share Event"
       >
-        <FiShare2 size={12} />
+        <FiShare2 size={14} />
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex gap-1 z-20 animate-slide-up">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
-            <FaFacebook size={14} />
+        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-100/50 p-2 flex gap-1 z-30 animate-slide-up">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
+            <FaFacebook size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
-            <FaTwitter size={14} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-lg hover:bg-sky-50 text-sky-500 transition-colors" aria-label="Share on Twitter">
+            <FaTwitter size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
-            <FaLinkedin size={14} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
+            <FaLinkedin size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-1.5 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
-            <FaWhatsapp size={14} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
+            <FaWhatsapp size={16} />
           </button>
         </div>
       )}
@@ -147,7 +146,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
   // Memoize expensive computations
   const categoryLabel = useMemo(() => event.category?.trim() || 'Other', [event.category]);
-  const categoryColor = useMemo(() => categoryColorMap[categoryLabel] || 'bg-gray-100 text-gray-700', [categoryLabel]);
+  const categoryColor = useMemo(() => categoryColorMap[categoryLabel] || 'bg-gray-500/90 text-white', [categoryLabel]);
   const Icon = useMemo(() => categoryIconMap[categoryLabel] || FiStar, [categoryLabel]);
 
   // Memoize date calculations
@@ -253,7 +252,6 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     setLoading(true);
     try {
       if (bookmarked) {
-        // Remove from saved events
         const { error } = await supabase
           .from(TABLES.SAVED_EVENTS)
           .delete()
@@ -265,7 +263,6 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
           setSaveCount(prev => Math.max(0, prev - 1));
         }
       } else {
-        // Add to saved events
         const { error } = await supabase
           .from(TABLES.SAVED_EVENTS)
           .insert({
@@ -340,10 +337,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     e.stopPropagation();
     if (!user || deleting || !isOwner) return;
 
-    // Show confirmation dialog with toast
     toast((t) => (
-      <div>
-        <p className="font-medium mb-2">Delete Event</p>
+      <div className="p-2">
+        <p className="font-semibold mb-2 text-gray-900">Delete Event</p>
         <p className="text-sm text-gray-600 mb-4">
           Are you sure you want to delete "{event.name}"? This action cannot be undone.
         </p>
@@ -353,13 +349,13 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
               toast.dismiss(t.id);
               performDelete();
             }}
-            className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+            className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 transition-colors"
           >
             Delete
           </button>
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
@@ -371,7 +367,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
   return (
     <article
       data-event-id={event.id}
-      className="group relative responsive-card cursor-pointer overflow-hidden h-full transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl focus-within:scale-[1.02] focus:outline-none focus-ring active:scale-[0.98]"
+      className="group relative bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full border border-gray-100/50"
       tabIndex={0}
       role="button"
       aria-label={`View details for ${event.name} event`}
@@ -389,36 +385,14 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         }
       }}
     >
-      {/* Top Badges Row */}
-      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-col items-start gap-1 min-w-[0]">
-        {event.featured && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
-        )}
-        {isPopular && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
-        )}
-        {isNew && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-green-200 text-green-800 shadow-md">New</span>
-        )}
-      </div>
-
-      {/* Category Badge - Top Right */}
-      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
-        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${categoryColor} shadow-md backdrop-blur-sm`}>
-          <Icon size={10} />
-          <span className="hidden sm:inline">{categoryLabel}</span>
-          <span className="sm:hidden sr-only">{categoryLabel}</span>
-        </span>
-      </div>
-
       {/* Hero Image Area */}
-      <div className="relative h-24 sm:h-28 md:h-32 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-lg">
+      <div className="relative h-36 sm:h-44 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {imageSrc && (typeof imageSrc === 'string') ? (
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
             <img
               src={imageSrc}
               alt={`Event image for ${event.name}`}
-              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
             <Image
@@ -426,121 +400,171 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
               alt={`Event image for ${event.name}`}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="transition-transform duration-500 group-hover:scale-110 object-cover object-center"
+              className="transition-transform duration-700 group-hover:scale-110 object-cover"
             />
           )
-        ) : null}
-        {/* Price Badges - Bottom Left */}
-        <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex flex-col items-start gap-1 sm:gap-2">
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gray-200/50 flex items-center justify-center">
+              <FiImage size={32} className="text-gray-300" />
+            </div>
+          </div>
+        )}
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+
+        {/* Top Badges */}
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+          <div className="flex flex-wrap gap-1.5">
+            {event.featured && (
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
+                Featured
+              </span>
+            )}
+            {isPopular && (
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg flex items-center gap-1">
+                <FiStar size={10} /> Popular
+              </span>
+            )}
+            {isNew && (
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg">
+                New
+              </span>
+            )}
+          </div>
+
+          {/* Category Badge */}
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold ${categoryColor} shadow-lg backdrop-blur-sm`}>
+            <Icon size={10} />
+            {categoryLabel}
+          </span>
+        </div>
+
+        {/* Price Badge - Bottom Left */}
+        <div className="absolute bottom-3 left-3 z-10">
           {event.presale_price !== undefined && event.presale_price !== null ? (
             event.presale_price === 0 ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={8} />
-                Free
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-900 shadow-lg flex items-center gap-1">
+                Free Event
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={8} />
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
                 K{event.presale_price.toFixed(0)}
               </span>
             )
           ) : null}
-          {event.gate_price !== undefined && event.gate_price !== null ? (
-            event.gate_price === 0 ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={8} />
-                Free
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg border border-white/30 backdrop-blur-sm">
-                <FiDollarSign size={8} />
-                K{event.gate_price.toFixed(0)}
-              </span>
-            )
-          ) : null}
         </div>
+
+        {/* Gate Price - Bottom Right */}
+        {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 && (
+          <div className="absolute bottom-3 right-3 z-10">
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg">
+              Gate: K{event.gate_price.toFixed(0)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content Area */}
-      <div className="flex flex-col h-full">
-        <div className="px-2 py-2 sm:px-3 sm:py-3 pb-10 sm:pb-12">
-          {/* Event Title */}
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-0.5 text-left">
-            {event.name}
-          </h3>
+      <div className="p-4 sm:p-5">
+        {/* Event Title */}
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
+          {event.name}
+        </h3>
 
-          {/* Location and Venue */}
-          <div className="space-y-0.5 text-left mb-0.5 sm:mb-1">
-            <div className="flex items-start gap-1">
-              <FiMapPin size={10} className="text-blue-600 flex-shrink-0 mt-0.5" />
-              <span className="font-medium text-gray-700 text-[10px] sm:text-xs leading-snug">{event.location}</span>
-            </div>
+        {/* Location */}
+        <div className="flex items-start gap-2 mb-2">
+          <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 flex-shrink-0">
+            <FiMapPin size={12} />
           </div>
+          <span className="text-sm text-gray-600 font-medium line-clamp-1">{event.location}</span>
+        </div>
 
-          {/* Date and Time */}
-          {event.date && (
-            <div className="space-y-0.5 text-left">
-              <div className="flex items-start gap-1">
-                <FiCalendar size={10} className="text-red-600 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-[10px] sm:text-xs leading-snug">
-                  {formattedEndDate ? (
-                    <>
-                      {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.end_date!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </>
-                  ) : (
-                    formattedDate
-                  )}
-                </span>
-              </div>
-              <div className="flex items-start gap-1">
-                <FiClock size={10} className="text-orange-600 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-gray-700 text-[10px] sm:text-xs leading-snug">
+        {/* Date and Time */}
+        {event.date && (
+          <div className="flex items-start gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-red-50 text-red-600 flex-shrink-0">
+              <FiCalendar size={12} />
+            </div>
+            <div>
+              <span className="text-sm text-gray-700 font-medium block">
+                {formattedEndDate ? (
+                  <>
+                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.end_date!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </>
+                ) : (
+                  formattedDate
+                )}
+              </span>
+              {formattedTime && (
+                <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                  <FiClock size={10} />
                   {formattedTime}
                   {formattedEndTime ? ` - ${formattedEndTime}` : ''}
                 </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons - positioned in bottom area */}
-        <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 z-10 flex items-center gap-1">
-          {/* Delete button for event owners */}
-          {isOwner && (
-            <button
-              className={`p-1.5 sm:p-2 rounded-full bg-red-50 hover:bg-red-100 shadow border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 min-w-[28px] min-h-[28px] flex items-center justify-center ${deleting ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-700'}`}
-              aria-label="Delete Event"
-              onClick={handleDelete}
-              disabled={deleting}
-              tabIndex={0}
-            >
-              <FiTrash2 size={12} />
-            </button>
-          )}
-
-          {/* Save/Bookmark button for logged-in users */}
-          {user && (
-            <button
-              className={`p-1.5 sm:p-1.5 rounded-full bg-white/90 hover:bg-yellow-100 shadow-lg border border-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-[28px] min-h-[28px] flex items-center justify-center ${bookmarked ? 'text-yellow-700 bg-yellow-50' : 'text-yellow-600 hover:text-yellow-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
-              onClick={handleBookmark}
-              disabled={loading}
-              tabIndex={0}
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-2 w-2 sm:h-3 sm:w-3 border-b-2 border-yellow-600"></div>
-              ) : (
-                <FiBookmark size={12} className={bookmarked ? 'fill-current' : ''} />
               )}
-            </button>
-          )}
+            </div>
+          </div>
+        )}
 
-          {/* Social Share Feature */}
+        {/* Save Count */}
+        {saveCount > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+            <FiUsers size={12} />
+            <span>{saveCount} saved{saveCount !== 1 ? 's' : ''}</span>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
+          <div className="flex items-center gap-2">
+            {/* Delete button for event owners */}
+            {isOwner && (
+              <button
+                className={`p-2.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                  deleting 
+                    ? 'bg-red-100 text-red-400 cursor-not-allowed opacity-50' 
+                    : 'bg-red-50 hover:bg-red-100 text-red-600'
+                }`}
+                aria-label="Delete Event"
+                onClick={handleDelete}
+                disabled={deleting}
+                tabIndex={0}
+              >
+                {deleting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                ) : (
+                  <FiTrash2 size={14} />
+                )}
+              </button>
+            )}
+
+            {/* Save/Bookmark button for logged-in users */}
+            {user && (
+              <button
+                className={`p-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-[40px] min-h-[40px] flex items-center justify-center shadow-sm ${
+                  bookmarked 
+                    ? 'bg-yellow-400 text-gray-900' 
+                    : 'bg-gray-50 hover:bg-yellow-50 text-gray-600 hover:text-yellow-600'
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label={bookmarked ? 'Remove Bookmark' : 'Save Event'}
+                onClick={handleBookmark}
+                disabled={loading}
+                tabIndex={0}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+                ) : (
+                  <FiBookmark size={14} className={bookmarked ? 'fill-current' : ''} />
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Share Button */}
           <ShareButtons event={event} />
         </div>
-
-        {/* Hover Overlay Effect */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"></div>
       </div>
     </article>
   );
