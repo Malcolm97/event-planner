@@ -26,6 +26,10 @@ export const metadata = {
   keywords: 'events, Papua New Guinea, PNG, concerts, festivals, workshops',
   authors: [{ name: 'PNG Events Team' }],
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icons/apple-touch-icon-180x180.png',
+  },
 };
 
 export const viewport = {
