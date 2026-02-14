@@ -24,6 +24,7 @@ export function useDashboardData(): UseDashboardDataResult {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   const fetchUserEvents = useCallback(async (userId: string) => {
     try {
@@ -135,7 +136,13 @@ export function useDashboardData(): UseDashboardDataResult {
         return;
       }
 
-      setUserProfile(data as User);
+      const profileData = data as User;
+        // Add email from auth user
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.email) {
+          profileData.email = authUser.email;
+        }
+        setUserProfile(profileData);
     } catch (err) {
       console.warn('Failed to load user profile:', err);
       setUserProfile(null);

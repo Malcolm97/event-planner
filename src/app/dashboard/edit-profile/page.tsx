@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 import Link from 'next/link';
 import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import Image from 'next/image';

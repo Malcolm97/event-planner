@@ -124,7 +124,8 @@ export const TABLES = {
   USERS: 'users',
   SAVED_EVENTS: 'saved_events',
   ACTIVITIES: 'activities',
-  PUSH_SUBSCRIPTIONS: 'push_subscriptions'
+  PUSH_SUBSCRIPTIONS: 'push_subscriptions',
+  USERS_BY_EMAIL: 'users_by_email'
 } as const
 
 // Event interface for Supabase
