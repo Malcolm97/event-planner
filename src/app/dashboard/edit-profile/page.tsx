@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
 import Link from 'next/link';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -22,6 +22,8 @@ export default function EditProfilePage() {
   const [error, setError] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null); // New state for photo file
   const [photoUrl, setPhotoUrl] = useState<string | null>(null); // New state for photo URL
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -459,32 +461,52 @@ export default function EditProfilePage() {
                     <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
                       New Password
                     </label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      name="newPassword"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                      placeholder="Enter new password"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        id="newPassword"
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                        placeholder="Enter new password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="w-full md:w-1/2 px-2">
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                       Confirm New Password
                     </label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                      placeholder="Confirm new password"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                        placeholder="Confirm new password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

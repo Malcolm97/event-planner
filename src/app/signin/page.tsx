@@ -4,7 +4,7 @@ import { supabase, TABLES } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/Button";
-import { FiArrowLeft } from "react-icons/fi";
+import { FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 
 import { getSigninRedirect, getSigninModalState, clearSigninRedirect, ModalState, safeRedirect } from '@/lib/utils';
@@ -18,6 +18,8 @@ export default function SignInPage() {
   // All hooks must be called at the top level, before any conditional returns
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false); // New state for forgot password
   const [error, setError] = useState("");
@@ -62,7 +64,7 @@ export default function SignInPage() {
             <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
               Welcome to PNG Events
             </h2>
-            <p className="text-center text-gray-500 text-base mb-2">Sign in to discover and create amazing events</p>
+            <p className="text-center text-gray-500 text-base mb-2">Sign in to discover and create events</p>
             <div className="text-center text-gray-600">Sign-in and registration are not available when offline.</div>
           </div>
         </div>
@@ -249,7 +251,7 @@ export default function SignInPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-2">
           Welcome to PNG Events
         </h1>
-          <p className="text-gray-600 text-lg">Sign in to discover and create amazing events</p>
+          <p className="text-gray-600 text-lg">Sign in to discover and create events</p>
         </div>
 
         {/* Tabs */}
@@ -320,25 +322,45 @@ export default function SignInPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                placeholder="Create a password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="input-field"
-                required
-              />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="input-field pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
-              <input
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                className="input-field"
-                required
-              />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="input-field pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                </div>
               </div>
 
               {/* Contact Preferences */}
@@ -420,23 +442,33 @@ export default function SignInPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="input-field"
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
-                className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium p-0 h-auto"
-              >
-                Forgot Password?
-              </Button>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="input-field pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
+                  className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium p-0 h-auto"
+                >
+                  Forgot Password?
+                </Button>
               </div>
             </>
           )}

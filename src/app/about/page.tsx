@@ -503,11 +503,9 @@ export default function AboutPage() {
               </div>
               <div className="flex flex-col items-center p-4 rounded-xl bg-white bg-opacity-10">
                 <FiStar className="w-10 sm:w-12 h-10 sm:h-12 mb-3 sm:mb-4 text-white" />
-                <h4 className="text-lg sm:text-xl font-semibold mb-2">Award Winning</h4>
+                <h4 className="text-lg sm:text-xl font-semibold mb-2">Free to Use</h4>
                 <p className="text-sm sm:text-base text-gray-100 leading-relaxed">
-                  Trusted by {isOnline
-                    ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'thousands of'))
-                    : 'thousands of'} event organizers
+                  No fees to create or browse events
                 </p>
               </div>
             </div>
