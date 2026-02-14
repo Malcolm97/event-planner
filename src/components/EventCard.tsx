@@ -1,5 +1,5 @@
-import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
-import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiLink, FiHome, FiBookmark, FiTrash2, FiEdit, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
+import React, { memo, useMemo, useState, useEffect } from 'react';
+import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiBookmark, FiTrash2, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
@@ -20,7 +20,7 @@ const categoryColorMap: { [key: string]: string } = {
   'Other': 'bg-gray-100 text-gray-700',
 };
 
-const categoryIconMap: { [key: string]: any } = {
+const categoryIconMap: { [key: string]: React.ComponentType<{ size?: number; className?: string }> } = {
   'Music': FiMusic,
   'Art': FiImage,
   'Food': FiCoffee,
@@ -50,7 +50,95 @@ const formatDate = (date: Date): string => {
   return `${day}${getOrdinalSuffix(day)} ${month}, ${year}`;
 };
 
-const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOwner = false }: { event: EventItem; onClick?: () => void; onDelete?: (eventId: string) => void; isOwner?: boolean }) {
+// ShareButtons Component - defined first to avoid issues
+function ShareButtons({ event }: { event: EventItem }) {
+  const [showShareOptions, setShowShareOptions] = useState<boolean>(false);
+  const [eventUrl, setEventUrl] = useState<string>('');
+  const [isClient, setIsClient] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    if (typeof window !== 'undefined') {
+      setEventUrl(`${window.location.origin}/events/${event.id}`);
+    }
+  }, [event.id]);
+
+  const shareText = `Check out this event: ${event.name ?? ''} at ${event.location ?? ''} on ${event.date ? new Date(event.date).toLocaleDateString() : ''}.`;
+
+  const handleShare = async () => {
+    if (isClient && navigator.share) {
+      try {
+        await navigator.share({
+          title: event.name ?? '',
+          text: shareText,
+          url: eventUrl,
+        });
+      } catch (error) {
+        // User cancelled or error
+      }
+    } else {
+      setShowShareOptions((prev) => !prev);
+    }
+  };
+
+  const shareOnFacebook = () => {
+    if (typeof window !== 'undefined' && eventUrl) {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+    }
+  };
+
+  const shareOnTwitter = () => {
+    if (typeof window !== 'undefined' && eventUrl) {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+    }
+  };
+
+  const shareOnLinkedIn = () => {
+    if (typeof window !== 'undefined' && eventUrl) {
+      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name ?? '')}&summary=${encodeURIComponent(shareText)}`, '_blank');
+    }
+  };
+
+  const shareOnWhatsApp = () => {
+    if (typeof window !== 'undefined' && eventUrl) {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleShare();
+        }}
+        className="p-1.5 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[28px] min-h-[28px] flex items-center justify-center"
+        aria-label="Share Event"
+      >
+        <FiShare2 size={12} />
+      </button>
+
+      {showShareOptions && (
+        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex gap-1 z-20 animate-slide-up">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
+            <FaFacebook size={14} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
+            <FaTwitter size={14} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
+            <FaLinkedin size={14} />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-1.5 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
+            <FaWhatsapp size={14} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = false }: { event: EventItem; onClick?: () => void; onDelete?: (eventId: string) => void; isOwner?: boolean }) {
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -102,7 +190,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   }, [event.end_date]);
 
-  // Memoize image source with better error handling and debugging
+  // Memoize image source with better error handling
   const imageSrc = useMemo(() => {
     try {
       const src = getEventPrimaryImage(event);
@@ -112,18 +200,6 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       return '/next.svg';
     }
   }, [event.image_urls, event.name, event.date, event]);
-
-  // Swipe gesture for sharing - disabled for now to avoid scroll conflicts
-  // const swipeRef = useSwipe({
-  //   onSwipeUp: () => {
-  //     // Trigger share functionality
-  //     const shareButton = document.querySelector(`[data-event-id="${event.id}"] button[aria-label="Share Event"]`) as HTMLButtonElement;
-  //     if (shareButton) {
-  //       shareButton.click();
-  //       toast.success('Swipe up to share! 📤', { duration: 2000 });
-  //     }
-  //   },
-  // });
 
   // Fetch save count for popular badge logic
   useEffect(() => {
@@ -186,7 +262,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
         if (!error) {
           setBookmarked(false);
-          setSaveCount(prev => Math.max(0, prev - 1)); // Update save count
+          setSaveCount(prev => Math.max(0, prev - 1));
         }
       } else {
         // Add to saved events
@@ -199,7 +275,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
         if (!error) {
           setBookmarked(true);
-          setSaveCount(prev => prev + 1); // Update save count
+          setSaveCount(prev => prev + 1);
         }
       }
     } catch (error) {
@@ -215,7 +291,6 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
     setDeleting(true);
     try {
-      // Get the session token for API authentication
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error('Authentication session expired. Please sign in again.');
@@ -223,7 +298,6 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         return;
       }
 
-      // Make API call to delete event
       const response = await fetch(`/api/events/${event.id}`, {
         method: 'DELETE',
         headers: {
@@ -239,15 +313,13 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
         return;
       }
 
-      // Call the onDelete callback to refresh the events list
       if (onDelete) {
         onDelete(event.id);
       }
 
-      // Record activity
       await recordActivity(
         user.id,
-        'event_completed', // Using existing activity type
+        'event_completed',
         `Deleted event: ${event.name}`,
         { event_id: event.id, event_name: event.name },
         event.id,
@@ -264,13 +336,9 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user || deleting || !isOwner) return;
-    
-
-// Set displayName for React DevTools
-(EventCard as React.FunctionComponent).displayName = "EventCard";
 
     // Show confirmation dialog with toast
     toast((t) => (
@@ -323,15 +391,12 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
     >
       {/* Top Badges Row */}
       <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-col items-start gap-1 min-w-[0]">
-        {/* Featured Badge - Priority 1 */}
         {event.featured && (
           <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg">Featured</span>
         )}
-        {/* Popular Badge - Priority 2 */}
         {isPopular && (
           <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-pink-100 text-pink-700 shadow-md">Popular</span>
         )}
-        {/* New Badge - Priority 3 */}
         {isNew && (
           <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-green-200 text-green-800 shadow-md">New</span>
         )}
@@ -349,7 +414,6 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
       {/* Hero Image Area */}
       <div className="relative h-24 sm:h-28 md:h-32 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-lg">
         {imageSrc && (typeof imageSrc === 'string') ? (
-          // Use native <img> for data/blob URIs to avoid Next/Image constraints
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
             <img
               src={imageSrc}
@@ -399,7 +463,7 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
 
       {/* Content Area */}
       <div className="flex flex-col h-full">
-  <div className="px-2 py-2 sm:px-3 sm:py-3 pb-10 sm:pb-12">
+        <div className="px-2 py-2 sm:px-3 sm:py-3 pb-10 sm:pb-12">
           {/* Event Title */}
           <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-0.5 text-left">
             {event.name}
@@ -481,93 +545,8 @@ const EventCard = React.memo(function EventCard({ event, onClick, onDelete, isOw
     </article>
   );
 });
+
+// Set displayName for React DevTools
+EventCard.displayName = "EventCard";
+
 export default EventCard;
-
-
-// ShareButtons Component
-function ShareButtons({ event }: { event: EventItem }) {
-  const [showShareOptions, setShowShareOptions] = useState<boolean>(false);
-  const [eventUrl, setEventUrl] = useState<string>('');
-  const [isClient, setIsClient] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    if (typeof window !== 'undefined') {
-      setEventUrl(`${window.location.origin}/events/${event.id}`);
-    }
-  }, [event.id]);
-
-  const shareText = `Check out this event: ${event.name ?? ''} at ${event.location ?? ''} on ${event.date ? new Date(event.date).toLocaleDateString() : ''}.`;
-
-  const handleShare = async () => {
-    if (isClient && navigator.share) {
-      try {
-        await navigator.share({
-          title: event.name ?? '',
-          text: shareText,
-          url: eventUrl,
-        });
-      } catch (error) {
-        // Optionally handle error
-      }
-    } else {
-      setShowShareOptions((prev) => !prev); // Fallback to showing custom buttons
-    }
-  };
-
-  const shareOnFacebook = () => {
-    if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
-    }
-  };
-
-  const shareOnTwitter = () => {
-    if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
-    }
-  };
-
-  const shareOnLinkedIn = () => {
-    if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name ?? '')}&summary=${encodeURIComponent(shareText)}`, '_blank');
-    }
-  };
-
-  const shareOnWhatsApp = () => {
-    if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
-    }
-  };
-
-  return (
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleShare();
-        }}
-        className="p-1.5 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 border border-gray-200/50 min-w-[28px] min-h-[28px] flex items-center justify-center"
-        aria-label="Share Event"
-      >
-        <FiShare2 size={12} />
-      </button>
-
-      {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white rounded-lg shadow-xl border border-gray-200 p-2 flex gap-1 z-20 animate-slide-up">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
-            <FaFacebook size={14} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-400 transition-colors" aria-label="Share on Twitter">
-            <FaTwitter size={14} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
-            <FaLinkedin size={14} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-1.5 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
-            <FaWhatsapp size={14} />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}

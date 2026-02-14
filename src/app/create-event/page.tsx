@@ -7,11 +7,10 @@ import { FiArrowLeft } from 'react-icons/fi';
 import Link from "next/link";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import CustomSelect, { SelectOption } from '@/components/CustomSelect';
 
 export default function CreateEventPage() {
   const router = useRouter();
-  const { isOnline } = useNetworkStatus(); // Get the network status
+  const { isOnline } = useNetworkStatus();
   const { queueOperation } = useOfflineSync();
   const [user, setUser] = useState<any>(null);
   const [loadingPage, setLoadingPage] = useState<boolean>(true);
@@ -19,8 +18,6 @@ export default function CreateEventPage() {
   const [description, setDescription] = useState<string>('');
   const [date, setDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [location, setLocation] = useState<string>('');
-  const [venue, setVenue] = useState<string>('');
   const [selectedLocationType, setSelectedLocationType] = useState<string>('Port Moresby');
   const [customLocation, setCustomLocation] = useState<string>('');
   const [presale_price, setPresale_price] = useState<string>('');
@@ -29,6 +26,7 @@ export default function CreateEventPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -43,8 +41,6 @@ export default function CreateEventPage() {
     checkUser();
   }, [router]);
 
-
-
   if (loadingPage) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -57,28 +53,20 @@ export default function CreateEventPage() {
   }
 
   const popularPngCities = [
-    "Port Moresby",
-    "Lae",
-    "Madang",
-    "Mount Hagen",
-    "Goroka",
-    "Rabaul",
-    "Wewak",
-    "Popondetta",
-    "Arawa",
-    "Kavieng",
-    "Daru",
-    "Vanimo",
-    "Kimbe",
-    "Mendi",
-    "Kundiawa",
-    "Lorengau",
-    "Wabag",
-    "Kokopo",
-    "Buka",
-    "Alotau",
-    "Other" // Option for custom input
+    "Port Moresby", "Lae", "Madang", "Mount Hagen", "Goroka",
+    "Rabaul", "Wewak", "Popondetta", "Arawa", "Kavieng",
+    "Daru", "Vanimo", "Kimbe", "Mendi", "Kundiawa",
+    "Lorengau", "Wabag", "Kokopo", "Buka", "Alotau", "Other"
   ];
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files).slice(0, 3);
+      setImageFiles(fileArray);
+      setImageError(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,36 +93,32 @@ export default function CreateEventPage() {
         return;
       }
 
-      // For offline mode, skip image uploads for now
-      if (!isOnline && imageFiles.length > 0) {
-        setError('Image uploads are not available offline. Images will be uploaded when you reconnect.');
-      }
-
       let imageUrls: string[] = [];
-      if (isOnline && imageFiles.length > 0) {
-        for (const imageFile of imageFiles) {
-          const fileExt = imageFile.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-          const filePath = `${user.id}/${fileName}`;
+      if (imageFiles.length > 0) {
+        if (!isOnline) {
+          setImageError('Note: Images will be uploaded when you reconnect to the internet.');
+        } else {
+          for (const imageFile of imageFiles) {
+            const fileExt = imageFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
 
-          const { error: uploadError } = await supabase.storage
-            .from('event-images')
-            .upload(filePath, imageFile, {
-              cacheControl: '3600',
-              upsert: false,
-            });
+            const { error: uploadError } = await supabase.storage
+              .from('event-images')
+              .upload(filePath, imageFile, {
+                cacheControl: '3600',
+                upsert: false,
+              });
 
-          if (uploadError) {
-            setError(`Error uploading image: ${uploadError.message}`);
-            setLoading(false);
-            return;
+            if (uploadError) {
+              setImageError(`Warning: Some images may not have uploaded: ${uploadError.message}`);
+            } else {
+              const { data: publicUrlData } = supabase.storage
+                .from('event-images')
+                .getPublicUrl(filePath);
+              imageUrls.push(publicUrlData.publicUrl);
+            }
           }
-
-          const { data: publicUrlData } = supabase.storage
-            .from('event-images')
-            .getPublicUrl(filePath);
-
-          imageUrls.push(publicUrlData.publicUrl);
         }
       }
 
@@ -144,7 +128,7 @@ export default function CreateEventPage() {
         date,
         end_date: endDate || null,
         location: finalLocation,
-        venue,
+        venue: '',
         presale_price: presale_price === '' ? 0 : parseFloat(presale_price) || 0,
         gate_price: gate_price === '' ? 0 : parseFloat(gate_price) || 0,
         category,
@@ -152,16 +136,12 @@ export default function CreateEventPage() {
         created_by: user.id,
       };
 
-      // Use queueOperation which handles both online and offline cases
       await queueOperation('create', TABLES.EVENTS, eventData);
 
-      // Clear form and redirect
       setName('');
       setDescription('');
       setDate('');
       setEndDate('');
-      setLocation('');
-      setVenue('');
       setSelectedLocationType('Port Moresby');
       setCustomLocation('');
       setPresale_price('');
@@ -179,13 +159,9 @@ export default function CreateEventPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
-  {/* Header removed, now rendered globally in layout */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors"
-          >
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors">
             <FiArrowLeft size={16} />
             Back to Dashboard
           </Link>
@@ -198,8 +174,8 @@ export default function CreateEventPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </div>
-            <h1 className="text-heading-lg text-gray-900 mb-2">Create New Event</h1>
-            <p className="text-gray-600 text-base">Fill in the details to create your event</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Create New Event</h1>
+            <p className="text-gray-600">Fill in the details to create your event</p>
           </div>
 
           {error && (
@@ -208,224 +184,115 @@ export default function CreateEventPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-10">
-            {/* Event Basic Information */}
-            <div className="card p-8">
-              <h2 className="text-heading-lg text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                Basic Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {imageError && (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <p className="text-yellow-700 text-sm">{imageError}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1">Event Name <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="input-field"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Event Name <span className="text-red-500">*</span>
+                  </label>
+                  <input type="text" id="name" className="input-field" value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
                 <div>
-                  <CustomSelect
-                    label="Category"
-                    options={[
-                      { value: 'Music', label: 'Music', icon: '🎵' },
-                      { value: 'Art', label: 'Art', icon: '🎨' },
-                      { value: 'Food', label: 'Food', icon: '🍽️' },
-                      { value: 'Technology', label: 'Technology', icon: '💻' },
-                      { value: 'Wellness', label: 'Wellness', icon: '🧘' },
-                      { value: 'Comedy', label: 'Comedy', icon: '🎭' },
-                      { value: 'Other', label: 'Other', icon: '📌' }
-                    ]}
-                    value={category}
-                    onChange={setCategory}
-                    placeholder="Select a category"
-                    required
-                  />
+                  <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select id="category" className="input-field" value={category} onChange={(e) => setCategory(e.target.value)} required>
+                    <option value="">Select a category</option>
+                    <option value="Music">Music</option>
+                    <option value="Art">Art</option>
+                    <option value="Food">Food</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Wellness">Wellness</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
             </div>
 
-            {/* Event Details */}
-            <div className="card p-8">
-              <h2 className="text-heading-lg text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                Event Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Event Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
-                  <textarea
-                    id="description"
-                    rows={4}
-                    className="input-field resize-none"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                  ></textarea>
+                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea id="description" rows={4} className="input-field resize-none" value={description} onChange={(e) => setDescription(e.target.value)} required />
                 </div>
                 <div>
                   <label htmlFor="venue" className="block text-sm font-semibold text-gray-700 mb-1">Venue (optional)</label>
-                  <input
-                    type="text"
-                    id="venue"
-                    className="input-field"
-                    value={venue}
-                    onChange={(e) => setVenue(e.target.value)}
-                    placeholder="e.g. Grand Papua Hotel Ballroom"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="images" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Event Images (Up to 3) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-yellow-400 transition-colors">
-                    <input
-                    type="file"
-                    id="images"
-                    accept="image/*"
-                    multiple
-                    required
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100 file:transition-colors"
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
-                        const fileArray = Array.from(files).slice(0, 3); // Limit to 3 files
-                        setImageFiles(fileArray);
-                      }
-                    }}
-                  />
-                    <p className="text-xs text-gray-500 mt-3">
-                    You can upload up to 3 images. The first image will be the primary image.
-                  </p>
-                  </div>
-                  {imageFiles.length > 0 && (
-                    <div className="mt-3 text-sm text-green-600 font-medium">
-                      Selected {imageFiles.length} image{imageFiles.length > 1 ? 's' : ''}
+                  <input type="text" id="venue" className="input-field" placeholder="e.g. Grand Papua Hotel Ballroom" />
+                  <div className="mt-4">
+                    <label htmlFor="images" className="block text-sm font-semibold text-gray-700 mb-2">Event Images (Up to 3)</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-yellow-400 transition-colors">
+                      <input type="file" id="images" accept="image/*" multiple className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100" onChange={handleImageChange} />
+                      <p className="text-xs text-gray-500 mt-2">Optional - You can add images later</p>
                     </div>
-                  )}
+                    {imageFiles.length > 0 && (
+                      <div className="mt-2 text-sm text-green-600 font-medium">
+                        Selected {imageFiles.length} image{imageFiles.length > 1 ? 's' : ''}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Date & Location */}
-            <div className="card p-8">
-              <h2 className="text-heading-lg text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                Date & Location
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Date & Location</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-1">Start Date & Time <span className="text-red-500">*</span></label>
-                  <input
-                    type="datetime-local"
-                    id="date"
-                    className="input-field"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                  />
-                  <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700 mb-1 mt-6">End Date & Time <span className="text-xs text-gray-400">(optional)</span></label>
-                  <input
-                    type="datetime-local"
-                    id="endDate"
-                    className="input-field"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
+                  <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Start Date & Time <span className="text-red-500">*</span>
+                  </label>
+                  <input type="datetime-local" id="date" className="input-field" value={date} onChange={(e) => setDate(e.target.value)} required />
+                  <div className="mt-4">
+                    <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700 mb-1">End Date & Time (optional)</label>
+                    <input type="datetime-local" id="endDate" className="input-field" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  </div>
                 </div>
-
                 <div>
-                  <CustomSelect
-                    label="Location"
-                    options={popularPngCities.map(city => ({
-                      value: city,
-                      label: city,
-                      icon: city === 'Other' ? '📍' : '🏙️'
-                    }))}
-                    value={selectedLocationType}
-                    onChange={setSelectedLocationType}
-                    placeholder="Select location"
-                    searchable={true}
-                    required
-                  />
+                  <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Location <span className="text-red-500">*</span>
+                  </label>
+                  <select id="location" className="input-field" value={selectedLocationType} onChange={(e) => setSelectedLocationType(e.target.value)} required>
+                    {popularPngCities.map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
                   {selectedLocationType === 'Other' && (
-                    <input
-                      type="text"
-                      id="customLocation"
-                      className="input-field mt-3"
-                      placeholder="Enter custom location"
-                      value={customLocation}
-                      onChange={(e) => setCustomLocation(e.target.value)}
-                      required
-                    />
+                    <input type="text" id="customLocation" className="input-field mt-3" placeholder="Enter custom location" value={customLocation} onChange={(e) => setCustomLocation(e.target.value)} required />
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Pricing */}
-            <div className="card p-8">
-              <h2 className="text-heading-lg text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-                Pricing
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="presale_price" className="block text-sm font-semibold text-gray-700 mb-1">Presale Fee (PGK)</label>
-                  <input
-                    type="number"
-                    id="presale_price"
-                    className="input-field"
-                    value={presale_price}
-                    onChange={(e) => setPresale_price(e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">If 0 or empty, this event will be marked as "Free".</p>
+                  <input type="number" id="presale_price" className="input-field" value={presale_price} onChange={(e) => setPresale_price(e.target.value)} min="0" step="0.01" placeholder="0" />
+                  <p className="text-xs text-gray-500 mt-1">Leave as 0 or empty for Free events</p>
                 </div>
-
                 <div>
                   <label htmlFor="gate_price" className="block text-sm font-semibold text-gray-700 mb-1">Gate Fee (PGK)</label>
-                  <input
-                    type="number"
-                    id="gate_price"
-                    className="input-field"
-                    value={gate_price}
-                    onChange={(e) => setGate_price(e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">If 0 or empty, this event will be marked as "Free".</p>
+                  <input type="number" id="gate_price" className="input-field" value={gate_price} onChange={(e) => setGate_price(e.target.value)} min="0" step="0.01" placeholder="0" />
+                  <p className="text-xs text-gray-500 mt-1">Leave as 0 or empty for Free events</p>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-center">
-              <button
-                type="submit"
-                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                disabled={loading}
-              >
+              <button type="submit" className="btn-primary px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled={loading}>
                 {loading ? 'Creating Event...' : 'Create Event'}
               </button>
             </div>
