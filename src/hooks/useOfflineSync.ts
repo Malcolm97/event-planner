@@ -66,18 +66,28 @@ export function useOfflineSync() {
           const errorMessage = error instanceof Error ? error.message : String(error);
           console.error('Failed to process operation:', operation?.id || 'unknown', errorMessage);
 
-          const retryCount = (operation.retryCount || 0) + 1;
-          if (retryCount < 3) {
-            await updateQueuedOperation(operation.id!, {
-              status: 'pending',
-              retryCount,
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
+          // Non-recoverable errors - fail immediately and remove from queue
+          const isNonRecoverable = errorMessage.includes('infinite recursion') ||
+            errorMessage.includes('permission denied') ||
+            errorMessage.includes('violates row-level security');
+
+          if (isNonRecoverable) {
+            console.warn('Non-recoverable error, removing from queue:', errorMessage);
+            await removeFromQueue(operation.id!);
           } else {
-            await updateQueuedOperation(operation.id!, {
-              status: 'failed',
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
+            const retryCount = (operation.retryCount || 0) + 1;
+            if (retryCount < 3) {
+              await updateQueuedOperation(operation.id!, {
+                status: 'pending',
+                retryCount,
+                error: errorMessage
+              });
+            } else {
+              await updateQueuedOperation(operation.id!, {
+                status: 'failed',
+                error: errorMessage
+              });
+            }
           }
         }
       }
@@ -110,13 +120,18 @@ export function useOfflineSync() {
   const processOperation = async (operation: QueuedOperation) => {
     const { operation: opType, table, data } = operation;
 
+    const throwSupabaseError = (error: any) => {
+      const message = error?.message || error?.details || error?.hint || JSON.stringify(error) || 'Unknown database error';
+      throw new Error(`${opType} on ${table} failed: ${message}`);
+    };
+
     switch (opType) {
       case 'create':
         if (table === TABLES.EVENTS || table === TABLES.USERS) {
           const { error } = await supabase
             .from(table)
             .insert(data);
-          if (error) throw error;
+          if (error) throwSupabaseError(error);
         }
         break;
 
@@ -124,8 +139,9 @@ export function useOfflineSync() {
         if (table === TABLES.EVENTS || table === TABLES.USERS) {
           const { error } = await supabase
             .from(table)
-            .upsert(data);
-          if (error) throw error;
+            .update(data)
+            .eq('id', data.id);
+          if (error) throwSupabaseError(error);
         }
         break;
 
@@ -135,7 +151,7 @@ export function useOfflineSync() {
             .from(table)
             .delete()
             .eq('id', data.id);
-          if (error) throw error;
+          if (error) throwSupabaseError(error);
         }
         break;
 
@@ -180,9 +196,21 @@ export function useOfflineSync() {
     await processQueue();
   };
 
-  // Initialize queue length
+  // Initialize: update queue length and clean up stale failed operations
   useEffect(() => {
-    updateQueueLength();
+    const init = async () => {
+      // Remove any stuck failed operations from previous sessions
+      try {
+        const failedOps = await getQueuedOperations('failed');
+        for (const op of failedOps) {
+          if (op.id) await removeFromQueue(op.id);
+        }
+      } catch (e) {
+        console.warn('Failed to clean up stale queue operations:', e);
+      }
+      await updateQueueLength();
+    };
+    init();
   }, []);
 
   // Process queue when coming back online (if auto sync is enabled)

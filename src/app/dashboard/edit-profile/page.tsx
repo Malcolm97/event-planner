@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 import Link from 'next/link';
-import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiArrowLeft } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -22,8 +22,6 @@ export default function EditProfilePage() {
   const [error, setError] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null); // New state for photo file
   const [photoUrl, setPhotoUrl] = useState<string | null>(null); // New state for photo URL
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -33,10 +31,6 @@ export default function EditProfilePage() {
     contactMethod: 'both' as 'email' | 'phone' | 'both' | 'none',
     whatsappNumber: '',
     contactVisibility: true
-  });
-  const [passwordData, setPasswordData] = useState({
-    newPassword: '',
-    confirmPassword: ''
   });
   const router = useRouter();
 
@@ -163,8 +157,21 @@ export default function EditProfilePage() {
         }
       }
 
-      // Use queueOperation for database update (works online and offline)
-      await queueOperation('update', TABLES.USERS, updateData);
+      // Update profile in database
+      if (isOnline) {
+        // Direct Supabase call when online for better error handling
+        const { error: updateError } = await supabase
+          .from(TABLES.USERS)
+          .update(updateData)
+          .eq('id', user.id);
+
+        if (updateError) {
+          throw new Error(updateError.message || 'Failed to update profile in database');
+        }
+      } else {
+        // Queue for offline sync
+        await queueOperation('update', TABLES.USERS, updateData);
+      }
 
       setSuccess('Profile updated successfully!');
       setPhotoUrl(newPhotoUrl); // Update state with new photo URL
@@ -190,71 +197,6 @@ export default function EditProfilePage() {
     }));
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      if (!user) {
-        setError('You must be signed in to update your password');
-        return;
-      }
-
-      // Validate password fields
-      if (!passwordData.newPassword || !passwordData.confirmPassword) {
-        setError('Please fill in all password fields');
-        return;
-      }
-
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        setError('New password and confirmation password do not match');
-        return;
-      }
-
-      if (passwordData.newPassword.length < 6) {
-        setError('New password must be at least 6 characters long');
-        return;
-      }
-
-      // Note: Password verification is not possible via client-side signInWithPassword
-      // without signing out the user. Supabase handles verification server-side.
-      // Update the password directly - Supabase will verify the current password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: passwordData.newPassword
-      });
-
-      if (updateError) {
-        // Check if error is related to password verification
-        if (updateError.message?.includes('current password') || updateError.message?.includes('verify')) {
-          setError('Current password verification failed. Please try again.');
-        } else {
-          throw updateError;
-        }
-        return;
-      }
-
-      setSuccess('Password updated successfully!');
-      setPasswordData({
-        newPassword: '',
-        confirmPassword: ''
-      });
-
-    } catch (err: any) {
-      setError(err.message || 'Failed to update password');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -452,74 +394,6 @@ export default function EditProfilePage() {
               </div>
             </div>
 
-            {/* Password Change Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
-              <div className="space-y-4">
-                <div className="flex flex-wrap -mx-2">
-                  <div className="w-full md:w-1/2 px-2">
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                      New Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        id="newPassword"
-                        name="newPassword"
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        placeholder="Enter new password"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="w-full md:w-1/2 px-2">
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm New Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                        placeholder="Confirm new password"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handlePasswordSubmit}
-                  disabled={submitting}
-                  className="w-full rounded-lg px-6 py-3 bg-gray-600 text-white font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Updating Password...' : 'Update Password'}
-                </button>
-              </div>
-            </div>
 
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
