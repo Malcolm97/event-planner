@@ -406,50 +406,51 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="max-w-7xl mx-auto w-full section-padding bg-white">
-        <div className="text-center mb-12">
-          <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
-            <span className="text-2xl">📅</span> Upcoming Events
-          </h2>
-          <p className="text-body-md text-gray-600 max-w-3xl mx-auto">Discover all upcoming events happening near you.</p>
-        </div>
-
-        {loading ? (
-          <SkeletonGrid count={4}>
-            <SkeletonEventCard />
-          </SkeletonGrid>
-        ) : !isOnline && events.length === 0 ? (
-          <div className="col-span-full text-center py-20">
-            <div className="text-8xl mb-6">📴</div>
-            <h3 className="text-heading-lg mb-4">No saved events available offline</h3>
-            <p className="text-body-sm text-gray-500">Connect to the internet to load events for offline use.</p>
+      <section className="w-full section-padding bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
+              <span className="text-2xl">📅</span> Upcoming Events
+            </h2>
+            <p className="text-body-md text-gray-600 max-w-3xl mx-auto">Discover all upcoming events happening near you.</p>
           </div>
-        ) : (
-          <>
-            {upcomingEvents.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
-                {upcomingEvents.slice(0, 4).map(event => (
-                  <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-                ))}
-              </div>
-            ) : (
-              <div className="col-span-full text-center py-20">
-                <div className="text-8xl mb-6">📅</div>
-                <h3 className="text-heading-lg mb-4">No upcoming events</h3>
-                <p className="text-body-sm text-gray-500">Check back later for new events.</p>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="mt-8"
-                  aria-label="Retry loading events"
-                  onClick={() => window.location.reload()}
-                >
-                  Retry
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+
+          {loading ? (
+            <SkeletonGrid count={4}>
+              <SkeletonEventCard />
+            </SkeletonGrid>
+          ) : !isOnline && events.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <div className="text-8xl mb-6">📴</div>
+              <h3 className="text-heading-lg mb-4">No saved events available offline</h3>
+              <p className="text-body-sm text-gray-500">Connect to the internet to load events for offline use.</p>
+            </div>
+          ) : (
+            <>
+              {upcomingEvents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
+                  {upcomingEvents.slice(0, 4).map(event => (
+                    <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                  ))}
+                </div>
+              ) : (
+                <div className="col-span-full text-center py-20">
+                  <div className="text-8xl mb-6">📅</div>
+                  <h3 className="text-heading-lg mb-4">No upcoming events</h3>
+                  <p className="text-body-sm text-gray-500">Check back later for new events.</p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="mt-8"
+                    aria-label="Retry loading events"
+                    onClick={() => window.location.reload()}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="flex justify-center mt-16">
             <Button asChild size="lg">
@@ -458,6 +459,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               </Link>
             </Button>
           </div>
+        </div>
       </section>
 
       <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50">
