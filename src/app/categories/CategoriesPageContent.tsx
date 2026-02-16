@@ -267,7 +267,9 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                     </span>
-                    <h3 className="text-2xl font-bold text-red-600">Happening Now</h3>
+                    <h3 className="text-heading-2xl">
+                      Happening Now
+                    </h3>
                   </div>
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
                     {sortedHappeningNow.map(event => (
@@ -281,7 +283,9 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
               {sortedUpcoming.length > 0 && (
                 <div>
                   {sortedHappeningNow.length > 0 && (
-                    <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Upcoming Events</h3>
+                    <h3 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
+                      <span className="text-2xl">📅</span> Upcoming Events
+                    </h3>
                   )}
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
                     {sortedUpcoming.map(event => (

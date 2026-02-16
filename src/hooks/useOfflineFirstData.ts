@@ -29,9 +29,26 @@ function getErrorMessage(error: any, storeName: string): string {
     return `Access denied to ${storeName}. Please contact support if this persists.`;
   }
 
-  // Handle empty error objects (common with network/CORS issues)
+  // Handle empty error objects (common with network/CORS issues or RLS policy denials)
   if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
+    // This is likely an RLS policy denial or network issue
+    // Check if it's specifically for creators/users endpoint
+    if (storeName === 'creators' || storeName === TABLES.USERS) {
+      return `Unable to load ${storeName}. Please check your connection or try again later.`;
+    }
     return `Unable to connect to ${storeName} service. This may be due to network issues or service unavailability.`;
+  }
+  
+  // Check for Supabase RLS policy denial - common error message patterns
+  const errorString = typeof error === 'string' ? error : JSON.stringify(error);
+  if (errorString?.includes('row-level security') || 
+      errorString?.includes('RLS') ||
+      errorString?.includes('permission denied') ||
+      errorString?.includes('PGRST116')) {
+    if (storeName === 'creators') {
+      return `Unable to load creators. This may be a temporary issue. Please try again.`;
+    }
+    return `Permission denied. You may need to sign in to access this content.`;
   }
 
   // Handle Supabase error objects
@@ -189,16 +206,60 @@ export function useOptimizedData<T>(
         }
       });
 
+      // Handle non-OK responses with detailed error info
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        let errorDetails = '';
+        try {
+          const errorData = await response.json();
+          // Include the actual error message from the server
+          if (errorData.error) {
+            errorMessage = errorData.error;
+            // Include additional details if available
+            if (errorData.details || errorData.code) {
+              errorDetails = errorData.details || errorData.code;
+              console.error('API Error details:', { details: errorData.details, code: errorData.code });
+            }
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
+        // Create a more descriptive error
+        const fullError = errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage;
+        throw new Error(fullError);
       }
 
-      const freshData: T[] = await response.json();
+      // Parse the response - handle both array and object formats
+      let freshData: T[] = [];
+      let totalRecords: number | null = null;
+      
+      try {
+        const responseData = await response.json();
+        
+        // Handle new format: { data: [...], count: number }
+        if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+          freshData = responseData.data || [];
+          totalRecords = responseData.count ?? null;
+        } 
+        // Handle legacy format: direct array [...]
+        else if (Array.isArray(responseData)) {
+          freshData = responseData;
+        }
+        // Fallback
+        else {
+          console.warn('Unexpected API response format:', responseData);
+          freshData = [];
+        }
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error('Failed to parse server response');
+      }
 
       // Debug logging for data fetching
       if (process.env.NODE_ENV === 'development') {
         console.log(`[${new Date().toISOString()}] API Response for ${storeName}:`, {
           count: freshData.length,
+          totalCount: totalRecords,
           sample: freshData.slice(0, 2), // Show first 2 items as sample
           hasImageUrls: freshData.some((item: any) => item.image_urls),
           hasDescriptions: freshData.some((item: any) => item.description),
@@ -209,7 +270,7 @@ export function useOptimizedData<T>(
       // Update state
       setData(prevData => isLoadMore ? [...prevData, ...freshData] : freshData);
       setHasMore(freshData.length === (opts.limit || 50));
-      setTotalCount(response.headers.get('x-total-count') ? parseInt(response.headers.get('x-total-count')!) : null);
+      setTotalCount(totalRecords);
 
       // Cache data in background
       try {

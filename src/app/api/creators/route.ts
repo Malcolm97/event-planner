@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { getUserFriendlyError } from '@/lib/userMessages';
 
 // Public endpoint for fetching creator profiles
 // This endpoint is accessible without authentication and returns only public user information
 export async function GET(request: Request) {
   try {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase is not configured for /api/creators');
+      return NextResponse.json(
+        { error: 'Service configuration error. Please contact support.', details: 'Supabase not configured' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
@@ -17,7 +26,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from(TABLES.USERS)
-      .select(selectedFields)
+      .select(selectedFields, { count: 'exact' })
       .order('updated_at', { ascending: false });
 
     // Apply pagination
@@ -36,21 +45,81 @@ export async function GET(request: Request) {
       query = query.limit(50);
     }
 
-    const { data, error } = await query;
+    const { data, error, count, status, statusText } = await query;
 
+    // Log detailed error information for debugging
     if (error) {
-      console.error('Error fetching creators from Supabase:', error.message);
+      const errorInfo = {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        status: status,
+        statusText: statusText
+      };
+      
+      console.error('Error fetching creators from Supabase:', errorInfo);
+      
+      // Check for RLS policy denial - return more helpful message
+      const isRLSError = error.message?.includes('row-level security') || 
+                         error.code === '42501' ||
+                         (status === 200 && !data);
+      
+      if (isRLSError) {
+        return NextResponse.json(
+          { 
+            error: 'Unable to load creators. Please try again later.',
+            code: 'RLS_POLICY_DENIAL',
+            details: 'The server returned no data. This may indicate a permissions issue.'
+          },
+          { status: 403 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: getUserFriendlyError(error, 'Failed to fetch creators') },
+        { 
+          error: getUserFriendlyError(error, 'Failed to fetch creators'),
+          code: error.code || 'UNKNOWN',
+          details: error.details || error.hint || error.message || 'No additional details'
+        },
         { status: 500 }
       );
     }
 
-    return NextResponse.json(data || []);
+    // Return data with count for pagination
+    return NextResponse.json({
+      data: data || [],
+      count: count || 0
+    });
   } catch (error: any) {
-    console.error('Unexpected error fetching creators:', error.message);
+    // Detailed error logging
+    console.error('Unexpected error fetching creators:', {
+      error: error,
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    });
+    
+    // Check for specific error types
+    if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+      return NextResponse.json(
+        { error: 'Request was cancelled. Please try again.' },
+        { status: 499 }
+      );
+    }
+    
+    if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+      return NextResponse.json(
+        { error: 'Network error. Please check your connection.' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: getUserFriendlyError(error, 'Internal Server Error') },
+      { 
+        error: getUserFriendlyError(error, 'Internal Server Error'),
+        message: error?.message || 'Unknown error'
+      },
       { status: 500 }
     );
   }
