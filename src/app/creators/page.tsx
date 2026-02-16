@@ -10,6 +10,7 @@ import Link from 'next/link';
 import CreatorModal from '@/components/CreatorModal';
 import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { isEventUpcomingOrActive } from '@/lib/utils';
 
 // Base64 encoded SVG for a default user avatar
 const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIjk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
@@ -32,7 +33,8 @@ interface CreatorWithEvents extends User {
 export default function CreatorsPage() {
   const searchParams = useSearchParams();
   const { isOnline } = useNetworkStatus();
-  const { data: users = [], isLoading: usersLoading } = useOfflineFirstData<User>(TABLES.USERS);
+  // Use 'creators' endpoint which is a public API that doesn't require admin auth
+  const { data: users = [], isLoading: usersLoading } = useOfflineFirstData<User>('creators');
   const { data: events = [] } = useOfflineFirstData(TABLES.EVENTS);
   const [creators, setCreators] = useState<CreatorWithEvents[]>([]);
   const [filteredCreators, setFilteredCreators] = useState<CreatorWithEvents[]>([]);
@@ -66,8 +68,9 @@ export default function CreatorsPage() {
         const creatorsWithData = creatorsData.map(creator => {
           const creatorEvents = events.filter((event: any) => event.created_by === creator.id);
           const eventsCount = creatorEvents.length;
+          // Use proper timing logic - event is upcoming/current if it hasn't ended yet
           const upcomingEvents = creatorEvents.filter((event: any) =>
-            event.date && new Date(event.date) >= new Date()
+            isEventUpcomingOrActive(event)
           );
           const latestEvent = upcomingEvents[0] || creatorEvents[0];
           const hasUpcomingEvent = upcomingEvents.length > 0;

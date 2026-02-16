@@ -9,6 +9,8 @@ import DashboardEventsSection from '@/components/DashboardEventsSection';
 import DashboardActivity from '@/components/DashboardActivity';
 import Link from 'next/link';
 import { FiPlus, FiEdit, FiCalendar, FiBookmark, FiClock } from 'react-icons/fi';
+import { isEventUpcomingOrActive } from '@/lib/utils';
+import { EventItem } from '@/lib/types';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -65,8 +67,9 @@ export default function DashboardPage() {
     return null;
   }
 
-  const upcomingEvents = userEvents.filter(event => new Date(event.date) >= new Date());
-  const expiredEvents = userEvents.filter(event => new Date(event.date) < new Date());
+  // Use proper timing logic - event is upcoming/current if it hasn't ended yet
+  const upcomingEvents = userEvents.filter(event => isEventUpcomingOrActive(event as EventItem));
+  const expiredEvents = userEvents.filter(event => !isEventUpcomingOrActive(event as EventItem));
 
   return (
     <div className="min-h-screen bg-gray-50">

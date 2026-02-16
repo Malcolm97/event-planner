@@ -17,6 +17,18 @@ function getErrorMessage(error: any, storeName: string): string {
     return `No internet connection. Please check your network and try again.`;
   }
 
+  // Handle HTTP 403/401 errors (forbidden/unauthorized - likely admin-only endpoint)
+  // Check both error.status (for fetch Response errors) and error message (for thrown Error objects)
+  const httpStatusMatch = error?.message?.match(/HTTP\s*(\d{3})/);
+  const httpStatus = httpStatusMatch ? parseInt(httpStatusMatch[1], 10) : error?.status;
+  
+  if (httpStatus === 403 || httpStatus === 401) {
+    if (storeName === 'users' || storeName === TABLES.USERS) {
+      return `Access restricted. This data requires elevated permissions.`;
+    }
+    return `Access denied to ${storeName}. Please contact support if this persists.`;
+  }
+
   // Handle empty error objects (common with network/CORS issues)
   if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
     return `Unable to connect to ${storeName} service. This may be due to network issues or service unavailability.`;
@@ -128,7 +140,8 @@ export function useOptimizedData<T>(
           if (storeName === TABLES.EVENTS) {
             const { getEvents } = await import('@/lib/indexedDB');
             cachedData = (await getEvents()) as T[];
-          } else if (storeName === TABLES.USERS) {
+          } else if (storeName === TABLES.USERS || storeName === 'creators') {
+            // 'creators' uses the same endpoint but doesn't require admin auth
             const { getUsers } = await import('@/lib/indexedDB');
             cachedData = (await getUsers()) as T[];
           } else {
@@ -203,7 +216,8 @@ export function useOptimizedData<T>(
         if (storeName === TABLES.EVENTS) {
           const currentUpcomingEvents = (freshData as EventItem[]).filter(isEventCurrentOrUpcoming);
           await (await import('@/lib/indexedDB')).addEvents(currentUpcomingEvents);
-        } else if (storeName === TABLES.USERS) {
+        } else if (storeName === TABLES.USERS || storeName === 'creators') {
+          // 'creators' uses the same endpoint but doesn't require admin auth
           await (await import('@/lib/indexedDB')).addUsers(freshData);
         } else {
           await addItems(storeName, freshData);

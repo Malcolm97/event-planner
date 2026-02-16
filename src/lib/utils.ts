@@ -181,12 +181,99 @@ export function isEventCurrentOrUpcoming(event: EventItem): boolean {
   // Check if event has ended
   if (event.end_date) {
     const endDate = new Date(event.end_date)
-    // Event is current if now is between start and end date
-    return now >= eventDate && now <= endDate
+    // Event is current/upcoming if now is between start and end date
+    // or if the event hasn't started yet
+    return now <= endDate
   }
 
-  // For events without end_date, consider events current if they're within 24 hours of starting
-  const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+  // For events without end_date, consider events as upcoming/current 
+  // if the event date is in the future or within the current day
+  // An event is only "past" if the entire event day has ended
+  const endOfEventDay = new Date(eventDate)
+  endOfEventDay.setHours(23, 59, 59, 999)
 
-  return eventDate >= now && eventDate <= twentyFourHoursFromNow
+  return now <= endOfEventDay
+}
+
+// Helper function to check if an event is upcoming or currently happening
+// This is the main function used for filtering events to display
+export function isEventUpcomingOrActive(event: EventItem): boolean {
+  if (!event?.date) return false
+
+  const now = new Date()
+  const eventDate = new Date(event.date)
+
+  // If event has an end_date, check against it
+  if (event.end_date) {
+    const endDate = new Date(event.end_date)
+    // Event is active/upcoming if current time is before or at end time
+    return now <= endDate
+  }
+
+  // For events without end_date, check if we're still on the event day
+  // Event ends at 11:59 PM on the event day
+  const endOfEventDay = new Date(eventDate)
+  endOfEventDay.setHours(23, 59, 59, 999)
+
+  return now <= endOfEventDay
+}
+
+// Helper function to check if an event has ended (for past events display)
+export function isEventPast(event: EventItem): boolean {
+  return !isEventUpcomingOrActive(event)
+}
+
+// Check if an event is currently happening (between start and end time)
+export function isEventCurrentlyHappening(event: EventItem): boolean {
+  if (!event?.date) return false
+
+  const now = new Date()
+  const eventDate = new Date(event.date)
+
+  // If the event hasn't started yet, it's not currently happening
+  if (now < eventDate) {
+    return false
+  }
+
+  // If event has an end_date, check if we're still within that timeframe
+  if (event.end_date) {
+    const endDate = new Date(event.end_date)
+    return now <= endDate
+  }
+
+  // For events without end_date, check if we're still on the event day
+  const endOfEventDay = new Date(eventDate)
+  endOfEventDay.setHours(23, 59, 59, 999)
+
+  return now <= endOfEventDay
+}
+
+// Get the date to use for sorting events
+// For currently happening events, uses end_date so they appear first (sorted by when they end)
+// For upcoming events, uses start date
+export function getEventSortDate(event: EventItem): Date {
+  if (!event?.date) return new Date(0)
+
+  const eventDate = new Date(event.date)
+
+  // If event is currently happening, sort by end date so events ending soonest appear first
+  if (isEventCurrentlyHappening(event)) {
+    if (event.end_date) {
+      return new Date(event.end_date)
+    }
+    // If no end_date, use end of event day
+    const endOfEventDay = new Date(eventDate)
+    endOfEventDay.setHours(23, 59, 59, 999)
+    return endOfEventDay
+  }
+
+  // Otherwise, sort by start date
+  return eventDate
+}
+
+// Sort events: currently happening first (by end date), then upcoming (by start date)
+export function sortEventsByDate(events: EventItem[]): EventItem[] {
+  return [...events].sort((a, b) => {
+    return getEventSortDate(a).getTime() - getEventSortDate(b).getTime()
+  })
 }

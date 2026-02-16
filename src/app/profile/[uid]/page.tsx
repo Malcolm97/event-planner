@@ -7,6 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import AppFooter from '@/components/AppFooter';
 import DashboardEventsSection from '@/components/DashboardEventsSection';
+import { isEventUpcomingOrActive } from '@/lib/utils';
+import { EventItem } from '@/lib/types';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -106,8 +108,9 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
     );
   }
 
-  const upcomingEvents = userEvents.filter(event => new Date(event.date) >= new Date());
-  const previousEvents = userEvents.filter(event => new Date(event.date) < new Date());
+  // Use proper timing logic - event is upcoming/current if it hasn't ended yet
+  const upcomingEvents = userEvents.filter(event => isEventUpcomingOrActive(event as EventItem));
+  const previousEvents = userEvents.filter(event => !isEventUpcomingOrActive(event as EventItem));
 
   return (
     <div className="min-h-screen bg-white">

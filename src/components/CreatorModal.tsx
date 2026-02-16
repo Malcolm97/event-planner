@@ -9,7 +9,7 @@ import {
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { storeSigninRedirect } from '@/lib/utils';
+import { storeSigninRedirect, isEventUpcomingOrActive } from '@/lib/utils';
 
 // Base64 encoded SVG for a default user avatar
 const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIjk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
@@ -80,7 +80,8 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
 
   // Get up to 4 events for the gallery
   const galleryEvents = creator.allEvents?.slice(0, 4) || [];
-  const hasUpcomingEvents = creator.allEvents?.some(e => e.date && new Date(e.date) >= new Date()) || false;
+  // Use proper timing logic - event is upcoming/current if it hasn't ended yet
+  const hasUpcomingEvents = creator.allEvents?.some(e => isEventUpcomingOrActive(e)) || false;
 
   const handleViewFullProfile = () => {
     sessionStorage.setItem('creatorsScrollPosition', window.scrollY.toString());
@@ -273,7 +274,8 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {galleryEvents.map((event, index) => {
-                    const isUpcoming = event.date && new Date(event.date) >= new Date();
+                    // Use proper timing logic - event is upcoming if it hasn't ended yet
+                    const isUpcoming = isEventUpcomingOrActive(event);
                     return (
                       <div
                         key={event.id || index}

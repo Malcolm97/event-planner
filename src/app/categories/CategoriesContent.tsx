@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '../../lib/types';
@@ -9,6 +9,7 @@ import EventCard from '@/components/EventCard';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import EventModal from '@/components/EventModal';
 import Link from 'next/link';
+import { isEventUpcomingOrActive } from '@/lib/utils';
 
 const allCategories = [
   { name: 'All Categories', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
@@ -45,7 +46,6 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [host, setHost] = useState<User | null>(null);
   
-  const now = new Date();
   const selectedCategoryInfo = allCategories.find(cat => cat.name === queryCategory) || allCategories[0];
   const Icon = categoryIconMap[selectedCategoryInfo.icon];
 
@@ -75,16 +75,19 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
     }
   }, [selectedEvent]);
 
-  // Filter events by category
-  const filteredEvents = events.filter(event => {
-    if (!queryCategory || queryCategory === 'All Categories') return true;
-    return event.category === queryCategory;
-  });
+  // Use memoized filtering with proper event timing logic
+  const filteredEvents = useMemo(() => {
+    return events.filter(event => {
+      if (!queryCategory || queryCategory === 'All Categories') return true;
+      return event.category === queryCategory;
+    });
+  }, [events, queryCategory]);
 
-  const upcomingEvents = filteredEvents.filter(event => {
-    if (!event.date) return false;
-    return new Date(event.date) >= now;
-  });
+  // Use the improved timing function to filter events
+  // Events are considered "upcoming" if they haven't ended yet
+  const upcomingEvents = useMemo(() => {
+    return filteredEvents.filter(event => isEventUpcomingOrActive(event));
+  }, [filteredEvents]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -108,7 +111,8 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
         {allCategories.map(cat => {
           const CategoryIcon = categoryIconMap[cat.icon];
           const eventsInCategory = events.filter(event => !cat.name || cat.name === 'All Categories' || event.category === cat.name);
-          const upcomingInCategory = eventsInCategory.filter(event => event.date && new Date(event.date) >= now);
+          // Use the improved timing function for active/upcoming events
+          const upcomingInCategory = eventsInCategory.filter(event => isEventUpcomingOrActive(event));
 
           return (
             <Link

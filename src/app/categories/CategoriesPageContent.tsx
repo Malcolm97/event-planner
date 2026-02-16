@@ -3,7 +3,7 @@ import AppFooter from '@/components/AppFooter';
 
 // Offline mode detection
 const isOffline = typeof window !== 'undefined' && !navigator.onLine;
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '../../lib/types';
@@ -13,6 +13,7 @@ import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'rea
 import EventModal from '@/components/EventModal';
 import Link from 'next/link';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { isEventUpcomingOrActive, isEventCurrentlyHappening, sortEventsByDate } from '@/lib/utils';
 
 // Define categories and their properties
 const allCategories = [
@@ -76,12 +77,14 @@ const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
 }
 
 function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
-  const { data: events = [], isLoading: loading } = useEvents();
-  const { data: users = [] } = useOfflineFirstData<User>(TABLES.USERS);
+  const { data: fetchedEvents = [], isLoading: loading } = useEvents();
+  // Use initial events as fallback while loading or if no fetched events
+  const events = fetchedEvents.length > 0 ? fetchedEvents : initialEvents;
+  // Use 'creators' endpoint which is a public API that doesn't require admin auth
+  const { data: users = [] } = useOfflineFirstData<User>('creators');
   const { isOnline } = useNetworkStatus();
   const [displayCategories] = useState<typeof allCategories>(initialDisplayCategories);
   const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
-  const now = new Date();
 
   const selectedCategoryInfo = displayCategories.find(cat => cat.name === selectedCategory);
   const Icon = selectedCategoryInfo?.icon ? categoryIconMap[selectedCategoryInfo.icon] : FiStar;
@@ -135,15 +138,37 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
     }
   }, [selectedEvent, fetchHost]);
 
-  const filteredEvents = events.filter(event => {
-    if (!selectedCategory || selectedCategory === 'All Events') return true;
-    return event.category === selectedCategory;
-  });
+  // Use memoized filtering with proper event timing logic
+  const filteredEvents = useMemo(() => {
+    return events.filter(event => {
+      if (!selectedCategory || selectedCategory === 'All Events') return true;
+      return event.category === selectedCategory;
+    });
+  }, [events, selectedCategory]);
 
-  const upcomingEvents = filteredEvents.filter(event => {
-    if (!event.date) return false;
-    return new Date(event.date) >= now;
-  });
+  // Use the improved timing function to filter events
+  // Events are considered "upcoming" if they haven't ended yet
+  const upcomingEvents = useMemo(() => {
+    return filteredEvents.filter(event => isEventUpcomingOrActive(event));
+  }, [filteredEvents]);
+
+  // Separate events into "Happening Now" and "Upcoming" categories
+  const happeningNowEvents = useMemo(() => {
+    return upcomingEvents.filter(event => isEventCurrentlyHappening(event));
+  }, [upcomingEvents]);
+
+  const upcomingOnlyEvents = useMemo(() => {
+    return upcomingEvents.filter(event => !isEventCurrentlyHappening(event));
+  }, [upcomingEvents]);
+
+  // Sort events: happening now first (by end date), then upcoming (by start date)
+  const sortedHappeningNow = useMemo(() => {
+    return sortEventsByDate(happeningNowEvents);
+  }, [happeningNowEvents]);
+
+  const sortedUpcoming = useMemo(() => {
+    return sortEventsByDate(upcomingOnlyEvents);
+  }, [upcomingOnlyEvents]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -177,17 +202,14 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
                 // Always show "All Events" category
                 if (cat.name === 'All Events') return true;
 
-                // Only show other categories that have upcoming events
-                const upcomingEvents = events.filter(event => {
-                  if (!event.date) return false;
-                  return new Date(event.date) >= new Date();
-                });
+                // Use the improved timing function to check for active/upcoming events
+                const activeEvents = events.filter(event => isEventUpcomingOrActive(event));
 
                 if (cat.name === 'Other') {
                   const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
-                  return upcomingEvents.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
+                  return activeEvents.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
                 } else {
-                  return upcomingEvents.some(ev => ev.category === cat.name);
+                  return activeEvents.some(ev => ev.category === cat.name);
                 }
               })
               .map((cat) => {
@@ -218,8 +240,8 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
             </h2>
             <p className="text-gray-600 text-lg">
               {selectedCategory !== 'All Events'
-                ? `Showing ${upcomingEvents.length} upcoming ${selectedCategory.toLowerCase()} events`
-                : `Showing ${upcomingEvents.length} upcoming events across all categories`
+                ? `Showing ${upcomingEvents.length} ${selectedCategory.toLowerCase()} events`
+                : `Showing ${upcomingEvents.length} events across all categories`
               }
             </p>
           </div>
@@ -236,11 +258,39 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
               <p className="text-gray-500">Connect to the internet to load events for offline use.</p>
             </div>
           ) : upcomingEvents.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
-              {upcomingEvents.map(event => (
-                <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-              ))}
-            </div>
+            <>
+              {/* Happening Now Section - only show if there are events currently happening */}
+              {sortedHappeningNow.length > 0 && (
+                <div className="mb-12">
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <h3 className="text-2xl font-bold text-red-600">Happening Now</h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
+                    {sortedHappeningNow.map(event => (
+                      <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upcoming Events Section */}
+              {sortedUpcoming.length > 0 && (
+                <div>
+                  {sortedHappeningNow.length > 0 && (
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Upcoming Events</h3>
+                  )}
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
+                    {sortedUpcoming.map(event => (
+                      <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📅</div>

@@ -12,6 +12,7 @@ import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import CustomSelect from '@/components/CustomSelect';
+import { isEventUpcomingOrActive, isEventCurrentlyHappening, sortEventsByDate } from '@/lib/utils';
 
 
 
@@ -41,9 +42,8 @@ export default function EventsPageContent() {
     let otherLocsCount = 0;
 
     // Only consider current and upcoming events for available locations
-    const currentEvents = events.filter(event =>
-      event.date && new Date(event.date) >= new Date()
-    );
+    // Use proper timing logic - event is current/upcoming if it hasn't ended yet
+    const currentEvents = events.filter(event => isEventUpcomingOrActive(event));
 
     currentEvents.forEach(event => {
       if (event.location) {
@@ -88,10 +88,20 @@ export default function EventsPageContent() {
 
   const oneWeekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days ago
 
-  const upcomingEvents = filteredEvents.filter(event => event.date && new Date(event.date) >= now);
+  // Use proper timing logic - event is upcoming/current if it hasn't ended yet
+  const upcomingEvents = filteredEvents.filter(event => isEventUpcomingOrActive(event));
+  
+  // Separate events into "Happening Now" and "Upcoming" categories
+  const happeningNowEvents = upcomingEvents.filter(event => isEventCurrentlyHappening(event));
+  const upcomingOnlyEvents = upcomingEvents.filter(event => !isEventCurrentlyHappening(event));
+
+  // Sort events: happening now first (by end date), then upcoming (by start date)
+  const sortedHappeningNow = sortEventsByDate(happeningNowEvents);
+  const sortedUpcoming = sortEventsByDate(upcomingOnlyEvents);
+  
   const previousEvents = filteredEvents.filter(event =>
+    !isEventUpcomingOrActive(event) &&
     event.date &&
-    new Date(event.date) < now &&
     new Date(event.date) >= oneWeekAgo
   );
 
@@ -215,11 +225,37 @@ export default function EventsPageContent() {
       {/* Events grid */}
       {!loading && upcomingEvents.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
-            {upcomingEvents.map((event: EventItem) => (
-              <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-            ))}
-          </div>
+          {/* Happening Now Section - only show if there are events currently happening */}
+          {sortedHappeningNow.length > 0 && (
+            <div className="mb-12">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                <h3 className="text-2xl font-bold text-red-600">Happening Now</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
+                {sortedHappeningNow.map((event: EventItem) => (
+                  <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Events Section */}
+          {sortedUpcoming.length > 0 && (
+            <div>
+              {sortedHappeningNow.length > 0 && (
+                <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Upcoming Events</h3>
+              )}
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
+                {sortedUpcoming.map((event: EventItem) => (
+                  <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -2,6 +2,8 @@
 
 import { Event } from '@/lib/supabase';
 import { FiCalendar, FiClock, FiBookmark, FiCheckCircle } from 'react-icons/fi';
+import { isEventUpcomingOrActive } from '@/lib/utils';
+import { EventItem } from '@/lib/types';
 
 interface DashboardStatsProps {
   userEvents: Event[];
@@ -10,11 +12,12 @@ interface DashboardStatsProps {
 }
 
 export default function DashboardStats({ userEvents, savedEvents, loading = false }: DashboardStatsProps) {
-  // Calculate statistics from events
-  const now = new Date();
+  // Calculate statistics from events using proper timing logic
   const totalEvents = userEvents.length;
-  const upcomingEvents = userEvents.filter(event => new Date(event.date) >= now).length;
-  const pastEvents = userEvents.filter(event => new Date(event.date) < now).length;
+  // Use isEventUpcomingOrActive to properly determine if event is upcoming/current
+  const upcomingEvents = userEvents.filter(event => isEventUpcomingOrActive(event as EventItem)).length;
+  // Event is past only if it has ended
+  const pastEvents = userEvents.filter(event => !isEventUpcomingOrActive(event as EventItem)).length;
   const totalSaved = savedEvents.length;
 
   // Show loading skeleton

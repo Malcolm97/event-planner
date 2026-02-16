@@ -4,7 +4,7 @@ import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
-import { getEventPrimaryImage } from '@/lib/utils';
+import { getEventPrimaryImage, isEventUpcomingOrActive } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 
@@ -155,9 +155,10 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     event.created_at && (now.getTime() - new Date(event.created_at).getTime() < 1000 * 60 * 60 * 24 * 7),
     [event.created_at, now]
   );
+  // Use proper timing logic - event is current/upcoming if it hasn't ended yet
   const isCurrentEvent = useMemo(() =>
-    event.date && new Date(event.date) >= now,
-    [event.date, now]
+    isEventUpcomingOrActive(event),
+    [event.date, event.end_date]
   );
   const isPopular = useMemo(() =>
     isCurrentEvent && saveCount >= 5,
