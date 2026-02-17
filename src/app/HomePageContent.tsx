@@ -177,10 +177,6 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     return filteredEvents.filter((ev: EventItem) => isEventUpcomingOrActive(ev));
   }, [filteredEvents]);
 
-  const previousEvents = useMemo(() => {
-    return filteredEvents.filter((ev: EventItem) => !isEventUpcomingOrActive(ev));
-  }, [filteredEvents]);
-
   // Separate events into "Happening Now" and "Upcoming" categories
   const happeningNowEvents = upcomingEvents.filter(event => isEventCurrentlyHappening(event));
   const upcomingOnlyEvents = upcomingEvents.filter(event => !isEventCurrentlyHappening(event));
@@ -191,8 +187,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
   useEffect(() => {
     const filterEvents = () => {
-      // Use events from hook if available, otherwise use filteredEvents (which may contain initialEvents)
-      let tempEvents = events && events.length > 0 ? events : filteredEvents;
+      // Use events from hook if available, otherwise use initialEvents
+      let tempEvents = events && events.length > 0 ? events : initialEvents;
 
       if (searchTerm) {
         const searchTermLower = searchTerm.toLowerCase();
@@ -249,7 +245,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
     };
 
     filterEvents();
-  }, [events, filteredEvents, searchTerm, selectedDate, selectedLocationFilter]);
+  }, [events, initialEvents, searchTerm, selectedDate, selectedLocationFilter]);
 
   useEffect(() => {
     // Only consider current and upcoming events for available locations

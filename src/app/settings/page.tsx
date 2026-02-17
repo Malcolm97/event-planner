@@ -12,7 +12,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/lib/supabase";
 import { isAutoSyncEnabled } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { RefreshCw, Home, Calendar, Grid3X3, User, Settings, Info, MessageSquare, Trash2, CheckCircle, AlertCircle, Download, Sparkles } from "lucide-react";
 
 import CustomSelect, { SelectOption } from "@/components/CustomSelect";
 
@@ -42,6 +42,9 @@ export default function SettingsPage() {
   const [syncingNow, setSyncingNow] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [isPWA, setIsPWA] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>('');
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateResult, setUpdateResult] = useState<string | null>(null);
 
 
   // Detect PWA mode with improved detection
@@ -315,6 +318,57 @@ export default function SettingsPage() {
     } finally {
       setSyncingNow(false);
       setTimeout(() => setSyncResult(null), 3000);
+    }
+  };
+
+  // Check for app updates
+  const handleCheckForUpdates = async () => {
+    if (!('serviceWorker' in navigator)) {
+      setUpdateResult('Updates are not supported in this browser');
+      setTimeout(() => setUpdateResult(null), 3000);
+      return;
+    }
+
+    setCheckingUpdate(true);
+    setUpdateResult(null);
+
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      
+      if (!registration) {
+        setUpdateResult('No service worker registered');
+        setTimeout(() => setUpdateResult(null), 3000);
+        return;
+      }
+
+      // Force check for updates
+      await registration.update();
+
+      // Get current version
+      if (registration.active) {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (event) => {
+          if (event.data.version) {
+            setAppVersion(event.data.version);
+          }
+        };
+        registration.active.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+      }
+
+      // Check if there's a waiting worker (new version ready)
+      if (registration.waiting) {
+        setUpdateResult('New version available! Refresh to update.');
+      } else if (registration.installing) {
+        setUpdateResult('Downloading update...');
+      } else {
+        setUpdateResult('You have the latest version!');
+      }
+    } catch (error) {
+      console.error('Update check failed:', error);
+      setUpdateResult('Failed to check for updates. Please try again.');
+    } finally {
+      setCheckingUpdate(false);
+      setTimeout(() => setUpdateResult(null), 5000);
     }
   };
 
@@ -692,29 +746,82 @@ export default function SettingsPage() {
           <div className="grid gap-3">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50">
               <span className="text-lg">📱</span>
-              <div>
+              <div className="flex-1">
                 <span className="text-gray-800 font-medium">Version</span>
-                <p className="text-sm text-gray-600">1.0.0</p>
+                <p className="text-sm text-gray-600">{appVersion || '10.0.2'}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50">
               <span className="text-lg">📅</span>
-              <div>
+              <div className="flex-1">
                 <span className="text-gray-800 font-medium">Last Updated</span>
-                <p className="text-sm text-gray-600">January 18, 2026</p>
+                <p className="text-sm text-gray-600">February 17, 2026</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-3 rounded-lg bg-teal-50">
               <span className="text-lg">💻</span>
-              <div>
+              <div className="flex-1">
                 <span className="text-gray-800 font-medium">Device</span>
                 <p className="text-sm text-gray-600 truncate">
                   {typeof window !== 'undefined' ? navigator.userAgent.split(' ').pop() : 'Unknown'}
                 </p>
               </div>
             </div>
+
+            {/* Check for Updates Button */}
+            <div className="mt-2">
+              <Button
+                onClick={handleCheckForUpdates}
+                disabled={checkingUpdate}
+                className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-medium py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                {checkingUpdate ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                    </motion.div>
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Check for Updates
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Update Result */}
+            <AnimatePresence>
+              {updateResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className={`flex items-center gap-2 font-medium justify-center rounded-lg p-3 ${
+                    updateResult.includes('latest')
+                      ? 'text-green-600 bg-green-50'
+                      : updateResult.includes('New version')
+                      ? 'text-orange-600 bg-orange-50'
+                      : 'text-blue-600 bg-blue-50'
+                  }`}
+                >
+                  {updateResult.includes('latest') ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : updateResult.includes('New version') ? (
+                    <Download className="w-5 h-5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5" />
+                  )}
+                  {updateResult}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.section>
 

@@ -148,27 +148,54 @@ export default function PWAInstallPrompt() {
     return null;
   }
 
-  // iOS instructions
+  // iOS instructions with visual guide
   if (isIOS) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm mx-auto">
+      <div className="fixed bottom-4 left-4 right-4 z-50 bg-white border border-gray-200 rounded-xl shadow-lg p-4 max-w-sm mx-auto">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-gray-900">Save PNG Events</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Install PNG Events</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Keepim event long homskrin blong yu - isi tumas!
+              Add to your home screen for the best experience
             </p>
+            
+            {/* Step-by-step iOS instructions */}
+            <div className="mt-3 space-y-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">1</span>
+                <span>Tap the <strong>Share</strong> button below</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">2</span>
+                <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">3</span>
+                <span>Tap <strong>"Add"</strong> in the top right corner</span>
+              </div>
+            </div>
+
+            {/* Visual indicator for Share button location */}
+            <div className="mt-3 flex items-center justify-center">
+              <div className="flex items-center gap-1 text-gray-400 text-xs">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                </svg>
+                <span>Look for the share icon in your browser</span>
+              </div>
+            </div>
           </div>
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+            className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Dismiss"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

@@ -1,6 +1,7 @@
 // Dynamic versioning based on build timestamp
-const BUILD_TIMESTAMP = '20260214'; // Update this when deploying new versions
-const APP_VERSION = '10.0.1';
+// IMPORTANT: Update BUILD_TIMESTAMP when deploying new versions to force cache update
+const BUILD_TIMESTAMP = '20260217'; // Update this when deploying new versions
+const APP_VERSION = '10.0.2';
 
 const CACHE_NAME = `event-planner-cache-v${BUILD_TIMESTAMP}`;
 const STATIC_CACHE = `event-planner-static-v${BUILD_TIMESTAMP}`;
@@ -8,6 +9,9 @@ const DYNAMIC_CACHE = `event-planner-dynamic-v${BUILD_TIMESTAMP}`;
 const API_CACHE = `event-planner-api-v${BUILD_TIMESTAMP}`;
 const PAGES_CACHE = `event-planner-pages-v${BUILD_TIMESTAMP}`;
 const APP_SHELL_CACHE = `event-planner-app-shell-v${BUILD_TIMESTAMP}`;
+
+// Track if we've notified about this version
+let hasNotifiedUpdate = false;
 
 // Update check interval (in milliseconds) - check every 5 minutes
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -31,13 +35,27 @@ const urlsToCache = [
   '/icons/icon-maskable-512x512.png'
 ];
 
-// Cache expiration times (in milliseconds) - REDUCED for fresher content
+// Cache expiration times (in milliseconds) - Optimized for offline mode
 const CACHE_EXPIRATION = {
-  API: 60 * 1000,           // 1 minute for API responses (reduced from 5 min)
-  PAGES: 5 * 60 * 1000,     // 5 minutes for pages (reduced from 15 min)
-  STATIC: 24 * 60 * 60 * 1000, // 24 hours for static assets
-  DYNAMIC: 30 * 60 * 1000   // 30 minutes for dynamic content (reduced from 1 hour)
+  API: 5 * 60 * 1000,           // 5 minutes for API responses (increased for offline)
+  PAGES: 15 * 60 * 1000,        // 15 minutes for pages
+  STATIC: 7 * 24 * 60 * 60 * 1000, // 7 days for static assets (increased for offline)
+  DYNAMIC: 60 * 60 * 1000,      // 1 hour for dynamic content
+  IMAGES: 30 * 24 * 60 * 60 * 1000 // 30 days for images (offline viewing)
 };
+
+// Offline-first pages that should always be cached
+const OFFLINE_PAGES = [
+  '/',
+  '/events',
+  '/categories',
+  '/about',
+  '/settings',
+  '/terms',
+  '/privacy',
+  '/download',
+  '/offline.html'
+];
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
@@ -540,7 +558,7 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Push notification support for PWA users
+// Push notification support for PWA users with platform-specific optimizations
 self.addEventListener('push', (event) => {
   console.log('Push message received:', event);
 
@@ -569,33 +587,61 @@ self.addEventListener('push', (event) => {
   const userAgent = self.navigator?.userAgent || '';
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
   const isAndroid = /Android/.test(userAgent);
+  const isWindows = /Windows/.test(userAgent);
   
   const eventId = data.eventId || data.data?.eventId || null;
   const url = data.url || data.data?.url || '/';
+  const notificationType = data.type || data.notificationType || 'event';
   
+  // Platform-specific notification options
   const options = {
     body: data.body || 'New event update available!',
-    icon: '/icons/icon-192x192.png',
+    icon: isIOS ? '/icons/icon-192x192.png' : '/icons/icon-512x512.png',
     badge: '/icons/icon-96x96.png',
-    vibrate: [200, 100, 200],
+    vibrate: isAndroid ? [200, 100, 200, 100, 200] : [200, 100, 200], // Android: longer pattern
     data: {
       dateOfArrival: Date.now(),
       primaryKey: data.primaryKey || 1,
       url: url,
       eventId: eventId,
-      platform: isIOS ? 'ios' : isAndroid ? 'android' : 'other'
+      notificationType: notificationType,
+      platform: isIOS ? 'ios' : isAndroid ? 'android' : isWindows ? 'windows' : 'other'
     },
     actions: [
-      { action: 'view', title: 'View Event' },
+      { action: 'view', title: 'View Event', icon: '/icons/icon-96x96.png' },
       { action: 'dismiss', title: 'Dismiss' }
     ],
-    tag: 'event-notification',
+    tag: notificationType === 'update' ? 'app-update-notification' : 'event-notification',
     timeout: 5000,
     renotify: true,
-    requireInteraction: isIOS,
+    requireInteraction: isIOS || notificationType === 'update', // iOS and updates require interaction
     silent: false,
     timestamp: Date.now()
   };
+
+  // iOS-specific adjustments (iOS 16.4+)
+  if (isIOS) {
+    // iOS doesn't support all notification options
+    delete options.timeout;
+    options.requireInteraction = true;
+    // Use simpler action titles for iOS
+    options.actions = [
+      { action: 'view', title: 'View' },
+      { action: 'dismiss', title: 'Close' }
+    ];
+  }
+
+  // Android-specific: Add notification channel support via tag
+  if (isAndroid) {
+    // Set priority for Android (via renotify and requireInteraction)
+    options.renotify = true;
+    options.tag = notificationType === 'update' ? 'app-update-high-priority' : 'event-notification';
+  }
+
+  // Windows-specific: Badge support
+  if (isWindows) {
+    options.badge = '/icons/icon-96x96.png';
+  }
 
   event.waitUntil(
     self.registration.showNotification(data.title || 'PNG Events', options)

@@ -14,8 +14,10 @@ CREATE TABLE IF NOT EXISTS public.events (
     image_urls TEXT[],
     featured BOOLEAN DEFAULT false,
     date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE,
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- Create profiles table linked to auth.users

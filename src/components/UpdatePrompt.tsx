@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { RefreshCw, X, Zap, Check, AlertCircle } from 'lucide-react';
+import { RefreshCw, X, Zap, Check, AlertCircle, Download, Sparkles } from 'lucide-react';
 
 interface UpdatePromptProps {
   /**
@@ -12,7 +12,7 @@ interface UpdatePromptProps {
   
   /**
    * Delay in ms before showing the update prompt
-   * @default 3000
+   * @default 1000
    */
   showDelay?: number;
   
@@ -30,6 +30,12 @@ interface UpdatePromptProps {
    * Custom text for the dismiss button
    */
   dismissButtonText?: string;
+  
+  /**
+   * Whether to show as a prominent modal (for critical updates)
+   * @default false
+   */
+  prominent?: boolean;
 }
 
 interface SWVersion {
@@ -37,12 +43,17 @@ interface SWVersion {
   buildTimestamp: string;
 }
 
+// Storage key for dismissed updates
+const DISMISSED_UPDATE_KEY = 'pwa_dismissed_update';
+const UPDATE_CHECK_INTERVAL = 2 * 60 * 1000; // Check every 2 minutes
+
 export function UpdatePrompt({
   autoShow = true,
-  showDelay = 3000,
+  showDelay = 1000,
   message = 'A new version is available!',
   updateButtonText = 'Update Now',
-  dismissButtonText = 'Later'
+  dismissButtonText = 'Later',
+  prominent = false
 }: UpdatePromptProps) {
   const [showUpdate, setShowUpdate] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -50,17 +61,42 @@ export function UpdatePrompt({
   const [currentVersion, setCurrentVersion] = useState<string>('');
   const [latestVersion, setLatestVersion] = useState<string>('');
   const [isChecking, setIsChecking] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
+  const [dismissedVersion, setDismissedVersion] = useState<string | null>(null);
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check for updates and set up listeners
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
+    // Check if running as PWA
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isInWebAppiOS = (window.navigator as any).standalone === true;
+      setIsPWA(isStandalone || isInWebAppiOS);
+    };
+
+    checkPWA();
+
+    // Get dismissed version from localStorage
+    try {
+      const dismissed = localStorage.getItem(DISMISSED_UPDATE_KEY);
+      if (dismissed) {
+        setDismissedVersion(dismissed);
+      }
+    } catch (e) {
+      console.warn('Could not read dismissed update version');
+    }
+
     // Function to handle service worker updates
     const handleUpdate = (reg: ServiceWorkerRegistration, version?: string) => {
       setRegistration(reg);
       if (version) {
         setLatestVersion(version);
+        // Don't show if user dismissed this version
+        if (dismissedVersion === version) {
+          return;
+        }
       }
       if (autoShow) {
         setTimeout(() => {
@@ -127,8 +163,26 @@ export function UpdatePrompt({
 
     // Listen for messages from service worker
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && (event.data.type === 'SW_ACTIVATED' || event.data.type === 'SW_UPDATE')) {
-        handleUpdate(event.data.registration, event.data.version);
+      // Handle SW_ACTIVATED message (new version installed)
+      if (event.data && event.data.type === 'SW_ACTIVATED') {
+        console.log('SW activated with version:', event.data.version);
+        // Check if this is a newer version than current
+        if (event.data.version && event.data.version !== currentVersion) {
+          setLatestVersion(event.data.version);
+          // Don't show if user dismissed this version
+          if (dismissedVersion !== event.data.version) {
+            setShowUpdate(true);
+          }
+        }
+      }
+      
+      // Handle SW_UPDATE_AVAILABLE message
+      if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
+        console.log('SW update available:', event.data.version);
+        if (event.data.version && dismissedVersion !== event.data.version) {
+          setLatestVersion(event.data.version);
+          setShowUpdate(true);
+        }
       }
       
       // Handle version response
@@ -139,7 +193,8 @@ export function UpdatePrompt({
 
     navigator.serviceWorker.addEventListener('message', handleMessage);
 
-    // Start periodic update checking (every 5 minutes)
+    // Start periodic update checking (every 2 minutes for PWA users)
+    const checkInterval = isPWA ? UPDATE_CHECK_INTERVAL : 5 * 60 * 1000;
     checkIntervalRef.current = setInterval(async () => {
       try {
         const reg = await navigator.serviceWorker.getRegistration();
@@ -149,7 +204,7 @@ export function UpdatePrompt({
       } catch (error) {
         console.warn('Periodic update check failed:', error);
       }
-    }, 5 * 60 * 1000);
+    }, checkInterval);
 
     return () => {
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
@@ -158,7 +213,7 @@ export function UpdatePrompt({
         clearInterval(checkIntervalRef.current);
       }
     };
-  }, [autoShow, showDelay]);
+  }, [autoShow, showDelay, currentVersion, dismissedVersion, isPWA]);
 
   // Update the service worker
   const handleUpdate = useCallback(async () => {

@@ -135,8 +135,6 @@ export function useOptimizedData<T>(
     isLoadMore = false,
     forceRefresh = false
   ): Promise<void> => {
-    const opts = memoizedOptions.current;
-
     // Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -191,11 +189,11 @@ export function useOptimizedData<T>(
 
       // Build API URL with optimized parameters
       const params = new URLSearchParams();
-      if (opts.limit) params.set('limit', opts.limit.toString());
-      if (opts.offset && isLoadMore) params.set('offset', opts.offset.toString());
-      if (opts.fields) params.set('fields', opts.fields);
-      if (opts.category) params.set('category', opts.category);
-      if (opts.upcoming) params.set('upcoming', 'true');
+      if (options.limit) params.set('limit', options.limit.toString());
+      if (options.offset && isLoadMore) params.set('offset', options.offset.toString());
+      if (options.fields) params.set('fields', options.fields);
+      if (options.category) params.set('category', options.category);
+      if (options.upcoming) params.set('upcoming', 'true');
 
       const apiUrl = `/api/${storeName}?${params.toString()}`;
 
@@ -269,7 +267,7 @@ export function useOptimizedData<T>(
 
       // Update state
       setData(prevData => isLoadMore ? [...prevData, ...freshData] : freshData);
-      setHasMore(freshData.length === (opts.limit || 50));
+      setHasMore(freshData.length === (options.limit || 50));
       setTotalCount(totalRecords);
 
       // Cache data in background

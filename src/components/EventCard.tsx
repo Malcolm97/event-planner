@@ -513,7 +513,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         {saveCount > 0 && (
           <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
             <FiUsers size={12} />
-            <span>{saveCount} saved{saveCount !== 1 ? 's' : ''}</span>
+            <span>{saveCount} {saveCount === 1 ? 'save' : 'saves'}</span>
           </div>
         )}
 

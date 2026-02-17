@@ -2,8 +2,20 @@
 <browserconfig>
     <msapplication>
         <tile>
+            <square70x70logo src="/icons/icon-72x72.png"/>
             <square150x150logo src="/icons/icon-144x144.png"/>
+            <wide310x150logo src="/icons/icon-310x150.png"/>
+            <square310x310logo src="/icons/icon-512x512.png"/>
             <TileColor>#FCD34D</TileColor>
+            <TileImage src="/icons/icon-144x144.png"/>
         </tile>
+        <notification>
+            <polling-uri src="/api/notifications"/>
+            <frequency>30</frequency>
+            <cycle>1</cycle>
+        </notification>
+        <badge>
+            <src="/icons/icon-96x96.png"/>
+        </badge>
     </msapplication>
 </browserconfig>

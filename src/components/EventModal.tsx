@@ -28,7 +28,6 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   const [activeTab, setActiveTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
   const [imageExpanded, setImageExpanded] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isOnline } = useNetworkStatus();
 
@@ -65,7 +64,6 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   // Error handling for missing event/host
   useEffect(() => {
     setError(null);
-    setLoading(false);
     if (!selectedEvent) {
       setError('No event selected.');
     }
@@ -114,17 +112,6 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   };
 
   if (!dialogOpen) return null;
-
-  if (loading) {
-    return (
-      <div className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center max-w-sm">
-          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-yellow-600 mx-auto mb-4 sm:mb-6"></div>
-          <p className="text-base sm:text-lg text-gray-700">Loading event details...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
