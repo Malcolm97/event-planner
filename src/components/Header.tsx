@@ -168,9 +168,9 @@ const Header = React.memo(function Header() {
         </div>
       )}
 
-      <header className="glass-effect shadow-lg border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md safe-area-inset">
-        <div className="max-w-7xl mx-auto container-padding">
-          <div className="flex justify-between items-center h-14 sm:h-16 md:h-20">
+      <header className="glass-effect shadow-sm border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex justify-between items-center h-11 sm:h-14 lg:h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 rounded-lg p-1">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">

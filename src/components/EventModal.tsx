@@ -1,4 +1,4 @@
-
+ 
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/supabase';
@@ -141,7 +141,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-5xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
         style={{
           minHeight: 'auto',
-          maxHeight: 'calc(90dvh - 5rem)',
+          maxHeight: 'calc(79dvh - 5rem)',
           boxSizing: 'border-box',
         }}
       >

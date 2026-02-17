@@ -117,7 +117,7 @@ export default function RootLayout({
         <meta name="color-scheme" content="light dark" />
         <meta name="prefers-color-scheme" content="light" />
       </head>
-      <body className={`antialiased ${inter.className} min-h-screen safe-area-inset`}>
+      <body className={`antialiased ${inter.className} min-h-screen`}>
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <EnhancedErrorBoundary>
           <ClientProviders>

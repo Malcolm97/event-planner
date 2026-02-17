@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, testSupabaseConnection, getSupabaseConnectionStatus } from '@/lib/supabase';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, getSupabaseConnectionStatus } from '@/lib/supabase';
+import { getEvents, addEvents, getUsers, addUsers, getSyncStatus, updateSyncStatus } from '@/lib/indexedDB';
 
 interface UseDashboardDataResult {
   user: any;
@@ -14,7 +15,13 @@ interface UseDashboardDataResult {
   refetch: () => Promise<void>;
   isConnected: boolean;
   connectionError: string | null;
+  isRefreshing: boolean;
+  lastUpdated: Date | null;
 }
+
+// Cache key for dashboard data
+const DASHBOARD_CACHE_KEY = 'dashboard-cache';
+const MIN_REFETCH_INTERVAL = 30000; // 30 seconds minimum between refetches
 
 export function useDashboardData(): UseDashboardDataResult {
   const [user, setUser] = useState<any>(null);
@@ -23,10 +30,62 @@ export function useDashboardData(): UseDashboardDataResult {
   const [savedEvents, setSavedEvents] = useState<Event[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchUserEvents = useCallback(async (userId: string) => {
+  // Refs for debouncing and preventing race conditions
+  const lastFetchTimeRef = useRef<number>(0);
+  const isFetchingRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  // Load cached data from IndexedDB
+  const loadCachedData = useCallback(async (userId: string) => {
+    try {
+      // Try to load cached events
+      const cachedEvents = await getEvents();
+      if (cachedEvents && cachedEvents.length > 0) {
+        const userCachedEvents = cachedEvents.filter((e: any) => e.created_by === userId);
+        if (userCachedEvents.length > 0) {
+          setUserEvents(userCachedEvents as Event[]);
+        }
+      }
+
+      // Try to load cached users (for profile)
+      const cachedUsers = await getUsers();
+      if (cachedUsers && cachedUsers.length > 0) {
+        const userProfile = cachedUsers.find((u: any) => u.id === userId);
+        if (userProfile) {
+          setUserProfile(userProfile as User);
+        }
+      }
+
+      // Load last sync time
+      const syncStatus = await getSyncStatus();
+      if (syncStatus?.lastSync) {
+        setLastUpdated(new Date(syncStatus.lastSync));
+      }
+    } catch (err) {
+      console.warn('Failed to load cached dashboard data:', err);
+    }
+  }, []);
+
+  // Cache data to IndexedDB
+  const cacheData = useCallback(async (events: Event[], profile: User | null) => {
+    try {
+      if (events.length > 0) {
+        await addEvents(events);
+      }
+      if (profile) {
+        await addUsers([profile]);
+      }
+      await updateSyncStatus({ lastSync: Date.now(), inProgress: false });
+    } catch (err) {
+      console.warn('Failed to cache dashboard data:', err);
+    }
+  }, []);
+
+  const fetchUserEvents = useCallback(async (userId: string): Promise<Event[]> => {
     try {
       const { data, error: fetchError } = await supabase
         .from(TABLES.EVENTS)
@@ -34,49 +93,41 @@ export function useDashboardData(): UseDashboardDataResult {
         .eq('created_by', userId)
         .order('date', { ascending: true });
 
-      // Handle error gracefully - don't throw
       if (fetchError) {
         console.warn('Failed to fetch user events:', fetchError.message);
-        setUserEvents([]);
-        return;
+        return [];
       }
 
-      // Validate and filter events
       const validEvents = (data || []).filter(event => {
         if (!event || typeof event !== 'object') return false;
         if (!event.id || !event.name) return false;
         return true;
       });
 
-      setUserEvents(validEvents as Event[]);
+      return validEvents as Event[];
     } catch (err) {
       console.warn('Failed to load user events:', err);
-      setUserEvents([]);
+      return [];
     }
   }, []);
 
-  const fetchSavedEvents = useCallback(async (userId: string) => {
+  const fetchSavedEvents = useCallback(async (userId: string): Promise<Event[]> => {
     try {
-      // Get saved event IDs
       const { data: savedEventsData, error: savedError } = await supabase
         .from(TABLES.SAVED_EVENTS)
         .select('event_id, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      // Handle errors gracefully - don't throw
       if (savedError) {
         console.warn('Failed to fetch saved events:', savedError.message);
-        setSavedEvents([]);
-        return;
+        return [];
       }
 
       if (!savedEventsData || savedEventsData.length === 0) {
-        setSavedEvents([]);
-        return;
+        return [];
       }
 
-      // Get full event details
       const eventIds = savedEventsData.map(item => item.event_id);
       const { data: eventsData, error: eventsError } = await supabase
         .from(TABLES.EVENTS)
@@ -86,36 +137,33 @@ export function useDashboardData(): UseDashboardDataResult {
 
       if (eventsError) {
         console.warn('Could not fetch event details:', eventsError.message);
-        setSavedEvents([]);
-        return;
+        return [];
       }
 
-      // Validate events
       const validEvents = (eventsData || []).filter(event => {
         if (!event || typeof event !== 'object') return false;
         if (!event.id || !event.name) return false;
         return true;
       });
 
-      setSavedEvents(validEvents as Event[]);
+      return validEvents as Event[];
     } catch (err) {
       console.warn('Failed to load saved events:', err);
-      setSavedEvents([]);
+      return [];
     }
   }, []);
 
-  const fetchUserActivities = useCallback(async (userId: string) => {
+  const fetchUserActivities = useCallback(async (userId: string): Promise<Activity[]> => {
     try {
       const activitiesData = await getUserActivities(userId, 20);
-      setActivities(activitiesData);
+      return activitiesData;
     } catch (err) {
-      // Activities are not critical, so we don't set a main error
       console.warn('Failed to load activities:', err);
-      setActivities([]);
+      return [];
     }
   }, []);
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string): Promise<User | null> => {
     try {
       const { data, error: fetchError } = await supabase
         .from(TABLES.USERS)
@@ -124,61 +172,81 @@ export function useDashboardData(): UseDashboardDataResult {
         .single();
 
       if (fetchError) {
-        // If user not found, set profile to null (user may not have created profile yet)
         if (fetchError.code === 'PGRST116') {
           console.warn('User profile not yet created:', userId);
-          setUserProfile(null);
-          return;
+          return null;
         }
-        // Handle RLS or other errors
         console.warn('Failed to fetch user profile:', fetchError.message);
-        setUserProfile(null);
-        return;
+        return null;
       }
 
       const profileData = data as User;
-        // Add email from auth user
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser?.email) {
-          profileData.email = authUser.email;
-        }
-        setUserProfile(profileData);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser?.email) {
+        profileData.email = authUser.email;
+      }
+      return profileData;
     } catch (err) {
       console.warn('Failed to load user profile:', err);
-      setUserProfile(null);
+      return null;
     }
   }, []);
 
-  // Function to fetch all dashboard data
-  const fetchAllData = useCallback(async (authUser: any) => {
+  // Main data fetching function with caching
+  const fetchAllData = useCallback(async (authUser: any, isRefresh = false) => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    // Check minimum interval for refreshes
+    const now = Date.now();
+    if (isRefresh && (now - lastFetchTimeRef.current) < MIN_REFETCH_INTERVAL) {
+      isFetchingRef.current = false;
+      return;
+    }
+    lastFetchTimeRef.current = now;
+
+    if (isRefresh) {
+      setIsRefreshing(true);
+    }
+
     try {
-      // Fetch all data in parallel with fresh fetch
-      await Promise.all([
+      // Fetch all data in parallel
+      const [events, saved, acts, profile] = await Promise.all([
         fetchUserEvents(authUser.id),
         fetchSavedEvents(authUser.id),
         fetchUserActivities(authUser.id),
         fetchUserProfile(authUser.id)
       ]);
+
+      // Only update state if component is still mounted
+      if (mountedRef.current) {
+        setUserEvents(events);
+        setSavedEvents(saved);
+        setActivities(acts);
+        setUserProfile(profile);
+        setLastUpdated(new Date());
+        setError(null);
+
+        // Cache the data for offline use
+        await cacheData(events, profile);
+      }
     } catch (err) {
       console.warn('Error fetching dashboard data:', err);
-    }
-  }, [fetchUserEvents, fetchSavedEvents, fetchUserActivities, fetchUserProfile]);
-
-  const refetch = useCallback(async () => {
-    if (!user) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      await fetchAllData(user);
-    } catch (err) {
-      // Error is already handled in individual fetch functions
+      if (mountedRef.current && !isRefresh) {
+        const appError = err instanceof Error ? err : new Error(String(err));
+        setError(`Failed to load dashboard: ${appError.message}`);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setIsRefreshing(false);
+        setLoading(false);
+      }
+      isFetchingRef.current = false;
     }
-  }, [user, fetchAllData]);
+  }, [fetchUserEvents, fetchSavedEvents, fetchUserActivities, fetchUserProfile, cacheData]);
 
+  // Initial load - show cached data first, then fetch fresh
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
@@ -195,37 +263,64 @@ export function useDashboardData(): UseDashboardDataResult {
 
         setUser(authUser);
 
-        // Fetch all data in parallel
-        await fetchAllData(authUser);
+        // Load cached data first for instant display
+        await loadCachedData(authUser.id);
+
+        // Then fetch fresh data
+        await fetchAllData(authUser, false);
 
       } catch (err) {
         const appError = err instanceof Error ? err : new Error(String(err));
         setError(`Failed to load dashboard: ${appError.message}`);
-      } finally {
         setLoading(false);
       }
     };
 
     initializeDashboard();
-  }, [fetchAllData]);
 
-  // Refetch data when window gains focus (user returns from edit-profile or other pages)
+    // Cleanup on unmount
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [fetchAllData, loadCachedData]);
+
+  // Manual refetch function
+  const refetch = useCallback(async () => {
+    if (!user) return;
+    await fetchAllData(user, true);
+  }, [user, fetchAllData]);
+
+  // Debounced focus refetch - only refetch if more than 30 seconds have passed
   useEffect(() => {
     const handleFocus = async () => {
-      if (user) {
-        // Refresh auth state and fetch latest data
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (currentUser) {
-          await fetchAllData(currentUser);
+      if (user && !isFetchingRef.current) {
+        const now = Date.now();
+        if ((now - lastFetchTimeRef.current) >= MIN_REFETCH_INTERVAL) {
+          await fetchAllData(user, true);
         }
       }
     };
 
-    // Add focus listener
     window.addEventListener('focus', handleFocus);
-
     return () => {
       window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, fetchAllData]);
+
+  // Visibility change handler for mobile
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && user && !isFetchingRef.current) {
+        const now = Date.now();
+        if ((now - lastFetchTimeRef.current) >= MIN_REFETCH_INTERVAL) {
+          await fetchAllData(user, true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user, fetchAllData]);
 
@@ -243,6 +338,8 @@ export function useDashboardData(): UseDashboardDataResult {
     error,
     refetch,
     isConnected,
-    connectionError
+    connectionError,
+    isRefreshing,
+    lastUpdated
   };
 }
