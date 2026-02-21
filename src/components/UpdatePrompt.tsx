@@ -45,7 +45,7 @@ interface SWVersion {
 
 // Storage key for dismissed updates
 const DISMISSED_UPDATE_KEY = 'pwa_dismissed_update';
-const UPDATE_CHECK_INTERVAL = 2 * 60 * 1000; // Check every 2 minutes
+const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000; // Check every 5 minutes (aligned with service worker)
 
 export function UpdatePrompt({
   autoShow = true,

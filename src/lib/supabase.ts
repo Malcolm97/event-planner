@@ -3,6 +3,13 @@
 // Unauthorized copying, modification, or distribution is prohibited.
 
 import { createClient } from '@supabase/supabase-js'
+import type { EventItem, UserItem, ActivityItem, ExternalLinks, SocialLinks } from './types';
+
+// Re-export types for backward compatibility
+export type Event = EventItem;
+export type User = UserItem;
+export type Activity = ActivityItem;
+export type { ExternalLinks, SocialLinks };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -127,70 +134,6 @@ export const TABLES = {
   PUSH_SUBSCRIPTIONS: 'push_subscriptions',
   USERS_BY_EMAIL: 'users_by_email'
 } as const
-
-// External links interface for events
-export interface ExternalLinks {
-  facebook?: string
-  instagram?: string
-  tiktok?: string
-  website?: string
-}
-
-// Event interface for Supabase
-export interface Event {
-  id: string
-  name: string
-  category?: string
-  location: string
-  venue?: string
-  presale_price?: number
-  gate_price?: number
-  description: string
-  image_urls?: string[]
-  created_at?: string
-  featured?: boolean
-  date: string
-  end_date?: string
-  created_by?: string
-  external_links?: ExternalLinks
-}
-
-// Social links interface
-export interface SocialLinks {
-  facebook?: string
-  instagram?: string
-  tiktok?: string
-  twitter?: string
-}
-
-// User interface for Supabase
-export interface User {
-  id: string
-  name: string
-  email: string
-  company?: string
-  phone?: string
-  about?: string
-  photo_url?: string
-  contact_method?: 'email' | 'phone' | 'both' | 'none'
-  whatsapp_number?: string
-  contact_visibility?: boolean
-  social_links?: SocialLinks
-  show_social_links?: boolean
-  updated_at?: string
-}
-
-// Activity interface for tracking user activities
-export interface Activity {
-  id: string
-  user_id: string
-  activity_type: 'event_created' | 'event_updated' | 'event_saved' | 'event_completed' | 'profile_updated' | 'event_viewed'
-  description: string
-  metadata?: Record<string, any>
-  created_at: string
-  event_id?: string
-  event_name?: string
-}
 
 // Activity tracking functions
 export const recordActivity = async (

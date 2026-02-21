@@ -225,16 +225,12 @@ export default function EventsPageContent() {
       {/* Events grid */}
       {!loading && upcomingEvents.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Happening Now Section - only show if there are events currently happening */}
+          {/* Events Section - currently happening events */}
           {sortedHappeningNow.length > 0 && (
             <div className="mb-12">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                </span>
-                <h3 className="text-heading-2xl">
-                  Happening Now
+              <div className="text-center mb-6">
+                <h3 className="text-heading-2xl flex items-center justify-center gap-4">
+                  <span className="text-2xl">🎉</span> Events
                 </h3>
               </div>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
@@ -245,14 +241,14 @@ export default function EventsPageContent() {
             </div>
           )}
 
-          {/* Upcoming Events Section */}
+          {/* Upcoming Events Section - only show if there are upcoming events */}
           {sortedUpcoming.length > 0 && (
             <div>
-              {sortedHappeningNow.length > 0 && (
-                <h3 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
+              <div className="text-center mb-6">
+                <h3 className="text-heading-2xl flex items-center justify-center gap-4">
                   <span className="text-2xl">📅</span> Upcoming Events
                 </h3>
-              )}
+              </div>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
                 {sortedUpcoming.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />

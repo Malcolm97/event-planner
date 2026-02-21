@@ -203,6 +203,8 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
   // Fetch save count for popular badge logic
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchSaveCount = async () => {
       try {
         const { count, error } = await supabase
@@ -210,19 +212,28 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
           .select('*', { count: 'exact', head: true })
           .eq('event_id', event.id);
 
-        if (!error && count !== null) {
+        if (isMounted && !error && count !== null) {
           setSaveCount(count);
         }
       } catch (error) {
-        console.error('Error fetching save count:', error);
+        // Silently handle - not critical for UX
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Error fetching save count:', error);
+        }
       }
     };
 
     fetchSaveCount();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [event.id]);
 
   // Check if event is saved on component mount
   useEffect(() => {
+    let isMounted = true;
+    
     const checkIfSaved = async () => {
       if (!user) return;
 
@@ -234,7 +245,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
           .eq('event_id', event.id)
           .single();
 
-        if (data && !error) {
+        if (isMounted && data && !error) {
           setBookmarked(true);
         }
       } catch (error) {
@@ -243,6 +254,10 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     };
 
     checkIfSaved();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [user, event.id]);
 
   // Save/Bookmark logic

@@ -133,16 +133,24 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       // Use service worker to cache these URLs - with error handling
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'caches' in window) {
         try {
-          const cache = await caches.open('event-planner-cache-v4');
-          for (const url of essentialUrls) {
-            try {
-              const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
-              if (response.ok) {
-                // Cache the successful response
-                await cache.put(url, response);
+          // Find the correct cache dynamically
+          const cacheNames = await caches.keys();
+          const appCache = cacheNames.find(name => 
+            name.includes('event-planner') && (name.includes('cache') || name.includes('pages'))
+          );
+          
+          if (appCache) {
+            const cache = await caches.open(appCache);
+            for (const url of essentialUrls) {
+              try {
+                const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+                if (response.ok) {
+                  // Cache the successful response
+                  await cache.put(url, response);
+                }
+              } catch (error) {
+                console.warn(`Failed to pre-cache ${url}:`, error);
               }
-            } catch (error) {
-              console.warn(`Failed to pre-cache ${url}:`, error);
             }
           }
         } catch (cacheError) {

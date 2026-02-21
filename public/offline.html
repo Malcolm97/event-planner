@@ -408,8 +408,18 @@
 
         async function loadCachedCategories() {
             try {
-                // Try to fetch categories from cache
-                const cache = await caches.open('event-planner-cache-v9');
+                // Try to fetch categories from cache - find the correct cache dynamically
+                const cacheNames = await caches.keys();
+                const apiCache = cacheNames.find(name => name.includes('api-cache') || name.includes('event-planner'));
+                const cache = apiCache ? await caches.open(apiCache) : null;
+                
+                if (!cache) {
+                    cachedStats.categories = 0;
+                    document.getElementById('categories-list').innerHTML =
+                        '<p class="no-events">No cached categories available.</p>';
+                    return;
+                }
+                
                 const response = await cache.match('/api/categories');
 
                 if (response) {

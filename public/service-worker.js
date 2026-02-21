@@ -1,7 +1,13 @@
 // Dynamic versioning based on build timestamp
 // IMPORTANT: Update BUILD_TIMESTAMP when deploying new versions to force cache update
-const BUILD_TIMESTAMP = '20260217'; // Update this when deploying new versions
-const APP_VERSION = '10.0.2';
+const BUILD_TIMESTAMP = '20260221'; // Update this when deploying new versions
+const APP_VERSION = '10.0.3';
+
+// Debug logging - only in development
+const isDebug = typeof self !== 'undefined' && self.location && self.location.hostname === 'localhost';
+const debugLog = (...args) => isDebug && console.log('[SW]', ...args);
+const debugWarn = (...args) => isDebug && console.warn('[SW]', ...args);
+const debugError = (...args) => console.error('[SW]', ...args); // Always log errors
 
 const CACHE_NAME = `event-planner-cache-v${BUILD_TIMESTAMP}`;
 const STATIC_CACHE = `event-planner-static-v${BUILD_TIMESTAMP}`;
@@ -25,14 +31,23 @@ const CACHE_LIMITS = {
   [APP_SHELL_CACHE]: 25
 };
 
-// Core static assets to cache immediately - only critical ones
+// Core static assets to cache immediately - critical for offline
 const urlsToCache = [
   '/offline.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/icons/icon-maskable-192x192.png',
-  '/icons/icon-maskable-512x512.png'
+  '/icons/icon-maskable-512x512.png',
+  '/icons/icon-96x96.png',
+  '/icons/icon-144x144.png',
+  '/icons/apple-touch-icon-180x180.png'
+];
+
+// Essential API endpoints to cache for offline access
+const ESSENTIAL_API_URLS = [
+  '/api/events',
+  '/api/categories'
 ];
 
 // Cache expiration times (in milliseconds) - Optimized for offline mode

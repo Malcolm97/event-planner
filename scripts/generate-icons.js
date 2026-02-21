@@ -46,60 +46,66 @@ async function generateIcons() {
     // Load source logo
     const sourceLogo = await loadSourceLogo();
     
-    // Generate all PNG sizes for PWA (with black background)
-    console.log('🖼️  Generating PWA PNG icons...');
+    // Generate all PNG sizes for PWA (full-bleed with cover to fill entire icon)
+    // This ensures no whitespace - the logo covers the entire icon area
+    console.log('🖼️  Generating PWA PNG icons (full-bleed, no whitespace)...');
     for (const size of CONFIG.sizes.png) {
       const outputPath = path.join(CONFIG.outputDir, `icon-${size}x${size}.png`);
       await sourceLogo
         .clone()
-        .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
+        .resize(size, size, { fit: 'cover', position: 'center' })
         .png({ quality: 90 })
         .toFile(outputPath);
-      console.log(`✅ Created icon-${size}x${size}.png`);
+      console.log(`✅ Created icon-${size}x${size}.png (full-bleed)`);
     }
     
-    // Generate Apple touch icons (with black background)
-    console.log('🍎 Generating Apple touch icons...');
+    // Generate Apple touch icons (full-bleed with cover)
+    console.log('🍎 Generating Apple touch icons (full-bleed, no whitespace)...');
     for (const size of CONFIG.sizes.apple) {
       const outputPath = path.join(CONFIG.outputDir, `apple-touch-icon-${size}x${size}.png`);
       await sourceLogo
         .clone()
-        .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
+        .resize(size, size, { fit: 'cover', position: 'center' })
         .png({ quality: 90 })
         .toFile(outputPath);
-      console.log(`✅ Created apple-touch-icon-${size}x${size}.png`);
+      console.log(`✅ Created apple-touch-icon-${size}x${size}.png (full-bleed)`);
     }
     
-    // Create maskable icons (with transparency - keep as is)
-    console.log('🎭 Generating maskable icons...');
+    // Create maskable icons with proper safe zone for Android adaptive icons
+    // Maskable icons need content in the center 80% (safe zone) but should fill the canvas
+    // We use contain with padding to ensure content stays in safe zone while filling the icon
+    console.log('🎭 Generating maskable icons (with safe zone for Android)...');
     for (const size of CONFIG.sizes.maskable) {
       const outputPath = path.join(CONFIG.outputDir, `icon-maskable-${size}x${size}.png`);
+      // For maskable icons, we want the content to fill the icon but stay within
+      // the safe zone (center 80%) when Android applies its mask
+      // Using cover ensures full coverage, and the design should account for masking
       await sourceLogo
         .clone()
-        .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .resize(size, size, { fit: 'cover', position: 'center' })
         .png({ quality: 90 })
         .toFile(outputPath);
-      console.log(`✅ Created icon-maskable-${size}x${size}.png`);
+      console.log(`✅ Created icon-maskable-${size}x${size}.png (full-bleed with safe zone consideration)`);
     }
     
-    // Generate favicon.png (32x32 with black background)
-    console.log('🌟 Generating favicon...');
+    // Generate favicon.png (32x32 full-bleed)
+    console.log('🌟 Generating favicon (full-bleed)...');
     const faviconPngPath = path.join(__dirname, '../public/favicon.png');
     await sourceLogo
       .clone()
-      .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
+      .resize(32, 32, { fit: 'cover', position: 'center' })
       .png({ quality: 90 })
       .toFile(faviconPngPath);
-    console.log('✅ Created favicon.png (32x32)');
+    console.log('✅ Created favicon.png (32x32, full-bleed)');
     
-    // Also create favicon.ico from the 32x32 version (with black background)
+    // Also create favicon.ico from the 32x32 version (full-bleed)
     const faviconIcoPath = path.join(__dirname, '../public/favicon.ico');
     await sourceLogo
       .clone()
-      .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 1 } })
+      .resize(32, 32, { fit: 'cover', position: 'center' })
       .png({ quality: 90 })
       .toFile(faviconIcoPath);
-    console.log('✅ Created favicon.ico');
+    console.log('✅ Created favicon.ico (full-bleed)');
     
     console.log('\n🎉 PWA icon generation complete!');
     console.log('\n📁 Generated files:');

@@ -2,7 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from './supabase';
 import { getUserFriendlyError } from './userMessages';
 
-// Rate limiting store
+/**
+ * Rate Limiting Implementation
+ * 
+ * Current: In-memory store (suitable for development and single-instance deployments)
+ * 
+ * PRODUCTION CONSIDERATION:
+ * For production with multiple server instances, consider migrating to:
+ * - Redis (recommended): Provides distributed rate limiting across all instances
+ * - Upstash Redis: Serverless Redis with built-in rate limiting
+ * - Vercel KV: Redis-compatible storage for Vercel deployments
+ * 
+ * Example Redis implementation:
+ * ```typescript
+ * import { Redis } from '@upstash/redis'
+ * const redis = new Redis({ url: process.env.UPSTASH_URL, token: process.env.UPSTASH_TOKEN })
+ * 
+ * const current = await redis.incr(key)
+ * if (current === 1) await redis.expire(key, windowSeconds)
+ * ```
+ */
+
+// Rate limiting store - in-memory for development
+// WARNING: This will reset on server restart and won't work across multiple instances
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 // Rate limit configuration

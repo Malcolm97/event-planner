@@ -75,7 +75,10 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    return NextResponse.json(data);
+    const response = NextResponse.json(data);
+    // Add caching headers for better performance
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return response;
   } catch (error: any) {
     console.error('Unexpected error fetching event:', error.message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

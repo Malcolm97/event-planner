@@ -29,9 +29,9 @@ const EventStatusBadge: React.FC<EventStatusBadgeProps> = ({ event }) => {
       return { label: 'Event Ended', color: 'bg-gray-500/90 text-white', icon: '📅' };
     }
 
-    // Check if event is currently happening
+    // Check if event is currently happening - don't show a special badge
     if (isEventCurrentlyHappening(event)) {
-      return { label: 'Happening Now!', color: 'bg-green-500/90 text-white animate-pulse', icon: '🔴' };
+      return null;
     }
 
     // Calculate days until event

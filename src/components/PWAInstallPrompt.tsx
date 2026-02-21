@@ -11,28 +11,68 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+interface DeviceInfo {
+  isIOS: boolean;
+  isAndroid: boolean;
+  isDesktop: boolean;
+  isIPad: boolean;
+  isStandalone: boolean;
+  isPWA: boolean;
+}
+
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>({
+    isIOS: false,
+    isAndroid: false,
+    isDesktop: false,
+    isIPad: false,
+    isStandalone: false,
+    isPWA: false
+  });
 
   useEffect(() => {
-    // Check if app is already installed
-    const checkStandalone = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isInWebAppiOS = (window.navigator as any).standalone === true;
-      setIsStandalone(isStandalone || isInWebAppiOS);
+    // Comprehensive device detection
+    const detectDevice = (): DeviceInfo => {
+      const userAgent = navigator.userAgent;
+      
+      // iOS detection (iPhone, iPad, iPod)
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      // iPad detection (includes iPadOS 13+ which reports as Mac)
+      const isIPad = /iPad/.test(userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 && !/iPhone/.test(userAgent));
+      
+      // Android detection
+      const isAndroid = /Android/.test(userAgent);
+      
+      // Desktop detection
+      const isDesktop = !isIOS && !isAndroid && !/Mobi|Android/i.test(userAgent);
+      
+      // Check if running as standalone PWA
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes('android-app://');
+      
+      // Check if it's a PWA (could also be in minimal-ui mode)
+      const isPWA = isStandalone || 
+        window.matchMedia('(display-mode: minimal-ui)').matches ||
+        window.matchMedia('(display-mode: window-controls-overlay)').matches;
+      
+      return {
+        isIOS,
+        isAndroid,
+        isDesktop,
+        isIPad,
+        isStandalone,
+        isPWA
+      };
     };
 
-    // Check if iOS device
-    const checkIOS = () => {
-      const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      setIsIOS(iOS);
-    };
-
-    checkStandalone();
-    checkIOS();
+    const info = detectDevice();
+    setDeviceInfo(info);
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -43,7 +83,8 @@ export default function PWAInstallPrompt() {
       const showPromptWithDelay = () => {
         // Check if user has been on the site for at least 30 seconds
         const timeOnSite = Date.now() - (window as any).pageLoadTime;
-        if (timeOnSite > 30000 && !isStandalone) {
+        const currentStandalone = detectDevice().isStandalone;
+        if (timeOnSite > 30000 && !currentStandalone) {
           // Check if user has scrolled or interacted with the page
           const hasInteracted = (window as any).userHasInteracted;
           if (hasInteracted) {
@@ -70,7 +111,7 @@ export default function PWAInstallPrompt() {
       console.log('PWA installed successfully!');
       setDeferredPrompt(null);
       setShowPrompt(false);
-      setIsStandalone(true);
+      setDeviceInfo(prev => ({ ...prev, isStandalone: true, isPWA: true }));
 
       // Register background sync for installed PWA
       registerBackgroundSyncForPWA();
@@ -85,7 +126,7 @@ export default function PWAInstallPrompt() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [isStandalone]);
+  }, [deviceInfo.isStandalone]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -144,12 +185,12 @@ export default function PWAInstallPrompt() {
   };
 
   // Don't show if already installed or dismissed recently
-  if (isStandalone || !showPrompt) {
+  if (deviceInfo.isStandalone || !showPrompt) {
     return null;
   }
 
   // iOS instructions with visual guide
-  if (isIOS) {
+  if (deviceInfo.isIOS) {
     return (
       <div className="fixed bottom-4 left-4 right-4 z-50 bg-white border border-gray-200 rounded-xl shadow-lg p-4 max-w-sm mx-auto">
         <div className="flex items-start space-x-3">
@@ -190,6 +231,52 @@ export default function PWAInstallPrompt() {
                 </svg>
                 <span>Look for the share icon in your browser</span>
               </div>
+            </div>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop prompt (Chrome/Edge)
+  if (deviceInfo.isDesktop && deferredPrompt) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 bg-white border border-gray-200 rounded-xl shadow-lg p-4 max-w-sm">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-900">Install PNG Events</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Install this app on your desktop for quick access and offline features
+            </p>
+            <div className="flex space-x-2 mt-3">
+              <button
+                onClick={handleInstallClick}
+                className="flex-1 bg-yellow-400 text-gray-900 text-sm font-medium py-2 px-4 rounded-md hover:bg-yellow-500 transition-colors"
+              >
+                Install
+              </button>
+              <button
+                onClick={handleDismiss}
+                className="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Not now
+              </button>
             </div>
           </div>
           <button

@@ -87,10 +87,14 @@ export async function GET(request: Request) {
     }
 
     // Return data with count for pagination
-    return NextResponse.json({
+    const response = NextResponse.json({
       data: data || [],
       count: count || 0
     });
+    
+    // Add caching headers for better performance
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    return response;
   } catch (error: any) {
     // Detailed error logging
     console.error('Unexpected error fetching creators:', {
