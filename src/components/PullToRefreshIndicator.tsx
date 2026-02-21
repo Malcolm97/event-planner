@@ -6,18 +6,21 @@ import { FiRefreshCw } from 'react-icons/fi';
 interface PullToRefreshIndicatorProps {
   isPulling: boolean;
   progress: number;
+  isRefreshing?: boolean;
 }
 
-const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = React.memo(({ isPulling, progress }) => {
+const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = React.memo(({ isPulling, progress, isRefreshing }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [announcement, setAnnouncement] = useState('');
 
   // Debounced visibility update to prevent excessive re-renders
   useEffect(() => {
-    if (isPulling) {
+    if (isPulling || isRefreshing) {
       setIsVisible(true);
       // Announce to screen readers with device-appropriate feedback
-      if (progress >= 1) {
+      if (isRefreshing) {
+        setAnnouncement('Refreshing...');
+      } else if (progress >= 1) {
         setAnnouncement('Release to refresh the page');
       } else {
         setAnnouncement('Pull down to refresh');
@@ -27,7 +30,7 @@ const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = React.memo
       const timer = setTimeout(() => setIsVisible(false), 200);
       return () => clearTimeout(timer);
     }
-  }, [isPulling, progress]);
+  }, [isPulling, progress, isRefreshing]);
 
   // Early return for performance
   if (!isVisible) return null;
@@ -36,8 +39,9 @@ const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = React.memo
   const devicePixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
   const isHighDPI = devicePixelRatio > 1;
 
-  const opacity = Math.min(progress * 2, 1); // Fade in as progress increases
-  const translateY = Math.min(progress * (isHighDPI ? 50 : 40), isHighDPI ? 50 : 40); // Move down up to 40-50px based on DPI
+  const displayProgress = isRefreshing ? 1 : progress;
+  const opacity = isRefreshing ? 1 : Math.min(displayProgress * 2, 1); // Fade in as progress increases
+  const translateY = isRefreshing ? (isHighDPI ? 50 : 40) : Math.min(displayProgress * (isHighDPI ? 50 : 40), isHighDPI ? 50 : 40); // Move down up to 40-50px based on DPI
 
   // Dynamic styling based on device capabilities
   const indicatorHeight = isHighDPI ? 'py-3' : 'py-2';
@@ -74,16 +78,16 @@ const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = React.memo
       >
         <FiRefreshCw
           size={iconSize}
-          className={`mr-2 transition-transform duration-200 ${progress >= 1 ? 'animate-spin' : ''}`}
+          className={`mr-2 transition-transform duration-200 ${progress >= 1 || isRefreshing ? 'animate-spin' : ''}`}
           style={{
-            transform: `rotate(${progress * 360}deg)`,
+            transform: `rotate(${displayProgress * 360}deg)`,
             // Ensure smooth rotation
             transformOrigin: 'center center',
           }}
           aria-hidden="true"
         />
         <span className={`${textSize} font-medium select-none`}>
-          {progress >= 1 ? 'Release to refresh' : 'Pull to refresh'}
+          {isRefreshing ? 'Refreshing...' : progress >= 1 ? 'Release to refresh' : 'Pull to refresh'}
         </span>
       </div>
     </>
