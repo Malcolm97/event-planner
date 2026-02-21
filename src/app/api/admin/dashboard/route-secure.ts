@@ -29,7 +29,7 @@ async function dashboardHandler(request: NextRequest) {
 
     // Recent users (last 7 days)
     supabase.from("profiles").select("*", { count: "exact", head: true })
-      .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      .gte("updated_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
 
     // Recent events (last 7 days)
     supabase.from("events").select("*", { count: "exact", head: true })
@@ -87,12 +87,12 @@ async function dashboardHandler(request: NextRequest) {
 
   const { data: monthlyUsers } = await supabase
     .from("profiles")
-    .select("created_at")
-    .gte("created_at", sixMonthsAgo.toISOString())
-    .order("created_at")
+    .select("updated_at")
+    .gte("updated_at", sixMonthsAgo.toISOString())
+    .order("updated_at")
 
   const monthlyStats = monthlyUsers?.reduce((acc: Record<string, number>, user: any) => {
-    const month = new Date(user.created_at).toLocaleDateString('en-US', {
+    const month = new Date(user.updated_at).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short'
     })

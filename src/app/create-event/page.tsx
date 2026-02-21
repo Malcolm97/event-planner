@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiArrowLeft, FiPlus, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileText, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileText, FiAlertCircle, FiCheck, FiExternalLink } from 'react-icons/fi';
 import Link from 'next/link';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -37,6 +37,14 @@ export default function CreateEventPage() {
   
   // Image state
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  
+  // External links state
+  const [externalLinks, setExternalLinks] = useState({
+    facebook: '',
+    instagram: '',
+    tiktok: '',
+    website: ''
+  });
   
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -181,6 +189,21 @@ export default function CreateEventPage() {
         }
       }
 
+      // Build external links object (only include non-empty values)
+      const externalLinksData: Record<string, string> = {};
+      if (externalLinks.facebook?.trim()) {
+        externalLinksData.facebook = externalLinks.facebook.trim();
+      }
+      if (externalLinks.instagram?.trim()) {
+        externalLinksData.instagram = externalLinks.instagram.trim();
+      }
+      if (externalLinks.tiktok?.trim()) {
+        externalLinksData.tiktok = externalLinks.tiktok.trim();
+      }
+      if (externalLinks.website?.trim()) {
+        externalLinksData.website = externalLinks.website.trim();
+      }
+
       const eventData = {
         name: name.trim(),
         description: description.trim(),
@@ -193,6 +216,7 @@ export default function CreateEventPage() {
         category,
         image_urls: imageUrls.length > 0 ? imageUrls : null,
         created_by: currentUser.id,
+        external_links: externalLinksData,
       };
 
       await queueOperation('create', TABLES.EVENTS, eventData);
@@ -494,6 +518,74 @@ export default function CreateEventPage() {
                     min="0"
                     step="0.01"
                     placeholder="0.00"
+                  />
+                </FormField>
+              </div>
+            </FormSection>
+
+            {/* External Links */}
+            <FormSection
+              title="External Event Links"
+              description="Add links to where this event is posted on social media"
+              icon={<FiExternalLink size={20} />}
+            >
+              <p className="text-sm text-gray-500 mb-4">
+                Link to your event posts on Facebook, Instagram, TikTok, or a website. Users can view your event on these platforms.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField 
+                  label="Facebook Event URL"
+                  hint="Link to your Facebook event page"
+                >
+                  <input
+                    type="url"
+                    id="externalFacebook"
+                    className="input-field"
+                    value={externalLinks.facebook}
+                    onChange={(e) => setExternalLinks(prev => ({ ...prev, facebook: e.target.value }))}
+                    placeholder="https://facebook.com/events/..."
+                  />
+                </FormField>
+
+                <FormField 
+                  label="Instagram Post URL"
+                  hint="Link to your Instagram event post"
+                >
+                  <input
+                    type="url"
+                    id="externalInstagram"
+                    className="input-field"
+                    value={externalLinks.instagram}
+                    onChange={(e) => setExternalLinks(prev => ({ ...prev, instagram: e.target.value }))}
+                    placeholder="https://instagram.com/p/..."
+                  />
+                </FormField>
+
+                <FormField 
+                  label="TikTok URL"
+                  hint="Link to your TikTok event video"
+                >
+                  <input
+                    type="url"
+                    id="externalTiktok"
+                    className="input-field"
+                    value={externalLinks.tiktok}
+                    onChange={(e) => setExternalLinks(prev => ({ ...prev, tiktok: e.target.value }))}
+                    placeholder="https://tiktok.com/@user/video/..."
+                  />
+                </FormField>
+
+                <FormField 
+                  label="Website URL"
+                  hint="Link to your event website or ticketing page"
+                >
+                  <input
+                    type="url"
+                    id="externalWebsite"
+                    className="input-field"
+                    value={externalLinks.website}
+                    onChange={(e) => setExternalLinks(prev => ({ ...prev, website: e.target.value }))}
+                    placeholder="https://your-event-website.com"
                   />
                 </FormField>
               </div>

@@ -128,6 +128,14 @@ export const TABLES = {
   USERS_BY_EMAIL: 'users_by_email'
 } as const
 
+// External links interface for events
+export interface ExternalLinks {
+  facebook?: string
+  instagram?: string
+  tiktok?: string
+  website?: string
+}
+
 // Event interface for Supabase
 export interface Event {
   id: string
@@ -142,7 +150,17 @@ export interface Event {
   created_at?: string
   featured?: boolean
   date: string
+  end_date?: string
   created_by?: string
+  external_links?: ExternalLinks
+}
+
+// Social links interface
+export interface SocialLinks {
+  facebook?: string
+  instagram?: string
+  tiktok?: string
+  twitter?: string
 }
 
 // User interface for Supabase
@@ -157,6 +175,8 @@ export interface User {
   contact_method?: 'email' | 'phone' | 'both' | 'none'
   whatsapp_number?: string
   contact_visibility?: boolean
+  social_links?: SocialLinks
+  show_social_links?: boolean
   updated_at?: string
 }
 

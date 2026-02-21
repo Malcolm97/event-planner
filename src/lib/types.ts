@@ -14,4 +14,10 @@ export interface EventItem {
   date: string;
   end_date?: string | null;
   created_by?: string;
+  external_links?: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    website?: string;
+  };
 }

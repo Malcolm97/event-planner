@@ -587,6 +587,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
               </div>
             </div>
           )}
+
         </div>
       </div>
 

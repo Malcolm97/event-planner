@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     const fields = searchParams.get('fields');
 
     // Only fetch public fields - no sensitive information
-    const publicFields = 'id, name, email, phone, company, about, photo_url, role, updated_at, created_at';
+    const publicFields = 'id, name, email, phone, company, about, photo_url, role, updated_at';
     const selectedFields = fields || publicFields;
 
     let query = supabase

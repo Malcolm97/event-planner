@@ -210,17 +210,28 @@ export function useOptimizedData<T>(
         let errorDetails = '';
         try {
           const errorData = await response.json();
-          // Include the actual error message from the server
-          if (errorData.error) {
+          // Prefer userMessage over technical error message for better UX
+          if (errorData.userMessage) {
+            errorMessage = errorData.userMessage;
+          } else if (errorData.error) {
             errorMessage = errorData.error;
-            // Include additional details if available
-            if (errorData.details || errorData.code) {
-              errorDetails = errorData.details || errorData.code;
-              console.error('API Error details:', { details: errorData.details, code: errorData.code });
+          }
+          // Only include details if they contain meaningful data (not empty objects)
+          const hasDetails = errorData.details && typeof errorData.details === 'object' && Object.keys(errorData.details).length > 0;
+          const hasCode = errorData.code;
+          if (hasDetails || hasCode) {
+            errorDetails = hasDetails ? JSON.stringify(errorData.details) : errorData.code;
+            // Only log in development for debugging
+            if (process.env.NODE_ENV === 'development') {
+              console.error('API Error:', {
+                type: errorData.type,
+                code: errorData.code,
+                details: errorData.details
+              });
             }
           }
         } catch (parseError) {
-          console.error('Failed to parse error response:', parseError);
+          // Silently handle parse errors - the HTTP status message is sufficient
         }
         // Create a more descriptive error
         const fullError = errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage;

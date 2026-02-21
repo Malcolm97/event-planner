@@ -145,7 +145,8 @@ export async function POST(request: Request) {
       presale_price,
       gate_price,
       category,
-      image_urls
+      image_urls,
+      external_links
     } = body;
 
     // Validate required fields
@@ -218,6 +219,7 @@ export async function POST(request: Request) {
       gate_price: gatePrice,
       category: sanitizedCategory,
       image_urls: validatedImageUrls,
+      external_links: external_links || null,
       created_by: user.id,
     };
 

@@ -210,11 +210,11 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
             </div>
 
             {/* Social Links */}
-            {creator.socialLinks && Object.keys(creator.socialLinks).length > 0 && (
+            {creator.show_social_links !== false && creator.social_links && Object.keys(creator.social_links).length > 0 && (
               <div className="flex gap-2">
-                {creator.socialLinks.facebook && (
+                {creator.social_links.facebook && (
                   <a
-                    href={creator.socialLinks.facebook}
+                    href={creator.social_links.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all duration-200 hover:scale-105"
@@ -226,9 +226,9 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                     </svg>
                   </a>
                 )}
-                {creator.socialLinks.instagram && (
+                {creator.social_links.instagram && (
                   <a
-                    href={creator.socialLinks.instagram}
+                    href={creator.social_links.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-9 h-9 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:scale-105 transition-all duration-200"
@@ -240,9 +240,23 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
                     </svg>
                   </a>
                 )}
-                {creator.socialLinks.twitter && (
+                {creator.social_links.tiktok && (
                   <a
-                    href={creator.socialLinks.twitter}
+                    href={creator.social_links.tiktok}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-black text-white flex items-center justify-center hover:bg-gray-800 hover:scale-105 transition-all duration-200"
+                    aria-label="TikTok"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                    </svg>
+                  </a>
+                )}
+                {creator.social_links.twitter && (
+                  <a
+                    href={creator.social_links.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-black hover:scale-105 transition-all duration-200"

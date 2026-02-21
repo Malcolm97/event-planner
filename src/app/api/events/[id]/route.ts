@@ -246,7 +246,8 @@ export async function PUT(
       presale_price,
       gate_price,
       category,
-      image_urls
+      image_urls,
+      external_links
     } = body;
 
     // Validate date format if provided
@@ -316,6 +317,7 @@ export async function PUT(
     if (gatePrice !== null) updateData.gate_price = gatePrice;
     if (category !== undefined) updateData.category = category ? category.trim() : null;
     if (validatedImageUrls !== undefined) updateData.image_urls = validatedImageUrls;
+    if (external_links !== undefined) updateData.external_links = external_links;
 
     // Update event in database
     const { data, error } = await supabaseAuth
