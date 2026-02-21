@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiMapPin, FiCalendar, FiClock, FiBookmark, FiImage, FiCopy, FiNavigation, FiCalendar as FiCalendarAdd, FiCheck } from 'react-icons/fi';
+import { FiMapPin, FiCalendar, FiClock, FiBookmark, FiImage, FiCopy, FiNavigation, FiCalendar as FiCalendarAdd, FiCheck, FiDownload } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getValidImageUrls, isEventPast, isEventCurrentlyHappening } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import { 
+  getGoogleCalendarUrl, 
+  downloadICSFile, 
+  getDirectionsUrl, 
+  isIOS 
+} from '@/lib/thirdPartyUtils';
 
 interface EventDetailsTabProps {
   event: EventItem;
@@ -198,41 +204,26 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
     }
   };
 
-  // Open directions in Google Maps
+  // Open directions in appropriate maps app (Apple Maps on iOS, Google Maps otherwise)
   const handleGetDirections = () => {
-    if (!event?.location && !event?.venue) return;
-
-    // Combine venue and location for more specific search
-    // e.g., "Stanley Hotel, Port Moresby" instead of just "Port Moresby"
-    const searchQuery = event.venue && event.location
-      ? `${event.venue}, ${event.location}`
-      : event.venue || event.location;
-
-    const encodedQuery = encodeURIComponent(searchQuery);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedQuery}`, '_blank');
+    const url = getDirectionsUrl(event?.venue, event?.location);
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
-  // Add to Calendar
+  // Add to Google Calendar
   const handleAddToCalendar = () => {
-    if (!event?.date) return;
-
-    const startDate = new Date(event.date);
-    const endDate = event.end_date ? new Date(event.end_date) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Default 2 hours
-
-    const formatDate = (date: Date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-    const googleCalendarUrl = new URL('https://calendar.google.com/calendar/render');
-    googleCalendarUrl.searchParams.set('action', 'TEMPLATE');
-    googleCalendarUrl.searchParams.set('text', event.name || 'Event');
-    googleCalendarUrl.searchParams.set('dates', `${formatDate(startDate)}/${formatDate(endDate)}`);
-    if (event.location) {
-      googleCalendarUrl.searchParams.set('location', event.location);
+    const url = getGoogleCalendarUrl(event);
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
-    if (event.description) {
-      googleCalendarUrl.searchParams.set('details', event.description);
-    }
+  };
 
-    window.open(googleCalendarUrl.toString(), '_blank');
+  // Download ICS file for Apple Calendar, Outlook, etc.
+  const handleDownloadCalendar = () => {
+    downloadICSFile(event);
+    toast.success('Calendar event downloaded!');
   };
 
   // Format date with relative time and end date

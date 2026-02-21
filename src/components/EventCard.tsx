@@ -1,12 +1,14 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiBookmark, FiTrash2, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiUsers, FiEye } from 'react-icons/fi';
-import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
+import { FaFacebook, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
+import { SiX } from 'react-icons/si';
 import { EventItem } from '@/lib/types';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage, isEventUpcomingOrActive } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { shareUrls, getEventShareText } from '@/lib/thirdPartyUtils';
 
 
 // Define category mappings directly in this component
@@ -62,13 +64,13 @@ function ShareButtons({ event }: { event: EventItem }) {
     }
   }, [event.id]);
 
-  const shareText = `Check out this event: ${event.name ?? ''} at ${event.location ?? ''} on ${event.date ? new Date(event.date).toLocaleDateString() : ''}.`;
+  const shareText = getEventShareText(event);
 
   const handleShare = async () => {
     if (isClient && navigator.share) {
       try {
         await navigator.share({
-          title: event.name ?? '',
+          title: event.name ?? 'Event',
           text: shareText,
           url: eventUrl,
         });
@@ -82,25 +84,25 @@ function ShareButtons({ event }: { event: EventItem }) {
 
   const shareOnFacebook = () => {
     if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`, '_blank');
+      window.open(shareUrls.facebook(eventUrl), '_blank', 'noopener,noreferrer');
     }
   };
 
-  const shareOnTwitter = () => {
+  const shareOnX = () => {
     if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`, '_blank');
+      window.open(shareUrls.twitter(shareText, eventUrl), '_blank', 'noopener,noreferrer');
     }
   };
 
   const shareOnLinkedIn = () => {
     if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(eventUrl)}&title=${encodeURIComponent(event.name ?? '')}&summary=${encodeURIComponent(shareText)}`, '_blank');
+      window.open(shareUrls.linkedin(eventUrl, event.name ?? 'Event', shareText), '_blank', 'noopener,noreferrer');
     }
   };
 
   const shareOnWhatsApp = () => {
     if (typeof window !== 'undefined' && eventUrl) {
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${eventUrl}`)}`, '_blank');
+      window.open(shareUrls.whatsapp(shareText, eventUrl), '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -122,8 +124,8 @@ function ShareButtons({ event }: { event: EventItem }) {
           <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
             <FaFacebook size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnTwitter(); }} className="p-2 rounded-lg hover:bg-sky-50 text-sky-500 transition-colors" aria-label="Share on Twitter">
-            <FaTwitter size={16} />
+          <button onClick={(e) => { e.stopPropagation(); shareOnX(); }} className="p-2 rounded-lg hover:bg-gray-100 text-gray-900 transition-colors" aria-label="Share on X">
+            <SiX size={16} />
           </button>
           <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
             <FaLinkedin size={16} />

@@ -1,7 +1,7 @@
 // Dynamic versioning based on build timestamp
 // IMPORTANT: Update BUILD_TIMESTAMP when deploying new versions to force cache update
 const BUILD_TIMESTAMP = '20260221'; // Update this when deploying new versions
-const APP_VERSION = '10.0.3';
+const APP_VERSION = '10.0.4';
 
 // Debug logging - only in development
 const isDebug = typeof self !== 'undefined' && self.location && self.location.hostname === 'localhost';
@@ -72,6 +72,14 @@ const OFFLINE_PAGES = [
   '/offline.html'
 ];
 
+// Static content pages that should be aggressively cached for offline
+const STATIC_PAGES = [
+  '/about',
+  '/terms',
+  '/privacy',
+  '/download'
+];
+
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
 
@@ -85,7 +93,8 @@ self.addEventListener('install', (event) => {
           console.log('Opened cache');
           return cache.addAll(urlsToCache.filter(url => !url.includes('**')));
         }),
-      cacheAppShell()
+      cacheAppShell(),
+      cacheStaticPages() // Cache static pages on install for offline access
     ])
     .catch((error) => {
       console.error('Cache installation failed:', error);
@@ -117,6 +126,36 @@ async function cacheAppShell() {
     }
   } catch (error) {
     console.error('App shell caching failed:', error);
+  }
+}
+
+// Cache static pages aggressively for offline access
+async function cacheStaticPages() {
+  console.log('Caching static pages for offline access...');
+  
+  const cache = await caches.open(PAGES_CACHE);
+  const now = Date.now();
+  
+  for (const url of STATIC_PAGES) {
+    try {
+      // Always try to fetch and cache static pages
+      const response = await fetch(url);
+      if (response.ok) {
+        const responseClone = response.clone();
+        const newResponse = new Response(responseClone.body, {
+          status: responseClone.status,
+          statusText: responseClone.statusText,
+          headers: {
+            ...Object.fromEntries(responseClone.headers.entries()),
+            'sw-cache-time': now.toString()
+          }
+        });
+        await cache.put(url, newResponse);
+        console.log(`Cached static page: ${url}`);
+      }
+    } catch (error) {
+      console.warn(`Failed to cache static page: ${url}`, error);
+    }
   }
 }
 
@@ -811,7 +850,10 @@ self.addEventListener('message', (event) => {
 
   if (event.data && event.data.type === 'TRIGGER_CACHE_UPDATE') {
     event.waitUntil(
-      cacheDataPeriodically(event.data.isPWA || false).then(() => {
+      Promise.all([
+        cacheDataPeriodically(event.data.isPWA || false),
+        cacheStaticPages() // Also refresh static pages
+      ]).then(() => {
         event.ports[0].postMessage({ success: true });
       }).catch((error) => {
         console.error('Cache update failed:', error);

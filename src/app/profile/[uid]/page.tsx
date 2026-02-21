@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES, Event, User } from '@/lib/supabase';
 import { FiArrowLeft, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageCircle } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import Image from 'next/image';
 import Link from 'next/link';
 import AppFooter from '@/components/AppFooter';
 import DashboardEventsSection from '@/components/DashboardEventsSection';
 import { isEventUpcomingOrActive } from '@/lib/utils';
 import { EventItem } from '@/lib/types';
+import { getWhatsAppUrl, sanitizeUrl } from '@/lib/thirdPartyUtils';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -200,12 +202,12 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
 
                   {user.whatsapp_number && (
                     <a
-                      href={`https://wa.me/${user.whatsapp_number.replace(/\D/g, '')}`}
+                      href={getWhatsAppUrl(user.whatsapp_number)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
                     >
-                      <FiMessageCircle size={18} className="text-green-600" />
+                      <FaWhatsapp size={18} className="text-green-600" />
                       <div>
                         <p className="text-xs text-green-600 font-medium uppercase tracking-wide">WhatsApp</p>
                         <p className="text-green-800 font-medium">{user.whatsapp_number}</p>

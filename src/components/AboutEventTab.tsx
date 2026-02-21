@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiInfo, FiExternalLink } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
+import { sanitizeUrl } from '@/lib/thirdPartyUtils';
 
 interface AboutEventTabProps {
   event: EventItem;
@@ -10,8 +11,16 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
   // Check if description exists and is not just whitespace
   const hasValidDescription = event?.description && typeof event.description === 'string' && event.description.trim().length > 0;
   
-  // Check if external links exist
-  const hasExternalLinks = event?.external_links && Object.keys(event.external_links).length > 0;
+  // Check if external links exist and validate them
+  const externalLinks = event?.external_links;
+  const validatedLinks = externalLinks ? {
+    facebook: sanitizeUrl(externalLinks.facebook),
+    instagram: sanitizeUrl(externalLinks.instagram),
+    tiktok: sanitizeUrl(externalLinks.tiktok),
+    website: sanitizeUrl(externalLinks.website),
+  } : null;
+  
+  const hasValidExternalLinks = validatedLinks && Object.values(validatedLinks).some(link => link !== null);
 
   return (
     <div className="space-y-3">
@@ -38,16 +47,16 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
       )}
 
       {/* External Links Section */}
-      {hasExternalLinks && (
+      {hasValidExternalLinks && (
         <div className="bg-gradient-to-br from-purple-50 via-white to-pink-50 rounded-xl p-3 border border-purple-200/60 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <FiExternalLink size={14} className="text-purple-500" />
             <h4 className="text-sm font-semibold text-gray-700">Event Links</h4>
           </div>
           <div className="flex flex-wrap gap-2">
-            {event.external_links!.facebook && (
+            {validatedLinks?.facebook && (
               <a
-                href={event.external_links!.facebook}
+                href={validatedLinks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-all duration-200 hover:scale-105"
@@ -58,9 +67,9 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
                 <span>Facebook</span>
               </a>
             )}
-            {event.external_links!.instagram && (
+            {validatedLinks?.instagram && (
               <a
-                href={event.external_links!.instagram}
+                href={validatedLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white text-xs font-medium hover:scale-105 transition-all duration-200"
@@ -71,9 +80,9 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
                 <span>Instagram</span>
               </a>
             )}
-            {event.external_links!.tiktok && (
+            {validatedLinks?.tiktok && (
               <a
-                href={event.external_links!.tiktok}
+                href={validatedLinks.tiktok}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black text-white text-xs font-medium hover:bg-gray-800 hover:scale-105 transition-all duration-200"
@@ -84,9 +93,9 @@ const AboutEventTab: React.FC<AboutEventTabProps> = ({ event }) => {
                 <span>TikTok</span>
               </a>
             )}
-            {event.external_links!.website && (
+            {validatedLinks?.website && (
               <a
-                href={event.external_links!.website}
+                href={validatedLinks.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-medium hover:bg-gray-800 hover:scale-105 transition-all duration-200"

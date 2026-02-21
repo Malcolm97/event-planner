@@ -18,15 +18,21 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             min-height: 100vh;
-            background: linear-gradient(to bottom right, #FCD34D, #EF4444, #DC2626);
+            background: linear-gradient(135deg, #FCD34D 0%, #F97316 50%, #DC2626 100%);
             color: #111827;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .header {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-bottom: 1px solid #E5E7EB;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .header-content {
@@ -34,6 +40,7 @@
             margin: 0 auto;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 1rem;
         }
 
@@ -44,222 +51,540 @@
         }
 
         .logo-box {
-            width: 2rem;
-            height: 2rem;
-            background: linear-gradient(to bottom right, #FCD34D, #EF4444);
-            border-radius: 0.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #FCD34D, #EF4444);
+            border-radius: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
             font-size: 0.875rem;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         }
 
         .logo-text {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #111827;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FCD34D, #EF4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .offline-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #92400E;
+            border: 1px solid rgba(217, 119, 6, 0.2);
+        }
+
+        .offline-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #EF4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
 
         .container {
             max-width: 64rem;
-            margin: 2rem auto;
-            padding: 2rem;
+            margin: 0 auto;
+            padding: 1.5rem;
         }
 
-        .offline-card {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .hero-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
-            margin: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);
         }
 
         h1 {
             font-size: 2rem;
-            font-weight: bold;
+            font-weight: 800;
             color: #111827;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
         }
 
-        p {
+        .subtitle {
             color: #6B7280;
-            margin-bottom: 1rem;
-            line-height: 1.5;
+            font-size: 1.125rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
         }
 
-        .features {
-            margin-top: 2rem;
-            text-align: left;
+        .last-updated {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #F3F4F6;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-bottom: 1.5rem;
         }
 
-        .feature {
-            margin-bottom: 1rem;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-
-        .feature:before {
-            content: "•";
-            position: absolute;
-            left: 0.5rem;
-            color: #FCD34D;
+        .last-updated svg {
+            width: 16px;
+            height: 16px;
         }
 
         .retry-button {
             display: inline-flex;
             align-items: center;
-            margin-top: 1.5rem;
-            padding: 0.75rem 1.5rem;
-            background-color: #FCD34D;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #FCD34D, #FBBF24);
             color: #111827;
-            font-weight: 600;
-            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 0.75rem;
             text-decoration: none;
-            transition: all 0.2s;
-            white-space: nowrap;
-            min-width: max-content;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+            border: none;
+            cursor: pointer;
         }
 
         .retry-button:hover {
-            background-color: #FBBF24;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
         }
 
-        .cached-events {
-            margin-top: 2rem;
-            text-align: left;
+        .retry-button:active {
+            transform: translateY(0);
         }
 
-        .section-title {
-            font-size: 1.25rem;
+        .retry-button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .retry-button .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .retry-button.loading .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Quick Links Section */
+        .quick-links {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .quick-links-title {
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #374151;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             margin-bottom: 1rem;
+        }
+
+        .quick-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .quick-link {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section-icon {
-            width: 1.25rem;
-            height: 1.25rem;
-            color: #FCD34D;
-        }
-
-        .event-item {
-            background: #F9FAFB;
-            border: 1px solid #E5E7EB;
-            border-radius: 0.5rem;
+            gap: 0.75rem;
             padding: 1rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s;
-        }
-
-        .event-item:hover {
-            background: #F3F4F6;
-            border-color: #D1D5DB;
-        }
-
-        .event-title {
+            background: linear-gradient(135deg, #F9FAFB, #F3F4F6);
+            border-radius: 0.75rem;
+            text-decoration: none;
+            color: #374151;
             font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .quick-link:hover {
+            background: linear-gradient(135deg, #FCD34D, #FBBF24);
             color: #111827;
-            margin-bottom: 0.5rem;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
         }
 
-        .event-meta {
-            font-size: 0.875rem;
-            color: #6B7280;
-            margin-bottom: 0.5rem;
+        .quick-link-icon {
+            font-size: 1.25rem;
         }
 
-        .event-description {
-            font-size: 0.875rem;
-            color: #4B5563;
-            margin-bottom: 0.5rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .event-category {
-            display: inline-block;
-            background: #FEF3C7;
-            color: #92400E;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-right: 0.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .event-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-            margin-top: 0.5rem;
-        }
-
-        .no-events {
-            text-align: center;
-            color: #6B7280;
-            font-style: italic;
-            margin-top: 1rem;
-            padding: 2rem;
-            background: #F9FAFB;
-            border-radius: 0.5rem;
-            border: 1px solid #E5E7EB;
-        }
-
-        .loading {
-            text-align: center;
-            color: #9CA3AF;
-            font-style: italic;
-            padding: 2rem;
-        }
-
+        /* Stats Section */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .stat-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #E5E7EB;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem;
+            border-radius: 1rem;
             text-align: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
         }
 
         .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #111827;
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FCD34D, #EF4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-label {
             font-size: 0.875rem;
             color: #6B7280;
+            font-weight: 500;
+            margin-top: 0.25rem;
         }
 
+        /* Events Section */
+        .events-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+        }
+
+        .event-item {
+            background: linear-gradient(135deg, #F9FAFB, #FFFFFF);
+            border: 1px solid #E5E7EB;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .event-item:hover {
+            border-color: #FCD34D;
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .event-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .event-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: #111827;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .event-category-badge {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            color: #92400E;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-left: 0.75rem;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .event-meta-item svg {
+            width: 16px;
+            height: 16px;
+            color: #9CA3AF;
+        }
+
+        .event-description {
+            font-size: 0.875rem;
+            color: #4B5563;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 0.75rem;
+            border-top: 1px solid #F3F4F6;
+        }
+
+        .event-price {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #059669;
+        }
+
+        .event-price.free {
+            color: #10B981;
+        }
+
+        .event-creator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .creator-avatar {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #E5E7EB, #D1D5DB);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6B7280;
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #F9FAFB, #F3F4F6);
+            border-radius: 1rem;
+            border: 2px dashed #E5E7EB;
+        }
+
+        .no-events-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-events-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-events-text {
+            color: #6B7280;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #9CA3AF;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E5E7EB;
+            border-top-color: #FCD34D;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Connection Status Toast */
+        .connection-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #111827;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .connection-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .connection-toast.online {
+            background: linear-gradient(135deg, #059669, #10B981);
+        }
+
+        /* Responsive */
         @media (max-width: 640px) {
             .container {
                 padding: 1rem;
+            }
+
+            .hero-card {
+                padding: 1.5rem;
             }
 
             h1 {
                 font-size: 1.5rem;
             }
 
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .quick-links-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
             .event-item {
-                padding: 0.75rem;
+                padding: 1rem;
+            }
+
+            .event-title {
+                font-size: 1rem;
+            }
+
+            .event-meta {
+                gap: 0.75rem;
+            }
+
+            .header-content {
+                padding: 0;
+            }
+
+            .offline-badge {
+                font-size: 0.75rem;
+                padding: 0.375rem 0.75rem;
             }
         }
+
+        /* Animation for cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
     </style>
 </head>
 <body>
@@ -269,54 +594,170 @@
                 <div class="logo-box">PNG</div>
                 <span class="logo-text">Events</span>
             </div>
+            <div class="offline-badge">Offline</div>
         </div>
     </header>
 
     <div class="container">
-        <div class="offline-card">
-            <h1>Unable to Connect</h1>
-            <p>PNG Events is temporarily unavailable. Some features may be limited while offline.</p>
-
-            <div class="features">
-                <div class="feature">Browse cached events and categories below</div>
-                <div class="feature">Create events (will sync when online)</div>
-                <div class="feature">View your dashboard (if logged in)</div>
-                <div class="feature">Connection quality indicators for mobile users</div>
+        <div class="hero-card animate-in">
+            <div class="hero-icon">📡</div>
+            <h1>You're Offline</h1>
+            <p class="subtitle">No internet connection detected. You can still view your saved events and cached pages below.</p>
+            <div class="last-updated" id="last-updated">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Checking cache...</span>
             </div>
+            <button class="retry-button" id="retry-button" onclick="retryConnection()">
+                <span class="spinner"></span>
+                <span>Try Again</span>
+            </button>
+        </div>
 
-            <a href="/" class="retry-button">Retry Connection</a>
-
-            <div class="stats" id="stats-section">
-                <!-- Stats will be populated by JavaScript -->
+        <!-- Quick Links to Cached Pages -->
+        <div class="quick-links animate-in delay-1">
+            <div class="quick-links-title">Available Offline</div>
+            <div class="quick-links-grid">
+                <a href="/about" class="quick-link">
+                    <span class="quick-link-icon">ℹ️</span>
+                    <span>About</span>
+                </a>
+                <a href="/terms" class="quick-link">
+                    <span class="quick-link-icon">📋</span>
+                    <span>Terms</span>
+                </a>
+                <a href="/privacy" class="quick-link">
+                    <span class="quick-link-icon">🔒</span>
+                    <span>Privacy</span>
+                </a>
+                <a href="/events" class="quick-link">
+                    <span class="quick-link-icon">📅</span>
+                    <span>Events</span>
+                </a>
             </div>
+        </div>
 
-            <div class="cached-events" id="cached-events">
+        <!-- Stats -->
+        <div class="stats animate-in delay-2" id="stats-section">
+            <div class="stat-card">
+                <div class="stat-number" id="events-count">-</div>
+                <div class="stat-label">Saved Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="cache-age">-</div>
+                <div class="stat-label">Cache Age</div>
+            </div>
+        </div>
+
+        <!-- Saved Events Section -->
+        <div class="events-section animate-in delay-3">
+            <div class="section-header">
                 <div class="section-title">
                     <span class="section-icon">📅</span>
                     Saved Events
                 </div>
-                <div id="events-list">
-                    <div class="loading">Loading cached events...</div>
-                </div>
-
-                <div class="section-title">
-                    <span class="section-icon">🏷️</span>
-                    Cached Categories
-                </div>
-                <div id="categories-list">
-                    <div class="loading">Loading cached categories...</div>
+            </div>
+            <div id="events-list">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading saved events...</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Connection Toast -->
+    <div class="connection-toast" id="connection-toast">
+        <span id="toast-icon">✓</span>
+        <span id="toast-message">Back online!</span>
+    </div>
+
     <script>
-        let cachedStats = { events: 0, categories: 0 };
+        let cachedData = {
+            events: [],
+            cacheTime: null
+        };
+
+        // Format relative time
+        function formatRelativeTime(timestamp) {
+            if (!timestamp) return 'Unknown';
+            
+            const now = Date.now();
+            const diff = now - timestamp;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            
+            return new Date(timestamp).toLocaleDateString();
+        }
+
+        // Format event date
+        function formatEventDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        // Format event time
+        function formatEventTime(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit'
+                });
+            } catch {
+                return '';
+            }
+        }
+
+        // Format price
+        function formatPrice(price) {
+            if (!price || price === '0' || price === 0) return 'Free';
+            if (typeof price === 'number') return `K${price.toFixed(2)}`;
+            if (price.toString().startsWith('K')) return price;
+            return `K${price}`;
+        }
+
+        // Update last updated display
+        function updateLastUpdated(timestamp) {
+            const el = document.getElementById('last-updated');
+            const span = el.querySelector('span');
+            
+            if (timestamp) {
+                span.textContent = `Data cached ${formatRelativeTime(timestamp)}`;
+                cachedData.cacheTime = timestamp;
+            } else {
+                span.textContent = 'No cached data available';
+            }
+        }
+
+        // Update stats display
+        function updateStats(eventsCount, cacheTime) {
+            document.getElementById('events-count').textContent = eventsCount || '0';
+            document.getElementById('cache-age').textContent = cacheTime ? formatRelativeTime(cacheTime) : '-';
+        }
 
         // Load cached data from IndexedDB
         async function loadCachedData() {
             try {
-                // Open IndexedDB
                 const db = await new Promise((resolve, reject) => {
                     const request = indexedDB.open('event-planner-db', 5);
                     request.onsuccess = () => resolve(request.result);
@@ -326,139 +767,202 @@
                 // Load cached events
                 await loadCachedEvents(db);
 
-                // Load cached categories
-                await loadCachedCategories();
-
-                // Update stats
-                updateStats();
-
             } catch (error) {
                 console.error('Failed to load cached data:', error);
-                document.getElementById('events-list').innerHTML =
-                    '<p class="no-events">Unable to load cached data. Please try refreshing the page.</p>';
+                document.getElementById('events-list').innerHTML = `
+                    <div class="no-events">
+                        <div class="no-events-icon">📭</div>
+                        <div class="no-events-title">Unable to Load Cache</div>
+                        <div class="no-events-text">Please try refreshing the page.</div>
+                    </div>
+                `;
             }
-        }
-
-        function updateStats() {
-            const statsSection = document.getElementById('stats-section');
-            statsSection.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${cachedStats.events}</div>
-                    <div class="stat-label">Saved Events</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${cachedStats.categories}</div>
-                    <div class="stat-label">Cached Categories</div>
-                </div>
-            `;
         }
 
         async function loadCachedEvents(db) {
             try {
                 const eventsList = document.getElementById('events-list');
 
-                // Get events from store
                 const transaction = db.transaction(['events'], 'readonly');
                 const store = transaction.objectStore('events');
                 const request = store.getAll();
 
-                const allEvents = await new Promise((resolve, reject) => {
-                    request.onsuccess = () => {
-                        const allItems = request.result;
-                        // Filter out metadata and return events
-                        const events = allItems.filter(item => item.id !== 'cache-meta');
-                        resolve(events);
-                    };
+                const allItems = await new Promise((resolve, reject) => {
+                    request.onsuccess = () => resolve(request.result);
                     request.onerror = () => reject(request.error);
                 });
 
-                cachedStats.events = allEvents.length;
-                const events = allEvents.slice(0, 10); // Show max 10
+                // Get cache metadata
+                const meta = allItems.find(item => item.id === 'cache-meta');
+                const cacheTime = meta?.timestamp || null;
+                
+                // Filter and sort events
+                const events = allItems
+                    .filter(item => item.id !== 'cache-meta' && item.id && (item.name || item.title))
+                    .sort((a, b) => {
+                        // Sort by date (upcoming first)
+                        const dateA = a.date || a.start_date ? new Date(a.date || a.start_date).getTime() : Infinity;
+                        const dateB = b.date || b.start_date ? new Date(b.date || b.start_date).getTime() : Infinity;
+                        return dateA - dateB;
+                    });
+
+                cachedData.events = events;
+                
+                // Update UI
+                updateLastUpdated(cacheTime);
+                updateStats(events.length, cacheTime);
 
                 if (events.length === 0) {
-                    eventsList.innerHTML = '<p class="no-events">No saved events available. Connect to the internet to load events.</p>';
+                    eventsList.innerHTML = `
+                        <div class="no-events">
+                            <div class="no-events-icon">📭</div>
+                            <div class="no-events-title">No Saved Events</div>
+                            <div class="no-events-text">Events you view will be saved here for offline access. Connect to the internet to browse events.</div>
+                        </div>
+                    `;
                     return;
                 }
 
-                // Display events
-                const eventsHtml = events.map(event => `
-                    <div class="event-item">
-                        <div class="event-title">${event.title || 'Untitled Event'}</div>
-                        <div class="event-meta">
-                            ${event.location ? `📍 ${event.location}` : ''}
-                            ${event.date ? `📅 ${new Date(event.date).toLocaleDateString()}` : ''}
-                            ${event.price ? `💰 ${event.price}` : ''}
+                // Display events with rich details
+                const eventsHtml = events.map(event => {
+                    const title = event.title || event.name || 'Untitled Event';
+                    const location = event.location || '';
+                    const date = event.date || event.start_date;
+                    const description = event.description || '';
+                    const category = event.category_name || event.category || '';
+                    const price = event.price || event.ticket_price;
+                    const creator = event.creator_name || event.creator?.name || '';
+                    const creatorInitial = creator ? creator.charAt(0).toUpperCase() : '?';
+                    
+                    return `
+                        <div class="event-item" onclick="window.location.href='/events/${event.id}'">
+                            <div class="event-header">
+                                <div class="event-title">${escapeHtml(title)}</div>
+                                ${category ? `<div class="event-category-badge">${escapeHtml(category)}</div>` : ''}
+                            </div>
+                            <div class="event-meta">
+                                ${date ? `
+                                    <div class="event-meta-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        ${formatEventDate(date)}
+                                    </div>
+                                ` : ''}
+                                ${location ? `
+                                    <div class="event-meta-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        ${escapeHtml(location.split(',')[0])}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            ${description ? `<div class="event-description">${escapeHtml(description)}</div>` : ''}
+                            <div class="event-footer">
+                                <div class="event-price ${!price || price === '0' || price === 0 ? 'free' : ''}">
+                                    ${formatPrice(price)}
+                                </div>
+                                ${creator ? `
+                                    <div class="event-creator">
+                                        <div class="creator-avatar">${creatorInitial}</div>
+                                        <span>${escapeHtml(creator)}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
-                        ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
-                        <div class="event-tags">
-                            ${event.category ? `<span class="event-category">${event.category}</span>` : ''}
-                            ${event.tags ? event.tags.map(tag => `<span class="event-category">${tag}</span>`).join('') : ''}
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 eventsList.innerHTML = eventsHtml;
 
             } catch (error) {
                 console.error('Failed to load cached events:', error);
-                document.getElementById('events-list').innerHTML =
-                    '<p class="no-events">Unable to load saved events. Please try refreshing the page.</p>';
+                document.getElementById('events-list').innerHTML = `
+                    <div class="no-events">
+                        <div class="no-events-icon">⚠️</div>
+                        <div class="no-events-title">Error Loading Events</div>
+                        <div class="no-events-text">Unable to load saved events. Please try refreshing.</div>
+                    </div>
+                `;
             }
         }
 
-        async function loadCachedCategories() {
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Retry connection
+        async function retryConnection() {
+            const button = document.getElementById('retry-button');
+            button.classList.add('loading');
+            
             try {
-                // Try to fetch categories from cache - find the correct cache dynamically
-                const cacheNames = await caches.keys();
-                const apiCache = cacheNames.find(name => name.includes('api-cache') || name.includes('event-planner'));
-                const cache = apiCache ? await caches.open(apiCache) : null;
+                // Try to fetch the homepage
+                const response = await fetch('/', { 
+                    method: 'HEAD',
+                    cache: 'no-store'
+                });
                 
-                if (!cache) {
-                    cachedStats.categories = 0;
-                    document.getElementById('categories-list').innerHTML =
-                        '<p class="no-events">No cached categories available.</p>';
-                    return;
-                }
-                
-                const response = await cache.match('/api/categories');
-
-                if (response) {
-                    const categories = await response.json();
-                    cachedStats.categories = categories ? categories.length : 0;
-                    const categoriesList = document.getElementById('categories-list');
-
-                    if (categories && categories.length > 0) {
-                        const displayCategories = categories.slice(0, 6);
-                        const categoriesHtml = displayCategories.map(category => `
-                            <div class="event-item">
-                                <div class="event-title">${category.name || 'Category'}</div>
-                                <div class="event-meta">
-                                    ${category.description ? category.description.substring(0, 80) + (category.description.length > 80 ? '...' : '') : 'Event category'}
-                                </div>
-                                <div class="event-tags">
-                                    ${category.color ? `<span class="event-category" style="background-color: ${category.color}20; color: ${category.color};">${category.name}</span>` : ''}
-                                </div>
-                            </div>
-                        `).join('');
-
-                        categoriesList.innerHTML = categoriesHtml;
-                    } else {
-                        categoriesList.innerHTML = '<p class="no-events">No cached categories available.</p>';
-                    }
+                if (response.ok) {
+                    // We're online!
+                    showToast('Back online!', true);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
-                    cachedStats.categories = 0;
-                    document.getElementById('categories-list').innerHTML =
-                        '<p class="no-events">No cached categories available.</p>';
+                    showToast('Still offline', false);
                 }
             } catch (error) {
-                console.error('Failed to load cached categories:', error);
-                cachedStats.categories = 0;
-                document.getElementById('categories-list').innerHTML =
-                    '<p class="no-events">Unable to load cached categories.</p>';
+                showToast('Still offline', false);
+            } finally {
+                button.classList.remove('loading');
             }
         }
 
-        // Load all cached data when page loads
+        // Show toast notification
+        function showToast(message, isOnline) {
+            const toast = document.getElementById('connection-toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+            
+            msg.textContent = message;
+            icon.textContent = isOnline ? '✓' : '✕';
+            toast.classList.toggle('online', isOnline);
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            showToast('Back online!', true);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        });
+
+        window.addEventListener('offline', () => {
+            showToast('Connection lost', false);
+        });
+
+        // Check if pages are cached
+        async function checkCachedPages() {
+            const pages = ['/about', '/terms', '/privacy', '/events'];
+            const cache = await caches.open('event-planner-pages-v20260221');
+            
+            // We could update the quick links to show which are actually cached
+            // For now, we assume they're cached by the service worker
+        }
+
+        // Initialize
         loadCachedData();
     </script>
 </body>

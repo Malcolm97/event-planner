@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiUser, FiBriefcase, FiMail, FiPhone, FiExternalLink, FiMessageCircle } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import Image from 'next/image';
 import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,6 +8,7 @@ import { EventItem } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { storeSigninRedirect, ModalState } from '@/lib/utils';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { getWhatsAppUrl, getEventInquiryMessage } from '@/lib/thirdPartyUtils';
 
 interface HostDetailsTabProps {
   event: EventItem;
@@ -100,15 +102,15 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
 
                   {host.whatsapp_number && (
                     <a
-                      href={`https://wa.me/${host.whatsapp_number.replace(/\D/g, '')}`}
+                      href={getWhatsAppUrl(host.whatsapp_number, getEventInquiryMessage(event.name || 'your event'))}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 rounded-lg bg-green-50 border border-green-200/60"
+                      className="flex items-center gap-2 p-2 rounded-lg bg-green-50 border border-green-200/60 hover:bg-green-100 transition-colors"
                     >
                       <div className="w-6 h-6 rounded bg-green-100 flex items-center justify-center">
-                        <FiMessageCircle size={12} className="text-green-600" />
+                        <FaWhatsapp size={14} className="text-green-600" />
                       </div>
-                      <span className="text-green-700 text-xs truncate">{host.whatsapp_number}</span>
+                      <span className="text-green-700 text-xs truncate">WhatsApp</span>
                     </a>
                   )}
 

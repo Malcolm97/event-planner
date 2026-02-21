@@ -6,10 +6,12 @@ import {
   FiUser, FiBriefcase, FiMail, FiPhone, 
   FiExternalLink, FiCalendar, FiChevronRight, FiX
 } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { storeSigninRedirect, isEventUpcomingOrActive } from '@/lib/utils';
+import { sanitizeUrl, getWhatsAppUrl } from '@/lib/thirdPartyUtils';
 
 // Base64 encoded SVG for a default user avatar
 const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIjk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
