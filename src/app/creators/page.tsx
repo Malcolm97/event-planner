@@ -195,17 +195,17 @@ export default function CreatorsPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
               {filteredCreators.map((creator) => (
                 <div
                   key={creator.id}
                   onClick={() => handleCreatorClick(creator)}
-                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-yellow-400 group p-5 sm:p-6 transform hover:scale-[1.02]"
+                  className="bg-white rounded-2xl lg:rounded-3xl shadow-md hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-yellow-400 group p-5 sm:p-6 lg:p-7 xl:p-8 transform hover:scale-[1.02] lg:hover:scale-[1.03]"
                 >
                   <div className="text-center">
                     {/* Profile Picture with Status Indicator */}
-                    <div className="relative inline-block mb-4">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center mx-auto overflow-hidden shadow-md border-4 border-white">
+                    <div className="relative inline-block mb-4 lg:mb-5">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-xl lg:rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center mx-auto overflow-hidden shadow-md lg:shadow-lg border-4 border-white">
                         {creator.photo_url ? (
                           <Image
                             src={creator.photo_url}
@@ -231,27 +231,27 @@ export default function CreatorsPage() {
                     </div>
 
                     {/* Name */}
-                    <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-yellow-600 transition-colors">
+                    <h3 className="font-bold text-gray-900 text-base sm:text-lg lg:text-xl mb-2 group-hover:text-yellow-600 transition-colors">
                       {creator.name || 'Unnamed Creator'}
                     </h3>
 
                     {/* Company */}
                     {creator.company && (
-                      <p className="text-gray-500 text-sm mb-2 truncate px-2">
+                      <p className="text-gray-500 text-sm lg:text-base mb-2 truncate px-2">
                         {creator.company}
                       </p>
                     )}
 
                     {/* Bio */}
                     {creator.about && (
-                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-3">
+                      <p className="text-gray-600 text-sm lg:text-base leading-relaxed line-clamp-2 mb-3">
                         {creator.about}
                       </p>
                     )}
 
                     {/* Event Preview Thumbnail */}
                     {creator.latestEvent && creator.latestEvent.image_url && (
-                      <div className="relative h-24 w-full rounded-lg overflow-hidden mb-3 shadow-sm">
+                      <div className="relative h-24 lg:h-28 w-full rounded-lg overflow-hidden mb-3 shadow-sm">
                         <Image
                           src={creator.latestEvent.image_url}
                           alt={creator.latestEvent.name || 'Event'}

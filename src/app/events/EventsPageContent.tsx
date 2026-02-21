@@ -138,12 +138,12 @@ export default function EventsPageContent() {
   return (
     <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
       {/* Hero section */}
-      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-display-lg text-white mb-4 sm:mb-6 tracking-tight">
+      <section className="w-full py-12 sm:py-16 lg:py-24 xl:py-32 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
+        <div className="max-w-5xl mx-auto lg:max-w-7xl xl:max-w-[1400px] text-center">
+          <h1 className="text-display-lg lg:text-5xl xl:text-6xl text-white mb-4 sm:mb-6 lg:mb-8 tracking-tight">
             Events by Location
           </h1>
-          <p className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl lg:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
             Find events happening in your area. Filter by location to discover what's happening near you.
           </p>
         </div>
@@ -224,16 +224,16 @@ export default function EventsPageContent() {
 
       {/* Events grid */}
       {!loading && upcomingEvents.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto lg:max-w-[1400px] xl:max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
           {/* Events Section - currently happening events */}
           {sortedHappeningNow.length > 0 && (
-            <div className="mb-12">
-              <div className="text-center mb-6">
-                <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                  <span className="text-2xl">🎉</span> Events
+            <div className="mb-12 lg:mb-16">
+              <div className="text-center mb-6 lg:mb-8">
+                <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
+                  <span className="text-2xl lg:text-3xl">🎉</span> Events
                 </h3>
               </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
                 {sortedHappeningNow.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -244,12 +244,12 @@ export default function EventsPageContent() {
           {/* Upcoming Events Section - only show if there are upcoming events */}
           {sortedUpcoming.length > 0 && (
             <div>
-              <div className="text-center mb-6">
-                <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                  <span className="text-2xl">📅</span> Upcoming Events
+              <div className="text-center mb-6 lg:mb-8">
+                <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
+                  <span className="text-2xl lg:text-3xl">📅</span> Upcoming Events
                 </h3>
               </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
                 {sortedUpcoming.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -261,13 +261,13 @@ export default function EventsPageContent() {
 
       {/* Previous Events */}
       {previousEvents.length > 0 && (
-        <section className="py-12 bg-gray-50 border-t border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-heading-2xl text-gray-900 mb-3">Previous Events</h2>
-              <p className="text-gray-600">Browse events that have already taken place.</p>
+        <section className="py-12 lg:py-20 bg-gray-50 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto lg:max-w-[1400px] xl:max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-12">
+            <div className="text-center mb-10 lg:mb-12">
+              <h2 className="text-heading-2xl lg:text-3xl text-gray-900 mb-3">Previous Events</h2>
+              <p className="text-gray-600 lg:text-lg">Browse events that have already taken place.</p>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-6 md:gap-8 animate-fade-in">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
               {previousEvents.map((event: EventItem) => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}

@@ -385,7 +385,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
   return (
     <article
       data-event-id={event.id}
-      className="group relative bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full border border-gray-100/50"
+      className="group relative bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.2)] overflow-hidden h-full border border-gray-100/50"
       tabIndex={0}
       role="button"
       aria-label={`View details for ${event.name} event`}
@@ -404,7 +404,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       }}
     >
       {/* Hero Image Area */}
-      <div className="relative h-36 sm:h-44 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+      <div className="relative h-36 sm:h-44 md:h-48 lg:h-60 xl:h-64 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {imageSrc && (typeof imageSrc === 'string') ? (
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
             <img
@@ -485,9 +485,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       </div>
 
       {/* Content Area */}
-      <div className="p-4 sm:p-5">
+      <div className="p-4 sm:p-5 lg:p-6 xl:p-7">
         {/* Event Title */}
-        <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
+        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
           {event.name}
         </h3>
 

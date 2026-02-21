@@ -328,15 +328,18 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       )}
 
       {/* Modern Hero Section */}
-      <section className="relative w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 overflow-hidden">
+      <section className="relative w-full py-12 sm:py-16 lg:py-24 xl:py-32 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 overflow-hidden">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-xl"></div>
           <div className="absolute top-40 right-32 w-24 h-24 bg-white rounded-full blur-lg"></div>
           <div className="absolute bottom-32 left-1/3 w-28 h-28 bg-white rounded-full blur-xl"></div>
+          {/* Additional desktop decorative elements */}
+          <div className="hidden lg:block absolute top-10 right-1/4 w-40 h-40 bg-white rounded-full blur-2xl"></div>
+          <div className="hidden lg:block absolute bottom-20 right-20 w-36 h-36 bg-white rounded-full blur-xl"></div>
         </div>
 
-        <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center gap-8 sm:gap-10">
+        <div className="relative max-w-6xl mx-auto lg:max-w-7xl xl:max-w-[1400px] flex flex-col items-center text-center gap-8 sm:gap-10 lg:gap-12">
           <div className="animate-bounce-in">
           <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
             PNG Events
@@ -346,20 +349,20 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           </p>
           </div>
 
-          {/* Search and Filter Controls - Mobile Optimized */}
-          <div className="w-full max-w-4xl animate-slide-up-fade">
-            <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/30">
-              <div className="flex flex-col gap-4">
+          {/* Search and Filter Controls - Desktop Enhanced */}
+          <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl animate-slide-up-fade">
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl lg:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 shadow-2xl border border-white/30">
+              <div className="flex flex-col gap-4 lg:gap-6">
                 <div className="w-full">
                   <input
-                    className="w-full px-4 py-4 text-base border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-200 placeholder-gray-500 shadow-sm"
+                    className="w-full px-4 py-4 lg:px-6 lg:py-5 text-base lg:text-lg border border-gray-200 rounded-xl lg:rounded-2xl bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-200 placeholder-gray-500 shadow-sm"
                     placeholder="🔍 Search events, locations, or venues..."
                     aria-label="Search events, locations, or venues"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
                   <CustomSelect
                     options={displayedLocations.map(location => ({ value: location, label: location }))}
                     value={selectedLocationFilter}
@@ -377,7 +380,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   <Button
                     size="md"
                     aria-label="Find Events"
-                    className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                    className="w-full sm:w-auto lg:px-8 lg:py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0"
                   >
                     Find Events ✨
                   </Button>
@@ -386,38 +389,38 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             </div>
           </div>
 
-          {/* Stats Cards - Modern Design */}
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-lg animate-slide-up-fade" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 text-center rounded-xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm">
+          {/* Stats Cards - Desktop Enhanced */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full max-w-lg lg:max-w-3xl xl:max-w-4xl animate-slide-up-fade" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 lg:p-8 text-center rounded-xl lg:rounded-2xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
+              <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-1 lg:mb-2 drop-shadow-sm">
                 {totalEvents !== null ? totalEvents : '...'}
               </div>
-              <div className="text-xs sm:text-sm text-orange-100 font-medium">Total Events</div>
+              <div className="text-xs sm:text-sm lg:text-base text-orange-100 font-medium">Total Events</div>
             </div>
-            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 text-center rounded-xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm">
+            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 lg:p-8 text-center rounded-xl lg:rounded-2xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
+              <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-1 lg:mb-2 drop-shadow-sm">
                 {totalUsers !== null ? totalUsers : '...'}
               </div>
-              <div className="text-xs sm:text-sm text-orange-100 font-medium">Total Users</div>
+              <div className="text-xs sm:text-sm lg:text-base text-orange-100 font-medium">Total Users</div>
             </div>
-            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 text-center rounded-xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-sm">
+            <div className="bg-white/20 backdrop-blur-md p-4 sm:p-6 lg:p-8 text-center rounded-xl lg:rounded-2xl border border-white/30 transform hover:scale-105 transition-all duration-200 hover:bg-white/30">
+              <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-1 lg:mb-2 drop-shadow-sm">
                 {citiesCoveredCount !== null ? citiesCoveredCount : '...'}
               </div>
-              <div className="text-xs sm:text-sm text-orange-100 font-medium">Cities Covered</div>
+              <div className="text-xs sm:text-sm lg:text-base text-orange-100 font-medium">Cities Covered</div>
             </div>
           </div>
         </div>
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="w-full section-padding bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
-              <span className="text-2xl">📅</span> Upcoming Events
+      <section className="w-full section-padding bg-white lg:py-20 lg:px-12">
+        <div className="max-w-7xl mx-auto lg:max-w-[1400px]">
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="text-heading-2xl lg:text-4xl xl:text-5xl flex items-center justify-center gap-4 mb-6">
+              <span className="text-2xl lg:text-3xl">📅</span> Upcoming Events
             </h2>
-            <p className="text-body-md text-gray-600 max-w-3xl mx-auto">Discover all upcoming events happening near you.</p>
+            <p className="text-body-md lg:text-lg text-gray-600 max-w-3xl mx-auto">Discover all upcoming events happening near you.</p>
           </div>
 
           {loading ? (
@@ -436,14 +439,14 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                 <>
                   {/* Events Section - currently happening events */}
                   {sortedHappeningNow.length > 0 && (
-                    <div className="mb-12">
-                      <div className="text-center mb-6">
-                        <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                          <span className="text-2xl">🎉</span> Events
+                    <div className="mb-12 lg:mb-16">
+                      <div className="text-center mb-6 lg:mb-8">
+                        <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
+                          <span className="text-2xl lg:text-3xl">🎉</span> Events
                         </h3>
                       </div>
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
-                        {sortedHappeningNow.slice(0, 4).map(event => (
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+                        {sortedHappeningNow.slice(0, 6).map(event => (
                           <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                         ))}
                       </div>
@@ -453,13 +456,13 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   {/* Upcoming Events Section - only show if there are upcoming events */}
                   {sortedUpcoming.length > 0 && (
                     <div>
-                      <div className="text-center mb-6">
-                        <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                          <span className="text-2xl">📅</span> Upcoming Events
+                      <div className="text-center mb-6 lg:mb-8">
+                        <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
+                          <span className="text-2xl lg:text-3xl">📅</span> Upcoming Events
                         </h3>
                       </div>
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
-                        {sortedUpcoming.slice(0, 4).map(event => (
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+                        {sortedUpcoming.slice(0, 6).map(event => (
                           <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                         ))}
                       </div>
@@ -504,11 +507,11 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         </div>
       </section>
 
-      <section className="w-full section-padding bg-white border-t border-gray-200">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h3 className="text-heading-xl mb-4">Explore by Category</h3>
-            <p className="text-body-sm text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>
+      <section className="w-full section-padding bg-white border-t border-gray-200 lg:py-20 lg:px-12">
+        <div className="max-w-6xl mx-auto lg:max-w-[1400px]">
+          <div className="text-center mb-12 lg:mb-16">
+            <h3 className="text-heading-xl lg:text-3xl xl:text-4xl mb-4 lg:mb-6">Explore by Category</h3>
+            <p className="text-body-sm lg:text-lg text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
           <ProgressiveLoader priority="low" delay={200}>
             <CategoryGrid events={events} />

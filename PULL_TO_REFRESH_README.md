@@ -1,4 +1,4 @@
-# Pull-to-Refresh Feature
+ Pull-to-Refresh Feature
 
 This document describes the pull-to-refresh feature implemented for the PNG Events PWA.
 

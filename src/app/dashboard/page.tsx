@@ -167,8 +167,8 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-5">
+        <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-6">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
               <div className="flex items-center gap-2 mt-1">
@@ -218,7 +218,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5">
+      <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12 py-3 sm:py-4 lg:py-8">
         {/* Last updated indicator */}
         {lastUpdated && (
           <motion.div
@@ -243,7 +243,7 @@ export default function DashboardPage() {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 mt-3 sm:mt-4 lg:mt-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-8 mt-3 sm:mt-4 lg:mt-8">
           {/* Left Column - Profile & Actions */}
           <div className="lg:col-span-1 space-y-4 sm:space-y-6">
             {/* Profile Section */}

@@ -659,6 +659,169 @@
     }
   }
 
+  /* Desktop-specific enhancements (lg and xl breakpoints) */
+  @media (min-width: 1024px) {
+    /* Desktop container widths */
+    .desktop-container {
+      @apply max-w-7xl mx-auto;
+    }
+
+    .desktop-container-wide {
+      @apply max-w-[1400px] mx-auto;
+    }
+
+    .desktop-container-ultra {
+      @apply max-w-[1600px] mx-auto;
+    }
+
+    /* Enhanced section padding for desktop */
+    .section-padding-desktop {
+      @apply py-20 px-12;
+    }
+
+    /* Desktop card enhancements */
+    .desktop-card-hover {
+      @apply transition-all duration-300;
+    }
+
+    .desktop-card-hover:hover {
+      @apply -translate-y-2 shadow-2xl;
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Desktop grid layouts */
+    .desktop-grid-5 {
+      @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5;
+    }
+
+    .desktop-grid-events {
+      @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6;
+    }
+
+    /* Desktop hero enhancements */
+    .desktop-hero {
+      @apply py-24 lg:py-32;
+    }
+
+    /* Desktop stats cards */
+    .desktop-stats-card {
+      @apply p-8 lg:p-10;
+    }
+
+    /* Desktop search container */
+    .desktop-search-container {
+      @apply p-8 lg:p-10;
+    }
+
+    /* Desktop navigation spacing */
+    .desktop-nav-spacing {
+      @apply space-x-8 lg:space-x-10;
+    }
+
+    /* Desktop header height */
+    .desktop-header-height {
+      @apply h-20;
+    }
+
+    /* Desktop event card image */
+    .desktop-event-image {
+      @apply h-56 lg:h-64;
+    }
+
+    /* Desktop content padding */
+    .desktop-content-padding {
+      @apply p-6 lg:p-8;
+    }
+
+    /* Desktop category card */
+    .desktop-category-card {
+      @apply px-8 py-10 min-h-[180px];
+    }
+
+    /* Desktop typography enhancements */
+    .desktop-heading-hero {
+      @apply text-5xl lg:text-6xl xl:text-7xl;
+    }
+
+    .desktop-heading-section {
+      @apply text-3xl lg:text-4xl;
+    }
+
+    .desktop-body-large {
+      @apply text-lg lg:text-xl;
+    }
+
+    /* Desktop button enhancements */
+    .desktop-button {
+      @apply px-8 py-4 text-base lg:text-lg;
+    }
+
+    /* Desktop input enhancements */
+    .desktop-input {
+      @apply px-6 py-4 text-base lg:text-lg;
+    }
+
+    /* Desktop modal enhancements */
+    .desktop-modal {
+      @apply max-w-4xl lg:max-w-5xl;
+    }
+
+    /* Desktop sidebar width */
+    .desktop-sidebar {
+      @apply w-80 lg:w-96;
+    }
+
+    /* Desktop main content area */
+    .desktop-main-content {
+      @apply flex-1 min-w-0;
+    }
+
+    /* Desktop gap spacing */
+    .desktop-gap {
+      @apply gap-8 lg:gap-10;
+    }
+
+    /* Desktop margin */
+    .desktop-margin-section {
+      @apply mb-16 lg:mb-20;
+    }
+
+    /* Enhanced focus states for desktop */
+    .desktop-focus-ring:focus {
+      @apply ring-4 ring-yellow-400/30;
+      outline: none;
+    }
+
+    /* Desktop shadow enhancements */
+    .desktop-shadow {
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
+    }
+
+    .desktop-shadow-hover:hover {
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  /* Ultra-wide screen enhancements (2xl: 1536px+) */
+  @media (min-width: 1536px) {
+    .ultra-container {
+      @apply max-w-[1800px] mx-auto;
+    }
+
+    .ultra-grid-events {
+      @apply grid-cols-6;
+    }
+
+    .ultra-padding {
+      @apply px-16;
+    }
+
+    .ultra-section-padding {
+      @apply py-24;
+    }
+  }
+
   /* Legacy mobile-card class */
   .mobile-card {
     @apply bg-white rounded-2xl shadow-lg border border-gray-100/50;
