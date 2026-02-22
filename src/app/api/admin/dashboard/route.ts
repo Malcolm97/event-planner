@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 import {
   checkRateLimit,
   createSecureResponse,
   logSecurityEvent,
   isSuspiciousRequest
 } from "@/lib/security"
+import type { NextRequest } from "next/server"
 
-// Helper function to check admin access
+// Helper function to check admin access using server-side client
 async function checkAdminAccess() {
   try {
+    const supabase = await createServerSupabaseClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
@@ -41,14 +43,14 @@ async function checkAdminAccess() {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   // Check admin access
   const adminCheck = await checkAdminAccess();
   if (!adminCheck.isAdmin) {
     logSecurityEvent('unauthorized_admin_access_attempt', {
       path: '/api/admin/dashboard',
       method: 'GET',
-    }, request as any);
+    }, request);
 
     return createSecureResponse(
       { error: adminCheck.error || 'Admin access required' },
@@ -61,9 +63,12 @@ export async function GET(request: Request) {
     path: '/api/admin/dashboard',
     method: 'GET',
     userId: adminCheck.user?.id
-  }, request as any);
+  }, request);
 
   try {
+    // Create server-side client for data queries
+    const supabase = await createServerSupabaseClient()
+    
     // Get comprehensive dashboard statistics with optimized queries
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
