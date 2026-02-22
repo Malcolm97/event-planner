@@ -4,7 +4,7 @@
 
 import './globals.css';
 import Script from 'next/script';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import ClientProviders from './ClientProviders';
 import { EnhancedErrorBoundary } from '@/components/EnhancedErrorBoundary';
 import '@/lib/polyfills'; // Import polyfills for cross-browser compatibility
@@ -18,7 +18,32 @@ import UpdatePrompt from '@/components/UpdatePrompt';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
-const inter = Inter({ subsets: ['latin'] });
+// Use local fonts to avoid Turbopack build issues with Google Fonts
+const inter = localFont({
+  src: [
+    {
+      path: '../../public/fonts/Inter-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Inter-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Inter-SemiBold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Inter-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-inter',
+});
 
 export const metadata = {
   title: 'PNG Events - Discover Local Events',
