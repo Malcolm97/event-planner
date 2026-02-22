@@ -27,7 +27,68 @@ export async function GET(request: Request) {
       )
     }
 
-    // Build query to get all events with category data for aggregation
+    // First, try to get categories from the categories table
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from(TABLES.CATEGORIES)
+      .select('*')
+
+    // If categories table exists and has data, use it
+    if (!categoriesError && categoriesData && categoriesData.length > 0) {
+      // Get event counts per category from events table
+      const { data: eventsData } = await supabase
+        .from(TABLES.EVENTS)
+        .select('category, approved')
+        .not('category', 'is', null)
+
+      // Build event count map
+      const eventCountMap = new Map<string, { total: number; approved: number; pending: number }>()
+      eventsData?.forEach((event: any) => {
+        const cat = event.category
+        if (!cat) return
+        if (!eventCountMap.has(cat)) {
+          eventCountMap.set(cat, { total: 0, approved: 0, pending: 0 })
+        }
+        const counts = eventCountMap.get(cat)!
+        counts.total++
+        if (event.approved) counts.approved++
+        else counts.pending++
+      })
+
+      // Enrich categories with event counts
+      let enrichedData = categoriesData.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description,
+        total_events: eventCountMap.get(cat.name)?.total || 0,
+        approved_events: eventCountMap.get(cat.name)?.approved || 0,
+        pending_events: eventCountMap.get(cat.name)?.pending || 0,
+      }))
+
+      // Apply search filter
+      if (search && search.length > 0) {
+        enrichedData = enrichedData.filter(cat =>
+          cat.name.toLowerCase().includes(search.toLowerCase())
+        )
+      }
+
+      // Apply pagination
+      const totalCount = enrichedData.length
+      const from = (page - 1) * limit
+      const to = Math.min(from + limit, totalCount)
+      const paginatedData = enrichedData.slice(from, to)
+
+      return NextResponse.json({
+        data: paginatedData,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      })
+    }
+
+    // Fallback: Aggregate categories from events table if categories table doesn't exist or is empty
     const { data: eventsData, error: eventsError } = await supabase
       .from(TABLES.EVENTS)
       .select('category, approved')

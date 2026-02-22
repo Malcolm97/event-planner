@@ -126,14 +126,43 @@ export const handleSupabaseError = (error: any, operation: string) => {
 }
 
 // Database table names - all tables used in the app
+// These match the actual table names in Supabase
 export const TABLES = {
   EVENTS: 'events',
-  USERS: 'profiles', // Changed from 'users' to 'profiles' - the actual table name
+  PROFILES: 'profiles',        // User profiles table
+  USERS: 'profiles',           // Alias for backward compatibility
   SAVED_EVENTS: 'saved_events',
   ACTIVITIES: 'activities',
+  AUDIT_LOGS: 'audit_logs',
+  CATEGORIES: 'categories',
+  LOCATIONS: 'locations',
   PUSH_SUBSCRIPTIONS: 'push_subscriptions',
-  USERS_BY_EMAIL: 'users_by_email'
 } as const
+
+// Field name mappings for database compatibility
+// Database uses different column names than the original code expected
+export const USER_FIELDS = {
+  ID: 'id',
+  FULL_NAME: 'full_name',      // Database column name
+  NAME: 'full_name',           // Alias for queries
+  EMAIL: 'email',
+  AVATAR_URL: 'avatar_url',    // Database column name
+  PHOTO_URL: 'avatar_url',     // Alias for queries
+  PHONE: 'phone',
+  COMPANY: 'company',
+  ABOUT: 'about',
+  ROLE: 'role',
+  APPROVED: 'approved',
+  CONTACT_METHOD: 'contact_method',
+  WHATSAPP_NUMBER: 'whatsapp_number',
+  CONTACT_VISIBILITY: 'contact_visibility',
+  SOCIAL_LINKS: 'social_links',
+  SHOW_SOCIAL_LINKS: 'show_social_links',
+  UPDATED_AT: 'updated_at',
+} as const
+
+// Public fields that can be fetched for creator profiles
+export const PUBLIC_USER_FIELDS = `${USER_FIELDS.ID}, ${USER_FIELDS.FULL_NAME}, ${USER_FIELDS.EMAIL}, ${USER_FIELDS.PHONE}, ${USER_FIELDS.COMPANY}, ${USER_FIELDS.ABOUT}, ${USER_FIELDS.AVATAR_URL}, ${USER_FIELDS.ROLE}, ${USER_FIELDS.UPDATED_AT}`
 
 // Activity tracking functions
 export const recordActivity = async (

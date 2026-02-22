@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
 
@@ -16,11 +17,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params
 
     const { data: event, error } = await supabase
-      .from('events')
-      .select(`
-        *,
-        profiles:created_by (full_name, avatar_url)
-      `)
+      .from(TABLES.EVENTS)
+      .select('*')
       .eq('id', id)
       .single()
 
@@ -35,7 +33,30 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ data: event })
+    // Fetch creator info separately using correct field names
+    let creatorInfo = null
+    if (event.created_by) {
+      const { data: creator } = await supabase
+        .from(TABLES.PROFILES)
+        .select(`${USER_FIELDS.ID}, ${USER_FIELDS.FULL_NAME}, ${USER_FIELDS.AVATAR_URL}`)
+        .eq('id', event.created_by)
+        .single()
+      
+      if (creator) {
+        creatorInfo = {
+          id: creator.id,
+          full_name: creator.full_name,
+          avatar_url: creator.avatar_url
+        }
+      }
+    }
+
+    return NextResponse.json({ 
+      data: {
+        ...event,
+        creator: creatorInfo
+      }
+    })
   } catch (error) {
     return NextResponse.json(
       { error: getUserFriendlyError(error, "Internal server error") },
@@ -72,7 +93,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (end_date !== undefined) updateData.end_date = end_date
 
     const { data, error } = await supabase
-      .from('events')
+      .from(TABLES.EVENTS)
       .update(updateData)
       .eq('id', id)
       .select()
@@ -112,7 +133,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     // Check if event exists
     const { data: existingEvent, error: fetchError } = await supabase
-      .from('events')
+      .from(TABLES.EVENTS)
       .select('id, name')
       .eq('id', id)
       .single()
@@ -123,13 +144,13 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     // Delete saved events first (foreign key constraint)
     await supabase
-      .from('saved_events')
+      .from(TABLES.SAVED_EVENTS)
       .delete()
       .eq('event_id', id)
 
     // Delete the event
     const { error } = await supabase
-      .from('events')
+      .from(TABLES.EVENTS)
       .delete()
       .eq('id', id)
 

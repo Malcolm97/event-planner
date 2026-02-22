@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { TABLES } from "@/lib/supabase"
 import {
   checkRateLimit,
   createSecureResponse,

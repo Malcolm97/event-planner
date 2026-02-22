@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
+import { TABLES } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
+import { normalizeUser } from "@/lib/types"
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   // Check admin access using server-side client
@@ -16,7 +18,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params
 
     const { data: profile, error } = await supabase
-      .from('profiles')
+      .from(TABLES.PROFILES)
       .select('*')
       .eq('id', id)
       .single()
@@ -32,7 +34,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ data: profile })
+    // Normalize the user data for backward compatibility
+    const normalizedProfile = normalizeUser(profile)
+
+    return NextResponse.json({ data: normalizedProfile })
   } catch (error) {
     return NextResponse.json(
       { error: getUserFriendlyError(error, "Internal server error") },
@@ -54,17 +59,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const { id } = await params
     const body = await req.json()
-    const { approved, role, full_name, email } = body
+    const { approved, role, full_name, name, email } = body
 
     // Build update object with only provided fields
+    // Use full_name for database (name is an alias)
     const updateData: Record<string, any> = { updated_at: new Date().toISOString() }
     if (approved !== undefined) updateData.approved = approved
     if (role !== undefined) updateData.role = role
     if (full_name !== undefined) updateData.full_name = full_name
+    else if (name !== undefined) updateData.full_name = name // Support 'name' as alias
     if (email !== undefined) updateData.email = email
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from(TABLES.PROFILES)
       .update(updateData)
       .eq('id', id)
       .select()
@@ -80,7 +87,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ data: data[0], success: true })
+    // Normalize the response
+    const normalizedData = normalizeUser(data[0])
+
+    return NextResponse.json({ data: normalizedData, success: true })
   } catch (error) {
     return NextResponse.json(
       { error: getUserFriendlyError(error, "Internal server error") },
@@ -112,7 +122,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     // Check if user exists
     const { data: existingUser, error: fetchError } = await supabase
-      .from('profiles')
+      .from(TABLES.PROFILES)
       .select('id, role')
       .eq('id', id)
       .single()
@@ -123,7 +133,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     // Delete the profile (this will cascade to auth.users if set up properly)
     const { error } = await supabase
-      .from('profiles')
+      .from(TABLES.PROFILES)
       .delete()
       .eq('id', id)
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { TABLES } from "@/lib/supabase"
+import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
 
@@ -23,12 +23,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from(TABLES.EVENTS)
-      .select(`
-        *,
-        categories (
-          name
-        )
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
 
     // Apply search filter
     if (search) {
@@ -36,12 +31,14 @@ export async function GET(request: Request) {
       query = query.or(`name.ilike.${searchPattern},description.ilike.${searchPattern},location.ilike.${searchPattern}`)
     }
 
+    // Filter by approval status
     if (status === 'approved') {
       query = query.eq('approved', true)
     } else if (status === 'pending') {
       query = query.eq('approved', false)
     }
 
+    // Filter by category
     if (category && category !== 'all') {
       query = query.eq('category', category)
     }
@@ -77,10 +74,10 @@ export async function GET(request: Request) {
     const creatorIds = [...new Set(data.map(e => e.created_by).filter(Boolean))]
     const eventIds = data.map(e => e.id)
 
-    // Batch fetch creators from profiles table
+    // Batch fetch creators from profiles table using correct field names
     const { data: creators } = await supabase
-      .from('profiles')
-      .select('id, full_name, avatar_url')
+      .from(TABLES.PROFILES)
+      .select(`id, ${USER_FIELDS.FULL_NAME}, ${USER_FIELDS.AVATAR_URL}`)
       .in('id', creatorIds)
 
     const creatorMap = new Map(creators?.map(c => [c.id, c]) || [])
@@ -104,9 +101,8 @@ export async function GET(request: Request) {
         ...event,
         creator_name: creator?.full_name || 'Unknown User',
         creator_avatar: creator?.avatar_url || null,
-        category_name: event.categories?.name || 'Uncategorized',
+        category_name: event.category || 'Uncategorized',
         saved_count: savedCountMap.get(event.id) || 0,
-        categories: undefined
       }
     })
 

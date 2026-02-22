@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { TABLES } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 
 export async function GET(request: Request) {
@@ -17,9 +18,9 @@ export async function GET(request: Request) {
     const role = searchParams.get('role')
     const status = searchParams.get('status')
 
-    // Build query
+    // Build query using TABLES constant
     let query = supabase
-      .from('profiles')
+      .from(TABLES.PROFILES)
       .select('*')
 
     if (role && role !== 'all') {
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
       })
     }
 
-    // CSV format
+    // CSV format - use correct field names (full_name, avatar_url)
     const headers = ['ID', 'Full Name', 'Email', 'Role', 'Approved', 'Created At']
     const csvRows = [headers.join(',')]
 

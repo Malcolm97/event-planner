@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { TABLES } from "@/lib/supabase"
+import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
+import { normalizeUser } from "@/lib/types"
 
 export async function GET(request: Request) {
   // Check admin access using server-side client
@@ -21,33 +22,34 @@ export async function GET(request: Request) {
     const role = searchParams.get('role')
     const status = searchParams.get('status')
 
-    // Build query for profiles table
+    // Build query for profiles table using correct field names
     let profilesQuery = supabase
-      .from('profiles')
+      .from(TABLES.PROFILES)
       .select('*', { count: 'exact' })
 
     if (search) {
-      profilesQuery = profilesQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)
+      // Search in full_name, email, and company fields
+      profilesQuery = profilesQuery.or(`${USER_FIELDS.FULL_NAME}.ilike.%${search}%,${USER_FIELDS.EMAIL}.ilike.%${search}%,company.ilike.%${search}%`)
     }
 
     // Apply role filter
     if (role && role !== 'all') {
-      profilesQuery = profilesQuery.eq('role', role)
+      profilesQuery = profilesQuery.eq(USER_FIELDS.ROLE, role)
     }
 
     // Apply status filter
     if (status && status !== 'all') {
       if (status === 'approved') {
-        profilesQuery = profilesQuery.eq('approved', true)
+        profilesQuery = profilesQuery.eq(USER_FIELDS.APPROVED, true)
       } else if (status === 'pending') {
-        profilesQuery = profilesQuery.eq('approved', false)
+        profilesQuery = profilesQuery.eq(USER_FIELDS.APPROVED, false)
       }
     }
 
     // Apply pagination
     const from = (page - 1) * limit
     const to = from + limit - 1
-    profilesQuery = profilesQuery.range(from, to).order('updated_at', { ascending: false })
+    profilesQuery = profilesQuery.range(from, to).order(USER_FIELDS.UPDATED_AT, { ascending: false })
 
     const { data: profilesData, error: profilesError, count: totalCount } = await profilesQuery
 
@@ -97,19 +99,26 @@ export async function GET(request: Request) {
       eventsSavedMap.set(save.user_id, (eventsSavedMap.get(save.user_id) || 0) + 1)
     })
 
-    // Enrich data with activity counts
-    const enrichedData = profilesData.map(profile => ({
-      id: profile.id,
-      full_name: profile.full_name,
-      email: profile.email,
-      avatar_url: profile.avatar_url,
-      role: profile.role || 'user',
-      approved: profile.approved || false,
-      created_at: profile.updated_at,
-      updated_at: profile.updated_at,
-      events_created: eventsCreatedMap.get(profile.id) || 0,
-      events_saved: eventsSavedMap.get(profile.id) || 0
-    }))
+    // Enrich data with activity counts and normalize field names
+    const enrichedData = profilesData.map(profile => {
+      // Normalize to include both field name variants
+      const normalized = normalizeUser(profile)
+      return {
+        ...normalized,
+        id: profile.id,
+        full_name: profile.full_name,
+        name: profile.full_name, // Alias for backward compatibility
+        email: profile.email,
+        avatar_url: profile.avatar_url,
+        photo_url: profile.avatar_url, // Alias for backward compatibility
+        role: profile.role || 'user',
+        approved: profile.approved || false,
+        created_at: profile.updated_at,
+        updated_at: profile.updated_at,
+        events_created: eventsCreatedMap.get(profile.id) || 0,
+        events_saved: eventsSavedMap.get(profile.id) || 0
+      }
+    })
 
     return NextResponse.json({
       data: enrichedData,

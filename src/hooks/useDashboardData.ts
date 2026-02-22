@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, getSupabaseConnectionStatus } from '@/lib/supabase';
+import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, getSupabaseConnectionStatus, USER_FIELDS } from '@/lib/supabase';
 import { getEvents, addEvents, getUsers, addUsers, getSyncStatus, updateSyncStatus } from '@/lib/indexedDB';
+import { normalizeUser } from '@/lib/types';
 
 interface UseDashboardDataResult {
   user: any;
@@ -180,10 +181,16 @@ export function useDashboardData(): UseDashboardDataResult {
         return null;
       }
 
-      const profileData = data as User;
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (authUser?.email) {
-        profileData.email = authUser.email;
+      // Normalize the user data to include both field name variants
+      // Database uses 'full_name' and 'avatar_url', but code may expect 'name' and 'photo_url'
+      const profileData = normalizeUser(data) as User;
+      
+      // Get email from auth user if not in profile
+      if (!profileData.email) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.email) {
+          profileData.email = authUser.email;
+        }
       }
       return profileData;
     } catch (err) {

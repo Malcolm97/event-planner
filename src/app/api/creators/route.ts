@@ -1,33 +1,43 @@
 import { NextResponse } from 'next/server';
-import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { TABLES, USER_FIELDS } from '@/lib/supabase';
 import { getUserFriendlyError } from '@/lib/userMessages';
+import { normalizeUser } from '@/lib/types';
 
 // Public endpoint for fetching creator profiles
 // This endpoint is accessible without authentication and returns only public user information
 export async function GET(request: Request) {
   try {
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      console.error('Supabase is not configured for /api/creators');
-      return NextResponse.json(
-        { error: 'Service configuration error. Please contact support.', details: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
-    const fields = searchParams.get('fields');
+    const search = searchParams.get('search');
 
-    // Only fetch public fields - no sensitive information
-    const publicFields = 'id, name, email, phone, company, about, photo_url, role, updated_at';
-    const selectedFields = fields || publicFields;
+    // Use server-side client for better security and SSR compatibility
+    const supabase = await createServerSupabaseClient();
 
+    // Build query for profiles table using correct field names
+    // Database uses 'full_name' and 'avatar_url', not 'name' and 'photo_url'
     let query = supabase
-      .from(TABLES.USERS)
-      .select(selectedFields, { count: 'exact' })
-      .order('updated_at', { ascending: false });
+      .from(TABLES.PROFILES)
+      .select(`
+        ${USER_FIELDS.ID},
+        ${USER_FIELDS.FULL_NAME},
+        ${USER_FIELDS.EMAIL},
+        ${USER_FIELDS.PHONE},
+        ${USER_FIELDS.COMPANY},
+        ${USER_FIELDS.ABOUT},
+        ${USER_FIELDS.AVATAR_URL},
+        ${USER_FIELDS.ROLE},
+        ${USER_FIELDS.UPDATED_AT}
+      `, { count: 'exact' })
+      .order(USER_FIELDS.UPDATED_AT, { ascending: false });
+
+    // Apply search filter if provided
+    if (search && search.trim().length > 0) {
+      const searchPattern = `%${search.trim()}%`;
+      query = query.or(`${USER_FIELDS.FULL_NAME}.ilike.${searchPattern},${USER_FIELDS.EMAIL}.ilike.${searchPattern},${USER_FIELDS.COMPANY}.ilike.${searchPattern}`);
+    }
 
     // Apply pagination
     if (offset) {
@@ -45,25 +55,21 @@ export async function GET(request: Request) {
       query = query.limit(50);
     }
 
-    const { data, error, count, status, statusText } = await query;
+    const { data, error, count } = await query;
 
     // Log detailed error information for debugging
     if (error) {
-      const errorInfo = {
+      console.error('Error fetching creators from Supabase:', {
         message: error.message,
         code: error.code,
         details: error.details,
         hint: error.hint,
-        status: status,
-        statusText: statusText
-      };
-      
-      console.error('Error fetching creators from Supabase:', errorInfo);
+      });
       
       // Check for RLS policy denial - return more helpful message
       const isRLSError = error.message?.includes('row-level security') || 
                          error.code === '42501' ||
-                         (status === 200 && !data);
+                         (error.code === 'PGRST116');
       
       if (isRLSError) {
         return NextResponse.json(
@@ -86,9 +92,12 @@ export async function GET(request: Request) {
       );
     }
 
+    // Normalize the data to include both field name variants for backward compatibility
+    const normalizedData = (data || []).map(user => normalizeUser(user));
+
     // Return data with count for pagination
     const response = NextResponse.json({
-      data: data || [],
+      data: normalizedData,
       count: count || 0
     });
     

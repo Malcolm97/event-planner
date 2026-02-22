@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { TABLES } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 
 export async function GET(request: Request) {
@@ -17,9 +18,9 @@ export async function GET(request: Request) {
     const status = searchParams.get('status')
     const category = searchParams.get('category')
 
-    // Build query
+    // Build query using TABLES constant
     let query = supabase
-      .from('events')
+      .from(TABLES.EVENTS)
       .select('*')
 
     if (status === 'approved') {

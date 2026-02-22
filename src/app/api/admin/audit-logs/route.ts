@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { TABLES } from "@/lib/supabase"
 import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
 
@@ -22,9 +23,9 @@ export async function GET(request: Request) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    // Build query
+    // Build query using the TABLES constant
     let query = supabase
-      .from('audit_logs')
+      .from(TABLES.AUDIT_LOGS)
       .select('*', { count: 'exact' })
 
     // Apply filters
