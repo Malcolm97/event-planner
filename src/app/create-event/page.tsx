@@ -281,16 +281,16 @@ export default function CreateEventPage() {
 
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-8 py-8 text-center">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <FiPlus className="h-8 w-8 text-white" />
+          <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-6 py-6 lg:px-8 lg:py-6 text-center">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <FiPlus className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-base sm:text-base lg:text-2xl font-bold text-white mb-2">Create New Event</h1>
-            <p className="text-white/80">Fill in the details to create your amazing event</p>
+            <h1 className="text-base sm:text-base lg:text-xl font-bold text-white mb-1">Create New Event</h1>
+            <p className="text-white/80 text-sm">Fill in the details to create your amazing event</p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 lg:p-6 space-y-5">
             {/* Error & Success Messages */}
             {error && (
               <AlertBanner 

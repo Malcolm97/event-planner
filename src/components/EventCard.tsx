@@ -404,7 +404,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       }}
     >
       {/* Hero Image Area */}
-      <div className="relative h-36 sm:h-44 md:h-48 lg:h-54 xl:h-58 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+      <div className="relative h-36 sm:h-44 md:h-48 lg:h-48 xl:h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {imageSrc && (typeof imageSrc === 'string') ? (
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
             <img
@@ -487,9 +487,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       </div>
 
       {/* Content Area */}
-      <div className="p-4 sm:p-5 lg:p-6 xl:p-7">
+      <div className="p-4 sm:p-5 lg:p-4 xl:p-5">
         {/* Event Title */}
-        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
+        <h3 className="text-base sm:text-lg lg:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
           {event.name}
         </h3>
 

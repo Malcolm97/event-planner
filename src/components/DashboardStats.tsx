@@ -69,11 +69,11 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 lg:mb-10">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 lg:mb-8">
       {stats.map((stat, index) => (
         <div 
           key={index}
-          className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+          className="bg-white rounded-2xl p-4 sm:p-6 lg:p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
         >
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <span className="text-xs sm:text-sm font-medium text-gray-600">{stat.label}</span>
@@ -81,7 +81,7 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
               <stat.icon className={`w-3 h-3 sm:w-4 sm:h-4 text-white`} />
             </div>
           </div>
-          <div className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">
+          <div className="text-base sm:text-base lg:text-xl font-bold text-gray-900">
             {stat.value}
           </div>
         </div>

@@ -243,15 +243,15 @@ export default function SignInPage() {
             </Link>
           </Button>
         </div>
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-white font-bold text-xl">PNG</span>
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
+        <div className="text-center mb-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-white font-bold text-lg">PNG</span>
           </div>
-          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 tracking-tight mb-2">
+          <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900 tracking-tight mb-2">
           Welcome to PNG Events
         </h1>
-          <p className="text-gray-600 text-lg">Sign in to discover and create events</p>
+          <p className="text-gray-600 text-base">Sign in to discover and create events</p>
         </div>
 
         {/* Tabs */}

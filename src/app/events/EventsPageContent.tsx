@@ -141,10 +141,10 @@ export default function EventsPageContent() {
       {/* Hero section */}
       <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-base sm:text-base lg:text-2xl text-white mb-4 sm:mb-6 lg:mb-8 tracking-tight font-bold">
+          <h1 className="text-base sm:text-base lg:text-2xl text-white mb-4 sm:mb-6 tracking-tight font-bold">
             Events by Location
           </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
             Find events happening in your area. Filter by location to discover what's happening near you.
           </p>
         </div>

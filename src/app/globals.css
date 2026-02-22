@@ -521,7 +521,7 @@
 
   /* Layout Utilities */
   .section-padding {
-    @apply py-6 px-4 sm:py-10 sm:px-6 lg:py-16 lg:px-8;
+    @apply py-6 px-4 sm:py-10 sm:px-6 lg:py-10 lg:px-8;
   }
 
   .container-padding {
@@ -701,17 +701,17 @@
 
     /* Desktop hero enhancements */
     .desktop-hero {
-      @apply py-24 lg:py-32;
+      @apply py-16 lg:py-20;
     }
 
     /* Desktop stats cards */
     .desktop-stats-card {
-      @apply p-8 lg:p-10;
+      @apply p-6 lg:p-8;
     }
 
     /* Desktop search container */
     .desktop-search-container {
-      @apply p-8 lg:p-10;
+      @apply p-6 lg:p-8;
     }
 
     /* Desktop navigation spacing */

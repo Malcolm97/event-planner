@@ -84,7 +84,7 @@ export default function DashboardEventsSection({
   }
 
   return (
-    <div className={`card p-3 sm:p-4 lg:p-5 ${colors.bg}`}>
+    <div className={`card p-3 sm:p-4 lg:p-4 ${colors.bg}`}>
       {/* Header Section - Improved for mobile */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export default function DashboardEventsSection({
             <Icon size={14} />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900">{title}</h2>
+            <h2 className="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">{title}</h2>
             <p className="text-gray-500 text-xs">{events.length} {events.length === 1 ? 'event' : 'events'}</p>
           </div>
         </div>

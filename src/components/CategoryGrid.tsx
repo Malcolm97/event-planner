@@ -43,7 +43,7 @@ interface CategoryGridProps {
 
 const CategoryGrid = memo(function CategoryGrid({ events }: CategoryGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6 lg:gap-8">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6 lg:gap-5">
       {allCategories
         .filter(cat => {
           if (cat.name === 'Other') {
@@ -60,12 +60,12 @@ const CategoryGrid = memo(function CategoryGrid({ events }: CategoryGridProps) {
             <Link
               href={`/categories?category=${encodeURIComponent(cat.name)}`}
               key={cat.name}
-              className={`card-hover flex flex-col items-center justify-center gap-3 lg:gap-4 px-6 py-8 lg:px-8 lg:py-10 rounded-2xl lg:rounded-3xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl lg:hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] lg:min-h-[180px] xl:min-h-[200px] ${categoryColor} group`}
+              className={`card-hover flex flex-col items-center justify-center gap-2 lg:gap-3 px-5 py-6 lg:px-6 lg:py-7 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[120px] lg:min-h-[140px] ${categoryColor} group`}
             >
-              <span className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md lg:shadow-lg">
-                <Icon size={28} className="lg:w-8 lg:h-8" />
+              <span className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
+                <Icon size={22} className="lg:w-6 lg:h-6" />
               </span>
-              <span className="text-base lg:text-lg font-bold text-center">{cat.name}</span>
+              <span className="text-sm lg:text-base font-bold text-center">{cat.name}</span>
             </Link>
           );
         })}

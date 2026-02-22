@@ -170,13 +170,13 @@ const Header = React.memo(function Header() {
 
       <header className="glass-effect shadow-sm border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md lg:shadow-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 xl:px-12">
-          <div className="flex justify-between items-center h-11 sm:h-14 lg:h-20 xl:h-24">
+          <div className="flex justify-between items-center h-11 sm:h-14 lg:h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 lg:space-x-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 rounded-lg p-1">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">
-                <span className="text-white font-bold text-sm sm:text-base lg:text-lg">PNG</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-10 lg:h-10 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">
+                <span className="text-white font-bold text-sm sm:text-base lg:text-base">PNG</span>
               </div>
-              <span className="text-base sm:text-base lg:text-2xl font-bold text-foreground tracking-tight">
+              <span className="text-base sm:text-base lg:text-xl font-bold text-foreground tracking-tight">
                 Events
               </span>
             </Link>

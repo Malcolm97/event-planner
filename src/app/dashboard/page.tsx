@@ -168,9 +168,9 @@ export default function DashboardPage() {
         className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40"
       >
         <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-6">
+          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-4">
             <div>
-              <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900">Dashboard</h1>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-gray-600 text-sm">Manage your events and profile</p>
                 {/* Online/Offline indicator */}
@@ -218,7 +218,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12 py-3 sm:py-4 lg:py-8">
+      <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12 py-3 sm:py-4 lg:py-6">
         {/* Last updated indicator */}
         {lastUpdated && (
           <motion.div

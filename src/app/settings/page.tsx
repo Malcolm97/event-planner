@@ -385,7 +385,7 @@ export default function SettingsPage() {
         >
           ← Back
         </Button>
-        <h1 className="text-base sm:text-base lg:text-2xl font-bold mb-8 text-center">Settings</h1>
+        <h1 className="text-base sm:text-base lg:text-xl font-bold mb-6 text-center">Settings</h1>
         <div className="grid gap-8">
         {/* Cache Management */}
         <motion.section

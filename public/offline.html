@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#FCD34D">
+    <meta name="theme-color" content="#F59E0B">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Offline - PNG Events</title>
     <link rel="manifest" href="/manifest.json">
     <style>
+        /* CSS Variables matching globals.css */
+        :root {
+            --primary-color: #f59e0b;
+            --secondary-color: #d97706;
+            --accent-color: #fbbf24;
+            --muted-color: #6b7280;
+            --border-color: #e5e7eb;
+            --card-background: #ffffff;
+            --input-background: #ffffff;
+            --glass-background: rgba(255, 255, 255, 0.9);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --info-color: #3b82f6;
+            --foreground: #111827;
+            --background: #f9fafb;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,17 +36,39 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #FCD34D 0%, #F97316 50%, #DC2626 100%);
-            color: #111827;
+            background: var(--background);
+            color: var(--foreground);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
+        /* Modern Hero Section matching HomePageContent */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            padding: 3rem 1rem 4rem;
+            background: linear-gradient(to right, #fcd34d, #f97316, #dc2626);
+            overflow: hidden;
+        }
+
+        /* Subtle Background Pattern */
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.05;
+            background: 
+                radial-gradient(circle at 20% 30%, white 0%, transparent 50%),
+                radial-gradient(circle at 80% 40%, white 0%, transparent 40%),
+                radial-gradient(circle at 40% 70%, white 0%, transparent 45%);
+        }
+
         .header {
             background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border-bottom: 1px solid rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
@@ -53,7 +93,7 @@
         .logo-box {
             width: 2.5rem;
             height: 2.5rem;
-            background: linear-gradient(135deg, #FCD34D, #EF4444);
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             border-radius: 0.75rem;
             display: flex;
             align-items: center;
@@ -61,23 +101,24 @@
             color: white;
             font-weight: bold;
             font-size: 0.875rem;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
         }
 
         .logo-text {
             font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #FCD34D, #EF4444);
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.02em;
         }
 
         .offline-badge {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            background: linear-gradient(to right, #fef3c7, #fde68a);
             padding: 0.5rem 1rem;
             border-radius: 2rem;
             font-size: 0.875rem;
@@ -90,7 +131,7 @@
             content: '';
             width: 8px;
             height: 8px;
-            background: #EF4444;
+            background: var(--error-color);
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
@@ -106,40 +147,42 @@
             padding: 1.5rem;
         }
 
+        /* Hero Card matching the search card style */
         .hero-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             text-align: center;
             margin-bottom: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .hero-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            background: linear-gradient(to right, #fef3c7, #fde68a);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
             font-size: 2.5rem;
-            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.2);
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.875rem;
             font-weight: 800;
-            color: #111827;
+            color: var(--foreground);
             margin-bottom: 0.75rem;
             letter-spacing: -0.02em;
         }
 
         .subtitle {
-            color: #6B7280;
+            color: var(--muted-color);
             font-size: 1.125rem;
             line-height: 1.6;
             margin-bottom: 1.5rem;
@@ -149,11 +192,11 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: #F3F4F6;
+            background: #f3f4f6;
             padding: 0.5rem 1rem;
             border-radius: 2rem;
             font-size: 0.875rem;
-            color: #6B7280;
+            color: var(--muted-color);
             margin-bottom: 1.5rem;
         }
 
@@ -162,30 +205,35 @@
             height: 16px;
         }
 
+        /* Button matching btn-primary from globals.css */
         .retry-button {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, #FCD34D, #FBBF24);
-            color: #111827;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
             font-weight: 700;
             font-size: 1rem;
             border-radius: 0.75rem;
             text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             border: none;
             cursor: pointer;
+            min-height: 44px;
+            min-width: 44px;
         }
 
         .retry-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+            transform: scale(1.05);
+            background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
         }
 
         .retry-button:active {
-            transform: translateY(0);
+            transform: scale(0.95);
         }
 
         .retry-button.loading {
@@ -213,18 +261,20 @@
 
         /* Quick Links Section */
         .quick-links {
-            background: rgba(255,255,255,0.9);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 1.5rem;
             border-radius: 1rem;
             margin-bottom: 1.5rem;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .quick-links-title {
             font-size: 0.875rem;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--muted-color);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
@@ -241,19 +291,20 @@
             align-items: center;
             gap: 0.75rem;
             padding: 1rem;
-            background: linear-gradient(135deg, #F9FAFB, #F3F4F6);
+            background: linear-gradient(to right, #f9fafb, #f3f4f6);
             border-radius: 0.75rem;
             text-decoration: none;
             color: #374151;
             font-weight: 600;
             font-size: 0.9rem;
             transition: all 0.2s ease;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            min-height: 44px;
         }
 
         .quick-link:hover {
-            background: linear-gradient(135deg, #FCD34D, #FBBF24);
-            color: #111827;
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            color: var(--foreground);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
         }
@@ -262,7 +313,7 @@
             font-size: 1.25rem;
         }
 
-        /* Stats Section */
+        /* Stats Section matching HomePageContent stats */
         .stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -271,23 +322,25 @@
         }
 
         .stat-card {
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 1.25rem;
             border-radius: 1rem;
             text-align: center;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: transform 0.2s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .stat-number {
             font-size: 2rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #FCD34D, #EF4444);
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -295,18 +348,20 @@
 
         .stat-label {
             font-size: 0.875rem;
-            color: #6B7280;
+            color: var(--muted-color);
             font-weight: 500;
             margin-top: 0.25rem;
         }
 
         /* Events Section */
         .events-section {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 1.5rem;
             border-radius: 1rem;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .section-header {
@@ -322,27 +377,28 @@
             gap: 0.75rem;
             font-size: 1.25rem;
             font-weight: 700;
-            color: #111827;
+            color: var(--foreground);
         }
 
         .section-icon {
             font-size: 1.5rem;
         }
 
+        /* Event Card matching EventCard component */
         .event-item {
-            background: linear-gradient(135deg, #F9FAFB, #FFFFFF);
-            border: 1px solid #E5E7EB;
+            background: linear-gradient(to right, #f9fafb, #ffffff);
+            border: 1px solid var(--border-color);
             border-radius: 1rem;
             padding: 1.25rem;
             margin-bottom: 1rem;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
 
         .event-item:hover {
-            border-color: #FCD34D;
-            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);
-            transform: translateY(-2px);
+            border-color: var(--primary-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-4px);
         }
 
         .event-item:last-child {
@@ -359,13 +415,13 @@
         .event-title {
             font-weight: 700;
             font-size: 1.125rem;
-            color: #111827;
+            color: var(--foreground);
             flex: 1;
             line-height: 1.4;
         }
 
         .event-category-badge {
-            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            background: linear-gradient(to right, #fef3c7, #fde68a);
             color: #92400E;
             padding: 0.25rem 0.75rem;
             border-radius: 2rem;
@@ -387,18 +443,18 @@
             align-items: center;
             gap: 0.375rem;
             font-size: 0.875rem;
-            color: #6B7280;
+            color: var(--muted-color);
         }
 
         .event-meta-item svg {
             width: 16px;
             height: 16px;
-            color: #9CA3AF;
+            color: #9ca3af;
         }
 
         .event-description {
             font-size: 0.875rem;
-            color: #4B5563;
+            color: #4b5563;
             line-height: 1.6;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -412,17 +468,17 @@
             align-items: center;
             justify-content: space-between;
             padding-top: 0.75rem;
-            border-top: 1px solid #F3F4F6;
+            border-top: 1px solid #f3f4f6;
         }
 
         .event-price {
             font-weight: 700;
             font-size: 1rem;
-            color: #059669;
+            color: var(--success-color);
         }
 
         .event-price.free {
-            color: #10B981;
+            color: #10b981;
         }
 
         .event-creator {
@@ -430,28 +486,28 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.875rem;
-            color: #6B7280;
+            color: var(--muted-color);
         }
 
         .creator-avatar {
             width: 24px;
             height: 24px;
-            background: linear-gradient(135deg, #E5E7EB, #D1D5DB);
+            background: linear-gradient(to right, #e5e7eb, #d1d5db);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 0.75rem;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--muted-color);
         }
 
         .no-events {
             text-align: center;
             padding: 3rem 2rem;
-            background: linear-gradient(135deg, #F9FAFB, #F3F4F6);
+            background: linear-gradient(to right, #f9fafb, #f3f4f6);
             border-radius: 1rem;
-            border: 2px dashed #E5E7EB;
+            border: 2px dashed var(--border-color);
         }
 
         .no-events-icon {
@@ -467,21 +523,21 @@
         }
 
         .no-events-text {
-            color: #6B7280;
+            color: var(--muted-color);
             font-size: 0.9rem;
         }
 
         .loading {
             text-align: center;
             padding: 2rem;
-            color: #9CA3AF;
+            color: #9ca3af;
         }
 
         .loading-spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #E5E7EB;
-            border-top-color: #FCD34D;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 1rem;
@@ -493,7 +549,7 @@
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: #111827;
+            background: var(--foreground);
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 1rem;
@@ -501,7 +557,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             transition: transform 0.3s ease;
             z-index: 1000;
         }
@@ -511,7 +567,22 @@
         }
 
         .connection-toast.online {
-            background: linear-gradient(135deg, #059669, #10B981);
+            background: linear-gradient(to right, #059669, #10b981);
+        }
+
+        /* Safe area for mobile devices */
+        .safe-area-inset {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        @supports (padding: max(0px)) {
+            .safe-area-inset {
+                padding-top: max(env(safe-area-inset-top), 20px);
+                padding-bottom: max(env(safe-area-inset-bottom), 20px);
+            }
         }
 
         /* Responsive */
@@ -564,10 +635,25 @@
                 font-size: 0.75rem;
                 padding: 0.375rem 0.75rem;
             }
+
+            .hero-section {
+                padding: 2rem 1rem 3rem;
+            }
         }
 
-        /* Animation for cards */
-        @keyframes fadeInUp {
+        /* Modern animations matching globals.css */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -578,13 +664,73 @@
             }
         }
 
-        .animate-in {
-            animation: fadeInUp 0.5s ease forwards;
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
+        .animate-in {
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        .animate-bounce-in {
+            animation: bounceIn 0.6s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* Accessibility: Respect user's motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            .animate-in,
+            .animate-slide-up,
+            .animate-bounce-in,
+            .event-item,
+            .stat-card,
+            .quick-link,
+            .retry-button {
+                animation: none;
+                transition: none;
+            }
+
+            .event-item:hover,
+            .stat-card:hover,
+            .quick-link:hover {
+                transform: none;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .event-item,
+            .hero-card,
+            .quick-links,
+            .events-section {
+                border: 2px solid var(--foreground);
+            }
+
+            .retry-button {
+                border: 2px solid white;
+            }
+        }
     </style>
 </head>
 <body>
@@ -599,7 +745,7 @@
     </header>
 
     <div class="container">
-        <div class="hero-card animate-in">
+        <div class="hero-card animate-bounce-in">
             <div class="hero-icon">📡</div>
             <h1>You're Offline</h1>
             <p class="subtitle">No internet connection detected. You can still view your saved events and cached pages below.</p>
@@ -616,7 +762,7 @@
         </div>
 
         <!-- Quick Links to Cached Pages -->
-        <div class="quick-links animate-in delay-1">
+        <div class="quick-links animate-slide-up delay-1">
             <div class="quick-links-title">Available Offline</div>
             <div class="quick-links-grid">
                 <a href="/about" class="quick-link">
@@ -639,7 +785,7 @@
         </div>
 
         <!-- Stats -->
-        <div class="stats animate-in delay-2" id="stats-section">
+        <div class="stats animate-slide-up delay-2" id="stats-section">
             <div class="stat-card">
                 <div class="stat-number" id="events-count">-</div>
                 <div class="stat-label">Saved Events</div>
@@ -651,7 +797,7 @@
         </div>
 
         <!-- Saved Events Section -->
-        <div class="events-section animate-in delay-3">
+        <div class="events-section animate-slide-up delay-3">
             <div class="section-header">
                 <div class="section-title">
                     <span class="section-icon">📅</span>
