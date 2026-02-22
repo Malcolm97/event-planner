@@ -398,7 +398,7 @@ export default function EditEventPage() {
             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FiEdit3 className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Edit Event</h1>
+            <h1 className="text-base sm:text-base lg:text-2xl font-bold text-white mb-2">Edit Event</h1>
             <p className="text-white/80">Update your event details</p>
           </div>
 

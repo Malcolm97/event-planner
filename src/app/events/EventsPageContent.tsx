@@ -5,6 +5,7 @@ import AppFooter from '@/components/AppFooter';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FiSmile, FiFilter, FiX } from 'react-icons/fi';
+import Link from 'next/link';
 import EventCard from '../../components/EventCard';
 import EventModal from '../../components/EventModal';
 import { useEvents } from '@/hooks/useOfflineFirstData';
@@ -138,9 +139,9 @@ export default function EventsPageContent() {
   return (
     <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
       {/* Hero section */}
-      <section className="w-full py-12 sm:py-16 lg:py-24 xl:py-32 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
-        <div className="max-w-5xl mx-auto lg:max-w-7xl xl:max-w-[1400px] text-center">
-          <h1 className="text-display-lg lg:text-5xl xl:text-6xl text-white mb-4 sm:mb-6 lg:mb-8 tracking-tight">
+      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-base sm:text-base lg:text-2xl text-white mb-4 sm:mb-6 lg:mb-8 tracking-tight font-bold">
             Events by Location
           </h1>
           <p className="text-lg sm:text-xl lg:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
@@ -215,25 +216,46 @@ export default function EventsPageContent() {
 
       {/* No events found message */}
       {!loading && upcomingEvents.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
-          <FiSmile size={40} className="mx-auto mb-4 text-yellow-400" />
-          <h2 className="text-heading-lg mb-2">No events found</h2>
-          <p className="mb-4 text-base sm:text-lg">Check back later for new events.</p>
+        <div className="text-center py-16 px-4">
+          <div className="text-6xl mb-4">📅</div>
+          <h2 className="text-heading-lg mb-2 text-gray-900">No events found</h2>
+          <p className="mb-6 text-gray-500 max-w-md mx-auto">
+            {selectedLocation !== 'all'
+              ? `No upcoming events in ${selectedLocation === 'other' ? 'Other Locations' : selectedLocation}. Try a different location or check back later.`
+              : 'Check back later for new events or create one yourself!'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {selectedLocation !== 'all' && (
+              <button
+                onClick={() => setSelectedLocation('all')}
+                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+              >
+                Clear Location Filter
+              </button>
+            )}
+            <Link
+              href="/create-event"
+              className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-xl font-medium hover:from-yellow-500 hover:to-orange-600 transition-all"
+            >
+              Create an Event
+            </Link>
+          </div>
         </div>
       )}
 
       {/* Events grid */}
       {!loading && upcomingEvents.length > 0 && (
-        <div className="max-w-7xl mx-auto lg:max-w-[1400px] xl:max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
-          {/* Events Section - currently happening events */}
-          {sortedHappeningNow.length > 0 && (
-            <div className="mb-12 lg:mb-16">
-              <div className="text-center mb-6 lg:mb-8">
-                <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
-                  <span className="text-2xl lg:text-3xl">🎉</span> Events
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
+              {/* Happening Now Section - currently happening events */}
+              {sortedHappeningNow.length > 0 && (
+                <div className="mb-12 lg:mb-16">
+                  <div className="text-center mb-6 lg:mb-8">
+                    <h3 className="text-heading-2xl flex items-center justify-center gap-4">
+                      <span className="text-2xl">🔥</span> Happening Now
+                    </h3>
+                    <p className="text-gray-500 mt-2 text-sm lg:text-base">Events that are currently in progress</p>
+                  </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
                 {sortedHappeningNow.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -245,11 +267,11 @@ export default function EventsPageContent() {
           {sortedUpcoming.length > 0 && (
             <div>
               <div className="text-center mb-6 lg:mb-8">
-                <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
-                  <span className="text-2xl lg:text-3xl">📅</span> Upcoming Events
+                <h3 className="text-heading-2xl flex items-center justify-center gap-4">
+                  <span className="text-2xl">📅</span> Upcoming Events
                 </h3>
               </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
                 {sortedUpcoming.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -262,12 +284,12 @@ export default function EventsPageContent() {
       {/* Previous Events */}
       {previousEvents.length > 0 && (
         <section className="py-12 lg:py-20 bg-gray-50 border-t border-gray-200">
-          <div className="max-w-7xl mx-auto lg:max-w-[1400px] xl:max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
             <div className="text-center mb-10 lg:mb-12">
-              <h2 className="text-heading-2xl lg:text-3xl text-gray-900 mb-3">Previous Events</h2>
+              <h2 className="text-heading-2xl text-gray-900 mb-3">Previous Events</h2>
               <p className="text-gray-600 lg:text-lg">Browse events that have already taken place.</p>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
               {previousEvents.map((event: EventItem) => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}

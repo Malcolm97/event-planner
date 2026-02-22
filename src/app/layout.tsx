@@ -15,7 +15,6 @@ import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnlineBadge from '@/components/OnlineBadge';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import UpdatePrompt from '@/components/UpdatePrompt';
-import PullToRefreshHandler from '@/components/PullToRefreshHandler';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -114,7 +113,6 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <EnhancedErrorBoundary>
           <ClientProviders>
-            <PullToRefreshHandler />
             <OfflineIndicator />
             <Header />
             <main id="main-content" role="main" className="pb-16 sm:pb-20 md:pb-20 lg:pb-0 min-h-screen">

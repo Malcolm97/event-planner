@@ -6,18 +6,18 @@ export default function DownloadPage() {
     <div className="min-h-screen bg-white flex flex-col justify-between">
       <div className="py-16 px-4 sm:px-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">Install PNG Events</h1>
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-8">Install PNG Events</h1>
           <p className="text-gray-700 mb-6">Get PNG Events on your phone! Install our app directly to your home screen for instant access to events - no app store required.</p>
 
           {/* Install Prompt Section */}
           <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg p-6 mb-8 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Install Now - It's Free!</h2>
+            <h2 className="text-base sm:text-base lg:text-2xl font-bold text-white mb-4">Install Now - It's Free!</h2>
             <p className="text-yellow-900 mb-6">Tap the button below to add PNG Events to your home screen. It works just like a regular app but updates automatically.</p>
             <PWAInstallPrompt />
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">iPhone & iPad (iOS)</h2>
+            <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">iPhone & iPad (iOS)</h2>
             <ol className="list-decimal pl-6 text-gray-700 mb-4">
               <li className="mb-2">Open Safari browser and navigate to our website</li>
               <li className="mb-2">Tap the Share button (square with arrow pointing up)</li>
@@ -28,7 +28,7 @@ export default function DownloadPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Android Phones</h2>
+            <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">Android Phones</h2>
             <ol className="list-decimal pl-6 text-gray-700 mb-4">
               <li className="mb-2">Open Chrome browser and navigate to our website</li>
               <li className="mb-2">Tap the menu button (three dots) in the top right</li>

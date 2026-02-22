@@ -81,7 +81,7 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
               <stat.icon className={`w-3 h-3 sm:w-4 sm:h-4 text-white`} />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <div className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">
             {stat.value}
           </div>
         </div>

@@ -95,8 +95,10 @@ export async function GET(request: Request) {
     }
 
     // Add caching headers for better performance
+    // Cache for 60 seconds on CDN, allow serving stale content for up to 120 seconds while revalidating
     const response = successResponse(data || []);
-    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    response.headers.set('X-Content-Source', 'supabase-cache');
     return response;
   } catch (error: any) {
     console.error('Unexpected error fetching events:', error.message);

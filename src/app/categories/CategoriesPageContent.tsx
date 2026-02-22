@@ -173,8 +173,8 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="w-full py-16 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
+        <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-display-lg text-white mb-6 tracking-tight">
             {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Categories'}
           </h1>
@@ -259,15 +259,16 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
             </div>
           ) : upcomingEvents.length > 0 ? (
             <>
-              {/* Events Section - currently happening events */}
+              {/* Happening Now Section - currently happening events */}
               {sortedHappeningNow.length > 0 && (
                 <div className="mb-12">
                   <div className="text-center mb-6">
                     <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                      <span className="text-2xl">🎉</span> Events
+                      <span className="text-2xl">🔥</span> Happening Now
                     </h3>
+                    <p className="text-gray-500 mt-2 text-sm">Events that are currently in progress</p>
                   </div>
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8">
                     {sortedHappeningNow.map(event => (
                       <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                     ))}
@@ -283,7 +284,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
                       <span className="text-2xl">📅</span> Upcoming Events
                     </h3>
                   </div>
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8">
                     {sortedUpcoming.map(event => (
                       <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                     ))}

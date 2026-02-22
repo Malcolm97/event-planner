@@ -404,13 +404,14 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       }}
     >
       {/* Hero Image Area */}
-      <div className="relative h-36 sm:h-44 md:h-48 lg:h-60 xl:h-64 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+      <div className="relative h-36 sm:h-44 md:h-48 lg:h-54 xl:h-58 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {imageSrc && (typeof imageSrc === 'string') ? (
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
             <img
               src={imageSrc}
               alt={`Event image for ${event.name}`}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              loading="lazy"
             />
           ) : (
             <Image
@@ -419,10 +420,11 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="transition-transform duration-700 group-hover:scale-110 object-cover"
+              loading="lazy"
             />
           )
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <div className="w-16 h-16 rounded-2xl bg-gray-200/50 flex items-center justify-center">
               <FiImage size={32} className="text-gray-300" />
             </div>

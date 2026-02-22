@@ -108,7 +108,7 @@ const EventsList = memo(function EventsList({
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
         {displayedEvents.map(event => (
           <EventCard
             key={event.id}

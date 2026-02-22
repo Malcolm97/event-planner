@@ -128,7 +128,7 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
               Back to Creators
             </button>
             <div className="text-center">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Event Creator Profile</h1>
+              <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Event Creator Profile</h1>
             </div>
             <div className="w-32"></div> {/* Spacer for centering */}
           </div>
@@ -162,7 +162,7 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
             </div>
 
             <div className="flex-1">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-2">
                 {user.name || 'Unnamed Creator'}
               </h2>
 

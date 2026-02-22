@@ -83,7 +83,7 @@ export default function UpdatePasswordPage() {
           </Link>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
-          <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
+          <h2 className="text-base sm:text-base lg:text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
             Update Your Password
           </h2>
           <p className="text-center text-gray-500 text-base mb-2">Enter your new password below.</p>

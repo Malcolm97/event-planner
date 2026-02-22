@@ -271,7 +271,7 @@ export default function EditProfilePage() {
                 {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
-            <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
+            <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Edit Profile</h1>
             <p className="text-gray-600 mt-2">Update your personal information</p>
           </div>
 

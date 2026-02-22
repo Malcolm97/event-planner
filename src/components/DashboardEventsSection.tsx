@@ -112,7 +112,7 @@ export default function DashboardEventsSection({
       {/* Content Section */}
       {!isExpanded && collapsible ? null : events.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
-          <div className="text-4xl sm:text-5xl mb-4">{emptyState.emoji}</div>
+          <div className="text-base sm:text-base lg:text-2xl mb-4">{emptyState.emoji}</div>
           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">{emptyState.title}</h3>
           <p className="text-gray-500 text-sm sm:text-base mb-6 sm:mb-8 max-w-sm mx-auto">{emptyState.description}</p>
           {emptyState.actionText && emptyState.actionLink && (

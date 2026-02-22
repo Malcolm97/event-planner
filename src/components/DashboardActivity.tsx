@@ -94,7 +94,7 @@ export default function DashboardActivity({ activities, loading = false }: Dashb
       <div className="space-y-3 sm:space-y-4">
         {activities.length === 0 ? (
           <div className="text-center py-6 sm:py-8">
-            <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div>
+            <div className="text-base sm:text-base lg:text-2xl mb-2 sm:mb-3">📭</div>
             <p className="text-gray-500 text-sm">No recent activity</p>
             <p className="text-gray-400 text-xs mt-1">Your activities will appear here</p>
           </div>

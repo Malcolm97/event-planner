@@ -64,7 +64,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       <div className="lg:hidden flex flex-col items-center gap-3 pr-24 sm:pr-28">
         {/* Event Title - Centered */}
         <div className="text-center w-full px-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 leading-tight break-words">
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 leading-tight break-words">
             {selectedEvent?.name}
           </h1>
         </div>
@@ -103,7 +103,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       <div className="hidden lg:flex flex-col items-center gap-3">
         {/* Event Title - Centered */}
         <div className="text-center w-full px-16">
-          <h1 className="text-xl xl:text-2xl font-bold text-gray-900 leading-tight break-words">
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 leading-tight break-words">
             {selectedEvent?.name}
           </h1>
         </div>

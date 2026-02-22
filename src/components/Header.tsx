@@ -176,7 +176,7 @@ const Header = React.memo(function Header() {
               <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">
                 <span className="text-white font-bold text-sm sm:text-base lg:text-lg">PNG</span>
               </div>
-              <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
+              <span className="text-base sm:text-base lg:text-2xl font-bold text-foreground tracking-tight">
                 Events
               </span>
             </Link>

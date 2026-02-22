@@ -5,7 +5,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-white flex flex-col justify-between">
       <div className="py-16 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
           <p className="text-gray-600 mb-2">Last updated: January 18, 2026</p>
           <p className="text-gray-700 mb-8">
             PNG Events ("we," "us," or "our") is committed to protecting your privacy and personal information.
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
           <div className="space-y-8">
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Information We Collect</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">1. Information We Collect</h2>
               <div className="space-y-6">
                 <div>
                   <h3 className="text-xl font-medium text-gray-900 mb-3">1.1 Information You Provide Directly</h3>
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. How We Use Your Information</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">2. How We Use Your Information</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900 mb-3">2.1 Core Service Provision</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Information Sharing and Disclosure</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">3. Information Sharing and Disclosure</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900 mb-3">3.1 Public Information</h3>
                 <p className="text-gray-700 mb-4">
@@ -167,7 +167,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Data Security</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">4. Data Security</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900 mb-3">4.1 Security Measures</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -201,7 +201,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Your Rights and Choices</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">5. Your Rights and Choices</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900 mb-3">5.1 Data Access and Portability</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -246,7 +246,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Data Retention</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">6. Data Retention</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900 mb-3">6.1 Active Account Data</h3>
                 <p className="text-gray-700 mb-4">
@@ -277,7 +277,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. International Data Transfers</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">7. International Data Transfers</h2>
               <p className="text-gray-700 mb-4">
                 PNG Events operates globally and your data may be transferred to and processed in countries other than Papua New Guinea.
                 We ensure appropriate safeguards are in place for international data transfers:
@@ -292,7 +292,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Children's Privacy</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">8. Children's Privacy</h2>
               <p className="text-gray-700 mb-4">
                 PNG Events is not intended for children under 13 years of age. We do not knowingly collect personal information
                 from children under 13. If we become aware that we have collected personal information from a child under 13,
@@ -307,7 +307,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Changes to This Privacy Policy</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">9. Changes to This Privacy Policy</h2>
               <p className="text-gray-700 mb-4">
                 We may update this Privacy Policy from time to time. When we make material changes, we will:
               </p>
@@ -324,7 +324,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Us</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">10. Contact Us</h2>
               <p className="text-gray-700 mb-4">
                 If you have questions about this Privacy Policy or our data practices, please contact us:
               </p>

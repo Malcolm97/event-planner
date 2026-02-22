@@ -328,7 +328,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       )}
 
       {/* Modern Hero Section */}
-      <section className="relative w-full py-12 sm:py-16 lg:py-24 xl:py-32 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 overflow-hidden">
+      <section className="relative w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 overflow-hidden">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-xl"></div>
@@ -339,9 +339,9 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           <div className="hidden lg:block absolute bottom-20 right-20 w-36 h-36 bg-white rounded-full blur-xl"></div>
         </div>
 
-        <div className="relative max-w-6xl mx-auto lg:max-w-7xl xl:max-w-[1400px] flex flex-col items-center text-center gap-8 sm:gap-10 lg:gap-12">
+        <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center gap-8 sm:gap-10 lg:gap-12">
           <div className="animate-bounce-in">
-          <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
+          <h1 className="text-base sm:text-base lg:text-2xl text-white mb-4 drop-shadow-lg font-bold tracking-tight">
             PNG Events
           </h1>
           <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
@@ -415,10 +415,10 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
       <section className="w-full section-padding bg-white lg:py-20 lg:px-12">
-        <div className="max-w-7xl mx-auto lg:max-w-[1400px]">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 lg:mb-16">
-            <h2 className="text-heading-2xl lg:text-4xl xl:text-5xl flex items-center justify-center gap-4 mb-6">
-              <span className="text-2xl lg:text-3xl">📅</span> Upcoming Events
+            <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
+              <span className="text-2xl">📅</span> Upcoming Events
             </h2>
             <p className="text-body-md lg:text-lg text-gray-600 max-w-3xl mx-auto">Discover all upcoming events happening near you.</p>
           </div>
@@ -437,15 +437,16 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             <>
               {upcomingEvents.length > 0 ? (
                 <>
-                  {/* Events Section - currently happening events */}
+                  {/* Happening Now Section - currently happening events */}
                   {sortedHappeningNow.length > 0 && (
                     <div className="mb-12 lg:mb-16">
                       <div className="text-center mb-6 lg:mb-8">
-                        <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
-                          <span className="text-2xl lg:text-3xl">🎉</span> Events
+                        <h3 className="text-heading-2xl flex items-center justify-center gap-4">
+                          <span className="text-2xl">🔥</span> Happening Now
                         </h3>
+                        <p className="text-gray-500 mt-2 text-sm lg:text-base">Events that are currently in progress</p>
                       </div>
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
                         {sortedHappeningNow.slice(0, 6).map(event => (
                           <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                         ))}
@@ -457,11 +458,11 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   {sortedUpcoming.length > 0 && (
                     <div>
                       <div className="text-center mb-6 lg:mb-8">
-                        <h3 className="text-heading-2xl lg:text-3xl flex items-center justify-center gap-4">
-                          <span className="text-2xl lg:text-3xl">📅</span> Upcoming Events
+                        <h3 className="text-heading-2xl flex items-center justify-center gap-4">
+                          <span className="text-2xl">📅</span> Upcoming Events
                         </h3>
                       </div>
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-6 lg:gap-8 animate-fade-in">
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
                         {sortedUpcoming.slice(0, 6).map(event => (
                           <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                         ))}
@@ -472,17 +473,33 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
               ) : (
                 <div className="col-span-full text-center py-20">
                   <div className="text-8xl mb-6">📅</div>
-                  <h3 className="text-heading-lg mb-4">No upcoming events</h3>
-                  <p className="text-body-sm text-gray-500">Check back later for new events.</p>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="mt-8"
-                    aria-label="Retry loading events"
-                    onClick={() => window.location.reload()}
-                  >
-                    Retry
-                  </Button>
+                  <h3 className="text-heading-lg mb-4">No upcoming events found</h3>
+                  <p className="text-body-sm text-gray-500 mb-6">
+                    {searchTerm || selectedDate !== 'All Dates' || selectedLocationFilter !== 'All Areas'
+                      ? 'Try adjusting your search filters to find more events.'
+                      : 'Be the first to create an event and share it with the community!'}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    {(searchTerm || selectedDate !== 'All Dates' || selectedLocationFilter !== 'All Areas') && (
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        aria-label="Clear all filters"
+                        onClick={() => {
+                          setSearchTerm('');
+                          setSelectedDate('All Dates');
+                          setSelectedLocationFilter('All Areas');
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                    <Button asChild size="lg">
+                      <Link href="/create-event">
+                        Create an Event
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
@@ -508,9 +525,9 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       </section>
 
       <section className="w-full section-padding bg-white border-t border-gray-200 lg:py-20 lg:px-12">
-        <div className="max-w-6xl mx-auto lg:max-w-[1400px]">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 lg:mb-16">
-            <h3 className="text-heading-xl lg:text-3xl xl:text-4xl mb-4 lg:mb-6">Explore by Category</h3>
+            <h3 className="text-heading-xl mb-4 lg:mb-6">Explore by Category</h3>
             <p className="text-body-sm lg:text-lg text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>
           </div>
           <ProgressiveLoader priority="low" delay={200}>

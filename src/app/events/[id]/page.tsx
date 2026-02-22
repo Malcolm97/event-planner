@@ -78,7 +78,7 @@ export default function EventDetailsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-6xl mb-4">😔</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
+        <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
         <p className="text-gray-600">The event you are looking for does not exist or has been removed.</p>
         <Button
           variant="secondary"
@@ -95,7 +95,7 @@ export default function EventDetailsPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.name}</h1>
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-4">{event.name}</h1>
           <p className="text-gray-600">{event.description}</p>
           <Button
             size="lg"

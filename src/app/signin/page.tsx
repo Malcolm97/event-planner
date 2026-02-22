@@ -248,7 +248,7 @@ export default function SignInPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-white font-bold text-xl">PNG</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-2">
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 tracking-tight mb-2">
           Welcome to PNG Events
         </h1>
           <p className="text-gray-600 text-lg">Sign in to discover and create events</p>

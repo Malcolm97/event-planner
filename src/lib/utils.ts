@@ -171,28 +171,13 @@ export function safeRedirect(url: string, router: any): void {
   }
 }
 
-// Event utility functions
+/**
+ * @deprecated Use `isEventUpcomingOrActive` instead.
+ * This function is kept for backward compatibility but will be removed in a future version.
+ * Both functions have identical behavior.
+ */
 export function isEventCurrentOrUpcoming(event: EventItem): boolean {
-  if (!event?.date) return false
-
-  const now = new Date()
-  const eventDate = new Date(event.date)
-
-  // Check if event has ended
-  if (event.end_date) {
-    const endDate = new Date(event.end_date)
-    // Event is current/upcoming if now is between start and end date
-    // or if the event hasn't started yet
-    return now <= endDate
-  }
-
-  // For events without end_date, consider events as upcoming/current 
-  // if the event date is in the future or within the current day
-  // An event is only "past" if the entire event day has ended
-  const endOfEventDay = new Date(eventDate)
-  endOfEventDay.setHours(23, 59, 59, 999)
-
-  return now <= endOfEventDay
+  return isEventUpcomingOrActive(event)
 }
 
 // Helper function to check if an event is upcoming or currently happening

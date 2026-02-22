@@ -5,7 +5,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-white flex flex-col justify-between">
       <div className="py-16 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">Terms of Service</h1>
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-8">Terms of Service</h1>
           <p className="text-gray-600 mb-2">Last updated: January 18, 2026</p>
           <p className="text-gray-700 mb-8">
             Welcome to PNG Events, Papua New Guinea's premier event discovery and management platform.
@@ -14,7 +14,7 @@ export default function TermsPage() {
 
           <div className="space-y-8">
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 mb-4">
                 By creating an account, accessing our platform, or using any of our services, you acknowledge that you have read,
                 understood, and agree to be bound by these Terms of Service and our Privacy Policy.
@@ -25,7 +25,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
               <p className="text-gray-700 mb-4">
                 PNG Events is a comprehensive event discovery and management platform that provides:
               </p>
@@ -41,7 +41,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. User Accounts and Registration</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">3. User Accounts and Registration</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Account Creation</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -62,7 +62,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Progressive Web App (PWA) Usage</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">4. Progressive Web App (PWA) Usage</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">PWA Features</h3>
                 <p className="text-gray-700 mb-4">
@@ -87,7 +87,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Push Notifications</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">5. Push Notifications</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Notification Services</h3>
                 <p className="text-gray-700 mb-4">
@@ -112,7 +112,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Event Creation and Management</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">6. Event Creation and Management</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Event Content Guidelines</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -142,7 +142,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. User Conduct and Prohibited Activities</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">7. User Conduct and Prohibited Activities</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Acceptable Use</h3>
                 <p className="text-gray-700 mb-4">You agree to use PNG Events responsibly and in compliance with applicable laws.</p>
@@ -164,7 +164,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Intellectual Property Rights</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">8. Intellectual Property Rights</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Platform IP</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -183,7 +183,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Privacy and Data Protection</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">9. Privacy and Data Protection</h2>
               <p className="text-gray-700 mb-4">
                 Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy,
                 which is incorporated into these Terms by reference.
@@ -197,7 +197,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Service Availability and Disclaimers</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">10. Service Availability and Disclaimers</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Service Availability</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -219,7 +219,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Limitation of Liability</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">11. Limitation of Liability</h2>
               <p className="text-gray-700 mb-4">
                 To the maximum extent permitted by law, PNG Events shall not be liable for any indirect,
                 incidental, special, consequential, or punitive damages arising from your use of our platform.
@@ -233,7 +233,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Account Termination</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">12. Account Termination</h2>
               <div className="space-y-4">
                 <h3 className="text-xl font-medium text-gray-900">Termination by User</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -253,7 +253,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Changes to Terms</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">13. Changes to Terms</h2>
               <p className="text-gray-700 mb-4">
                 We may update these Terms of Service from time to time. When we make changes, we will:
               </p>
@@ -269,7 +269,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Governing Law</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">14. Governing Law</h2>
               <p className="text-gray-700">
                 These Terms of Service are governed by the laws of Papua New Guinea. Any disputes arising from these terms
                 or your use of our platform will be resolved through the courts of Papua New Guinea.
@@ -277,7 +277,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Contact Information</h2>
+              <h2 className="text-base sm:text-base lg:text-2xl font-semibold text-gray-900 mb-4">15. Contact Information</h2>
               <p className="text-gray-700 mb-4">
                 If you have questions about these Terms of Service, please contact us:
               </p>

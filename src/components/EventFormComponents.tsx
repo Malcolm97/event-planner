@@ -412,7 +412,7 @@ export function PageHeader({ title, subtitle, icon, children }: PageHeaderProps)
           {icon}
         </div>
       )}
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+      <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-2">
         {title}
       </h1>
       {subtitle && (

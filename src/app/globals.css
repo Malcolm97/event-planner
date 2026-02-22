@@ -366,43 +366,43 @@
 @layer components {
   /* Modern Typography Scale - Mobile First */
   .text-display-2xl {
-    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-display-xl {
-    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-display-lg {
-    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-display-md {
-    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-display-sm {
-    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-heading-2xl {
-    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-heading-xl {
-    @apply text-lg sm:text-xl lg:text-2xl font-bold tracking-tight;
+    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
   }
 
   .text-heading-lg {
-    @apply text-base sm:text-lg lg:text-xl font-semibold tracking-tight;
+    @apply text-base sm:text-base lg:text-lg font-semibold tracking-tight;
   }
 
   .text-heading-md {
-    @apply text-sm sm:text-base lg:text-lg font-semibold tracking-tight;
+    @apply text-base sm:text-base lg:text-base font-semibold tracking-tight;
   }
 
   .text-heading-sm {
-    @apply text-xs sm:text-sm lg:text-base font-semibold tracking-tight;
+    @apply text-base sm:text-base lg:text-sm font-semibold tracking-tight;
   }
 
   .text-body-lg {
@@ -875,17 +875,6 @@
 
   .swipe-dot.active {
     @apply bg-white;
-  }
-
-  /* Pull to refresh indicator */
-  .pull-refresh {
-    @apply flex items-center justify-center py-4;
-    transform: translateY(-100%);
-    transition: transform 0.3s ease;
-  }
-
-  .pull-refresh.active {
-    transform: translateY(0);
   }
 
   /* Modern animations */

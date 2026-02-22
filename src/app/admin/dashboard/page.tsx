@@ -214,7 +214,7 @@ export default function AdminDashboard() {
       {/* Header with quick actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600">Monitor your event platform's performance</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">

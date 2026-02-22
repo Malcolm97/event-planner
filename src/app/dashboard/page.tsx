@@ -170,7 +170,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex justify-between items-center py-3 sm:py-4 lg:py-6">
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Dashboard</h1>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-gray-600 text-sm">Manage your events and profile</p>
                 {/* Online/Offline indicator */}
