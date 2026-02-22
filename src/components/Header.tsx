@@ -191,24 +191,6 @@ const Header = React.memo(function Header() {
 
             {/* Right side actions */}
             <div className="flex items-center space-x-2 xl:space-x-3">
-              {/* Desktop Network Status Indicator */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200">
-                <div className={`w-2 h-2 rounded-full ${
-                  syncState === 'offline' ? 'bg-red-500' :
-                  syncState === 'syncing' ? 'bg-blue-500 animate-pulse' :
-                  syncState === 'error' ? 'bg-red-500' :
-                  syncState === 'has-queue' ? 'bg-yellow-500' :
-                  'bg-green-500'
-                }`} />
-                <span className="text-xs font-medium text-gray-600">
-                  {syncState === 'offline' ? 'Offline' :
-                   syncState === 'syncing' ? 'Syncing...' :
-                   syncState === 'error' ? 'Error' :
-                   syncState === 'has-queue' ? `${queueLength} pending` :
-                   'Online'}
-                </span>
-              </div>
-
               {/* Network Status - Mobile/Tablet only */}
               <div className="relative network-dropdown lg:hidden">
                 <Button
@@ -364,86 +346,89 @@ const Header = React.memo(function Header() {
                 )}
               </div>
 
-              <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="hidden lg:flex items-center text-sm xl:text-base">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 inline mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="hidden xl:inline">Create Event</span>
-                <span className="xl:hidden">Create</span>
-              </Button>
+              {/* Desktop: Create Event + User Profile grouped together */}
+              <div className="hidden lg:flex items-center gap-2">
+                <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="flex items-center text-sm xl:text-base">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 xl:h-5 xl:w-5 mr-1 xl:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="hidden xl:inline">Create Event</span>
+                  <span className="xl:hidden">Create</span>
+                </Button>
 
-              {user ? (
-                <div className="relative profile-dropdown">
-                  <Button
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    variant="ghost"
-                    className="hidden lg:flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100"
-                    aria-expanded={isProfileDropdownOpen}
-                    aria-haspopup="menu"
-                  >
-                    {userPhotoUrl ? (
-                      <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-1 sm:mr-2" />
-                    ) : (
-                      <FiUser size={16} className="inline mr-1 sm:mr-2" />
+                {user ? (
+                  <div className="relative profile-dropdown">
+                    <Button
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      variant="ghost"
+                      className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100"
+                      aria-expanded={isProfileDropdownOpen}
+                      aria-haspopup="menu"
+                    >
+                      {userPhotoUrl ? (
+                        <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-1 xl:mr-2" />
+                      ) : (
+                        <FiUser size={16} className="inline mr-1 xl:mr-2" />
+                      )}
+                      <span className="hidden xl:inline">{userName || 'Dashboard'}</span>
+                      <span className="xl:hidden">{userName ? userName.split(' ')[0] : 'Profile'}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Button>
+
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-[100] backdrop-blur-sm">
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900">{userName || 'User'}</p>
+                          <p className="text-xs text-gray-500">Manage your account</p>
+                        </div>
+                        <div className="py-2">
+                          <button
+                            onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsProfileDropdownOpen(false); }}
+                            className="w-full flex items-center space-x-3 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                          >
+                            <FiUser size={16} />
+                            <span>Dashboard</span>
+                          </button>
+                          <button
+                            onClick={() => { router.push('/settings'); setIsProfileDropdownOpen(false); }}
+                            className="w-full flex items-center space-x-3 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                          >
+                            <FiSettings size={16} />
+                            <span>Settings</span>
+                          </button>
+                        </div>
+                        <div className="border-t border-gray-100 my-2"></div>
+                        <div className="px-4">
+                          <button
+                            onClick={() => { handleSignOut(); setIsProfileDropdownOpen(false); }}
+                            className="w-full flex items-center space-x-3 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                          >
+                            <FiLogOut size={16} />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    <span className="hidden xl:inline">{userName || 'Dashboard'}</span>
-                    <span className="xl:hidden">{userName ? userName.split(' ')[0] : 'Profile'}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </Button>
-
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-[100] backdrop-blur-sm">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900">{userName || 'User'}</p>
-                        <p className="text-xs text-gray-500">Manage your account</p>
-                      </div>
-                      <div className="py-2">
-                        <button
-                          onClick={() => { navigateWithOfflineCheck('/dashboard', 'Dashboard'); setIsProfileDropdownOpen(false); }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
-                        >
-                          <FiUser size={16} />
-                          <span>Dashboard</span>
-                        </button>
-                        <button
-                          onClick={() => { router.push('/settings'); setIsProfileDropdownOpen(false); }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
-                        >
-                          <FiSettings size={16} />
-                          <span>Settings</span>
-                        </button>
-                      </div>
-                      <div className="border-t border-gray-100 my-2"></div>
-                      <div className="px-4">
-                        <button
-                          onClick={() => { handleSignOut(); setIsProfileDropdownOpen(false); }}
-                          className="w-full flex items-center space-x-3 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                        >
-                          <FiLogOut size={16} />
-                          <span>Sign Out</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                hasMounted && isOnline && (
-                  <Button
-                    onClick={() => {
-                      // Store current URL for redirect after sign-in
-                      const currentUrl = window.location.pathname + window.location.search;
-                      storeSigninRedirect(currentUrl);
-                      router.push('/signin');
-                    }}
-                    variant="ghost"
-                    className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2"
-                  >
-                    <FiUser size={14} className="inline mr-1 sm:mr-2" />Sign In
-                  </Button>
-                )
-              )}
+                  </div>
+                ) : (
+                  hasMounted && isOnline && (
+                    <Button
+                      onClick={() => {
+                        // Store current URL for redirect after sign-in
+                        const currentUrl = window.location.pathname + window.location.search;
+                        storeSigninRedirect(currentUrl);
+                        router.push('/signin');
+                      }}
+                      variant="ghost"
+                      className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2"
+                    >
+                      <FiUser size={14} className="inline mr-1 sm:mr-2" />Sign In
+                    </Button>
+                  )
+                )}
+              </div>
             </div>
           </div>
         </div>
