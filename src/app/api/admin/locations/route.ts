@@ -1,57 +1,22 @@
 import { NextResponse } from "next/server"
-import { supabase, TABLES } from "@/lib/supabase"
+import { TABLES } from "@/lib/supabase"
+import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
 
-// Helper function to check admin access - uses 'users' table
-async function checkAdminAccess() {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return { isAdmin: false, error: 'Not authenticated' }
-    }
-
-    const { data: userData, error: userError } = await supabase
-      .from(TABLES.USERS)
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError) {
-      const isUserNotFound = userError.code === 'PGRST116' ||
-                               userError.message?.includes('No rows found') ||
-                               userError.code === 'PGRST204' ||
-                               !userError.code
-
-      if (isUserNotFound) {
-        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' }
-      } else {
-        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') }
-      }
-    }
-
-    return { isAdmin: userData?.role === 'admin', user }
-  } catch (error) {
-    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
-  }
-}
-
 export async function GET(request: Request) {
-  // Admin API routes require authentication
-  try {
-    // Check admin access
-    const adminCheck = await checkAdminAccess()
-    
-    if (!adminCheck.isAdmin) {
-      return NextResponse.json(
-        { error: adminCheck.error || 'Access denied. Admin privileges required.' },
-        { status: 403 }
-      )
-    }
+  // Check admin access using server-side client
+  const adminCheck = await checkAdminAccess()
+  
+  if (!adminCheck.isAdmin || !adminCheck.supabase) {
+    return unauthorizedResponse(adminCheck.error)
+  }
 
+  const supabase = adminCheck.supabase
+
+  try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Max 100 items
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
     const search = searchParams.get('search')?.trim()
 
     // Validate pagination parameters
@@ -65,10 +30,7 @@ export async function GET(request: Request) {
     // Build query to get all events with location data
     let query = supabase
       .from(TABLES.EVENTS)
-      .select(`
-        location,
-        approved
-      `)
+      .select('location, approved')
       .not('location', 'is', null)
       .neq('location', '')
 
@@ -118,7 +80,7 @@ export async function GET(request: Request) {
     // Convert to array and sort by location name
     const locationsArray = Array.from(locationStats.entries())
       .map(([location, stats]) => ({
-        id: location.toLowerCase().replace(/[^a-z0-9]/g, '-'), // Generate ID from location name
+        id: location.toLowerCase().replace(/[^a-z0-9]/g, '-'),
         name: location,
         description: 'Location in Papua New Guinea',
         ...stats
@@ -131,8 +93,7 @@ export async function GET(request: Request) {
     const to = Math.min(from + limit, totalCount)
     const paginatedData = locationsArray.slice(from, to)
 
-    // Add cache headers for better performance
-    const response = NextResponse.json({
+    return NextResponse.json({
       data: paginatedData,
       pagination: {
         page,
@@ -141,11 +102,6 @@ export async function GET(request: Request) {
         totalPages: Math.ceil(totalCount / limit)
       }
     })
-
-    // Cache for 30 seconds, revalidate on demand
-    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
-
-    return response
 
   } catch (error) {
     console.error("Unexpected error in locations API:", error)

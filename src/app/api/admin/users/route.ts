@@ -1,51 +1,17 @@
 import { NextResponse } from "next/server"
-import { supabase, TABLES } from "@/lib/supabase"
+import { TABLES } from "@/lib/supabase"
+import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
 
-// Helper function to check admin access - uses 'profiles' table
-async function checkAdminAccess() {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return { isAdmin: false, error: 'Not authenticated' }
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError) {
-      const isProfileNotFound = profileError.code === 'PGRST116' ||
-                               profileError.message?.includes('No rows found') ||
-                               profileError.code === 'PGRST204' ||
-                               !profileError.code
-
-      if (isProfileNotFound) {
-        return { isAdmin: false, error: 'Profile not found' }
-      } else {
-        return { isAdmin: false, error: getUserFriendlyError(profileError, 'Something went wrong. Please try again.') }
-      }
-    }
-
-    return { isAdmin: profile?.role === 'admin', user }
-  } catch (error) {
-    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
-  }
-}
-
 export async function GET(request: Request) {
-  // Check admin access
+  // Check admin access using server-side client
   const adminCheck = await checkAdminAccess()
   
-  if (!adminCheck.isAdmin) {
-    return NextResponse.json(
-      { error: adminCheck.error || 'Access denied. Admin privileges required.' },
-      { status: 403 }
-    )
+  if (!adminCheck.isAdmin || !adminCheck.supabase) {
+    return unauthorizedResponse(adminCheck.error)
   }
+
+  const supabase = adminCheck.supabase
 
   try {
     const { searchParams } = new URL(request.url)

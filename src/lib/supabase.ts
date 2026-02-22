@@ -128,7 +128,7 @@ export const handleSupabaseError = (error: any, operation: string) => {
 // Database table names - all tables used in the app
 export const TABLES = {
   EVENTS: 'events',
-  USERS: 'users',
+  USERS: 'profiles', // Changed from 'users' to 'profiles' - the actual table name
   SAVED_EVENTS: 'saved_events',
   ACTIVITIES: 'activities',
   PUSH_SUBSCRIPTIONS: 'push_subscriptions',

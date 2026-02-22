@@ -1,43 +1,16 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
-import { logUserAction } from "@/lib/auditLogger"
-
-// Helper function to check admin access
-async function checkAdminAccess() {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return { isAdmin: false, error: 'Not authenticated' }
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      return { isAdmin: false, error: 'Profile not found' }
-    }
-
-    return { isAdmin: profile.role === 'admin', user }
-  } catch (error) {
-    return { isAdmin: false, error: 'Unexpected error' }
-  }
-}
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  // Check admin access
+  // Check admin access using server-side client
   const adminCheck = await checkAdminAccess()
   
-  if (!adminCheck.isAdmin) {
-    return NextResponse.json(
-      { error: adminCheck.error || 'Access denied. Admin privileges required.' },
-      { status: 403 }
-    )
+  if (!adminCheck.isAdmin || !adminCheck.supabase) {
+    return unauthorizedResponse(adminCheck.error)
   }
+
+  const supabase = adminCheck.supabase
 
   try {
     const { id } = await params
@@ -69,15 +42,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  // Check admin access
+  // Check admin access using server-side client
   const adminCheck = await checkAdminAccess()
   
-  if (!adminCheck.isAdmin) {
-    return NextResponse.json(
-      { error: adminCheck.error || 'Access denied. Admin privileges required.' },
-      { status: 403 }
-    )
+  if (!adminCheck.isAdmin || !adminCheck.supabase) {
+    return unauthorizedResponse(adminCheck.error)
   }
+
+  const supabase = adminCheck.supabase
 
   try {
     const { id } = await params
@@ -118,15 +90,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  // Check admin access
+  // Check admin access using server-side client
   const adminCheck = await checkAdminAccess()
   
-  if (!adminCheck.isAdmin) {
-    return NextResponse.json(
-      { error: adminCheck.error || 'Access denied. Admin privileges required.' },
-      { status: 403 }
-    )
+  if (!adminCheck.isAdmin || !adminCheck.supabase) {
+    return unauthorizedResponse(adminCheck.error)
   }
+
+  const supabase = adminCheck.supabase
 
   try {
     const { id } = await params

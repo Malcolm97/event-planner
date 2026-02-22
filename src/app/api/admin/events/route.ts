@@ -1,57 +1,22 @@
 import { NextResponse } from "next/server"
-import { supabase, TABLES } from "@/lib/supabase"
+import { TABLES } from "@/lib/supabase"
+import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
 import { getUserFriendlyError } from "@/lib/userMessages"
 
-// Helper function to check admin access - uses 'users' table
-async function checkAdminAccess() {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return { isAdmin: false, error: 'Not authenticated' }
-    }
-
-    const { data: userData, error: userError } = await supabase
-      .from(TABLES.USERS)
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError) {
-      const isUserNotFound = userError.code === 'PGRST116' ||
-                               userError.message?.includes('No rows found') ||
-                               userError.code === 'PGRST204' ||
-                               !userError.code
-
-      if (isUserNotFound) {
-        return { isAdmin: false, error: 'We couldn\'t find your profile. Please try signing in again.' }
-      } else {
-        return { isAdmin: false, error: getUserFriendlyError(userError, 'Something went wrong. Please try again.') }
-      }
-    }
-
-    return { isAdmin: userData?.role === 'admin', user }
-  } catch (error) {
-    return { isAdmin: false, error: getUserFriendlyError(error, 'Something unexpected happened. Please try again.') }
-  }
-}
-
 export async function GET(request: Request) {
-  // Admin API routes require authentication
-  try {
-    // Check admin access
-    const adminCheck = await checkAdminAccess()
-    
-    if (!adminCheck.isAdmin) {
-      return NextResponse.json(
-        { error: adminCheck.error || 'Access denied. Admin privileges required.' },
-        { status: 403 }
-      )
-    }
+  // Check admin access using server-side client
+  const adminCheck = await checkAdminAccess()
+  
+  if (!adminCheck.isAdmin || !adminCheck.supabase) {
+    return unauthorizedResponse(adminCheck.error)
+  }
 
+  const supabase = adminCheck.supabase
+
+  try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Cap at 100
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
     const search = searchParams.get('search')
     const status = searchParams.get('status')
     const category = searchParams.get('category')
@@ -65,7 +30,7 @@ export async function GET(request: Request) {
         )
       `, { count: 'exact' })
 
-    // Apply search filter - FIXED: use 'name' instead of 'title'
+    // Apply search filter
     if (search) {
       const searchPattern = `%${search}%`
       query = query.or(`name.ilike.${searchPattern},description.ilike.${searchPattern},location.ilike.${searchPattern}`)
@@ -108,14 +73,14 @@ export async function GET(request: Request) {
       })
     }
 
-    // OPTIMIZATION: Fetch all creator info and saved counts in batch queries instead of N+1
+    // OPTIMIZATION: Fetch all creator info and saved counts in batch queries
     const creatorIds = [...new Set(data.map(e => e.created_by).filter(Boolean))]
     const eventIds = data.map(e => e.id)
 
-    // Batch fetch creators
+    // Batch fetch creators from profiles table
     const { data: creators } = await supabase
-      .from(TABLES.USERS)
-      .select('id, name, photo_url')
+      .from('profiles')
+      .select('id, full_name, avatar_url')
       .in('id', creatorIds)
 
     const creatorMap = new Map(creators?.map(c => [c.id, c]) || [])
@@ -137,8 +102,8 @@ export async function GET(request: Request) {
       const creator = creatorMap.get(event.created_by)
       return {
         ...event,
-        creator_name: creator?.name || 'Unknown User',
-        creator_avatar: creator?.photo_url || null,
+        creator_name: creator?.full_name || 'Unknown User',
+        creator_avatar: creator?.avatar_url || null,
         category_name: event.categories?.name || 'Uncategorized',
         saved_count: savedCountMap.get(event.id) || 0,
         categories: undefined
