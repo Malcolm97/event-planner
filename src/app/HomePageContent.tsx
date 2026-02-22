@@ -341,7 +341,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
         <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8 lg:gap-6">
           <div className="animate-bounce-in">
-          <h1 className="text-base sm:text-base lg:text-2xl text-white mb-4 drop-shadow-lg font-bold tracking-tight">
+          <h1 className="text-2xl text-white mb-4 drop-shadow-lg font-bold tracking-tight">
             PNG Events
           </h1>
           <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
@@ -380,7 +380,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                   <Button
                     size="md"
                     aria-label="Find Events"
-                    className="w-full sm:w-auto lg:px-8 lg:py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                    className="lg:px-8 lg:py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-0"
                   >
                     Find Events ✨
                   </Button>

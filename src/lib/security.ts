@@ -105,7 +105,7 @@ export async function checkAdminAccess(request?: NextRequest): Promise<{
     }
 
     const { data: userData, error: userError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();

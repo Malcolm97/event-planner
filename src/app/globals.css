@@ -366,31 +366,31 @@
 @layer components {
   /* Modern Typography Scale - Mobile First */
   .text-display-2xl {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-display-xl {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-display-lg {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-display-md {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-display-sm {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-heading-2xl {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-heading-xl {
-    @apply text-base sm:text-base lg:text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .text-heading-lg {

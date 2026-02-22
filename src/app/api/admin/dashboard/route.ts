@@ -68,40 +68,19 @@ export async function GET(request: Request) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [
-      usersCountResult,
-      eventsCountResult,
-      categoriesCountResult,
-      pendingEventsResult,
-      recentUsersResult,
-      recentEventsResult,
-      recentActivitiesResult,
-      approvedEventsResult,
-      userActivityResult,
-      eventsByCategoryResult,
-      userRolesResult,
-      monthlyUsersResult
-    ] = await Promise.all([
-      // Total users count
-      supabase.from("users").select("id", { count: "exact", head: true }),
-
-      // Total events count
-      supabase.from("events").select("id", { count: "exact", head: true }),
-
-      // Total categories count
-      supabase.from("categories").select("name", { count: "exact", head: true }),
-
-      // Pending approvals (unapproved events)
-      supabase.from("events").select("id", { count: "exact", head: true }).eq("featured", false),
-
-      // Recent users (last 7 days)
-      supabase.from("users").select("id", { count: "exact", head: true }).gte("updated_at", sevenDaysAgo),
-
-      // Recent events (last 7 days)
-      supabase.from("events").select("id", { count: "exact", head: true }).gte("created_at", sevenDaysAgo),
-
-      // Recent activities (last 10 activities)
-      supabase.from("activities").select(`
+    // Execute queries individually with error handling
+    const usersCountResult = await supabase.from("profiles").select("id", { count: "exact", head: true });
+    const eventsCountResult = await supabase.from("events").select("id", { count: "exact", head: true });
+    const categoriesCountResult = await supabase.from("categories").select("name", { count: "exact", head: true });
+    const pendingEventsResult = await supabase.from("events").select("id", { count: "exact", head: true }).eq("approved", false);
+    const recentUsersResult = await supabase.from("profiles").select("id", { count: "exact", head: true }).gte("updated_at", sevenDaysAgo);
+    const recentEventsResult = await supabase.from("events").select("id", { count: "exact", head: true }).gte("created_at", sevenDaysAgo);
+    
+    // Try to get activities, but don't fail if table doesn't exist
+    let recentActivitiesData: any[] = [];
+    let userActivityCount = 0;
+    try {
+      const activitiesResult = await supabase.from("activities").select(`
         id,
         activity_type,
         description,
@@ -110,23 +89,22 @@ export async function GET(request: Request) {
         event_name,
         created_at,
         user_id
-      `).order("created_at", { ascending: false }).limit(10),
-
-      // Approved events count
-      supabase.from("events").select("id", { count: "exact", head: true }).eq("featured", true),
-
-      // User activity stats (last 30 days) - using batch count
-      supabase.from("activities").select("activity_type", { count: "exact" }).gte("created_at", thirtyDaysAgo),
-
-      // Get events by category for stats
-      supabase.from("events").select("category, id"),
-
-      // Get user role distribution (sample data)
-      supabase.from("users").select("id"),
-
-      // Get monthly user registrations (last 6 months)
-      supabase.from("users").select("updated_at").gte("updated_at", new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString())
-    ])
+      `).order("created_at", { ascending: false }).limit(10);
+      
+      if (activitiesResult.data) {
+        recentActivitiesData = activitiesResult.data;
+      }
+      
+      const activityCountResult = await supabase.from("activities").select("activity_type", { count: "exact" }).gte("created_at", thirtyDaysAgo);
+      userActivityCount = activityCountResult.count || 0;
+    } catch (e) {
+      console.log("Activities table may not exist:", e);
+    }
+    
+    const approvedEventsResult = await supabase.from("events").select("id", { count: "exact", head: true }).eq("approved", true);
+    const eventsByCategoryResult = await supabase.from("events").select("category, id");
+    const userRolesResult = await supabase.from("profiles").select("role");
+    const monthlyUsersResult = await supabase.from("profiles").select("updated_at").gte("updated_at", new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString());
 
     // Calculate category popularity from fetched data
     const categoryStats: Record<string, number> = {};
@@ -137,11 +115,14 @@ export async function GET(request: Request) {
       });
     }
 
-    // Calculate role distribution (simplified)
-    const roleStats: Record<string, number> = {
-      admin: 0,
-      user: userRolesResult.count || 0
-    };
+    // Calculate role distribution from profiles data
+    const roleStats: Record<string, number> = { admin: 0, user: 0, moderator: 0 };
+    if (userRolesResult.data) {
+      userRolesResult.data.forEach((profile: any) => {
+        const role = profile.role || 'user';
+        roleStats[role] = (roleStats[role] || 0) + 1;
+      });
+    }
 
     // Calculate monthly stats from user data
     const monthlyStats: Record<string, number> = {};
@@ -165,7 +146,7 @@ export async function GET(request: Request) {
         recentUsers: recentUsersResult.count || 0,
         recentEvents: recentEventsResult.count || 0,
       },
-      recentActivities: recentActivitiesResult?.data || [],
+      recentActivities: recentActivitiesData,
       categoryStats,
       roleStats,
       monthlyStats,

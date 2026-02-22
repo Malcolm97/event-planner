@@ -246,11 +246,11 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-0 z-[110] bg-black/95 backdrop-blur-md animate-fade-in flex flex-col"
+      className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md animate-fade-in flex flex-col"
       onClick={onClose}
     >
       {/* Top Controls Bar - Fixed at top */}
-      <div className="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 md:p-5">
+      <div className="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 md:p-5 lg:py-6">
         {/* Left side - Zoom Controls */}
         <div className="flex gap-2">
           <button
@@ -286,8 +286,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
         </button>
       </div>
 
-      {/* Main Image Area - Takes remaining space */}
-      <div className="flex-1 relative flex items-center justify-center px-12 sm:px-16 md:px-20 lg:px-24 w-full min-h-0">
+      {/* Main Image Area - Takes remaining space, reduced height on desktop by 10% */}
+      <div className="flex-1 relative flex items-center justify-center px-12 sm:px-16 md:px-20 lg:px-24 lg:py-8 w-full min-h-0">
         {/* Navigation Buttons - visible on tablet+ */}
         <button
           onClick={(e) => { e.stopPropagation(); onPrevImage(); }}
@@ -376,7 +376,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
       </div>
 
       {/* Bottom UI Section - Fixed at bottom with spacing for mobile nav */}
-      <div className="flex-shrink-0 p-3 sm:p-4 pb-16 sm:pb-6 md:pb-4">
+      <div className="flex-shrink-0 p-3 sm:p-4 pb-16 sm:pb-6 md:pb-4 lg:pb-6">
         {/* Image Counter */}
         <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-xl px-4 py-2 mx-auto max-w-md border border-white/10 mb-3">
           <div className="flex items-center justify-center gap-2">

@@ -114,7 +114,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 transition-all duration-300 ${
+      className={`fixed inset-x-0 top-14 sm:top-16 lg:top-0 bottom-16 sm:bottom-20 lg:bottom-0 z-50 flex items-center justify-center p-3 sm:p-4 lg:p-6 transition-all duration-300 ${
         isVisible 
           ? 'bg-black/60 backdrop-blur-sm opacity-100' 
           : 'bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none'
@@ -134,7 +134,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
             ? 'translate-y-0 opacity-100 scale-100' 
             : 'translate-y-8 opacity-0 scale-95'
         }`}
-        style={{ maxHeight: '90dvh' }}
+        style={{ maxHeight: 'calc(90dvh - 3.5rem - 4rem - env(safe-area-inset-bottom, 0px))' }}
       >
         {/* Header with gradient */}
         <div className="relative h-14 sm:h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
@@ -160,7 +160,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         <div 
           ref={contentRef}
           className="overflow-y-auto"
-          style={{ maxHeight: 'calc(90dvh - 4rem)' }}
+          style={{ maxHeight: 'calc(90dvh - 3.5rem - 4rem - 4rem - env(safe-area-inset-bottom, 0px))' }}
         >
           <div className="p-4 sm:p-5 space-y-4">
             {/* Avatar Section */}
