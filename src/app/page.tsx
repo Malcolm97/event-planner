@@ -1,4 +1,4 @@
-import { supabase, TABLES, isSupabaseConfigured, getEventsCount, getUserCount } from '@/lib/supabase';
+import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import { Suspense } from 'react';
 import ClientHomePageWrapper from './ClientHomePageWrapper';
@@ -6,6 +6,29 @@ import Loading from './loading'; // Import the Loading component
 
 // Revalidate the page every 60 seconds
 export const revalidate = 60;
+
+// Fetch stats from our server-side API endpoint
+async function getStats() {
+  try {
+    // Use internal fetch with absolute URL for server-side rendering
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
+      ? `https://${process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/stats`, {
+      next: { revalidate: 60 } // Cache for 60 seconds
+    });
+    
+    if (!response.ok) {
+      return { totalUsers: 0, totalEvents: 0, citiesCovered: 0 };
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    return { totalUsers: 0, totalEvents: 0, citiesCovered: 0 };
+  }
+}
 
 async function getEvents() {
   // Check if Supabase is properly configured
@@ -20,14 +43,18 @@ async function getEvents() {
   }
 
   let events: EventItem[] = [];
-  let totalEvents = 0;
-  let totalUsers = 0;
 
   try {
-    // Fetch events
+    // Get current date for filtering upcoming events
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+    // Fetch upcoming and current events (events that haven't ended yet)
+    // We fetch events where date >= today OR end_date >= today (for multi-day events currently happening)
     const { data: eventsData, error: eventsError } = await supabase
       .from(TABLES.EVENTS)
-      .select('id, name, date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by')
+      .select('id, name, date, end_date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by')
+      .or(`date.gte.${todayStart},end_date.gte.${todayStart}`)
       .order('date', { ascending: true });
 
     if (eventsError) {
@@ -36,6 +63,7 @@ async function getEvents() {
       events = (eventsData || []).map((event: any) => ({
         ...event,
         date: event.date ? String(event.date) : '',
+        end_date: event.end_date ? String(event.end_date) : null,
         id: String(event.id),
         name: event.name,
         location: event.location || '',
@@ -50,12 +78,6 @@ async function getEvents() {
       }));
     }
 
-    // Fetch total events count using utility function
-    totalEvents = await getEventsCount();
-
-    // Fetch total users count using utility function
-    totalUsers = await getUserCount();
-
   } catch (error) {
     console.error('Unexpected error in getEvents:', error);
     // Return fallback values on any error
@@ -67,25 +89,14 @@ async function getEvents() {
     };
   }
 
-  // Calculate cities covered
-  const uniqueCities = new Set<string>();
-  if (events.length > 0) {
-    events.forEach((event: EventItem) => {
-      if (event.location) {
-        const firstPart = event.location.split(',')[0]?.trim();
-        if (firstPart) {
-          uniqueCities.add(firstPart);
-        }
-      }
-    });
-  }
-  const citiesCovered = uniqueCities.size;
+  // Fetch stats from the dedicated API endpoint
+  const stats = await getStats();
 
   return {
     events,
-    totalEvents,
-    totalUsers,
-    citiesCovered,
+    totalEvents: stats.totalEvents,
+    totalUsers: stats.totalUsers,
+    citiesCovered: stats.citiesCovered,
   };
 }
 

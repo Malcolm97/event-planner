@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppFooter from '@/components/AppFooter';
 import { supabase, TABLES, User } from '@/lib/supabase';
+import { normalizeUser } from '@/lib/types';
 import { FiSearch, FiUser, FiCalendar, FiMapPin, FiClock } from 'react-icons/fi';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -61,8 +62,10 @@ export default function CreatorsPage() {
           return;
         }
 
-        // Filter users to only creators
-        const creatorsData = users.filter(user => creatorIds.includes(user.id));
+        // Filter users to only creators and normalize their data
+        const creatorsData = users
+          .filter(user => creatorIds.includes(user.id))
+          .map(user => normalizeUser(user));
 
         // Add event data to creators
         const creatorsWithData = creatorsData.map(creator => {

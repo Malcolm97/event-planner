@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, TABLES, Event, User } from '@/lib/supabase';
+import { supabase, TABLES, Event, User, USER_FIELDS } from '@/lib/supabase';
+import { normalizeUser } from '@/lib/types';
+import { triggerCacheRefresh } from '@/hooks/useOfflineFirstData';
 import { FiArrowLeft, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageCircle } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import Image from 'next/image';
@@ -51,7 +53,9 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
           setLoading(false);
           return;
         }
-        setUser(userData);
+        // Normalize user data to handle field name variants (full_name/name, avatar_url/photo_url)
+        const normalizedUser = normalizeUser(userData);
+        setUser(normalizedUser);
         const { data: eventsData } = await supabase
           .from(TABLES.EVENTS)
           .select('*')

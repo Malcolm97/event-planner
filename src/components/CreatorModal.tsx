@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/supabase';
+import { normalizeUser } from '@/lib/types';
 import { 
   FiUser, FiBriefcase, FiMail, FiPhone, 
   FiExternalLink, FiCalendar, FiChevronRight, FiX
@@ -79,6 +80,13 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
   }, [isOpen]);
 
   if (!isOpen || !creator) return null;
+
+  // Normalize creator data to handle field name variants (full_name/name, avatar_url/photo_url)
+  const normalizedCreator = normalizeUser(creator);
+  // Get photo URL from either field
+  const creatorPhotoUrl = normalizedCreator.photo_url || normalizedCreator.avatar_url;
+  // Get name from either field
+  const creatorName = normalizedCreator.name || normalizedCreator.full_name || 'Unnamed Creator';
 
   // Get up to 4 events for the gallery
   const galleryEvents = creator.allEvents?.slice(0, 4) || [];
@@ -168,10 +176,10 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
               <div className="relative flex-shrink-0">
                 <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-xl bg-white p-1 shadow-md">
                   <div className="w-full h-full rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                    {creator.photo_url ? (
+                {creatorPhotoUrl ? (
                       <Image
-                        src={creator.photo_url}
-                        alt={creator.name || 'Creator'}
+                        src={creatorPhotoUrl}
+                        alt={creatorName}
                         width={72}
                         height={72}
                         className="w-full h-full object-cover"
@@ -189,10 +197,10 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
 
               <div className="flex-1 min-w-0 pt-1">
                 <h2 id="creator-modal-title" className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                  {creator.name || 'Unnamed Creator'}
+                  {creatorName}
                 </h2>
-                {creator.company && (
-                  <span className="text-gray-600 text-sm truncate block">{creator.company}</span>
+                {normalizedCreator.company && (
+                  <span className="text-gray-600 text-sm truncate block">{normalizedCreator.company}</span>
                 )}
                 {/* Stats row */}
                 <div className="flex items-center gap-3 mt-1.5">

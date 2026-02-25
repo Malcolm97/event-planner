@@ -380,17 +380,27 @@ export function useOfflineFirstData<T>(storeName: string) {
 
 // Event-specific hook with proper typing
 export function useEvents(category?: string) {
-  const { data, isLoading, error, setData } = useOfflineFirstData<EventItem>(TABLES.EVENTS);
+  const { data, isLoading, error, setData, refresh } = useOptimizedData<EventItem>(TABLES.EVENTS, {
+    limit: 100,
+    enablePagination: false
+  });
   
   // Filter by category if specified
   const filteredData = category 
     ? data.filter(event => event.category === category)
     : data;
 
-  return { data: filteredData, isLoading, error, setData };
+  return { data: filteredData, isLoading, error, setData, refresh };
 }
 
 // Category-specific hook
 export function useEventsByCategory(category: string) {
   return useEvents(category);
+}
+
+// Utility function to trigger cache refresh across the app
+export function triggerCacheRefresh(type: 'events' | 'users' | 'all' = 'all') {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('cache-refreshed', { detail: { type } }));
+  }
 }

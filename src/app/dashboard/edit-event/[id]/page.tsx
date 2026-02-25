@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { triggerCacheRefresh } from '@/hooks/useOfflineFirstData';
 import ImageUpload from '@/components/EventFormComponents';
 import { FormSection, FormField, LoadingButton, AlertBanner } from '@/components/EventFormComponents';
 import CustomSelect from '@/components/CustomSelect';
@@ -335,6 +336,9 @@ export default function EditEventPage() {
       }
 
       setSuccessMessage('Event updated successfully!');
+      
+      // Trigger cache refresh so updated event appears immediately
+      triggerCacheRefresh('events');
       
       // Delay redirect to show success message
       setTimeout(() => {

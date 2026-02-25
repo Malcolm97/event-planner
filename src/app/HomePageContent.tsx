@@ -50,7 +50,7 @@ interface HomePageContentProps {
 
 export default function HomePageContent({ initialEvents, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: HomePageContentProps) {
   // Use the optimized data hook for events with pagination support
-  const { data: events, isLoading: loading, error: eventsError } = useEvents();
+  const { data: events, isLoading: loading, error: eventsError, refresh: refreshEvents } = useEvents();
 
   const [filteredEvents, setFilteredEvents] = useState<EventItem[]>(initialEvents || []);
   const [searchTerm, setSearchTerm] = useState('');

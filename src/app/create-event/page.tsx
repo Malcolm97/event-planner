@@ -7,6 +7,7 @@ import { FiArrowLeft, FiPlus, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileT
 import Link from 'next/link';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { triggerCacheRefresh } from '@/hooks/useOfflineFirstData';
 import ImageUpload from '@/components/EventFormComponents';
 import { FormSection, FormField, LoadingButton, AlertBanner, PageHeader } from '@/components/EventFormComponents';
 import CustomSelect from '@/components/CustomSelect';
@@ -235,6 +236,9 @@ export default function CreateEventPage() {
       setImageFiles([]);
 
       setSuccessMessage('Event created successfully!');
+      
+      // Trigger cache refresh so new event appears immediately
+      triggerCacheRefresh('events');
       
       // Redirect to dashboard
       setTimeout(() => {

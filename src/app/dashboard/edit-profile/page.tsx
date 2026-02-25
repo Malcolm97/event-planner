@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, TABLES, recordActivity } from '@/lib/supabase';
+import { supabase, TABLES, recordActivity, USER_FIELDS } from '@/lib/supabase';
+import { normalizeUser, prepareUserForDb } from '@/lib/types';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 import Image from 'next/image';
@@ -72,25 +73,27 @@ export default function EditProfilePage() {
         .single();
       
       if (data) {
+        // Normalize user data to handle field name variants (full_name/name, avatar_url/photo_url)
+        const normalizedData = normalizeUser(data);
         setFormData({
-          name: data.name || '',
-          company: data.company || '',
-          phone: data.phone || '',
-          about: data.about || '',
+          name: normalizedData.name || normalizedData.full_name || '',
+          company: normalizedData.company || '',
+          phone: normalizedData.phone || '',
+          about: normalizedData.about || '',
           email: user.email || '', // Set existing email
-          contactMethod: data.contact_method || 'both',
-          whatsappNumber: data.whatsapp_number || '',
-          contactVisibility: data.contact_visibility !== false, // Default to true
+          contactMethod: normalizedData.contact_method || 'both',
+          whatsappNumber: normalizedData.whatsapp_number || '',
+          contactVisibility: normalizedData.contact_visibility !== false, // Default to true
           // Social links
           socialLinks: {
-            facebook: data.social_links?.facebook || '',
-            instagram: data.social_links?.instagram || '',
-            tiktok: data.social_links?.tiktok || '',
-            twitter: data.social_links?.twitter || ''
+            facebook: normalizedData.social_links?.facebook || '',
+            instagram: normalizedData.social_links?.instagram || '',
+            tiktok: normalizedData.social_links?.tiktok || '',
+            twitter: normalizedData.social_links?.twitter || ''
           },
-          showSocialLinks: data.show_social_links !== false // Default to true
+          showSocialLinks: normalizedData.show_social_links !== false // Default to true
         });
-        setPhotoUrl(data.photo_url || null); // Set existing photo URL
+        setPhotoUrl(normalizedData.photo_url || normalizedData.avatar_url || null); // Set existing photo URL
       }
       
       setLoading(false);
@@ -164,14 +167,15 @@ export default function EditProfilePage() {
         socialLinks.twitter = formData.socialLinks.twitter.trim();
       }
 
+      // Prepare data with correct database column names (full_name instead of name, avatar_url instead of photo_url)
       const updateData = {
         id: user.id,
         email: formData.email,
-        name: formData.name,
+        full_name: formData.name, // Database uses 'full_name' column
         company: formData.company,
         phone: formData.phone,
         about: formData.about,
-        photo_url: newPhotoUrl, // Update photo URL
+        avatar_url: newPhotoUrl, // Database uses 'avatar_url' column
         contact_method: formData.contactMethod,
         whatsapp_number: formData.whatsappNumber || null,
         contact_visibility: formData.contactVisibility,

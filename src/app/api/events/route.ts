@@ -88,15 +88,34 @@ export async function GET(request: Request) {
       query = query.limit(50);
     }
 
+    // Get total count for pagination
+    let countQuery = supabase
+      .from(TABLES.EVENTS)
+      .select('*', { count: 'exact', head: true });
+    
+    // Apply same category filter for accurate count
+    if (category) {
+      countQuery = countQuery.eq('category', category);
+    }
+    
+    const { count, error: countError } = await countQuery;
+    
+    // Don't fail if count fails, just return data without count
+    const totalRecords = countError ? null : count;
+
     const { data, error } = await query;
 
     if (error) {
       return handleSupabaseError(error);
     }
 
+    // Return standardized format: { data: [...], count: number }
+    const response = successResponse({
+      data: data || [],
+      count: totalRecords
+    });
     // Add caching headers for better performance
     // Cache for 60 seconds on CDN, allow serving stale content for up to 120 seconds while revalidating
-    const response = successResponse(data || []);
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     response.headers.set('X-Content-Source', 'supabase-cache');
     return response;

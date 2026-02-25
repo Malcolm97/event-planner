@@ -29,7 +29,12 @@ export async function GET(request: Request) {
         ${USER_FIELDS.ABOUT},
         ${USER_FIELDS.AVATAR_URL},
         ${USER_FIELDS.ROLE},
-        ${USER_FIELDS.UPDATED_AT}
+        ${USER_FIELDS.UPDATED_AT},
+        ${USER_FIELDS.CONTACT_METHOD},
+        ${USER_FIELDS.WHATSAPP_NUMBER},
+        ${USER_FIELDS.CONTACT_VISIBILITY},
+        ${USER_FIELDS.SOCIAL_LINKS},
+        ${USER_FIELDS.SHOW_SOCIAL_LINKS}
       `, { count: 'exact' })
       .order(USER_FIELDS.UPDATED_AT, { ascending: false });
 
