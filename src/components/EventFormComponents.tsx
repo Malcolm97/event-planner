@@ -313,6 +313,7 @@ interface LoadingButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   loading?: boolean;
   loadingText?: string;
   icon?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 export function LoadingButton({
@@ -322,18 +323,20 @@ export function LoadingButton({
   children,
   className = '',
   disabled,
+  fullWidth = false,
   ...props
 }: LoadingButtonProps) {
   return (
     <button
       className={`
-        w-full rounded-xl px-6 py-3.5 font-semibold
+        rounded-xl px-6 py-3.5 font-semibold
         bg-gradient-to-r from-yellow-400 to-red-500 text-white
         hover:from-yellow-500 hover:to-red-600
         focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed
         transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]
         flex items-center justify-center gap-2
+        ${fullWidth ? 'w-full' : 'w-auto'}
         ${className}
       `}
       disabled={disabled || loading}

@@ -596,12 +596,13 @@ export default function CreateEventPage() {
             </FormSection>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-4 flex justify-center">
               <LoadingButton
                 type="submit"
                 loading={loading}
                 loadingText="Creating Event..."
                 icon={<FiPlus size={20} />}
+                fullWidth
               >
                 Create Event
               </LoadingButton>

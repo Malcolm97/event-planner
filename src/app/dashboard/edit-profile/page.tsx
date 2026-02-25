@@ -558,13 +558,15 @@ export default function EditProfilePage() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Updating...' : 'Update Profile'}
-            </button>
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? 'Updating...' : 'Update Profile'}
+              </button>
+            </div>
           </form>
         </div>
       </div>

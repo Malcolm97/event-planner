@@ -409,12 +409,12 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-wrap gap-3">
             <motion.div>
               <Button
                 onClick={handleSyncNow}
                 disabled={syncingNow || !isOnline}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {syncingNow ? (
                   <>
@@ -439,7 +439,7 @@ export default function SettingsPage() {
               <Button
                 onClick={handleClearCacheClick}
                 disabled={clearing}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {clearing ? (
                   <>

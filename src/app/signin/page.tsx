@@ -260,7 +260,6 @@ export default function SignInPage() {
             type="button"
             variant={!isRegister && !isForgotPassword ? "secondary" : "ghost"}
             size="sm"
-            className="flex-1"
             onClick={() => { setIsRegister(false); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >
@@ -270,7 +269,6 @@ export default function SignInPage() {
             type="button"
             variant={isRegister ? "secondary" : "ghost"}
             size="sm"
-            className="flex-1"
             onClick={() => { setIsRegister(true); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
           >

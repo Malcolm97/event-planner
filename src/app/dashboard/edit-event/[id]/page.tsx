@@ -704,12 +704,13 @@ export default function EditEventPage() {
             </FormSection>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-4 flex justify-center">
               <LoadingButton
                 type="submit"
                 loading={submitting}
                 loadingText="Saving Changes..."
                 icon={<FiSave size={20} />}
+                fullWidth
               >
                 Save Changes
               </LoadingButton>

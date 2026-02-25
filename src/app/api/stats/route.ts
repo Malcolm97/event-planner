@@ -1,20 +1,40 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { supabase } from '@/lib/supabase';
 
 // Public endpoint for fetching site statistics
-// Uses service role key if available, otherwise falls back to anon key with different query approach
+// Primary: Uses RPC function (get_public_stats) which bypasses RLS
+// Fallback: Uses direct queries with service role key or anon key
 export async function GET() {
   try {
+    // Method 1: Try RPC function first (most reliable if set up)
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_public_stats');
+      
+      if (!rpcError && rpcData) {
+        console.log('Stats API - RPC method successful:', rpcData);
+        const response = NextResponse.json(rpcData);
+        response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+        return response;
+      }
+      
+      if (rpcError) {
+        console.warn('Stats API - RPC method failed, falling back to direct queries:', rpcError.message);
+      }
+    } catch (rpcErr: any) {
+      console.warn('Stats API - RPC not available, falling back to direct queries:', rpcErr.message);
+    }
+
+    // Method 2: Fallback to direct queries with server client
     const cookieStore = await cookies();
     
-    // Check if service role key is available for admin-level access
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     
     // Use service role key if available (for admin-level access), otherwise use anon key
-    const supabase = createServerClient(
+    const serverClient = createServerClient(
       supabaseUrl,
       serviceRoleKey || anonKey,
       {
@@ -35,39 +55,43 @@ export async function GET() {
       }
     );
 
-    // Fetch users count - use actual data query instead of head:true for better RLS compatibility
-    const { data: usersData, error: usersError, count: usersCount } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact' })
-      .limit(1); // Limit to 1 row for efficiency, we just want the count
+    // Fetch all stats in parallel
+    const [usersResult, eventsResult, locationsResult] = await Promise.all([
+      // Get users count
+      serverClient
+        .from('profiles')
+        .select('id', { count: 'exact' })
+        .limit(1),
+      
+      // Get events count
+      serverClient
+        .from('events')
+        .select('id', { count: 'exact' })
+        .limit(1),
+      
+      // Get locations for cities count
+      serverClient
+        .from('events')
+        .select('location')
+    ]);
 
-    if (usersError) {
-      console.error('Stats API - Users query error:', usersError);
+    if (usersResult.error) {
+      console.error('Stats API - Users query error:', usersResult.error);
     }
 
-    // Fetch events count
-    const { data: eventsData, error: eventsError, count: eventsCount } = await supabase
-      .from('events')
-      .select('id', { count: 'exact' })
-      .limit(1);
-
-    if (eventsError) {
-      console.error('Stats API - Events query error:', eventsError);
+    if (eventsResult.error) {
+      console.error('Stats API - Events query error:', eventsResult.error);
     }
 
-    // Get unique cities from events
-    const { data: locationsData, error: locationsError } = await supabase
-      .from('events')
-      .select('location');
-
-    if (locationsError) {
-      console.error('Stats API - Locations query error:', locationsError);
+    if (locationsResult.error) {
+      console.error('Stats API - Locations query error:', locationsResult.error);
     }
 
+    // Calculate cities covered
     let citiesCovered = 0;
-    if (locationsData && locationsData.length > 0) {
+    if (locationsResult.data && locationsResult.data.length > 0) {
       const uniqueCities = new Set<string>();
-      locationsData.forEach((event: any) => {
+      locationsResult.data.forEach((event: any) => {
         if (event.location) {
           const firstPart = event.location.split(',')[0]?.trim();
           if (firstPart) {
@@ -79,16 +103,14 @@ export async function GET() {
     }
 
     const stats = {
-      totalUsers: usersCount || 0,
-      totalEvents: eventsCount || 0,
+      totalUsers: usersResult.count || 0,
+      totalEvents: eventsResult.count || 0,
       citiesCovered
     };
 
-    console.log('Stats API - Returning stats:', stats);
+    console.log('Stats API - Direct query method returning:', stats);
 
     const response = NextResponse.json(stats);
-    
-    // Cache for 60 seconds on CDN, allow stale content for 120 seconds
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     
     return response;
