@@ -57,6 +57,14 @@ export interface UserItem {
   updated_at?: string;
   role?: string;
   approved?: boolean;
+  // New profile features
+  is_verified?: boolean;       // Creator verification status
+  verified_at?: string;        // When the creator was verified
+  follower_count?: number;     // Number of followers (denormalized)
+  total_attendees?: number;    // Total attendees across all events
+  total_event_views?: number;  // Total views across all events
+  creator_categories?: string[]; // Event categories this creator specializes in
+  avg_response_hours?: number; // Average response time in hours
 }
 
 // Activity interface for tracking user activities

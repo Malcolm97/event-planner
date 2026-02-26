@@ -1,7 +1,7 @@
 {
-  "name": "PNG Events - Discover Local Events",
+  "name": "PNG Events - Discover Events in Papua New Guinea",
   "short_name": "PNG Events",
-  "description": "Find concerts, festivals, workshops, and more happening in Papua New Guinea. Works offline with full event browsing and creation capabilities.",
+  "description": "Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea. Discover what's on in Port Moresby, Lae, and across PNG. Your go-to platform for events in Papua New Guinea.",
   "start_url": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],

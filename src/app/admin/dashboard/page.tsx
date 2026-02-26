@@ -13,7 +13,6 @@ interface DashboardData {
     totalUsers: number
     totalEvents: number
     totalCategories: number
-    pendingApprovals: number
     approvedEvents: number
     recentUsers: number
     recentEvents: number
@@ -25,7 +24,6 @@ interface DashboardData {
   trends: {
     userGrowth: number[]
     eventActivity: number
-    approvalRate: number
   }
 }
 
@@ -179,15 +177,9 @@ export default function AdminDashboard() {
     {
       title: "Total Events",
       count: stats.totalEvents,
-      subtitle: `${stats.approvedEvents} approved`,
+      subtitle: `${stats.approvedEvents} total`,
       trend: eventTrend.value !== 0 ? { value: eventTrend.value, label: "this week", isPositive: eventTrend.isPositive } : undefined,
       icon: <span className="text-2xl">📅</span>
-    },
-    {
-      title: "Pending Approvals",
-      count: stats.pendingApprovals,
-      subtitle: `${trends.approvalRate}% approval rate`,
-      icon: <span className="text-2xl">⏳</span>
     },
     {
       title: "Categories",
@@ -229,13 +221,13 @@ export default function AdminDashboard() {
             variant="outline"
             onClick={() => router.push('/admin/events')}
           >
-            Manage Events
+            View Events
           </Button>
           <Button
             variant="outline"
             onClick={() => router.push('/admin/users')}
           >
-            Manage Users
+            View Users
           </Button>
         </div>
       </div>
@@ -280,8 +272,8 @@ export default function AdminDashboard() {
               <span className="font-medium">{stats.recentUsers}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Approval Rate</span>
-              <span className="font-medium">{trends.approvalRate}%</span>
+              <span className="text-gray-600">Total Categories</span>
+              <span className="font-medium">{stats.totalCategories}</span>
             </div>
           </div>
         </div>

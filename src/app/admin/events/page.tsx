@@ -4,15 +4,11 @@ import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
 import { 
-  Check, 
-  X, 
-  Trash2, 
   Star,
   Calendar,
   MapPin,
   ChevronLeft,
   ChevronRight,
-  X as CloseIcon,
   ExternalLink
 } from "lucide-react"
 import Link from "next/link"
@@ -51,8 +47,6 @@ export default function EventsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<Event | null>(null)
   const { toast } = useToast()
 
   // Load categories on mount
@@ -121,109 +115,6 @@ export default function EventsPage() {
     fetchEvents(page)
   }
 
-  const handleApprovalChange = async (eventId: string, approved: boolean) => {
-    setActionLoading(eventId)
-    try {
-      const response = await fetch(`/api/admin/events/${eventId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved })
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: approved ? "Event approved" : "Event approval revoked",
-        })
-        fetchEvents(pagination?.page || 1)
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update approval",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update approval",
-        variant: "destructive",
-      })
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  const handleFeatureChange = async (eventId: string, featured: boolean) => {
-    setActionLoading(eventId)
-    try {
-      const response = await fetch(`/api/admin/events/${eventId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured })
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: featured ? "Event featured" : "Event unfeatured",
-        })
-        fetchEvents(pagination?.page || 1)
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update feature status",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update feature status",
-        variant: "destructive",
-      })
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  const handleDeleteEvent = async () => {
-    if (!deleteConfirm) return
-    
-    setActionLoading(deleteConfirm.id)
-    try {
-      const response = await fetch(`/api/admin/events/${deleteConfirm.id}`, {
-        method: 'DELETE'
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Event deleted successfully",
-        })
-        fetchEvents(pagination?.page || 1)
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to delete event",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete event",
-        variant: "destructive",
-      })
-    } finally {
-      setActionLoading(null)
-      setDeleteConfirm(null)
-    }
-  }
-
   useEffect(() => {
     fetchEvents()
 
@@ -280,9 +171,7 @@ export default function EventsPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="all">All Status</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
+              <option value="all">All Events</option>
               <option value="featured">Featured</option>
             </select>
           </div>
@@ -335,6 +224,14 @@ export default function EventsPage() {
                         </div>
                       )}
                     </div>
+                    <Link
+                      href={`/events/${event.id}`}
+                      target="_blank"
+                      className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-md flex-shrink-0"
+                      title="View event"
+                    >
+                      <ExternalLink size={16} />
+                    </Link>
                   </div>
                   <div className="flex items-center space-x-4 text-xs text-gray-500">
                     <div className="flex items-center space-x-1">
@@ -348,51 +245,19 @@ export default function EventsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleApprovalChange(event.id, !event.approved)}
-                        disabled={actionLoading === event.id}
-                        className={`inline-flex items-center space-x-1 px-2 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
-                          event.approved
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {event.approved ? <Check size={12} /> : <X size={12} />}
-                        <span>{event.approved ? 'Approved' : 'Pending'}</span>
-                      </button>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleFeatureChange(event.id, !event.featured)}
-                        disabled={actionLoading === event.id}
-                        className={`p-1.5 rounded-md transition-colors ${
-                          event.featured
-                            ? 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100'
-                            : 'text-gray-400 hover:bg-gray-100'
-                        }`}
-                        title={event.featured ? 'Unfeature' : 'Feature'}
-                      >
-                        <Star size={16} className={event.featured ? 'fill-yellow-500' : ''} />
-                      </button>
-                      <Link
-                        href={`/events/${event.id}`}
-                        target="_blank"
-                        className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-md"
-                        title="View event"
-                      >
-                        <ExternalLink size={16} />
-                      </Link>
-                      <button
-                        onClick={() => setDeleteConfirm(event)}
-                        disabled={actionLoading === event.id}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      event.approved
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {event.approved ? 'Approved' : 'Pending'}
+                    </span>
+                    {event.featured && (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        Featured
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -466,61 +331,34 @@ export default function EventsPage() {
                     </div>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleApprovalChange(event.id, !event.approved)}
-                      disabled={actionLoading === event.id}
-                      className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
-                        event.approved
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                      }`}
-                    >
-                      {event.approved ? (
-                        <>
-                          <Check size={12} />
-                          <span>Approved</span>
-                        </>
-                      ) : (
-                        <>
-                          <X size={12} />
-                          <span>Pending</span>
-                        </>
-                      )}
-                    </button>
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      event.approved
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {event.approved ? 'Approved' : 'Pending'}
+                    </span>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleFeatureChange(event.id, !event.featured)}
-                      disabled={actionLoading === event.id}
-                      className={`p-2 rounded-md transition-colors ${
-                        event.featured
-                          ? 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100'
-                          : 'text-gray-400 hover:bg-gray-100'
-                      }`}
-                      title={event.featured ? 'Click to unfeature' : 'Click to feature'}
-                    >
-                      <Star size={18} className={event.featured ? 'fill-yellow-500' : ''} />
-                    </button>
+                    {event.featured ? (
+                      <div className="flex items-center space-x-1">
+                        <Star size={18} className="text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm text-gray-600">Featured</span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <Link
-                        href={`/events/${event.id}`}
-                        target="_blank"
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                        title="View event"
-                      >
-                        <ExternalLink size={18} />
-                      </Link>
-                      <button
-                        onClick={() => setDeleteConfirm(event)}
-                        disabled={actionLoading === event.id}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
-                        title="Delete event"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                    <Link
+                      href={`/events/${event.id}`}
+                      target="_blank"
+                      className="inline-flex items-center space-x-1 px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+                      title="View event"
+                    >
+                      <ExternalLink size={16} />
+                      <span>View</span>
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -559,43 +397,6 @@ export default function EventsPage() {
               Next
               <ChevronRight size={16} />
             </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Delete Event</h3>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <CloseIcon size={20} />
-              </button>
-            </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete <strong>{deleteConfirm.name}</strong>? 
-              This action cannot be undone and will remove all saved references to this event.
-            </p>
-            <div className="flex space-x-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setDeleteConfirm(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 bg-red-600 hover:bg-red-700"
-                onClick={handleDeleteEvent}
-                disabled={actionLoading === deleteConfirm.id}
-              >
-                {actionLoading === deleteConfirm.id ? "Deleting..." : "Delete Event"}
-              </Button>
-            </div>
           </div>
         </div>
       )}

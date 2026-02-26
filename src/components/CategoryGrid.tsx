@@ -1,10 +1,11 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import Link from 'next/link';
 import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import { EventItem } from '@/lib/types';
+import { isEventUpcomingOrActive } from '@/lib/utils';
 
 // Define PNG-specific categories and their properties
 const allCategories = [
@@ -42,15 +43,18 @@ interface CategoryGridProps {
 }
 
 const CategoryGrid = memo(function CategoryGrid({ events }: CategoryGridProps) {
+  // Filter to only current/upcoming events before checking categories
+  const currentEvents = useMemo(() => events.filter(isEventUpcomingOrActive), [events]);
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6 lg:gap-5">
       {allCategories
         .filter(cat => {
           if (cat.name === 'Other') {
             const predefinedCategoryNames = allCategories.filter(c => c.name !== 'Other').map(c => c.name);
-            return events.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
+            return currentEvents.some(ev => ev.category && !predefinedCategoryNames.includes(ev.category));
           } else {
-            return events.some(ev => ev.category === cat.name);
+            return currentEvents.some(ev => ev.category === cat.name);
           }
         })
         .map((cat) => {

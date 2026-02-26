@@ -1,73 +1,8 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { TABLES } from "@/lib/supabase"
-import {
-  checkRateLimit,
-  createSecureResponse,
-  logSecurityEvent,
-  isSuspiciousRequest
-} from "@/lib/security"
-import type { NextRequest } from "next/server"
 
-// Helper function to check admin access using server-side client
-async function checkAdminAccess() {
+export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return { isAdmin: false, error: 'Not authenticated' }
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError) {
-      const isProfileNotFound = profileError.code === 'PGRST116' ||
-                               profileError.message?.includes('No rows found') ||
-                               profileError.code === 'PGRST204' ||
-                               !profileError.code
-
-      if (isProfileNotFound) {
-        return { isAdmin: false, error: 'Profile not found' }
-      } else {
-        return { isAdmin: false, error: 'Database error' }
-      }
-    }
-
-    return { isAdmin: profile?.role === 'admin', user }
-  } catch (error) {
-    return { isAdmin: false, error: 'Unexpected error' }
-  }
-}
-
-export async function GET(request: NextRequest) {
-  // Check admin access
-  const adminCheck = await checkAdminAccess();
-  if (!adminCheck.isAdmin) {
-    logSecurityEvent('unauthorized_admin_access_attempt', {
-      path: '/api/admin/dashboard',
-      method: 'GET',
-    }, request);
-
-    return createSecureResponse(
-      { error: adminCheck.error || 'Admin access required' },
-      { status: 403 }
-    );
-  }
-
-  // Log successful admin access
-  logSecurityEvent('admin_access_granted', {
-    path: '/api/admin/dashboard',
-    method: 'GET',
-    userId: adminCheck.user?.id
-  }, request);
-
-  try {
-    // Create server-side client for data queries
     const supabase = await createServerSupabaseClient()
     
     // Get comprehensive dashboard statistics with optimized queries
@@ -84,7 +19,6 @@ export async function GET(request: NextRequest) {
     
     // Try to get activities, but don't fail if table doesn't exist
     let recentActivitiesData: any[] = [];
-    let userActivityCount = 0;
     try {
       const activitiesResult = await supabase.from("activities").select(`
         id,
@@ -100,9 +34,6 @@ export async function GET(request: NextRequest) {
       if (activitiesResult.data) {
         recentActivitiesData = activitiesResult.data;
       }
-      
-      const activityCountResult = await supabase.from("activities").select("activity_type", { count: "exact" }).gte("created_at", thirtyDaysAgo);
-      userActivityCount = activityCountResult.count || 0;
     } catch (e) {
       console.log("Activities table may not exist:", e);
     }

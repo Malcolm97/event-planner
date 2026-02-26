@@ -3,9 +3,46 @@ import { EventItem } from '@/lib/types';
 import { Suspense } from 'react';
 import ClientHomePageWrapper from './ClientHomePageWrapper';
 import Loading from './loading'; // Import the Loading component
+import { SITE_CONFIG, PRIMARY_KEYWORDS } from '@/lib/seo';
+import { OrganizationJsonLd, WebSiteJsonLd, EventListJsonLd } from '@/components/JsonLd';
+import { Metadata } from 'next';
 
 // Revalidate the page every 60 seconds
 export const revalidate = 60;
+
+// Home page metadata for SEO
+export const metadata: Metadata = {
+  title: 'PNG Events - Discover Events in Papua New Guinea',
+  description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea. Discover what\'s on in Port Moresby, Lae, and across PNG. Your go-to platform for events in Papua New Guinea.',
+  keywords: PRIMARY_KEYWORDS.join(', '),
+  alternates: {
+    canonical: SITE_CONFIG.url,
+  },
+  openGraph: {
+    type: 'website',
+    url: SITE_CONFIG.url,
+    title: 'PNG Events - Discover Events in Papua New Guinea',
+    description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea. Discover what\'s on in Port Moresby, Lae, and across PNG.',
+    images: [
+      {
+        url: `${SITE_CONFIG.url}/icons/screenshot-desktop.png`,
+        width: 1280,
+        height: 720,
+        alt: 'PNG Events - Discover Events in Papua New Guinea',
+      },
+    ],
+    siteName: 'PNG Events',
+    locale: 'en_PG',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@pngevents',
+    creator: '@pngevents',
+    title: 'PNG Events - Discover Events in Papua New Guinea',
+    description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea.',
+    images: [`${SITE_CONFIG.url}/icons/screenshot-desktop.png`],
+  },
+};
 
 // Fetch stats from our server-side API endpoint
 async function getStats() {

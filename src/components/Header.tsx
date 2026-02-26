@@ -137,6 +137,51 @@ const Header = React.memo(function Header() {
 
   const syncState = getSyncState();
 
+  // Sync state configuration for cleaner rendering
+  const syncStateConfig = {
+    offline: {
+      icon: FiWifiOff,
+      color: 'text-red-600 hover:bg-red-50',
+      bgClass: 'bg-red-100 text-red-600',
+      label: 'Offline Mode',
+      description: 'Limited functionality available',
+    },
+    syncing: {
+      icon: FiRefreshCw,
+      color: 'text-blue-600 hover:bg-blue-50',
+      bgClass: 'bg-blue-100 text-blue-600',
+      label: 'Syncing Data',
+      description: 'Updating your data...',
+      animate: true,
+    },
+    error: {
+      icon: FiAlertTriangle,
+      color: 'text-red-600 hover:bg-red-50',
+      bgClass: 'bg-red-100 text-red-600',
+      label: 'Sync Error',
+      description: 'Connection issue detected',
+      showNotification: true,
+    },
+    'has-queue': {
+      icon: FiClock,
+      color: 'text-yellow-600 hover:bg-yellow-50',
+      bgClass: 'bg-yellow-100 text-yellow-600',
+      label: 'Pending Sync',
+      description: 'Changes ready to sync',
+      showNotification: true,
+    },
+    online: {
+      icon: FiWifi,
+      color: 'text-green-600 hover:bg-green-50',
+      bgClass: 'bg-green-100 text-green-600',
+      label: 'Online',
+      description: 'Fully connected',
+    },
+  };
+
+  const currentSyncConfig = syncStateConfig[syncState];
+  const SyncIcon = currentSyncConfig.icon;
+
   // Offline-aware navigation helper
   const navigateWithOfflineCheck = (path: string, description: string) => {
     // Always allow navigation to home, settings, and about (static-ish pages)

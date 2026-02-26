@@ -9,14 +9,11 @@ import ClientProviders from './ClientProviders';
 import { EnhancedErrorBoundary } from '@/components/EnhancedErrorBoundary';
 import '@/lib/polyfills'; // Import polyfills for cross-browser compatibility
 
-import Header from '@/components/Header';
-import BottomNav from '@/components/BottomNav';
-import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import OnlineBadge from '@/components/OnlineBadge';
-import OfflineIndicator from '@/components/OfflineIndicator';
-import UpdatePrompt from '@/components/UpdatePrompt';
+import MainLayout from '@/components/MainLayout';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/JsonLd';
+import { SITE_CONFIG, ALL_KEYWORDS } from '@/lib/seo';
 
 // Use local fonts to avoid Turbopack build issues with Google Fonts
 const inter = localFont({
@@ -45,22 +42,96 @@ const inter = localFont({
   variable: '--font-inter',
 });
 
+// Enhanced metadata for SEO optimization
 export const metadata = {
-  title: 'PNG Events - Discover Local Events',
-  description: 'Find concerts, festivals, workshops, and more happening in Papua New Guinea.',
-  keywords: 'events, Papua New Guinea, PNG, concerts, festivals, workshops',
-  authors: [{ name: 'PNG Events Team' }],
+  metadataBase: new URL(SITE_CONFIG.url),
+  title: {
+    default: 'PNG Events - Discover Events in Papua New Guinea',
+    template: `%s | PNG Events`,
+  },
+  description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea. Discover what\'s on in Port Moresby, Lae, and across PNG. Your go-to platform for events in PNG.',
+  keywords: ALL_KEYWORDS.join(', '),
+  authors: [{ name: 'PNG Events Team', url: SITE_CONFIG.url }],
+  creator: 'PNG Events',
+  publisher: 'PNG Events',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/icons/apple-touch-icon-180x180.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon-180x180.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  alternates: {
+    canonical: SITE_CONFIG.url,
+    languages: {
+      'en-PG': SITE_CONFIG.url,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_PG',
+    url: SITE_CONFIG.url,
+    siteName: 'PNG Events',
+    title: 'PNG Events - Discover Events in Papua New Guinea',
+    description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea. Discover what\'s on in Port Moresby, Lae, and across PNG.',
+    images: [
+      {
+        url: `${SITE_CONFIG.url}/icons/screenshot-desktop.png`,
+        width: 1280,
+        height: 720,
+        alt: 'PNG Events - Discover Events in Papua New Guinea',
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@pngevents',
+    creator: '@pngevents',
+    title: 'PNG Events - Discover Events in Papua New Guinea',
+    description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea.',
+    images: [`${SITE_CONFIG.url}/icons/screenshot-desktop.png`],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'google-site-verification-code', // Replace with actual verification code
+  },
+  category: 'Events',
+  classification: 'Event Discovery Platform',
+  appLinks: {
+    web: {
+      url: SITE_CONFIG.url,
+      should_fallback: true,
+    },
   },
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#FCD34D',
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FCD34D' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
+  ],
 };
 
 export default function RootLayout({
@@ -136,17 +207,14 @@ export default function RootLayout({
       </head>
       <body className={`antialiased ${inter.className} min-h-screen`}>
         <a href="#main-content" className="skip-link">Skip to main content</a>
+        
+        {/* JSON-LD Structured Data for SEO */}
+        <OrganizationJsonLd />
+        <WebSiteJsonLd />
+        
         <EnhancedErrorBoundary>
           <ClientProviders>
-            <OfflineIndicator />
-            <Header />
-            <main id="main-content" role="main" className="pb-16 sm:pb-20 md:pb-20 lg:pb-0 min-h-screen">
-              {children}
-            </main>
-            <BottomNav />
-            <PWAInstallPrompt />
-            <OnlineBadge />
-            <UpdatePrompt />
+            <MainLayout>{children}</MainLayout>
           </ClientProviders>
         </EnhancedErrorBoundary>
         <Script id="service-worker-script">

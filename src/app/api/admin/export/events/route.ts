@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server"
 import { TABLES } from "@/lib/supabase"
-import { checkAdminAccess, unauthorizedResponse } from "@/lib/admin-utils"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 
 export async function GET(request: Request) {
-  // Check admin access using server-side client
-  const adminCheck = await checkAdminAccess()
-  
-  if (!adminCheck.isAdmin || !adminCheck.supabase) {
-    return unauthorizedResponse(adminCheck.error)
-  }
-
-  const supabase = adminCheck.supabase
-
   try {
+    const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
     const format = searchParams.get('format') || 'csv'
     const status = searchParams.get('status')

@@ -1,112 +1,207 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { supabase, TABLES, Event, User } from "@/lib/supabase";
-import EventModal from "@/components/EventModal";
-import Button from "@/components/Button";
+// Event Detail Page with Server-Side SEO
+// This page uses server-side rendering for optimal SEO performance
 
-export default function EventDetailsPage() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const eventId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [host, setHost] = useState<User | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [initialTab, setInitialTab] = useState<'event-details' | 'about-event' | 'host-details'>('event-details');
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
+import { SITE_CONFIG, generatePageTitle, generateMetaDescription } from '@/lib/seo';
+import { EventJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
+import EventDetailClient from './EventDetailClient';
 
-  useEffect(() => {
-    async function fetchEvent() {
-      setLoading(true);
-      if (!eventId) {
-        setEvent(null);
-        setLoading(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from(TABLES.EVENTS)
-        .select("*")
-        .eq("id", eventId)
-        .single();
-      if (error || !data) {
-        setEvent(null);
-        setLoading(false);
-        return;
-      }
-      setEvent(data);
-      // Fetch host
+// Generate static params for all events
+export async function generateStaticParams() {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  try {
+    const { data: events } = await supabase
+      .from(TABLES.EVENTS)
+      .select('id')
+      .limit(100);
+
+    return (events || []).map((event) => ({
+      id: event.id,
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
+}
+
+// Generate dynamic metadata for each event
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}): Promise<Metadata> {
+  const { id } = await params;
+  
+  if (!isSupabaseConfigured()) {
+    return {
+      title: 'Event Not Found',
+      description: 'The event you are looking for could not be found.',
+    };
+  }
+
+  try {
+    const { data: event, error } = await supabase
+      .from(TABLES.EVENTS)
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !event) {
+      return {
+        title: 'Event Not Found',
+        description: 'The event you are looking for could not be found on PNG Events.',
+      };
+    }
+
+    // Generate SEO-optimized title
+    const title = generatePageTitle(`${event.name} - ${event.location || 'Papua New Guinea'}`);
+    
+    // Generate SEO-optimized description
+    const description = generateMetaDescription(
+      event.description || `Join us for ${event.name} in ${event.location || 'Papua New Guinea'}. Find event details, venue information, and ticket prices on PNG Events.`,
+      160
+    );
+
+    // Generate keywords based on event
+    const keywords = [
+      event.name,
+      event.location,
+      event.category,
+      'PNG events',
+      'Papua New Guinea events',
+      'events in PNG',
+      event.venue,
+    ].filter(Boolean).join(', ');
+
+    const eventUrl = `${SITE_CONFIG.url}/events/${id}`;
+    const imageUrl = event.image_urls && event.image_urls.length > 0 
+      ? event.image_urls[0] 
+      : `${SITE_CONFIG.url}/icons/screenshot-desktop.png`;
+
+    return {
+      title: event.name,
+      description,
+      keywords,
+      authors: [{ name: 'PNG Events' }],
+      alternates: {
+        canonical: eventUrl,
+      },
+      openGraph: {
+        type: 'article',
+        url: eventUrl,
+        title: event.name,
+        description,
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${event.name} - Event in ${event.location || 'Papua New Guinea'}`,
+          },
+        ],
+        siteName: 'PNG Events',
+        locale: 'en_PG',
+        ...(event.date && { publishedTime: new Date(event.date).toISOString() }),
+      },
+      twitter: {
+        card: 'summary_large_image',
+        site: '@pngevents',
+        creator: '@pngevents',
+        title: event.name,
+        description,
+        images: [imageUrl],
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-video-preview': -1,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Event - PNG Events',
+      description: 'Discover events in Papua New Guinea.',
+    };
+  }
+}
+
+// Fetch event data server-side
+async function getEvent(id: string) {
+  if (!isSupabaseConfigured()) {
+    return { event: null, host: null };
+  }
+
+  try {
+    const { data: event, error } = await supabase
+      .from(TABLES.EVENTS)
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !event) {
+      return { event: null, host: null };
+    }
+
+    // Fetch host information
+    let host = null;
+    if (event.created_by) {
       const { data: hostData } = await supabase
         .from(TABLES.USERS)
-        .select("*")
-        .eq("id", data.created_by)
+        .select('*')
+        .eq('id', event.created_by)
         .single();
-      setHost(hostData || null);
-      setLoading(false);
+      host = hostData;
     }
-    fetchEvent();
-  }, [eventId]);
 
-  // Check for modal state in URL parameters (after sign-in redirect)
-  useEffect(() => {
-    const modalStateParam = searchParams.get('modalState');
-    if (modalStateParam && event) {
-      try {
-        const modalState = JSON.parse(modalStateParam);
-        if (modalState.type === 'event-modal' && modalState.eventId === eventId) {
-          setInitialTab(modalState.activeTab || 'event-details');
-          setDialogOpen(true);
-          // Clean up URL
-          const url = new URL(window.location.href);
-          url.searchParams.delete('modalState');
-          window.history.replaceState({}, '', url.toString());
-        }
-      } catch (error) {
-        console.error('Error parsing modal state:', error);
-      }
-    }
-  }, [searchParams, event, eventId]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-        <p className="text-gray-500 mt-6 text-lg">Loading event details...</p>
-      </div>
-    );
+    return { event, host };
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    return { event: null, host: null };
   }
+}
+
+// Server Component for Event Detail Page
+export default async function EventDetailPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params;
+  const { event, host } = await getEvent(id);
+
   if (!event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-6xl mb-4">😔</div>
-        <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
-        <p className="text-gray-600">The event you are looking for does not exist or has been removed.</p>
-        <Button
-          variant="secondary"
-          size="lg"
-          className="mt-6"
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </Button>
-      </div>
-    );
+    notFound();
   }
+
+  const eventUrl = `${SITE_CONFIG.url}/events/${id}`;
+
+  // Breadcrumb data
+  const breadcrumbs = [
+    { name: 'Home', url: '/' },
+    { name: 'Events', url: '/events' },
+    { name: event.name, url: `/events/${id}` },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-4">{event.name}</h1>
-          <p className="text-gray-600">{event.description}</p>
-          <Button
-            size="lg"
-            className="mt-4"
-            onClick={() => setDialogOpen(true)}
-          >
-            View Event Details
-          </Button>
-        </div>
-      </div>
-      <EventModal selectedEvent={event} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} initialTab={initialTab} />
-    </div>
+    <>
+      {/* JSON-LD Structured Data for SEO */}
+      <EventJsonLd event={event} />
+      <BreadcrumbJsonLd items={breadcrumbs} />
+      
+      {/* Client Component for interactivity */}
+      <EventDetailClient event={event} host={host} />
+    </>
   );
 }

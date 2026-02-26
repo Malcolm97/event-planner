@@ -5,15 +5,9 @@ import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
 import { getUserFriendlyError } from "@/lib/userMessages"
 import { 
-  MoreVertical, 
-  UserCheck, 
-  UserX, 
-  Trash2, 
-  Shield, 
   User as UserIcon,
   ChevronLeft,
-  ChevronRight,
-  X
+  ChevronRight
 } from "lucide-react"
 import ExportButton from "../components/ExportButton"
 
@@ -44,9 +38,6 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null)
   const { toast } = useToast()
 
   const fetchUsers = useCallback(async (page = 1) => {
@@ -97,111 +88,6 @@ export default function UsersPage() {
     fetchUsers(page)
   }
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    setActionLoading(userId)
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole })
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: `User role updated to ${newRole}`,
-        })
-        fetchUsers(pagination?.page || 1)
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update role",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update role",
-        variant: "destructive",
-      })
-    } finally {
-      setActionLoading(null)
-      setActionMenuOpen(null)
-    }
-  }
-
-  const handleApprovalChange = async (userId: string, approved: boolean) => {
-    setActionLoading(userId)
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved })
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: approved ? "User approved" : "User approval revoked",
-        })
-        fetchUsers(pagination?.page || 1)
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update approval",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update approval",
-        variant: "destructive",
-      })
-    } finally {
-      setActionLoading(null)
-      setActionMenuOpen(null)
-    }
-  }
-
-  const handleDeleteUser = async () => {
-    if (!deleteConfirm) return
-    
-    setActionLoading(deleteConfirm.id)
-    try {
-      const response = await fetch(`/api/admin/users/${deleteConfirm.id}`, {
-        method: 'DELETE'
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User deleted successfully",
-        })
-        fetchUsers(pagination?.page || 1)
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to delete user",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      })
-    } finally {
-      setActionLoading(null)
-      setDeleteConfirm(null)
-    }
-  }
-
   useEffect(() => {
     fetchUsers()
 
@@ -218,15 +104,6 @@ export default function UsersPage() {
       channel.unsubscribe()
     }
   }, [])
-
-  // Close action menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => setActionMenuOpen(null)
-    if (actionMenuOpen) {
-      document.addEventListener('click', handleClickOutside)
-      return () => document.removeEventListener('click', handleClickOutside)
-    }
-  }, [actionMenuOpen])
 
   if (loading && users.length === 0) {
     return <div className="text-center py-8">Loading users...</div>
@@ -303,63 +180,19 @@ export default function UsersPage() {
             <div className="divide-y divide-gray-200">
               {users.map((user) => (
                 <div key={user.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        {user.avatar_url ? (
-                          <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full" />
-                        ) : (
-                          <UserIcon className="w-5 h-5 text-gray-500" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {user.full_name || "No name"}
-                        </div>
-                        <div className="text-xs text-gray-500">{user.email || "No email"}</div>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActionMenuOpen(actionMenuOpen === user.id ? null : user.id)
-                        }}
-                        className="p-1 rounded hover:bg-gray-100"
-                      >
-                        <MoreVertical size={18} />
-                      </button>
-                      {actionMenuOpen === user.id && (
-                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
-                          <button
-                            onClick={() => handleRoleChange(user.id, user.role === 'admin' ? 'user' : 'admin')}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2"
-                            disabled={actionLoading === user.id}
-                          >
-                            <Shield size={16} />
-                            <span>{user.role === 'admin' ? 'Make User' : 'Make Admin'}</span>
-                          </button>
-                          <button
-                            onClick={() => handleApprovalChange(user.id, !user.approved)}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2"
-                            disabled={actionLoading === user.id}
-                          >
-                            {user.approved ? <UserX size={16} /> : <UserCheck size={16} />}
-                            <span>{user.approved ? 'Revoke Approval' : 'Approve User'}</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              setDeleteConfirm(user)
-                              setActionMenuOpen(null)
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 text-red-600"
-                            disabled={actionLoading === user.id}
-                          >
-                            <Trash2 size={16} />
-                            <span>Delete User</span>
-                          </button>
-                        </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full" />
+                      ) : (
+                        <UserIcon className="w-5 h-5 text-gray-500" />
                       )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {user.full_name || "No name"}
+                      </div>
+                      <div className="text-xs text-gray-500">{user.email || "No email"}</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4 text-sm">
@@ -379,6 +212,11 @@ export default function UsersPage() {
                     }`}>
                       {user.approved ? 'Approved' : 'Pending'}
                     </span>
+                  </div>
+                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                    <span title="Events created">📝 {user.events_created || 0}</span>
+                    <span title="Events saved">❤️ {user.events_saved || 0}</span>
+                    <span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               ))}
@@ -406,9 +244,6 @@ export default function UsersPage() {
                 <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -434,45 +269,24 @@ export default function UsersPage() {
                     </div>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      disabled={actionLoading === user.id}
-                      className={`text-xs font-semibold rounded-full px-3 py-1 border-0 cursor-pointer ${
-                        user.role === 'admin'
-                          ? 'bg-purple-100 text-purple-800'
-                          : user.role === 'moderator'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                      <option value="moderator">Moderator</option>
-                    </select>
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      user.role === 'admin'
+                        ? 'bg-purple-100 text-purple-800'
+                        : user.role === 'moderator'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {user.role}
+                    </span>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleApprovalChange(user.id, !user.approved)}
-                      disabled={actionLoading === user.id}
-                      className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
-                        user.approved
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                      }`}
-                    >
-                      {user.approved ? (
-                        <>
-                          <UserCheck size={12} />
-                          <span>Approved</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserX size={12} />
-                          <span>Pending</span>
-                        </>
-                      )}
-                    </button>
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      user.approved
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {user.approved ? 'Approved' : 'Pending'}
+                    </span>
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex space-x-4">
@@ -482,16 +296,6 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      onClick={() => setDeleteConfirm(user)}
-                      disabled={actionLoading === user.id}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
-                      title="Delete user"
-                    >
-                      <Trash2 size={18} />
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -530,43 +334,6 @@ export default function UsersPage() {
               Next
               <ChevronRight size={16} />
             </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Delete User</h3>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete <strong>{deleteConfirm.full_name || "this user"}</strong>? 
-              This action cannot be undone.
-            </p>
-            <div className="flex space-x-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setDeleteConfirm(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 bg-red-600 hover:bg-red-700"
-                onClick={handleDeleteUser}
-                disabled={actionLoading === deleteConfirm.id}
-              >
-                {actionLoading === deleteConfirm.id ? "Deleting..." : "Delete User"}
-              </Button>
-            </div>
           </div>
         </div>
       )}

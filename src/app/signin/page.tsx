@@ -489,13 +489,29 @@ export default function SignInPage() {
       </form>
       </div>
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Success</h3>
-            <p className="text-gray-700 mb-6">{successMessage}</p>
-            <Button onClick={handleCloseSuccessModal} className="w-full">
-              OK
-            </Button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-slide-up-fade border border-gray-100">
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-5 text-center">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white">Success!</h3>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              <p className="text-gray-700 text-center leading-relaxed">{successMessage}</p>
+            </div>
+            
+            {/* Footer */}
+            <div className="px-6 pb-6">
+              <Button onClick={handleCloseSuccessModal} className="w-full" size="lg">
+                Continue
+              </Button>
+            </div>
           </div>
         </div>
       )}

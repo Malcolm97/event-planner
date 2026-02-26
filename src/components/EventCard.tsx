@@ -197,9 +197,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     try {
       const src = getEventPrimaryImage(event);
       return src;
-    } catch (error) {
-      console.error('Error getting image for event:', event.name, error);
-      return '/next.svg';
+    } catch {
+      // Return null to indicate no image available - will show placeholder
+      return null;
     }
   }, [event.image_urls, event.name, event.date, event]);
 
