@@ -72,12 +72,21 @@ const OFFLINE_PAGES = [
   '/offline.html'
 ];
 
-// Static content pages that should be aggressively cached for offline
+// Static content pages that should be aggressively cached for offline (cache-first strategy)
 const STATIC_PAGES = [
   '/about',
   '/terms',
   '/privacy',
   '/download'
+];
+
+// Dynamic pages that require network but should show offline UI with refresh option
+const DYNAMIC_PAGES = [
+  '/dashboard',
+  '/create-event',
+  '/profile',
+  '/admin',
+  '/signin'
 ];
 
 self.addEventListener('install', (event) => {
@@ -168,32 +177,82 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests (Next.js routes) - NETWORK FIRST for freshness
+  // Handle navigation requests (Next.js routes)
   if (request.mode === 'navigate') {
-    const offlinePages = [
-      '/',
-      '/events',
-      '/categories',
-      '/about',
-      '/settings',
-      '/terms',
-      '/privacy',
-      '/download'
-    ];
+    // Check if it's a static page (cache-first for offline reliability)
+    const isStaticPage = STATIC_PAGES.some(page => url.pathname === page || url.pathname.startsWith(page + '/'));
+    
+    // Check if it's a page that should work offline
+    const isOfflinePage = OFFLINE_PAGES.some(page => url.pathname === page || url.pathname.startsWith(page + '/'));
+    
+    // Check if it's a dynamic page that requires network
+    const isDynamicPage = DYNAMIC_PAGES.some(page => url.pathname === page || url.pathname.startsWith(page + '/'));
 
-    const isOfflinePage = offlinePages.some(page => url.pathname === page);
-
-    if (isOfflinePage) {
-      // NETWORK FIRST for pages - always try network, fallback to cache
+    if (isStaticPage) {
+      // CACHE FIRST for static pages - ensures offline reliability
+      event.respondWith(
+        caches.match(request, { cacheName: PAGES_CACHE })
+          .then(cachedResponse => {
+            if (cachedResponse) {
+              // Return cached version, but update cache in background
+              fetch(request).then(response => {
+                if (response.ok) {
+                  const responseClone = response.clone();
+                  const newResponse = new Response(responseClone.body, {
+                    status: responseClone.status,
+                    statusText: responseClone.statusText,
+                    headers: {
+                      ...Object.fromEntries(responseClone.headers.entries()),
+                      'sw-cache-time': Date.now().toString()
+                    }
+                  });
+                  caches.open(PAGES_CACHE).then(cache => cache.put(request, newResponse));
+                }
+              }).catch(() => {}); // Ignore fetch errors, we have cache
+              
+              return cachedResponse;
+            }
+            
+            // No cache, try network
+            return fetch(request)
+              .then(response => {
+                if (response.ok) {
+                  const responseClone = response.clone();
+                  const newResponse = new Response(responseClone.body, {
+                    status: responseClone.status,
+                    statusText: responseClone.statusText,
+                    headers: {
+                      ...Object.fromEntries(responseClone.headers.entries()),
+                      'sw-cache-time': Date.now().toString()
+                    }
+                  });
+                  caches.open(PAGES_CACHE).then(cache => cache.put(request, newResponse));
+                }
+                return response;
+              })
+              .catch(() => {
+                // Return offline page as last resort
+                return caches.match('/offline.html');
+              });
+          })
+      );
+    } else if (isOfflinePage) {
+      // NETWORK FIRST for other offline-capable pages
       event.respondWith(
         fetch(request)
           .then(response => {
             // Clone and cache the fresh response
             if (response.ok) {
               const responseClone = response.clone();
-              caches.open(PAGES_CACHE).then(cache => {
-                cache.put(request, responseClone);
+              const newResponse = new Response(responseClone.body, {
+                status: responseClone.status,
+                statusText: responseClone.statusText,
+                headers: {
+                  ...Object.fromEntries(responseClone.headers.entries()),
+                  'sw-cache-time': Date.now().toString()
+                }
               });
+              caches.open(PAGES_CACHE).then(cache => cache.put(request, newResponse));
             }
             return response;
           })
@@ -211,69 +270,157 @@ self.addEventListener('fetch', (event) => {
           })
       );
     } else {
-      // For pages that require internet: network first, custom offline message
+      // For dynamic pages that require internet: network first, custom offline message with Refresh button
       event.respondWith(
         fetch(request)
           .then(response => {
             return response;
           })
           .catch(() => {
+            // Generate offline HTML with Refresh and Homepage buttons
+            const currentUrl = url.pathname;
             const offlineMessage = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Internet Required - PNG Events</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+                <meta name="theme-color" content="#F59E0B">
+                <title>Offline - PNG Events</title>
                 <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
                     body {
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                         min-height: 100vh;
-                        background: linear-gradient(to bottom right, #FCD34D, #EF4444, #DC2626);
+                        background: linear-gradient(135deg, #FCD34D 0%, #F97316 50%, #DC2626 100%);
                         color: #111827;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         margin: 0;
-                        padding: 2rem;
-                        text-align: center;
+                        padding: 1rem;
+                        min-height: 100dvh;
                     }
-                    .message {
+                    .container {
                         background: white;
                         padding: 2rem;
                         border-radius: 1rem;
-                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                        max-width: 400px;
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                        max-width: 420px;
+                        width: 100%;
+                        text-align: center;
+                    }
+                    .icon {
+                        font-size: 4rem;
+                        margin-bottom: 1rem;
                     }
                     h1 {
                         font-size: 1.5rem;
-                        margin-bottom: 1rem;
+                        font-weight: 800;
+                        margin-bottom: 0.75rem;
                         color: #111827;
                     }
                     p {
                         color: #6B7280;
                         margin-bottom: 1.5rem;
+                        line-height: 1.6;
                     }
-                    .retry-button {
-                        display: inline-block;
-                        padding: 0.75rem 1.5rem;
-                        background: #FCD34D;
-                        color: #111827;
+                    .buttons {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.75rem;
+                    }
+                    .btn {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        padding: 0.875rem 1.5rem;
+                        border-radius: 0.75rem;
+                        font-weight: 700;
+                        font-size: 1rem;
                         text-decoration: none;
-                        border-radius: 0.5rem;
-                        font-weight: 600;
+                        cursor: pointer;
+                        border: none;
+                        transition: all 0.2s ease;
+                        min-height: 48px;
                     }
-                    .retry-button:hover {
-                        background: #FBBF24;
+                    .btn-primary {
+                        background: linear-gradient(to right, #F59E0B, #D97706);
+                        color: white;
+                    }
+                    .btn-primary:hover {
+                        transform: scale(1.02);
+                        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+                    }
+                    .btn-secondary {
+                        background: #F3F4F6;
+                        color: #374151;
+                    }
+                    .btn-secondary:hover {
+                        background: #E5E7EB;
+                    }
+                    .offline-badge {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        background: #FEF3C7;
+                        color: #92400E;
+                        padding: 0.5rem 1rem;
+                        border-radius: 2rem;
+                        font-size: 0.875rem;
+                        font-weight: 600;
+                        margin-bottom: 1rem;
+                    }
+                    .offline-badge::before {
+                        content: '';
+                        width: 8px;
+                        height: 8px;
+                        background: #EF4444;
+                        border-radius: 50%;
+                        animation: pulse 2s infinite;
+                    }
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.5; transform: scale(1.2); }
+                    }
+                    @media (max-width: 480px) {
+                        .container { padding: 1.5rem; }
+                        h1 { font-size: 1.25rem; }
+                        .icon { font-size: 3rem; }
                     }
                 </style>
             </head>
             <body>
-                <div class="message">
-                    <h1>Internet Connection Required</h1>
-                    <p>This page requires an internet connection to function properly. Please check your connection and try again.</p>
-                    <a href="/" class="retry-button">Go to Homepage</a>
+                <div class="container">
+                    <div class="offline-badge">Offline</div>
+                    <div class="icon">📡</div>
+                    <h1>You're Offline</h1>
+                    <p>This page requires an internet connection. Please check your connection and try again, or go to the homepage to browse cached content.</p>
+                    <div class="buttons">
+                        <button class="btn btn-primary" onclick="window.location.reload()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M1 20v-6h6"></path>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh Page
+                        </button>
+                        <a href="/" class="btn btn-secondary">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Go to Homepage
+                        </a>
+                    </div>
                 </div>
+                <script>
+                    // Auto-reload when coming back online
+                    window.addEventListener('online', () => {
+                        window.location.reload();
+                    });
+                </script>
             </body>
             </html>
             `;

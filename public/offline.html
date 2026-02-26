@@ -17,12 +17,9 @@
             --muted-color: #6b7280;
             --border-color: #e5e7eb;
             --card-background: #ffffff;
-            --input-background: #ffffff;
-            --glass-background: rgba(255, 255, 255, 0.9);
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --error-color: #ef4444;
-            --info-color: #3b82f6;
             --foreground: #111827;
             --background: #f9fafb;
         }
@@ -36,18 +33,18 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             min-height: 100vh;
-            background: var(--background);
+            min-height: 100dvh;
+            background: linear-gradient(135deg, #FCD34D 0%, #F97316 50%, #DC2626 100%);
             color: var(--foreground);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Modern Hero Section matching HomePageContent */
+        /* Modern Hero Section */
         .hero-section {
             position: relative;
             width: 100%;
-            padding: 3rem 1rem 4rem;
-            background: linear-gradient(to right, #fcd34d, #f97316, #dc2626);
+            padding: 2rem 1rem;
             overflow: hidden;
         }
 
@@ -147,7 +144,7 @@
             padding: 1.5rem;
         }
 
-        /* Hero Card matching the search card style */
+        /* Hero Card */
         .hero-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -205,43 +202,66 @@
             height: 16px;
         }
 
-        /* Button matching btn-primary from globals.css */
-        .retry-button {
+        /* Buttons */
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.75rem 2rem;
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
+            padding: 0.875rem 2rem;
             font-weight: 700;
             font-size: 1rem;
             border-radius: 0.75rem;
             text-decoration: none;
             transition: all 0.2s ease;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             border: none;
             cursor: pointer;
-            min-height: 44px;
-            min-width: 44px;
+            min-height: 48px;
+            width: 100%;
         }
 
-        .retry-button:hover {
-            transform: scale(1.05);
-            background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
             box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
         }
 
-        .retry-button:active {
-            transform: scale(0.95);
+        .btn-primary:active {
+            transform: scale(0.98);
         }
 
-        .retry-button.loading {
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn.loading {
             opacity: 0.7;
             pointer-events: none;
         }
 
-        .retry-button .spinner {
+        .btn .spinner {
             width: 18px;
             height: 18px;
             border: 2px solid transparent;
@@ -251,8 +271,12 @@
             display: none;
         }
 
-        .retry-button.loading .spinner {
+        .btn.loading .spinner {
             display: block;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
         }
 
         @keyframes spin {
@@ -313,7 +337,7 @@
             font-size: 1.25rem;
         }
 
-        /* Stats Section matching HomePageContent stats */
+        /* Stats Section */
         .stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -384,7 +408,7 @@
             font-size: 1.5rem;
         }
 
-        /* Event Card matching EventCard component */
+        /* Event Card */
         .event-item {
             background: linear-gradient(to right, #f9fafb, #ffffff);
             border: 1px solid var(--border-color);
@@ -641,7 +665,7 @@
             }
         }
 
-        /* Modern animations matching globals.css */
+        /* Modern animations */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -706,7 +730,7 @@
             .event-item,
             .stat-card,
             .quick-link,
-            .retry-button {
+            .btn {
                 animation: none;
                 transition: none;
             }
@@ -727,7 +751,7 @@
                 border: 2px solid var(--foreground);
             }
 
-            .retry-button {
+            .btn-primary {
                 border: 2px solid white;
             }
         }
@@ -755,10 +779,26 @@
                 </svg>
                 <span>Checking cache...</span>
             </div>
-            <button class="retry-button" id="retry-button" onclick="retryConnection()">
-                <span class="spinner"></span>
-                <span>Try Again</span>
-            </button>
+            
+            <!-- Action Buttons -->
+            <div class="buttons-container">
+                <button class="btn btn-primary" id="refresh-button" onclick="refreshPage()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M1 20v-6h6"></path>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span class="btn-text">Refresh Page</span>
+                    <span class="spinner"></span>
+                </button>
+                <a href="/" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Go to Homepage
+                </a>
+            </div>
         </div>
 
         <!-- Quick Links to Cached Pages -->
@@ -1043,14 +1083,14 @@
             return div.innerHTML;
         }
 
-        // Retry connection
-        async function retryConnection() {
-            const button = document.getElementById('retry-button');
+        // Refresh page
+        async function refreshPage() {
+            const button = document.getElementById('refresh-button');
             button.classList.add('loading');
             
             try {
-                // Try to fetch the homepage
-                const response = await fetch('/', { 
+                // Try to fetch the current page
+                const response = await fetch(window.location.href, { 
                     method: 'HEAD',
                     cache: 'no-store'
                 });
@@ -1102,7 +1142,7 @@
         // Check if pages are cached
         async function checkCachedPages() {
             const pages = ['/about', '/terms', '/privacy', '/events'];
-            const cache = await caches.open('event-planner-pages-v20260221');
+            const cache = await caches.open('event-planner-pages-v20260226');
             
             // We could update the quick links to show which are actually cached
             // For now, we assume they're cached by the service worker

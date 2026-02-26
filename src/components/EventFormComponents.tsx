@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { FiUpload, FiX, FiImage, FiAlertCircle, FiCheck, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileText } from 'react-icons/fi';
+import { FiUpload, FiX, FiImage, FiAlertCircle, FiCheck, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileText, FiRefreshCw, FiTrash2 } from 'react-icons/fi';
 
 interface ImageUploadProps {
   images: File[];
@@ -12,6 +12,7 @@ interface ImageUploadProps {
   maxImages?: number;
   maxSizeMB?: number;
   acceptedTypes?: string[];
+  showConfirmRemove?: boolean;
 }
 
 const DEFAULT_ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -25,10 +26,14 @@ export default function ImageUpload({
   maxImages = 3,
   maxSizeMB = DEFAULT_MAX_SIZE_MB,
   acceptedTypes = DEFAULT_ACCEPTED_TYPES,
+  showConfirmRemove = false,
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previewsRef = useRef<string[]>([]);
 
@@ -46,6 +51,13 @@ export default function ImageUpload({
     previewsRef.current = newPreviews;
     setPreviews(newPreviews);
   }, [images]);
+
+  // Initialize loading state for existing images
+  useEffect(() => {
+    const newLoading = new Set(existingImages);
+    setLoadingImages(newLoading);
+    setFailedImages(new Set());
+  }, [existingImages]);
 
   const totalImages = images.length + existingImages.length;
   const remainingSlots = maxImages - totalImages;
@@ -113,8 +125,57 @@ export default function ImageUpload({
   }, [images, onImagesChange]);
 
   const handleRemoveExisting = useCallback((url: string) => {
+    if (showConfirmRemove && removeConfirm !== url) {
+      setRemoveConfirm(url);
+      return;
+    }
     onExistingImagesRemove(url);
-  }, [onExistingImagesRemove]);
+    setRemoveConfirm(null);
+  }, [onExistingImagesRemove, showConfirmRemove, removeConfirm]);
+
+  const handleImageLoad = useCallback((url: string) => {
+    setLoadingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(url);
+      return newSet;
+    });
+    setFailedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(url);
+      return newSet;
+    });
+  }, []);
+
+  const handleImageError = useCallback((url: string) => {
+    setLoadingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(url);
+      return newSet;
+    });
+    setFailedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.add(url);
+      return newSet;
+    });
+  }, []);
+
+  const handleRetryImage = useCallback((url: string) => {
+    setFailedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(url);
+      return newSet;
+    });
+    setLoadingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.add(url);
+      return newSet;
+    });
+    // Force image reload by adding timestamp
+    const img = document.querySelector(`img[src="${url}"]`) as HTMLImageElement;
+    if (img) {
+      img.src = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    }
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -129,28 +190,71 @@ export default function ImageUpload({
       {/* Existing Images */}
       {existingImages.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Current images:</p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+              Current
+            </span>
+            <p className="text-xs text-gray-500">Saved images</p>
+          </div>
           <div className="grid grid-cols-3 gap-2">
             {existingImages.map((url, index) => (
               <div key={`existing-${index}`} className="relative group">
                 <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                  {/* Loading state */}
+                  {loadingImages.has(url) && !failedImages.has(url) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-yellow-500" />
+                    </div>
+                  )}
+                  
+                  {/* Error state */}
+                  {failedImages.has(url) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 z-10">
+                      <FiAlertCircle size={20} className="text-red-400 mb-1" />
+                      <button
+                        type="button"
+                        onClick={() => handleRetryImage(url)}
+                        className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                      >
+                        <FiRefreshCw size={12} />
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                  
                   <Image
                     src={url}
                     alt={`Event image ${index + 1}`}
                     fill
-                    className="object-cover"
+                    className={`object-cover transition-opacity duration-200 ${loadingImages.has(url) || failedImages.has(url) ? 'opacity-0' : 'opacity-100'}`}
                     sizes="(max-width: 768px) 33vw, 100px"
+                    onLoad={() => handleImageLoad(url)}
+                    onError={() => handleImageError(url)}
                   />
                 </div>
+                
+                {/* Remove button */}
                 <button
                   type="button"
                   onClick={() => handleRemoveExisting(url)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                  title="Remove image"
+                  onMouseLeave={() => setRemoveConfirm(null)}
+                  className={`absolute top-1 right-1 rounded-full p-1.5 transition-all ${
+                    removeConfirm === url 
+                      ? 'bg-red-500 text-white opacity-100' 
+                      : 'bg-red-500 text-white opacity-0 group-hover:opacity-100 focus:opacity-100'
+                  }`}
+                  title={removeConfirm === url ? 'Click again to confirm' : 'Remove image'}
                   aria-label={`Remove image ${index + 1}`}
                 >
-                  <FiX size={12} />
+                  {removeConfirm === url ? <FiTrash2 size={12} /> : <FiX size={12} />}
                 </button>
+                
+                {/* Confirm tooltip */}
+                {removeConfirm === url && (
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap z-20">
+                    Click to confirm
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -160,11 +264,16 @@ export default function ImageUpload({
       {/* New Image Previews */}
       {previews.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">New images to upload:</p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+              To Upload
+            </span>
+            <p className="text-xs text-gray-500">New images (not yet saved)</p>
+          </div>
           <div className="grid grid-cols-3 gap-2">
             {previews.map((previewUrl, index) => (
               <div key={`new-${index}`} className="relative group">
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 ring-2 ring-green-400 ring-offset-1">
                   <img
                     src={previewUrl}
                     alt={`New image ${index + 1}`}

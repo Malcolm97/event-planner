@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, TABLES, recordActivity, USER_FIELDS } from '@/lib/supabase';
 import { normalizeUser, prepareUserForDb } from '@/lib/types';
 import Link from 'next/link';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiCamera, FiX, FiRefreshCw, FiUser, FiCheck } from 'react-icons/fi';
 import Image from 'next/image';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -21,8 +21,13 @@ export default function EditProfilePage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-  const [photoFile, setPhotoFile] = useState<File | null>(null); // New state for photo file
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null); // New state for photo URL
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -42,6 +47,57 @@ export default function EditProfilePage() {
     showSocialLinks: true
   });
   const router = useRouter();
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewRef.current) {
+        URL.revokeObjectURL(previewRef.current);
+      }
+    };
+  }, []);
+
+  // Handle photo file selection with preview
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size must be less than 5MB');
+        return;
+      }
+      
+      // Cleanup previous preview
+      if (previewRef.current) {
+        URL.revokeObjectURL(previewRef.current);
+      }
+      
+      setPhotoFile(file);
+      const preview = URL.createObjectURL(file);
+      previewRef.current = preview;
+      setPhotoPreview(preview);
+      setError('');
+    }
+  };
+
+  // Cancel photo selection
+  const handleCancelPhoto = () => {
+    if (previewRef.current) {
+      URL.revokeObjectURL(previewRef.current);
+      previewRef.current = null;
+    }
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (event: any) => {
@@ -266,32 +322,141 @@ export default function EditProfilePage() {
 
         <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
           <div className="text-center mb-6">
-            {photoUrl ? (
-              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
-                <Image src={photoUrl} alt="Profile Photo" width={80} height={80} className="object-cover" />
-              </div>
-            ) : (
-              <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-            )}
             <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Edit Profile</h1>
             <p className="text-gray-600 mt-2">Update your personal information</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="photo" className="block text-sm font-medium text-gray-700 mb-2">
+            {/* Profile Photo Section */}
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
                 Profile Photo
               </label>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                {/* Current/Existing Photo */}
+                <div className="flex flex-col items-center">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 mb-2">
+                    Current
+                  </span>
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 ring-2 ring-gray-300">
+                      {photoUrl && !imageError ? (
+                        <>
+                          {imageLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                              <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-yellow-500" />
+                            </div>
+                          )}
+                          <Image 
+                            src={photoUrl} 
+                            alt="Current Profile Photo" 
+                            width={96} 
+                            height={96} 
+                            className={`object-cover w-full h-full transition-opacity duration-200 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                            onLoad={() => setImageLoading(false)}
+                            onError={() => {
+                              setImageLoading(false);
+                              setImageError(true);
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-3xl font-bold">
+                          {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                      )}
+                    </div>
+                    {/* Camera icon overlay */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-0 right-0 bg-yellow-500 text-white rounded-full p-2 shadow-lg hover:bg-yellow-600 transition-colors"
+                      title="Change photo"
+                    >
+                      <FiCamera size={16} />
+                    </button>
+                  </div>
+                  {imageError && photoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageError(false);
+                        setImageLoading(true);
+                      }}
+                      className="mt-2 text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                    >
+                      <FiRefreshCw size={12} />
+                      Failed to load - click to retry
+                    </button>
+                  )}
+                </div>
+
+                {/* Arrow for desktop */}
+                {photoPreview && (
+                  <div className="hidden sm:block text-gray-400">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* New Photo Preview */}
+                {photoPreview && (
+                  <div className="flex flex-col items-center">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 mb-2">
+                      New
+                    </span>
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-green-400 ring-offset-2">
+                        <img
+                          src={photoPreview}
+                          alt="New Profile Photo Preview"
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCancelPhoto}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors"
+                        title="Cancel new photo"
+                      >
+                        <FiX size={12} />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">Will replace current photo</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Hidden file input */}
               <input
+                ref={fileInputRef}
                 type="file"
                 id="photo"
                 name="photo"
                 accept="image/*"
-                onChange={(e) => setPhotoFile(e.target.files ? e.target.files[0] : null)}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+                onChange={handlePhotoChange}
+                className="hidden"
               />
+
+              {/* Upload button */}
+              {!photoPreview && (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FiCamera size={16} />
+                    {photoUrl ? 'Change Photo' : 'Upload Photo'}
+                  </button>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                JPG, PNG, GIF, or WebP • Max 5MB
+              </p>
             </div>
 
             <div className="flex flex-wrap -mx-2">

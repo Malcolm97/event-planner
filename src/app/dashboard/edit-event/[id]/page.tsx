@@ -515,6 +515,7 @@ export default function EditEventPage() {
                       onImagesChange={setImageFiles}
                       onExistingImagesRemove={handleExistingImagesRemove}
                       maxImages={3}
+                      showConfirmRemove={true}
                     />
                   </FormField>
                 </div>
