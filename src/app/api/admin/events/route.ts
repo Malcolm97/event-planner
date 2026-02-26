@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server"
 import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { requireAdminAccess, addAdminCacheHeaders } from "@/lib/admin-utils"
 
 export async function GET(request: Request) {
   try {
-    // Check admin access first
-    const adminError = await requireAdminAccess()
-    if (adminError) {
-      return adminError
-    }
-
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -57,7 +50,7 @@ export async function GET(request: Request) {
     }
 
     if (!data || data.length === 0) {
-      const response = NextResponse.json({
+      return NextResponse.json({
         data: [],
         pagination: {
           page,
@@ -66,7 +59,6 @@ export async function GET(request: Request) {
           totalPages: Math.ceil((count || 0) / limit)
         }
       })
-      return addAdminCacheHeaders(response)
     }
 
     // OPTIMIZATION: Fetch all creator info and saved counts in parallel
@@ -107,7 +99,7 @@ export async function GET(request: Request) {
       }
     })
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       data: enrichedData,
       pagination: {
         page,
@@ -116,8 +108,6 @@ export async function GET(request: Request) {
         totalPages: Math.ceil((count || 0) / limit)
       }
     })
-    
-    return addAdminCacheHeaders(response)
 
   } catch (error) {
     console.error("Unexpected error in events API:", error)

@@ -3,16 +3,9 @@ import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { getUserFriendlyError } from "@/lib/userMessages"
 import { normalizeUser } from "@/lib/types"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { requireAdminAccess, addAdminCacheHeaders } from "@/lib/admin-utils"
 
 export async function GET(request: Request) {
   try {
-    // Check admin access first
-    const adminError = await requireAdminAccess()
-    if (adminError) {
-      return adminError
-    }
-
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -61,7 +54,7 @@ export async function GET(request: Request) {
     }
 
     if (!profilesData || profilesData.length === 0) {
-      const response = NextResponse.json({
+      return NextResponse.json({
         data: [],
         pagination: {
           page,
@@ -70,7 +63,6 @@ export async function GET(request: Request) {
           totalPages: Math.ceil((totalCount || 0) / limit)
         }
       })
-      return addAdminCacheHeaders(response)
     }
 
     // Get user IDs for batch queries
@@ -122,7 +114,7 @@ export async function GET(request: Request) {
       }
     })
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       data: enrichedData,
       pagination: {
         page,
@@ -131,8 +123,6 @@ export async function GET(request: Request) {
         totalPages: Math.ceil((totalCount || 0) / limit)
       }
     })
-    
-    return addAdminCacheHeaders(response)
 
   } catch (error) {
     console.error("Unexpected error in users API:", error)

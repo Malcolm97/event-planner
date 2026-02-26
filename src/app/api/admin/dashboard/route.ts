@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { requireAdminAccess, addAdminCacheHeaders } from "@/lib/admin-utils"
 import { TABLES } from "@/lib/supabase"
 
 export async function GET() {
   try {
-    // Check admin access first
-    const adminError = await requireAdminAccess()
-    if (adminError) {
-      return adminError
-    }
-
     const supabase = await createServerSupabaseClient()
     
     // Calculate date thresholds
@@ -137,8 +130,7 @@ export async function GET() {
       }
     }
 
-    const response = NextResponse.json({ data: dashboardData })
-    return addAdminCacheHeaders(response)
+    return NextResponse.json({ data: dashboardData })
   } catch (error) {
     console.error("Failed to fetch dashboard data:", error)
     return NextResponse.json(
