@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server"
 import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { requireAdminAccess, addAdminCacheHeaders } from "@/lib/admin-utils"
 
 export async function GET(request: Request) {
   try {
+    // Check admin access first
+    const adminError = await requireAdminAccess()
+    if (adminError) {
+      return adminError
+    }
+
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -50,7 +57,7 @@ export async function GET(request: Request) {
     }
 
     if (!data || data.length === 0) {
-      return NextResponse.json({
+      const response = NextResponse.json({
         data: [],
         pagination: {
           page,
@@ -59,29 +66,32 @@ export async function GET(request: Request) {
           totalPages: Math.ceil((count || 0) / limit)
         }
       })
+      return addAdminCacheHeaders(response)
     }
 
-    // OPTIMIZATION: Fetch all creator info and saved counts in batch queries
+    // OPTIMIZATION: Fetch all creator info and saved counts in parallel
     const creatorIds = [...new Set(data.map(e => e.created_by).filter(Boolean))]
     const eventIds = data.map(e => e.id)
 
-    // Batch fetch creators from profiles table using correct field names
-    const { data: creators } = await supabase
-      .from(TABLES.PROFILES)
-      .select(`id, ${USER_FIELDS.FULL_NAME}, ${USER_FIELDS.AVATAR_URL}`)
-      .in('id', creatorIds)
+    const [creatorsResult, savedCountsResult] = await Promise.all([
+      // Batch fetch creators from profiles table
+      supabase
+        .from(TABLES.PROFILES)
+        .select(`id, ${USER_FIELDS.FULL_NAME}, ${USER_FIELDS.AVATAR_URL}`)
+        .in('id', creatorIds),
+      
+      // Batch fetch saved event counts
+      supabase
+        .from(TABLES.SAVED_EVENTS)
+        .select('event_id')
+        .in('event_id', eventIds)
+    ])
 
-    const creatorMap = new Map(creators?.map(c => [c.id, c]) || [])
-
-    // Batch fetch saved event counts
-    const { data: savedCounts } = await supabase
-      .from(TABLES.SAVED_EVENTS)
-      .select('event_id')
-      .in('event_id', eventIds)
+    const creatorMap = new Map(creatorsResult.data?.map(c => [c.id, c]) || [])
 
     // Count saves per event
     const savedCountMap = new Map<string, number>()
-    savedCounts?.forEach(save => {
+    savedCountsResult.data?.forEach(save => {
       savedCountMap.set(save.event_id, (savedCountMap.get(save.event_id) || 0) + 1)
     })
 
@@ -97,7 +107,7 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       data: enrichedData,
       pagination: {
         page,
@@ -106,6 +116,8 @@ export async function GET(request: Request) {
         totalPages: Math.ceil((count || 0) / limit)
       }
     })
+    
+    return addAdminCacheHeaders(response)
 
   } catch (error) {
     console.error("Unexpected error in events API:", error)

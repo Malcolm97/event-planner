@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 // Public endpoint for fetching site statistics
 // Primary: Uses RPC function (get_public_stats) which bypasses RLS
-// Fallback: Uses direct queries with service role key or anon key
+// Fallback: Uses optimized direct queries with service role key or anon key
 export async function GET() {
   try {
     // Method 1: Try RPC function first (most reliable if set up)
@@ -26,7 +26,7 @@ export async function GET() {
       console.warn('Stats API - RPC not available, falling back to direct queries:', rpcErr.message);
     }
 
-    // Method 2: Fallback to direct queries with server client
+    // Method 2: Fallback to optimized direct queries with server client
     const cookieStore = await cookies();
     
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -55,24 +55,25 @@ export async function GET() {
       }
     );
 
-    // Fetch all stats in parallel
+    // OPTIMIZATION: Execute all queries in parallel
+    // Use count queries with head:true for efficiency (no data transfer)
     const [usersResult, eventsResult, locationsResult] = await Promise.all([
-      // Get users count
+      // Get users count - head:true for efficiency
       serverClient
         .from('profiles')
-        .select('id', { count: 'exact' })
-        .limit(1),
+        .select('id', { count: 'exact', head: true }),
       
-      // Get events count
+      // Get events count - head:true for efficiency
       serverClient
         .from('events')
-        .select('id', { count: 'exact' })
-        .limit(1),
+        .select('id', { count: 'exact', head: true }),
       
-      // Get locations for cities count
+      // OPTIMIZATION: Only select location field, not all fields
+      // This significantly reduces data transfer for city calculation
       serverClient
         .from('events')
         .select('location')
+        .not('location', 'is', null)
     ]);
 
     if (usersResult.error) {
@@ -87,18 +88,20 @@ export async function GET() {
       console.error('Stats API - Locations query error:', locationsResult.error);
     }
 
-    // Calculate cities covered
+    // OPTIMIZATION: Calculate unique cities efficiently
+    // Use a Set for O(1) lookups instead of array operations
     let citiesCovered = 0;
     if (locationsResult.data && locationsResult.data.length > 0) {
       const uniqueCities = new Set<string>();
-      locationsResult.data.forEach((event: any) => {
+      for (const event of locationsResult.data) {
         if (event.location) {
-          const firstPart = event.location.split(',')[0]?.trim();
-          if (firstPart) {
-            uniqueCities.add(firstPart);
+          // Extract city name (first part before comma)
+          const cityPart = event.location.split(',')[0]?.trim();
+          if (cityPart) {
+            uniqueCities.add(cityPart.toLowerCase()); // Normalize to lowercase for deduplication
           }
         }
-      });
+      }
       citiesCovered = uniqueCities.size;
     }
 

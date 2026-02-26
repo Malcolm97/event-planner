@@ -22,7 +22,9 @@ export async function POST(request: NextRequest) {
     // Get the user from the auth session (optional - can be logged in or anonymous)
     const { data: { session } } = await supabase.auth.getSession();
     
-    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+    // FIX: Get user agent from request headers (server-side safe)
+    // navigator.userAgent is undefined on server-side
+    const userAgent = request.headers.get('user-agent') || 'unknown';
     
     let dbData: any = {
       subscription: subscription,
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
     let data, error;
 
     if (existingSub) {
-      // Update existing subscription - FIXED: added .select() to get updated data
+      // Update existing subscription
       if (session) {
         const { data: updateData, error: updateError } = await supabase
           .from(TABLES.PUSH_SUBSCRIPTIONS)

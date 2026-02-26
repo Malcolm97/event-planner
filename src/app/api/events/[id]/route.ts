@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabase, TABLES } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
+import {
+  handleSupabaseError,
+  validationError,
+  authenticationError,
+  authorizationError,
+  notFoundError,
+  successResponse,
+  databaseError
+} from '@/lib/errorHandler';
 
 // Function to send push notifications for updated events to users who saved them
 async function sendPushNotificationForUpdatedEvent(event: any) {
@@ -67,21 +76,24 @@ export async function GET(
       .single();
 
     if (error) {
-      console.error('Error fetching event from Supabase:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error.code === 'PGRST116') {
+        return notFoundError('Event');
+      }
+      return handleSupabaseError(error);
     }
 
     if (!data) {
-      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      return notFoundError('Event');
     }
 
-    const response = NextResponse.json(data);
-    // Add caching headers for better performance
-    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    const response = successResponse(data);
+    // Add caching headers for better performance - match events/route.ts
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    response.headers.set('X-Content-Source', 'supabase-cache');
     return response;
   } catch (error: any) {
     console.error('Unexpected error fetching event:', error.message);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return databaseError('Failed to fetch event');
   }
 }
 
@@ -95,7 +107,7 @@ export async function DELETE(
     // Get the authorization token from headers
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authenticationError();
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -116,7 +128,7 @@ export async function DELETE(
     // Verify the user is authenticated
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authenticationError();
     }
 
     // Check if event exists and user owns it
@@ -128,29 +140,26 @@ export async function DELETE(
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        return notFoundError('Event');
       }
-      console.error('Error fetching event:', fetchError.message);
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+      return handleSupabaseError(fetchError);
     }
 
     if (existingEvent.created_by !== user.id) {
-      return NextResponse.json({ error: 'Forbidden: You can only delete your own events' }, { status: 403 });
+      return authorizationError('You can only delete your own events');
     }
 
     // Delete associated images from storage if they exist
     if (existingEvent.image_urls && Array.isArray(existingEvent.image_urls) && existingEvent.image_urls.length > 0) {
       const filePathsToDelete = existingEvent.image_urls.map(url => {
         // Extract the file path from the public URL
-        // Assuming the path is '.../storage/v1/object/public/event-images/fileName.ext'
-        // We need 'event-images/fileName.ext'
         const pathSegments = url.split('/');
         const bucketIndex = pathSegments.indexOf('event-images');
         if (bucketIndex > -1 && bucketIndex + 1 < pathSegments.length) {
           return pathSegments.slice(bucketIndex).join('/');
         }
-        return ''; // Should not happen if URLs are consistent
-      }).filter(Boolean); // Remove empty strings
+        return '';
+      }).filter(Boolean);
 
       if (filePathsToDelete.length > 0) {
         const { error: deleteError } = await supabaseAuth.storage
@@ -160,7 +169,6 @@ export async function DELETE(
         if (deleteError) {
           console.error('Error deleting event images:', deleteError.message);
           // Don't fail the entire operation if image deletion fails
-          // The event will still be deleted
         }
       }
     }
@@ -170,17 +178,16 @@ export async function DELETE(
       .from(TABLES.EVENTS)
       .delete()
       .eq('id', id)
-      .eq('created_by', user.id); // Extra safety check
+      .eq('created_by', user.id);
 
     if (error) {
-      console.error('Error deleting event:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleSupabaseError(error);
     }
 
     return new Response(null, { status: 204 });
   } catch (error: any) {
     console.error('Unexpected error deleting event:', error.message);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return databaseError('Failed to delete event');
   }
 }
 
@@ -194,10 +201,10 @@ export async function PUT(
     // Get the authorization token from headers
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authenticationError();
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.substring(7);
 
     // Create authenticated Supabase client
     const supabaseAuth = createClient(
@@ -215,7 +222,7 @@ export async function PUT(
     // Verify the user is authenticated
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authenticationError();
     }
 
     // Check if event exists and user owns it
@@ -227,14 +234,13 @@ export async function PUT(
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        return notFoundError('Event');
       }
-      console.error('Error fetching event:', fetchError.message);
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+      return handleSupabaseError(fetchError);
     }
 
     if (existingEvent.created_by !== user.id) {
-      return NextResponse.json({ error: 'Forbidden: You can only update your own events' }, { status: 403 });
+      return authorizationError('You can only update your own events');
     }
 
     // Parse request body
@@ -258,7 +264,7 @@ export async function PUT(
     if (date) {
       eventDate = new Date(date);
       if (isNaN(eventDate.getTime())) {
-        return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+        return validationError('Invalid date format');
       }
     }
 
@@ -267,11 +273,11 @@ export async function PUT(
     if (end_date) {
       eventEndDate = new Date(end_date);
       if (isNaN(eventEndDate.getTime())) {
-        return NextResponse.json({ error: 'Invalid end_date format' }, { status: 400 });
+        return validationError('Invalid end_date format');
       }
       const checkDate = eventDate || new Date(existingEvent.date);
       if (eventEndDate <= checkDate) {
-        return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 });
+        return validationError('End date must be after start date');
       }
     }
 
@@ -282,14 +288,14 @@ export async function PUT(
     if (presale_price !== undefined) {
       presalePrice = parseFloat(presale_price);
       if (isNaN(presalePrice) || presalePrice < 0) {
-        return NextResponse.json({ error: 'Invalid presale_price' }, { status: 400 });
+        return validationError('Invalid presale_price');
       }
     }
 
     if (gate_price !== undefined) {
       gatePrice = parseFloat(gate_price);
       if (isNaN(gatePrice) || gatePrice < 0) {
-        return NextResponse.json({ error: 'Invalid gate_price' }, { status: 400 });
+        return validationError('Invalid gate_price');
       }
     }
 
@@ -297,10 +303,10 @@ export async function PUT(
     let validatedImageUrls = undefined;
     if (image_urls !== undefined) {
       if (!Array.isArray(image_urls)) {
-        return NextResponse.json({ error: 'There was a problem with your images. Please try selecting them again.' }, { status: 400 });
+        return validationError('There was a problem with your images. Please try selecting them again.');
       }
       if (image_urls.length > 3) {
-        return NextResponse.json({ error: 'You can only upload up to 3 images per event.' }, { status: 400 });
+        return validationError('You can only upload up to 3 images per event.');
       }
       validatedImageUrls = image_urls.filter(url => typeof url === 'string' && url.trim().length > 0);
     }
@@ -327,13 +333,12 @@ export async function PUT(
       .from(TABLES.EVENTS)
       .update(updateData)
       .eq('id', id)
-      .eq('created_by', user.id) // Extra safety check
+      .eq('created_by', user.id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating event:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleSupabaseError(error);
     }
 
     // Trigger push notifications for updated event (don't await to avoid blocking response)
@@ -341,9 +346,9 @@ export async function PUT(
       console.error('Failed to send push notification for updated event:', err);
     });
 
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch (error: any) {
     console.error('Unexpected error updating event:', error.message);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return databaseError('Failed to update event');
   }
 }

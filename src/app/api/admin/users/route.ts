@@ -3,9 +3,16 @@ import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { getUserFriendlyError } from "@/lib/userMessages"
 import { normalizeUser } from "@/lib/types"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { requireAdminAccess, addAdminCacheHeaders } from "@/lib/admin-utils"
 
 export async function GET(request: Request) {
   try {
+    // Check admin access first
+    const adminError = await requireAdminAccess()
+    if (adminError) {
+      return adminError
+    }
+
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -54,7 +61,7 @@ export async function GET(request: Request) {
     }
 
     if (!profilesData || profilesData.length === 0) {
-      return NextResponse.json({
+      const response = NextResponse.json({
         data: [],
         pagination: {
           page,
@@ -63,31 +70,34 @@ export async function GET(request: Request) {
           totalPages: Math.ceil((totalCount || 0) / limit)
         }
       })
+      return addAdminCacheHeaders(response)
     }
 
     // Get user IDs for batch queries
     const userIds = profilesData.map(profile => profile.id)
 
-    // OPTIMIZATION: Batch fetch events created and saved counts
-    const { data: eventsCreatedData } = await supabase
-      .from(TABLES.EVENTS)
-      .select('created_by')
-      .in('created_by', userIds)
-
-    const { data: savedEventsData } = await supabase
-      .from(TABLES.SAVED_EVENTS)
-      .select('user_id')
-      .in('user_id', userIds)
+    // OPTIMIZATION: Batch fetch events created and saved counts in parallel
+    const [eventsCreatedData, savedEventsData] = await Promise.all([
+      supabase
+        .from(TABLES.EVENTS)
+        .select('created_by')
+        .in('created_by', userIds),
+      
+      supabase
+        .from(TABLES.SAVED_EVENTS)
+        .select('user_id')
+        .in('user_id', userIds)
+    ])
 
     // Count events created per user
     const eventsCreatedMap = new Map<string, number>()
-    eventsCreatedData?.forEach(event => {
+    eventsCreatedData.data?.forEach(event => {
       eventsCreatedMap.set(event.created_by, (eventsCreatedMap.get(event.created_by) || 0) + 1)
     })
 
     // Count events saved per user
     const eventsSavedMap = new Map<string, number>()
-    savedEventsData?.forEach(save => {
+    savedEventsData.data?.forEach(save => {
       eventsSavedMap.set(save.user_id, (eventsSavedMap.get(save.user_id) || 0) + 1)
     })
 
@@ -112,7 +122,7 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       data: enrichedData,
       pagination: {
         page,
@@ -121,6 +131,8 @@ export async function GET(request: Request) {
         totalPages: Math.ceil((totalCount || 0) / limit)
       }
     })
+    
+    return addAdminCacheHeaders(response)
 
   } catch (error) {
     console.error("Unexpected error in users API:", error)
