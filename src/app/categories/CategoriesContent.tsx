@@ -107,7 +107,7 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
       </div>
 
       {/* Category Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-12">
         {allCategories.map(cat => {
           const CategoryIcon = categoryIconMap[cat.icon];
           const eventsInCategory = events.filter(event => !cat.name || cat.name === 'All Categories' || event.category === cat.name);
@@ -119,16 +119,16 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
               key={cat.name}
               href={`/categories?category=${encodeURIComponent(cat.name)}`}
               className={`
-                flex flex-col items-center justify-center gap-3 p-6 rounded-2xl 
+                flex flex-col items-center justify-center gap-2 md:gap-3 p-3 md:p-6 rounded-xl md:rounded-2xl 
                 transition duration-200 ease-in-out transform hover:scale-105
                 ${cat.color}
                 ${cat.name === queryCategory ? 'ring-2 ring-yellow-400 shadow-lg' : ''}
               `}
             >
-              <CategoryIcon className="w-8 h-8" />
+              <CategoryIcon className="w-5 h-5 md:w-8 md:h-8" />
               <div className="text-center">
-                <h3 className="font-semibold">{cat.name}</h3>
-                <p className="text-sm">{upcomingInCategory.length} upcoming</p>
+                <h3 className="font-medium md:font-semibold text-xs md:text-base">{cat.name}</h3>
+                <p className="text-xs md:text-sm">{upcomingInCategory.length} upcoming</p>
               </div>
             </Link>
           );
