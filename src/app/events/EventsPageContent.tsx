@@ -13,6 +13,7 @@ import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '@/lib/types';
 import CustomSelect from '@/components/CustomSelect';
+import Button from '@/components/Button';
 import { isEventUpcomingOrActive, isEventCurrentlyHappening, sortEventsByDate } from '@/lib/utils';
 
 
@@ -137,11 +138,11 @@ export default function EventsPageContent() {
   }, [selectedEvent, fetchHost]);
 
   return (
-    <div className="min-h-screen bg-white" role="main" tabIndex={-1} aria-label="Events Page">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300" role="main" tabIndex={-1} aria-label="Events Page">
       {/* Hero section */}
       <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-2xl text-white mb-4 sm:mb-6 tracking-tight font-bold">
+          <h1 className="text-display-lg text-white mb-4 sm:mb-6">
             Events by Location
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
@@ -233,12 +234,11 @@ export default function EventsPageContent() {
                 Clear Location Filter
               </button>
             )}
-            <Link
-              href="/create-event"
-              className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-xl font-medium hover:from-yellow-500 hover:to-orange-600 transition-all"
-            >
-              Create an Event
-            </Link>
+            <Button asChild size="lg">
+              <Link href="/create-event">
+                Create an Event
+              </Link>
+            </Button>
           </div>
         </div>
       )}

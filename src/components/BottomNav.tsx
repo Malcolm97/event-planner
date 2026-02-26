@@ -90,7 +90,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="bottom-nav lg:hidden">
+    <nav className="bottom-nav lg:hidden dark:bg-gray-800/95 dark:border-gray-700/50 transition-colors duration-300">
       <div className="flex items-center justify-around px-1 py-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -148,14 +148,14 @@ export default function BottomNav() {
       {/* Hamburger Menu Overlay */}
       {isHamburgerOpen && (
         <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm" onClick={() => setIsHamburgerOpen(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto">
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto transition-colors duration-300">
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Menu</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Menu</h3>
                 <button
                   onClick={() => setIsHamburgerOpen(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100"
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300"
                   aria-label="Close menu"
                 >
                   ✕

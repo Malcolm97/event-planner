@@ -1,7 +1,7 @@
 // Dynamic versioning based on build timestamp
 // IMPORTANT: Update BUILD_TIMESTAMP when deploying new versions to force cache update
-const BUILD_TIMESTAMP = '20260221'; // Update this when deploying new versions
-const APP_VERSION = '10.0.4';
+const BUILD_TIMESTAMP = '20260226'; // Update this when deploying new versions
+const APP_VERSION = '10.0.5';
 
 // Debug logging - only in development
 const isDebug = typeof self !== 'undefined' && self.location && self.location.hostname === 'localhost';
@@ -19,8 +19,8 @@ const APP_SHELL_CACHE = `event-planner-app-shell-v${BUILD_TIMESTAMP}`;
 // Track if we've notified about this version
 let hasNotifiedUpdate = false;
 
-// Update check interval (in milliseconds) - check every 5 minutes
-const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
+// Update check interval (in milliseconds) - check every 1 minute
+const UPDATE_CHECK_INTERVAL = 1 * 60 * 1000;
 
 // Cache size limits for better performance
 const CACHE_LIMITS = {

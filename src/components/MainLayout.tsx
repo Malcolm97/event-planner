@@ -21,7 +21,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     return (
       <>
         <OfflineIndicator />
-        <main id="main-content" role="main" className="min-h-screen">
+        <main id="main-content" role="main" className="min-h-screen bg-gray-50 dark:bg-gray-900">
           {children}
         </main>
       </>
@@ -32,7 +32,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     <>
       <OfflineIndicator />
       <Header />
-      <main id="main-content" role="main" className="pb-16 sm:pb-20 md:pb-20 lg:pb-0 min-h-screen">
+      <main id="main-content" role="main" className="pb-16 sm:pb-20 md:pb-20 lg:pb-0 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         {children}
       </main>
       <BottomNav />

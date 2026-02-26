@@ -89,10 +89,12 @@ function isValidUrl(urlString: string): boolean {
 export function isAutoSyncEnabled(): boolean {
   if (typeof window === 'undefined') return false
   try {
-    const setting = localStorage.getItem('autoSyncEnabled')
-    return setting === 'true'
+    // Use 'autoSync' key to match settings page
+    const setting = localStorage.getItem('autoSync')
+    // Default to true if not set, false only if explicitly set to 'false'
+    return setting !== 'false'
   } catch {
-    return false
+    return true // Default to enabled
   }
 }
 

@@ -34,6 +34,8 @@ export interface EventItem {
   created_by?: string;
   external_links?: ExternalLinks;
   approved?: boolean;
+  // Computed fields (not in database, added by API)
+  save_count?: number; // Number of times event has been saved (pre-fetched to avoid N+1 queries)
 }
 
 // User interface for Supabase

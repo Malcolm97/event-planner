@@ -171,7 +171,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   }, [upcomingOnlyEvents]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Hero Section */}
       <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
         <div className="max-w-7xl mx-auto text-center">

@@ -213,7 +213,7 @@ const Header = React.memo(function Header() {
         </div>
       )}
 
-      <header className="glass-effect shadow-sm border-b border-gray-200/50 sticky top-0 z-[100] backdrop-blur-md lg:shadow-md">
+      <header className="glass-effect dark:bg-gray-800/95 shadow-sm border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-[100] backdrop-blur-md lg:shadow-md transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 xl:px-12">
           <div className="flex justify-between items-center h-11 sm:h-14 lg:h-16">
             {/* Logo */}
@@ -227,7 +227,7 @@ const Header = React.memo(function Header() {
             </Link>
 
             {/* Centered nav for desktop */}
-            <nav className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 items-center space-x-6 xl:space-x-8">
+            <nav className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 items-center space-x-6 xl:space-x-8 mr-52">
               <Button onClick={() => navigateWithOfflineCheck('/events', 'Events')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Events</Button>
               <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Categories</Button>
               <Button onClick={() => router.push('/creators')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Creators</Button>
@@ -415,8 +415,8 @@ const Header = React.memo(function Header() {
                       ) : (
                         <FiUser size={16} className="inline mr-1 xl:mr-2" />
                       )}
-                      <span className="hidden xl:inline">{userName || 'Dashboard'}</span>
-                      <span className="xl:hidden">{userName ? userName.split(' ')[0] : 'Profile'}</span>
+                      <span className="hidden xl:inline max-w-[120px] truncate">{userName || 'Dashboard'}</span>
+                      <span className="xl:hidden max-w-[80px] truncate">{userName ? userName.split(' ')[0] : 'Profile'}</span>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>

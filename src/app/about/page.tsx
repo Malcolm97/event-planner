@@ -186,7 +186,7 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="w-full py-12 sm:py-16 lg:py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 text-white border-b border-black">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-2xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight leading-tight">
+          <h1 className="text-display-lg text-white mb-4 sm:mb-6">
             PNG Events: Connecting Communities
           </h1>
           <p className="text-lg sm:text-xl text-gray-100 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12">

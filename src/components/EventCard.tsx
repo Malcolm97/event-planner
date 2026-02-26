@@ -143,7 +143,8 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [saveCount, setSaveCount] = useState(0);
+  // Use save_count from event data (pre-fetched in API) to avoid N+1 queries
+  const [saveCount, setSaveCount] = useState(event.save_count || 0);
   const [deleting, setDeleting] = useState(false);
 
   // Memoize expensive computations
@@ -203,34 +204,8 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     }
   }, [event.image_urls, event.name, event.date, event]);
 
-  // Fetch save count for popular badge logic
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchSaveCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from(TABLES.SAVED_EVENTS)
-          .select('*', { count: 'exact', head: true })
-          .eq('event_id', event.id);
-
-        if (isMounted && !error && count !== null) {
-          setSaveCount(count);
-        }
-      } catch (error) {
-        // Silently handle - not critical for UX
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Error fetching save count:', error);
-        }
-      }
-    };
-
-    fetchSaveCount();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [event.id]);
+  // Note: save_count is now pre-fetched in the API to avoid N+1 queries
+  // No need for individual fetchSaveCount queries per card
 
   // Check if event is saved on component mount
   useEffect(() => {
@@ -278,7 +253,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
         if (!error) {
           setBookmarked(false);
-          setSaveCount(prev => Math.max(0, prev - 1));
+          setSaveCount((prev: number) => Math.max(0, prev - 1));
         }
       } else {
         const { error } = await supabase
@@ -290,7 +265,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
         if (!error) {
           setBookmarked(true);
-          setSaveCount(prev => prev + 1);
+          setSaveCount((prev: number) => prev + 1);
         }
       }
     } catch (error) {
@@ -385,7 +360,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
   return (
     <article
       data-event-id={event.id}
-      className="group relative bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.2)] overflow-hidden h-full border border-gray-100/50"
+      className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.2)] overflow-hidden h-full border border-gray-100/50 dark:border-gray-700/50"
       tabIndex={0}
       role="button"
       aria-label={`View details for ${event.name} event`}
@@ -489,26 +464,26 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       {/* Content Area */}
       <div className="p-4 sm:p-5 lg:p-4 xl:p-5">
         {/* Event Title */}
-        <h3 className="text-base sm:text-lg lg:text-lg font-bold text-gray-900 leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
+        <h3 className="text-base sm:text-lg lg:text-lg font-bold text-gray-900 dark:text-white leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
           {event.name}
         </h3>
 
         {/* Location */}
         <div className="flex items-start gap-2 mb-2">
-          <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 flex-shrink-0">
+          <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0">
             <FiMapPin size={12} />
           </div>
-          <span className="text-sm text-gray-600 font-medium line-clamp-1">{event.location}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium line-clamp-1">{event.location}</span>
         </div>
 
         {/* Date and Time */}
         {event.date && (
           <div className="flex items-start gap-2 mb-3">
-            <div className="p-1.5 rounded-lg bg-red-50 text-red-600 flex-shrink-0">
+            <div className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex-shrink-0">
               <FiCalendar size={12} />
             </div>
             <div>
-              <span className="text-sm text-gray-700 font-medium block">
+              <span className="text-sm text-gray-700 dark:text-gray-300 font-medium block">
                 {formattedEndDate ? (
                   <>
                     {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.end_date!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

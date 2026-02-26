@@ -13,6 +13,21 @@ const nextConfig = {
     optimizeCss: true,
     // Enable webpack build worker
     webpackBuildWorker: true,
+    // Enable optimized package imports for faster builds
+    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', 'date-fns'],
+  },
+
+  // Modularize imports for better tree-shaking
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
+    'react-icons': {
+      transform: 'react-icons/{{member}}',
+    },
+    'date-fns': {
+      transform: 'date-fns/{{member}}',
+    },
   },
 
   // Bundle analysis (only in development)

@@ -145,9 +145,9 @@ export default function CreatorsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Hero Section */}
-      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
+      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black dark:border-gray-700">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-base sm:text-base lg:text-2xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight">
             Event Creators

@@ -56,6 +56,20 @@ export async function GET(request: Request) {
       .from(TABLES.EVENTS)
       .select(selectedFields);
 
+    // Get save counts for all events in a single query (avoids N+1 problem)
+    const { data: saveCounts, error: saveCountsError } = await supabase
+      .from(TABLES.SAVED_EVENTS)
+      .select('event_id');
+    
+    // Aggregate save counts by event_id
+    const saveCountMap = new Map<string, number>();
+    if (saveCounts && !saveCountsError) {
+      saveCounts.forEach((item: { event_id: string }) => {
+        const count = saveCountMap.get(item.event_id) || 0;
+        saveCountMap.set(item.event_id, count + 1);
+      });
+    }
+
     // Apply category filter if provided
     if (category) {
       query = query.eq('category', category);
@@ -109,9 +123,15 @@ export async function GET(request: Request) {
       return handleSupabaseError(error);
     }
 
+    // Add save counts to events data
+    const eventsWithSaveCounts = (data || []).map((event: any) => ({
+      ...event,
+      save_count: saveCountMap.get(event.id) || 0
+    }));
+
     // Return standardized format: { data: [...], count: number }
     const response = successResponse({
-      data: data || [],
+      data: eventsWithSaveCounts,
       count: totalRecords
     });
     // Add caching headers for better performance

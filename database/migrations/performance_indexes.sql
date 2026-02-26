@@ -1,44 +1,56 @@
--- Performance optimization indexes for PNG Events database
--- Run this in your Supabase SQL Editor to improve query performance
+-- Performance Indexes for PNG Events
+-- Run this migration to add indexes that improve query performance
+-- Updated to match actual database schema
 
--- Composite indexes for common query patterns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_date_category ON public.events(date, category);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_date_featured ON public.events(date, featured) WHERE featured = true;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_location_date ON public.events(location, date);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_category_featured ON public.events(category, featured, date);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_created_by_date ON public.events(created_by, date);
+-- Events table indexes (all columns exist in schema)
+CREATE INDEX IF NOT EXISTS idx_events_date ON public.events(date);
+CREATE INDEX IF NOT EXISTS idx_events_end_date ON public.events(end_date);
+CREATE INDEX IF NOT EXISTS idx_events_category ON public.events(category);
+CREATE INDEX IF NOT EXISTS idx_events_location ON public.events(location);
+CREATE INDEX IF NOT EXISTS idx_events_created_by ON public.events(created_by);
+CREATE INDEX IF NOT EXISTS idx_events_featured ON public.events(featured);
+CREATE INDEX IF NOT EXISTS idx_events_created_at ON public.events(created_at);
 
--- Text search indexes for better search performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_name_gin ON public.events USING gin(to_tsvector('english', name));
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_description_gin ON public.events USING gin(to_tsvector('english', description));
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_location_gin ON public.events USING gin(to_tsvector('english', location));
+-- Composite index for common query patterns
+CREATE INDEX IF NOT EXISTS idx_events_date_category ON public.events(date, category);
+CREATE INDEX IF NOT EXISTS idx_events_date_location ON public.events(date, location);
 
--- Partial indexes for frequently filtered data
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_upcoming ON public.events(date) WHERE date >= CURRENT_DATE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_past ON public.events(date) WHERE date < CURRENT_DATE;
+-- Saved events table indexes (all columns exist in schema)
+CREATE INDEX IF NOT EXISTS idx_saved_events_event_id ON public.saved_events(event_id);
+CREATE INDEX IF NOT EXISTS idx_saved_events_user_id ON public.saved_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_saved_events_user_event ON public.saved_events(user_id, event_id);
 
--- Indexes for saved events relationships
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_saved_events_user_event_date ON public.saved_events(user_id, event_id, created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_saved_events_event_user ON public.saved_events(event_id, user_id);
+-- Profiles table indexes (only columns that exist: id, full_name, avatar_url, updated_at)
+CREATE INDEX IF NOT EXISTS idx_profiles_updated_at ON public.profiles(updated_at);
 
--- Push subscriptions indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_push_subscriptions_user_created ON public.push_subscriptions(user_id, created_at);
+-- Analyze tables to update statistics (PostgreSQL)
+ANALYZE public.events;
+ANALYZE public.saved_events;
+ANALYZE public.profiles;
 
--- User profiles indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_profiles_updated_at ON public.profiles(updated_at);
+-- Note: Only create indexes for tables that exist in your database
+-- The following tables may not exist yet, so they are commented out:
+-- activities, push_subscriptions, audit_logs, categories, locations
 
--- Comments on indexes for documentation
-COMMENT ON INDEX idx_events_date_category IS 'Optimizes event filtering by date and category';
-COMMENT ON INDEX idx_events_date_featured IS 'Speeds up featured events queries';
-COMMENT ON INDEX idx_events_location_date IS 'Improves location-based event searches';
-COMMENT ON INDEX idx_events_category_featured IS 'Optimizes featured events by category';
-COMMENT ON INDEX idx_events_created_by_date IS 'Speeds up user dashboard queries';
-COMMENT ON INDEX idx_events_name_gin IS 'Full-text search on event names';
-COMMENT ON INDEX idx_events_description_gin IS 'Full-text search on event descriptions';
-COMMENT ON INDEX idx_events_location_gin IS 'Full-text search on locations';
-COMMENT ON INDEX idx_events_upcoming IS 'Fast upcoming events queries';
-COMMENT ON INDEX idx_events_past IS 'Fast past events queries';
-COMMENT ON INDEX idx_saved_events_user_event_date IS 'Optimizes user saved events queries';
-COMMENT ON INDEX idx_saved_events_event_user IS 'Speeds up event popularity calculations';
-COMMENT ON INDEX idx_push_subscriptions_user_created IS 'Optimizes push notification queries';
-COMMENT ON INDEX idx_profiles_updated_at IS 'Speeds up profile update queries';
+-- Uncomment and run these only after creating the respective tables:
+
+-- Activities table indexes (uncomment when table exists)
+-- CREATE INDEX IF NOT EXISTS idx_activities_user_id ON public.activities(user_id);
+-- CREATE INDEX IF NOT EXISTS idx_activities_event_id ON public.activities(event_id);
+-- CREATE INDEX IF NOT EXISTS idx_activities_type ON public.activities(activity_type);
+-- CREATE INDEX IF NOT EXISTS idx_activities_created_at ON public.activities(created_at);
+
+-- Push subscriptions table indexes (uncomment when table exists)
+-- CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON public.push_subscriptions(user_id);
+
+-- Audit logs table indexes (uncomment when table exists)
+-- CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id);
+-- CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON public.audit_logs(action);
+-- CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON public.audit_logs(entity_type);
+-- CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at);
+
+-- Categories table indexes (uncomment when table exists)
+-- CREATE INDEX IF NOT EXISTS idx_categories_name ON public.categories(name);
+
+-- Locations table indexes (uncomment when table exists)
+-- CREATE INDEX IF NOT EXISTS idx_locations_name ON public.locations(name);

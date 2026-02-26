@@ -79,7 +79,7 @@ export default function DashboardPage() {
 
   if (loading && !userEvents.length) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
@@ -135,7 +135,7 @@ export default function DashboardPage() {
   return (
     <div 
       ref={containerRef}
-      className="min-h-screen bg-gray-50 overflow-auto"
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-auto transition-colors duration-300"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

@@ -551,3 +551,152 @@ export const clearCompletedOperations = async (): Promise<void> => {
   const operations = await getQueuedOperations('completed');
   await Promise.all(operations.map(op => op.id && removeFromQueue(op.id)));
 };
+
+// Cache statistics interface
+export interface CacheStats {
+  eventsCount: number;
+  usersCount: number;
+  categoriesCount: number;
+  queueLength: number;
+  lastCacheTime: number | null;
+  storageUsed: number;
+  storageAvailable: number | null;
+}
+
+// Get cache statistics
+export const getCacheStats = async (): Promise<CacheStats> => {
+  const events = await getEvents();
+  const users = await getUsers();
+  const categories = await getItems<any>(STORES.CATEGORIES);
+  const queue = await getQueuedOperations();
+
+  // Get cache timestamp
+  const syncStatus = await getSyncStatus();
+  const lastCacheTime = syncStatus?.lastSync || null;
+
+  // Estimate storage used by IndexedDB
+  let storageUsed = 0;
+  let storageAvailable: number | null = null;
+
+  // Try to get storage estimate using Storage API
+  if ('storage' in navigator && 'estimate' in navigator.storage) {
+    try {
+      const estimate = await navigator.storage.estimate();
+      storageUsed = estimate.usage || 0;
+      storageAvailable = estimate.quota || null;
+    } catch (e) {
+      console.warn('Could not get storage estimate:', e);
+    }
+  }
+
+  // Fallback: estimate based on data size
+  if (storageUsed === 0) {
+    const eventsSize = JSON.stringify(events).length;
+    const usersSize = JSON.stringify(users).length;
+    const categoriesSize = JSON.stringify(categories).length;
+    const queueSize = JSON.stringify(queue).length;
+    storageUsed = eventsSize + usersSize + categoriesSize + queueSize;
+  }
+
+  return {
+    eventsCount: events.length,
+    usersCount: users.length,
+    categoriesCount: categories.length,
+    queueLength: queue.length,
+    lastCacheTime,
+    storageUsed,
+    storageAvailable
+  };
+};
+
+// Get service worker cache statistics
+export const getServiceWorkerCacheStats = async (): Promise<{ name: string; count: number }[]> => {
+  if (!('caches' in window)) {
+    return [];
+  }
+
+  try {
+    const cacheNames = await caches.keys();
+    const stats: { name: string; count: number }[] = [];
+
+    for (const name of cacheNames) {
+      const cache = await caches.open(name);
+      const keys = await cache.keys();
+      stats.push({ name, count: keys.length });
+    }
+
+    return stats;
+  } catch (error) {
+    console.error('Failed to get service worker cache stats:', error);
+    return [];
+  }
+};
+
+// Clear specific cache type
+export const clearEventsCacheOnly = async (): Promise<void> => {
+  await clearStore(STORES.EVENTS);
+};
+
+export const clearUsersCacheOnly = async (): Promise<void> => {
+  await clearStore(STORES.USERS);
+};
+
+export const clearCategoriesCacheOnly = async (): Promise<void> => {
+  await clearStore(STORES.CATEGORIES);
+};
+
+export const clearOfflineQueueOnly = async (): Promise<void> => {
+  await clearStore(STORES.OFFLINE_QUEUE);
+};
+
+// Clear service worker caches
+export const clearServiceWorkerCaches = async (): Promise<number> => {
+  if (!('caches' in window)) {
+    return 0;
+  }
+
+  try {
+    const cacheNames = await caches.keys();
+    let clearedCount = 0;
+
+    for (const name of cacheNames) {
+      const deleted = await caches.delete(name);
+      if (deleted) clearedCount++;
+    }
+
+    return clearedCount;
+  } catch (error) {
+    console.error('Failed to clear service worker caches:', error);
+    return 0;
+  }
+};
+
+// Format bytes to human readable string
+export const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Get relative time string
+export const getRelativeTime = (timestamp: number | null): string => {
+  if (!timestamp) return 'Never';
+
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+
+  return new Date(timestamp).toLocaleDateString();
+};

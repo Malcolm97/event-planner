@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import EventCard from '@/components/EventCard';
 import Button from '@/components/Button';
@@ -9,7 +9,7 @@ import { EventItem } from '@/lib/types';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import { useOptimizedData, useEvents } from '@/hooks/useOfflineFirstData';
+import { useEventsSWR, useStatsSWR, prefetchEvent } from '@/hooks/useSWRData';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 import ProgressiveLoader, { ProgressiveEnhancement } from '@/components/ProgressiveLoader';
 import { useNotificationClick } from '@/hooks/useNotificationClick';
@@ -49,8 +49,16 @@ interface HomePageContentProps {
 }
 
 export default function HomePageContent({ initialEvents, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: HomePageContentProps) {
-  // Use the optimized data hook for events with pagination support
-  const { data: events, isLoading: loading, error: eventsError, refresh: refreshEvents } = useEvents();
+  // Use SWR for events with initial data from SSR
+  const { events, isLoading: loading, isError: eventsError, revalidate: refreshEvents } = useEventsSWR({
+    limit: 100,
+    config: {
+      fallbackData: { data: initialEvents, count: initialTotalEvents },
+    },
+  });
+
+  // Use SWR for stats with initial data
+  const { stats } = useStatsSWR();
 
   const [filteredEvents, setFilteredEvents] = useState<EventItem[]>(initialEvents || []);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,9 +68,10 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [host, setHost] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [totalEvents, setTotalEvents] = useState<number | null>(initialTotalEvents);
-  const [totalUsers, setTotalUsers] = useState<number | null>(initialTotalUsers);
-  const [citiesCoveredCount, setCitiesCoveredCount] = useState<number | null>(initialCitiesCovered);
+  // Use stats from SWR or fallback to initial values
+  const totalEvents = stats.totalEvents || initialTotalEvents;
+  const totalUsers = stats.totalUsers || initialTotalUsers;
+  const citiesCoveredCount = stats.citiesCovered || initialCitiesCovered;
   const router = useRouter();
   const { isOnline, isSyncing } = useNetworkStatus();
 
@@ -319,7 +328,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   }, [events, upcomingEvents]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       {/* Sync indicator */}
       {isSyncing && (
         <div className="w-full text-center py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold text-sm shadow-sm animate-pulse">
@@ -341,7 +350,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
 
         <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8 lg:gap-6">
           <div className="animate-bounce-in">
-          <h1 className="text-2xl text-white mb-4 drop-shadow-lg font-bold tracking-tight">
+          <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
             PNG Events
           </h1>
           <p className="text-body-lg text-orange-100 max-w-2xl px-4 leading-relaxed drop-shadow-sm">
@@ -414,7 +423,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="w-full section-padding bg-white lg:py-12 lg:px-8">
+      <section className="w-full section-padding bg-white dark:bg-gray-800 lg:py-12 lg:px-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 lg:mb-10">
             <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
@@ -515,16 +524,16 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50">
+      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <div className="text-center mb-12">
           <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">✨</span> Featured Events
           </h2>
-          <p className="text-body-md text-gray-600 max-w-3xl mx-auto">Featured events will appear here soon!</p>
+          <p className="text-body-md text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">Featured events will appear here soon!</p>
         </div>
       </section>
 
-      <section className="w-full section-padding bg-white border-t border-gray-200 lg:py-12 lg:px-8">
+      <section className="w-full section-padding bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 lg:py-12 lg:px-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 lg:mb-10">
             <h3 className="text-heading-xl mb-4 lg:mb-4">Explore by Category</h3>

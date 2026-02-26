@@ -77,8 +77,8 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
         >
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <span className="text-xs sm:text-sm font-medium text-gray-600">{stat.label}</span>
-            <div className={`p-1.5 sm:p-2 rounded-lg ${stat.bgColor}`}>
-              <stat.icon className={`w-3 h-3 sm:w-4 sm:h-4 text-white`} />
+            <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+              <stat.icon className={`w-5 h-5 text-white`} />
             </div>
           </div>
           <div className="text-base sm:text-base lg:text-xl font-bold text-gray-900">
