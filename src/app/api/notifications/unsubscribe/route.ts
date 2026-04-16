@@ -1,52 +1,74 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { TABLES } from '@/lib/supabase';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+async function getAuthenticatedUserId(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.slice(7);
+  const authClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    }
+  );
+
+  const { data: { user }, error } = await authClient.auth.getUser();
+  if (error || !user) {
+    return null;
+  }
+
+  return user.id;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { endpoint, user_id, device_id } = await request.json();
+    const { endpoint, device_id } = await request.json();
 
-    if (!endpoint && !user_id && !device_id) {
+    if (!endpoint && !device_id) {
       return NextResponse.json(
-        { error: 'Missing endpoint, user_id, or device_id' },
+        { error: 'Missing endpoint or device_id' },
         { status: 400 }
       );
     }
 
-    // Get the user from the auth session (optional)
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const userId = await getAuthenticatedUserId(request);
     let error;
 
-    if (session) {
-      // Logged-in user - delete by user_id
-      const { error: deleteError } = await supabase
-        .from('push_subscriptions')
+    if (userId) {
+      const result = await supabase
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .delete()
-        .eq('user_id', session.user.id);
-      
-      error = deleteError;
+        .eq('user_id', userId);
+
+      error = result.error;
     } else if (device_id) {
-      // Anonymous PWA user - delete by device_id
-      const { error: deleteError } = await supabase
-        .from('push_subscriptions')
+      const result = await supabase
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .delete()
         .eq('device_id', device_id);
-      
-      error = deleteError;
+
+      error = result.error;
     } else if (endpoint) {
-      // Fallback: try to delete by endpoint (stored in subscription JSON)
-      // This requires a different approach since it's in JSONB
-      const { error: deleteError } = await supabase
-        .from('push_subscriptions')
+      const result = await supabase
+        .from(TABLES.PUSH_SUBSCRIPTIONS)
         .delete()
-        .eq('subscription->>endpoint', endpoint);
-      
-      error = deleteError;
+        .eq('endpoint', endpoint);
+
+      error = result.error;
     } else {
       return NextResponse.json(
         { error: 'Unauthorized - either login or provide device_id' },

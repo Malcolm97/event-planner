@@ -23,6 +23,7 @@ export interface QueuedOperation {
   operation: 'create' | 'update' | 'delete';
   table: string;
   data: any;
+  refreshTargets?: string[];
   timestamp: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   retryCount?: number;

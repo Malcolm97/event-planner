@@ -1,12 +1,5 @@
-import { useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { setNotificationCallback, clearNotificationCallback } from '@/components/NotificationHandler';
-
-interface NotificationMessage {
-  type: 'NOTIFICATION_CLICK';
-  eventId?: string;
-  url?: string;
-}
 
 /**
  * Hook to handle notification clicks from service worker
@@ -17,47 +10,16 @@ interface NotificationMessage {
  * to avoid duplicate event handling
  */
 export function useNotificationClick(onEventSelected?: (eventId: string) => void) {
-  const router = useRouter();
-
-  const handleNotificationMessage = useCallback((event: MessageEvent<NotificationMessage>) => {
-    const message = event.data;
-
-    // Check if this is a notification click event from service worker
-    if (message && message.type === 'NOTIFICATION_CLICK' && message.eventId) {
-      console.log('Notification click received:', message.eventId);
-
-      // Call the callback if provided (for opening event modal)
-      if (onEventSelected) {
-        onEventSelected(message.eventId);
-      } else {
-        // Fallback: navigate to the event page
-        router.push(`/events/${message.eventId}`);
-      }
-    }
-  }, [router, onEventSelected]);
-
   useEffect(() => {
     // Register the callback with the global notification handler
     if (onEventSelected) {
       setNotificationCallback(onEventSelected);
     }
 
-    // Listen for messages from service worker as backup
-    const serviceWorkerHandler = (event: MessageEvent<NotificationMessage>) => {
-      handleNotificationMessage(event);
-    };
-
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', serviceWorkerHandler);
-    }
-
     // Cleanup listener on unmount
     return () => {
-      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('message', serviceWorkerHandler);
-      }
       // Clear the global callback when unmounting
       clearNotificationCallback();
     };
-  }, [handleNotificationMessage, onEventSelected]);
+  }, [onEventSelected]);
 }

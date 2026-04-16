@@ -17,7 +17,7 @@ import React from 'react';
 
 const Header = React.memo(function Header() {
   const { isOnline, isSyncing, lastSyncTime, syncError, connectionQuality } = useNetworkStatus();
-  const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
+  const { queueLength, failedOperationsCount, syncNow, isProcessingQueue } = useOfflineSync();
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
@@ -224,6 +224,115 @@ const Header = React.memo(function Header() {
   const currentSyncConfig = syncStateConfig[syncState];
   const SyncIcon = currentSyncConfig.icon;
 
+  const renderNetworkStatusMenu = () => (
+    <div ref={networkMenuRef} id="network-status-menu" role="dialog" aria-label="Network status panel" className="absolute right-0 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 backdrop-blur-xl z-[100] animate-in slide-in-from-top-2 fade-in duration-200">
+      <div className="px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-gray-50/50 to-white/50">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-xl ${currentSyncConfig.bgClass}`}>
+            <SyncIcon size={20} className={'animate' in currentSyncConfig && currentSyncConfig.animate ? 'animate-spin' : ''} />
+          </div>
+          <div>
+            <p className="text-base font-semibold text-gray-900">{currentSyncConfig.label}</p>
+            <p className="text-sm text-gray-500">{currentSyncConfig.description}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {!isOnline && cachedEventsCount > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FiDatabase size={16} className="text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-blue-900">Saved Events</p>
+              <p className="text-xs text-blue-700">{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} saved offline</p>
+            </div>
+          </div>
+        )}
+
+        {queueLength > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl border border-orange-100">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <FiClock size={16} className="text-orange-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-orange-900">Pending Changes</p>
+              <p className="text-xs text-orange-700">{queueLength} item{queueLength !== 1 ? 's' : ''} waiting to sync</p>
+            </div>
+          </div>
+        )}
+
+        {failedOperationsCount > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <FiAlertTriangle size={16} className="text-red-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-red-900">Needs Attention</p>
+              <p className="text-xs text-red-700">{failedOperationsCount} failed operation{failedOperationsCount !== 1 ? 's' : ''} will be retried on sync</p>
+            </div>
+          </div>
+        )}
+
+        {lastSyncTime && isOnline && isAutoSyncEnabled() && (
+          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <FiCheckCircle size={16} className="text-green-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-green-900">Last Synced</p>
+              <p className="text-xs text-green-700">{new Date(lastSyncTime).toLocaleString()}</p>
+            </div>
+          </div>
+        )}
+
+        {syncError && (
+          <div className="p-3 bg-red-50 rounded-xl border border-red-100">
+            <p className="text-sm font-medium text-red-900">Sync issue</p>
+            <p className="mt-1 text-xs text-red-700">{syncError}</p>
+          </div>
+        )}
+
+        {syncState === 'offline' && (
+          <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Offline Mode:</span> Your changes will automatically sync when you reconnect to the internet.
+            </p>
+          </div>
+        )}
+
+        {(syncState === 'error' || syncState === 'has-queue') && (
+          <div className="pt-2 border-t border-gray-100">
+            <button
+              onClick={() => { syncNow(); setIsNetworkDropdownOpen(false); }}
+              disabled={isProcessingQueue}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                isProcessingQueue
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : syncState === 'error'
+                    ? 'bg-red-500 hover:bg-red-600 text-white hover:scale-105 active:scale-95'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white hover:scale-105 active:scale-95'
+              }`}
+            >
+              {isProcessingQueue ? (
+                <>
+                  <FiRefreshCw size={16} className="animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <FiRefreshCw size={16} />
+                  {syncState === 'error' ? 'Retry Sync' : 'Sync Now'}
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   // Offline-aware navigation helper
   const navigateWithOfflineCheck = (path: string, description: string) => {
     // Always allow navigation to home, settings, and about (static-ish pages)
@@ -256,8 +365,8 @@ const Header = React.memo(function Header() {
       )}
 
       <header className="glass-effect dark:bg-gray-800/95 shadow-sm border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-[100] backdrop-blur-md lg:shadow-md transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 xl:px-12">
-          <div className="flex justify-between items-center h-11 sm:h-14 lg:h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-6 lg:px-8 xl:px-12">
+          <div className="flex justify-between items-center h-12 sm:h-14 md:h-[3.75rem] lg:h-16 gap-3">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 lg:space-x-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 rounded-lg p-1">
               <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-10 lg:h-10 bg-gradient-to-br from-yellow-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">
@@ -269,23 +378,23 @@ const Header = React.memo(function Header() {
             </Link>
 
             {/* Centered nav for desktop */}
-            <nav className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 items-center space-x-6 xl:space-x-8 mr-52">
+            <nav className="hidden md:flex lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 items-center space-x-1 md:ml-6 lg:ml-0 md:flex-1 lg:flex-none md:justify-center lg:space-x-6 xl:space-x-8 lg:mr-52">
               <Button onClick={() => navigateWithOfflineCheck('/events', 'Events')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Events</Button>
               <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Categories</Button>
-              <Button onClick={() => router.push('/creators')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Creators</Button>
-              <Button onClick={() => router.push('/about')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</Button>
+              <Button onClick={() => router.push('/creators')} variant="ghost" size="sm" className="hidden md:inline-flex text-gray-600 hover:text-gray-900 font-medium transition-colors">Creators</Button>
+              <Button onClick={() => router.push('/about')} variant="ghost" size="sm" className="hidden lg:inline-flex text-gray-600 hover:text-gray-900 font-medium transition-colors">About</Button>
             </nav>
 
             {/* Right side actions */}
-            <div className="flex items-center space-x-2 xl:space-x-3">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 xl:space-x-3">
               {/* Network Status - Mobile/Tablet only */}
-              <div className="relative network-dropdown lg:hidden">
+              <div className="relative network-dropdown md:hidden">
                 <Button
                   ref={networkButtonRef}
                   onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
                   variant="ghost"
                   size="sm"
-                  className={`relative flex items-center rounded-xl transition-all duration-200 hover:bg-gray-50 hover:scale-105 active:scale-95 ${
+                  className={`relative flex items-center rounded-xl transition-all duration-200 hover:bg-gray-50 hover:scale-105 active:scale-95 px-3 ${
                     syncState === 'offline' ? 'text-red-600 hover:bg-red-50' :
                     syncState === 'syncing' ? 'text-blue-600 hover:bg-blue-50' :
                     syncState === 'error' ? 'text-red-600 hover:bg-red-50' :
@@ -317,123 +426,29 @@ const Header = React.memo(function Header() {
                   </div>
                 </Button>
 
-                {isNetworkDropdownOpen && (
-                  <div ref={networkMenuRef} id="network-status-menu" role="dialog" aria-label="Network status panel" className="absolute right-0 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 backdrop-blur-xl z-[100] animate-in slide-in-from-top-2 fade-in duration-200">
-                    {/* Header */}
-                    <div className="px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-gray-50/50 to-white/50">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl ${
-                          syncState === 'offline' ? 'bg-red-100 text-red-600' :
-                          syncState === 'syncing' ? 'bg-blue-100 text-blue-700' :
-                          syncState === 'error' ? 'bg-red-100 text-red-600' :
-                          syncState === 'has-queue' ? 'bg-amber-100 text-amber-800' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {syncState === 'offline' ? <FiWifiOff size={20} /> :
-                           syncState === 'syncing' ? <FiRefreshCw size={20} className="animate-spin" /> :
-                           syncState === 'error' ? <FiAlertTriangle size={20} /> :
-                           syncState === 'has-queue' ? <FiClock size={20} /> :
-                           <FiWifi size={20} />}
-                        </div>
-                        <div>
-                          <p className="text-base font-semibold text-gray-900">
-                            {syncState === 'offline' ? 'Offline Mode' :
-                             syncState === 'syncing' ? 'Syncing Data' :
-                             syncState === 'error' ? 'Sync Error' :
-                             syncState === 'has-queue' ? 'Pending Sync' :
-                             'Online'}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {syncState === 'offline' ? 'Limited functionality available' :
-                             syncState === 'syncing' ? 'Updating your data...' :
-                             syncState === 'error' ? 'Connection issue detected' :
-                             syncState === 'has-queue' ? 'Changes ready to sync' :
-                             'Fully connected'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                {isNetworkDropdownOpen && renderNetworkStatusMenu()}
+              </div>
 
-                    <div className="p-4 space-y-4">
-                      {/* Saved events indicator */}
-                      {!isOnline && cachedEventsCount > 0 && (
-                        <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                          <div className="p-2 bg-blue-100 rounded-lg">
-                            <FiDatabase size={16} className="text-blue-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-blue-900">Saved Events</p>
-                            <p className="text-xs text-blue-700">{cachedEventsCount} event{cachedEventsCount !== 1 ? 's' : ''} saved offline</p>
-                          </div>
-                        </div>
-                      )}
+              <div className="relative network-dropdown hidden md:flex items-center">
+                <Button
+                  onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
+                  variant="ghost"
+                  size="sm"
+                  className={`relative flex items-center gap-2 rounded-xl px-3 py-2 transition-all duration-200 ${currentSyncConfig.color}`}
+                  aria-expanded={isNetworkDropdownOpen}
+                  aria-haspopup="dialog"
+                  aria-controls="network-status-menu"
+                >
+                  <SyncIcon size={16} className={'animate' in currentSyncConfig && currentSyncConfig.animate ? 'animate-spin' : ''} />
+                  <span className="hidden md:inline text-sm font-medium">{currentSyncConfig.label}</span>
+                  {(queueLength > 0 || failedOperationsCount > 0) && (
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-semibold text-gray-900">
+                      {failedOperationsCount > 0 ? `${failedOperationsCount}!` : queueLength}
+                    </span>
+                  )}
+                </Button>
 
-                      {/* Queue indicator */}
-                      {queueLength > 0 && (
-                        <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl border border-orange-100">
-                          <div className="p-2 bg-orange-100 rounded-lg">
-                            <FiClock size={16} className="text-orange-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-orange-900">Pending Changes</p>
-                            <p className="text-xs text-orange-700">{queueLength} item{queueLength !== 1 ? 's' : ''} waiting to sync</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Last sync time */}
-                      {lastSyncTime && isOnline && isAutoSyncEnabled() && (
-                        <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
-                          <div className="p-2 bg-green-100 rounded-lg">
-                            <FiCheckCircle size={16} className="text-green-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-green-900">Last Synced</p>
-                            <p className="text-xs text-green-700">{new Date(lastSyncTime).toLocaleString()}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Offline message */}
-                      {syncState === 'offline' && (
-                        <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                          <p className="text-sm text-gray-700">
-                            <span className="font-medium">Offline Mode:</span> Your changes will automatically sync when you reconnect to the internet.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      {(syncState === 'error' || syncState === 'has-queue') && (
-                        <div className="pt-2 border-t border-gray-100">
-                          <button
-                            onClick={() => { syncNow(); setIsNetworkDropdownOpen(false); }}
-                            disabled={isProcessingQueue}
-                            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                              isProcessingQueue
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : syncState === 'error'
-                                  ? 'bg-red-500 hover:bg-red-600 text-white hover:scale-105 active:scale-95'
-                                  : 'bg-blue-500 hover:bg-blue-600 text-white hover:scale-105 active:scale-95'
-                            }`}
-                          >
-                            {isProcessingQueue ? (
-                              <>
-                                <FiRefreshCw size={16} className="animate-spin" />
-                                Syncing...
-                              </>
-                            ) : (
-                              <>
-                                <FiRefreshCw size={16} />
-                                {syncState === 'error' ? 'Retry Sync' : 'Sync Now'}
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {isNetworkDropdownOpen && renderNetworkStatusMenu()}
               </div>
 
               {/* Desktop: Create Event + User Profile grouped together */}

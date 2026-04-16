@@ -48,8 +48,8 @@ export default function FeaturedEventsSection({
       </div>
 
       {/* Featured Event Cards - Horizontal scroll on mobile */}
-      <div className="p-4 sm:p-6">
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
+      <div className="p-4 sm:p-5 lg:p-6">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-0 sm:overflow-visible lg:grid-cols-3">
           {visibleEvents.map((event, index) => {
             const eventDate = event.date ? new Date(event.date).toLocaleDateString('en-US', { 
               month: 'short', 
@@ -64,7 +64,7 @@ export default function FeaturedEventsSection({
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="flex-shrink-0 w-[280px] sm:w-auto group"
+                className="group w-[min(84vw,19rem)] flex-shrink-0 snap-start sm:w-auto"
               >
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-yellow-300 transition-all duration-300 group-hover:scale-[1.02]">
                   {/* Image */}
@@ -74,7 +74,7 @@ export default function FeaturedEventsSection({
                       alt={event.name || 'Event'}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 280px, (max-width: 1024px) 50vw, 340px"
+                      sizes="(max-width: 640px) 84vw, (max-width: 1024px) 50vw, 340px"
                       quality={75}
                       priority={index === 0 && !showAll}
                     />

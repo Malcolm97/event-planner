@@ -155,8 +155,8 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="bottom-nav lg:hidden dark:bg-gray-800/95 dark:border-gray-700/50 transition-colors duration-300">
-      <div className="flex items-center justify-around px-1 py-1">
+    <nav className="bottom-nav md:hidden dark:bg-gray-800/95 dark:border-gray-700/50 transition-colors duration-300">
+      <div className="flex items-center justify-around gap-1 px-2 py-1.5 sm:px-3">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.active;
@@ -167,10 +167,10 @@ export default function BottomNav() {
               <button
                 key={item.path}
                 onClick={() => navigateWithOfflineCheck(item.path, item.label)}
-                className="relative -mt-4 flex flex-col items-center justify-center touch-target focus-ring"
+                className="relative -mt-4 flex flex-col items-center justify-center touch-target focus-ring px-1"
                 aria-label={`Go to ${item.label}`}
               >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-red-500 flex items-center justify-center shadow-lg transform transition-transform active:scale-95">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-yellow-400 to-red-500 flex items-center justify-center shadow-lg transform transition-transform active:scale-95">
                   <Icon size={18} className="text-white" />
                 </div>
               </button>
@@ -188,7 +188,7 @@ export default function BottomNav() {
                   navigateWithOfflineCheck(item.path, item.label);
                 }
               }}
-              className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all duration-200 touch-target focus-ring ${
+              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-200 touch-target focus-ring ${
                 isActive
                   ? 'text-amber-700 bg-amber-50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -204,7 +204,7 @@ export default function BottomNav() {
                   isActive ? 'text-amber-700' : 'text-gray-600'
                 }`}
               />
-              <span className={`text-[10px] font-medium hidden sm:inline ${
+              <span className={`text-[10px] font-medium ${
                 isActive ? 'text-amber-800' : 'text-gray-600'
               }`}>
                 {item.label}

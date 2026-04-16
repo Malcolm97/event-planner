@@ -337,7 +337,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       )}
 
       {/* Modern Hero Section */}
-      <section className="relative w-full py-12 sm:py-16 lg:py-8 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 overflow-hidden">
+      <section className="relative w-full overflow-hidden bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 py-12 sm:py-16 lg:py-10">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-xl"></div>
@@ -348,7 +348,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
           <div className="hidden lg:block absolute bottom-20 right-20 w-36 h-36 bg-white rounded-full blur-xl"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8 lg:gap-6">
+        <div className="page-shell relative flex flex-col items-center gap-6 text-center sm:gap-8 lg:gap-6">
           <div className="animate-bounce-in">
           <h1 className="text-display-lg text-white mb-4 drop-shadow-lg">
             PNG Events
@@ -371,7 +371,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
                   <CustomSelect
                     options={displayedLocations.map(location => ({ value: location, label: location }))}
                     value={selectedLocationFilter}
@@ -423,8 +423,8 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
       </section>
       <EventModal selectedEvent={selectedEvent} host={host} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
 
-      <section className="w-full section-padding bg-white dark:bg-gray-800 lg:py-12 lg:px-8 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto">
+      <section className="w-full bg-white section-padding dark:bg-gray-800 transition-colors duration-300 lg:py-12 lg:px-8">
+        <div className="page-shell">
           <div className="text-center mb-8 lg:mb-10">
             <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
               <span className="text-2xl">📅</span> Upcoming Events
@@ -455,7 +455,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                         </h3>
                         <p className="text-gray-500 mt-2 text-sm lg:text-base">Events that are currently in progress</p>
                       </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
+              <div className="responsive-grid animate-fade-in">
                         {sortedHappeningNow.slice(0, 6).map(event => (
                           <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                         ))}
@@ -471,7 +471,7 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
                           <span className="text-2xl">📅</span> Upcoming Events
                         </h3>
                       </div>
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
+                      <div className="responsive-grid animate-fade-in">
                         {sortedUpcoming.slice(0, 6).map(event => (
                           <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                         ))}
@@ -524,17 +524,19 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto w-full section-padding bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <section className="section-padding w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+        <div className="page-shell">
         <div className="text-center mb-12">
           <h2 className="text-heading-2xl flex items-center justify-center gap-4 mb-6">
             <span className="text-2xl">✨</span> Featured Events
           </h2>
           <p className="text-body-md text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">Featured events will appear here soon!</p>
         </div>
+        </div>
       </section>
 
-      <section className="w-full section-padding bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 lg:py-12 lg:px-8 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto">
+      <section className="w-full border-t border-gray-200 bg-white section-padding dark:border-gray-700 dark:bg-gray-800 transition-colors duration-300 lg:py-12 lg:px-8">
+        <div className="page-shell">
           <div className="text-center mb-8 lg:mb-10">
             <h3 className="text-heading-xl mb-4 lg:mb-4">Explore by Category</h3>
             <p className="text-body-sm lg:text-lg text-gray-600 max-w-2xl mx-auto">Discover events that match your interests</p>

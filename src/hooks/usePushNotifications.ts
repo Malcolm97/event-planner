@@ -56,6 +56,52 @@ function getDeviceId(): string | null {
   return deviceId;
 }
 
+async function buildNotificationRequestHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+
+  if (accessToken) {
+    headers.authorization = `Bearer ${accessToken}`;
+  }
+
+  return headers;
+}
+
+async function saveSubscriptionOnServer(payload: PushSubscriptionInsert): Promise<void> {
+  const headers = await buildNotificationRequestHeaders();
+  const response = await fetch('/api/notifications/subscribe', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      subscription: payload.subscription,
+      device_id: payload.device_id,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error || 'Could not save your notification settings. Please try again.');
+  }
+}
+
+async function removeSubscriptionOnServer(payload: { endpoint?: string; device_id?: string }): Promise<void> {
+  const headers = await buildNotificationRequestHeaders();
+  const response = await fetch('/api/notifications/unsubscribe', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error || 'Failed to remove notification settings.');
+  }
+}
+
 interface UsePushNotificationsReturn {
   isSupported: boolean;
   isSubscribed: boolean;
@@ -316,16 +362,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         devLog('Saving subscription for anonymous device:', deviceId);
       }
 
-      const { error: dbError } = await supabase
-        .from('push_subscriptions')
-        .upsert(dbData);
+      await saveSubscriptionOnServer(dbData);
 
-      if (dbError) {
-        devError('Database error:', dbError);
-        throw new Error("Couldn't save your notification settings. Please try again.");
-      }
-
-      devLog('Subscription saved to database successfully');
+      devLog('Subscription saved to server successfully');
       setIsSubscribed(true);
     } catch (err) {
       const errorMessage = getUserFriendlyError(err, "Couldn't set up notifications. Please try again.");
@@ -349,6 +388,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
+        const endpoint = subscription.endpoint;
         await subscription.unsubscribe();
         devLog('Push subscription unsubscribed');
 
@@ -356,33 +396,14 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          // Logged-in user - delete by user_id
-          const { error: dbError } = await supabase
-            .from('push_subscriptions')
-            .delete()
-            .eq('user_id', user.id);
-
-          if (dbError) {
-            devError('Database error during unsubscribe:', dbError);
-            // Don't throw - subscription was already removed from browser
-          } else {
-            devLog('Subscription removed from database for user:', user.id);
-          }
+          await removeSubscriptionOnServer({ endpoint });
+          devLog('Subscription removed from server for user:', user.id);
         } else {
           // Anonymous user - delete by device_id
           const deviceId = getDeviceId();
           if (deviceId) {
-            const { error: dbError } = await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('device_id', deviceId);
-
-            if (dbError) {
-              devError('Database error during unsubscribe:', dbError);
-              // Don't throw - subscription was already removed from browser
-            } else {
-              devLog('Subscription removed from database for device:', deviceId);
-            }
+            await removeSubscriptionOnServer({ endpoint, device_id: deviceId });
+            devLog('Subscription removed from server for device:', deviceId);
           }
         }
       } else {

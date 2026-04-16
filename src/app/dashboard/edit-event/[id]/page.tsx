@@ -1,40 +1,47 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
-import { FiArrowLeft, FiSave, FiCalendar, FiMapPin, FiTag, FiDollarSign, FiFileText, FiAlertCircle, FiCheck, FiEdit3, FiExternalLink } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiCalendar, FiTag, FiDollarSign, FiFileText, FiEdit3, FiExternalLink } from 'react-icons/fi';
 import Link from 'next/link';
-import Image from 'next/image';
+import ConfirmLeaveModal from '@/components/ConfirmLeaveModal';
+import { useNavigationGuard } from '@/hooks/useNavigationGuard';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { triggerCacheRefresh } from '@/hooks/useOfflineFirstData';
 import ImageUpload from '@/components/EventFormComponents';
 import { FormSection, FormField, LoadingButton, AlertBanner } from '@/components/EventFormComponents';
 import CustomSelect from '@/components/CustomSelect';
+import LocationAutocomplete from '@/components/LocationAutocomplete';
 import SkeletonLoader from '@/components/SkeletonLoader';
+import { storeSigninRedirect } from '@/lib/utils';
+import {
+  areDraftsEqual,
+  buildEventDraftKey,
+  clearEventDraft,
+  loadEventDraft,
+  saveEventDraft,
+} from '@/lib/eventDraft';
+import {
+  buildExternalLinksPayload,
+  DEFAULT_EXTERNAL_LINKS,
+  EVENT_CATEGORY_OPTIONS,
+  MAX_EVENT_IMAGES,
+  MAX_EVENT_NAME_LENGTH,
+  MAX_EVENT_DESCRIPTION_LENGTH,
+  POPULAR_PNG_CITIES,
+  resolveEventLocation,
+  validateEventForm,
+} from '@/lib/eventForm';
 
 export const dynamic = 'force-dynamic';
-
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const POPULAR_PNG_CITIES = [
-  'Port Moresby', 'Lae', 'Madang', 'Mount Hagen', 'Goroka', 'Rabaul', 'Wewak',
-  'Popondetta', 'Arawa', 'Kavieng', 'Daru', 'Vanimo', 'Kimbe', 'Mendi',
-  'Kundiawa', 'Lorengau', 'Wabag', 'Kokopo', 'Buka', 'Alotau', 'Other'
-];
-
-const DEFAULT_EXTERNAL_LINKS = {
-  facebook: '',
-  instagram: '',
-  tiktok: '',
-  website: ''
-};
 
 export default function EditEventPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
+  const draftStorageKey = buildEventDraftKey('edit', id);
   
   const { isOnline } = useNetworkStatus();
   const { queueOperation } = useOfflineSync();
@@ -67,28 +74,46 @@ export default function EditEventPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
+  const [draftMessage, setDraftMessage] = useState<string | null>(null);
+  const [initialDraftState, setInitialDraftState] = useState<string>('');
+  const [draftReady, setDraftReady] = useState(false);
   
   // Image cleanup ref
   const previewsRef = useRef<string[]>([]);
 
-  const categories = [
-    { value: 'Music', label: 'Music' },
-    { value: 'Art', label: 'Art' },
-    { value: 'Food', label: 'Food' },
-    { value: 'Technology', label: 'Technology' },
-    { value: 'Wellness', label: 'Wellness' },
-    { value: 'Comedy', label: 'Comedy' },
-    { value: 'Other', label: 'Other' },
-  ];
+  const currentDraft = useMemo(() => ({
+    name,
+    description,
+    date,
+    endDate,
+    selectedLocationType,
+    customLocation,
+    presalePrice: String(presalePrice || ''),
+    gatePrice: String(gatePrice || ''),
+    category,
+    venue,
+    imageUrls,
+    externalLinks,
+  }), [
+    name,
+    description,
+    date,
+    endDate,
+    selectedLocationType,
+    customLocation,
+    presalePrice,
+    gatePrice,
+    category,
+    venue,
+    imageUrls,
+    externalLinks,
+  ]);
 
-  const isValidHttpUrl = useCallback((value: string): boolean => {
-    try {
-      const parsed = new URL(value);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }, []);
+  const hasUnsavedChanges = Boolean(initialDraftState) && (
+    !areDraftsEqual(currentDraft, JSON.parse(initialDraftState)) || imageFiles.length > 0
+  );
+
+  const { showModal: showLeaveModal, confirmLeave, cancelLeave, guardedNavigate } = useNavigationGuard(hasUnsavedChanges);
 
   // Cleanup object URLs on unmount
   useEffect(() => {
@@ -119,12 +144,15 @@ export default function EditEventPage() {
       setImageUrls([]);
       setExternalLinks({ ...DEFAULT_EXTERNAL_LINKS });
       setImageFiles([]);
+      setDraftReady(false);
+      setDraftMessage(null);
       previewsRef.current.forEach(url => URL.revokeObjectURL(url));
       previewsRef.current = [];
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
+          storeSigninRedirect(`/dashboard/edit-event/${id}`);
           router.push('/signin');
           return;
         }
@@ -183,12 +211,59 @@ export default function EditEventPage() {
         const rawLinks = eventData.external_links && typeof eventData.external_links === 'object'
           ? eventData.external_links as Record<string, unknown>
           : {};
-        setExternalLinks({
+        const nextExternalLinks = {
           facebook: typeof rawLinks.facebook === 'string' ? rawLinks.facebook : '',
           instagram: typeof rawLinks.instagram === 'string' ? rawLinks.instagram : '',
           tiktok: typeof rawLinks.tiktok === 'string' ? rawLinks.tiktok : '',
           website: typeof rawLinks.website === 'string' ? rawLinks.website : ''
-        });
+        };
+
+        const baseDraft = {
+          name: eventData.name || '',
+          description: eventData.description || '',
+          date: eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : '',
+          endDate: eventData.end_date ? new Date(eventData.end_date).toISOString().slice(0, 16) : '',
+          selectedLocationType: normalizedLocation && POPULAR_PNG_CITIES.includes(normalizedLocation) ? normalizedLocation : normalizedLocation ? 'Other' : 'Port Moresby',
+          customLocation: normalizedLocation && !POPULAR_PNG_CITIES.includes(normalizedLocation) ? normalizedLocation : '',
+          presalePrice: String(eventData.presale_price || ''),
+          gatePrice: String(eventData.gate_price || ''),
+          category: eventData.category || '',
+          venue: eventData.venue || '',
+          imageUrls: images,
+          externalLinks: nextExternalLinks,
+        };
+
+        const savedDraft = loadEventDraft(draftStorageKey);
+        const restoredDraft = savedDraft
+          ? {
+              ...baseDraft,
+              ...savedDraft,
+              externalLinks: {
+                ...nextExternalLinks,
+                ...(savedDraft.externalLinks || {}),
+              },
+              imageUrls: Array.isArray(savedDraft.imageUrls) ? savedDraft.imageUrls : images,
+            }
+          : baseDraft;
+
+        setName(restoredDraft.name);
+        setDescription(restoredDraft.description);
+        setDate(restoredDraft.date);
+        setEndDate(restoredDraft.endDate);
+        setSelectedLocationType(restoredDraft.selectedLocationType);
+        setCustomLocation(restoredDraft.customLocation);
+        setPresalePrice(restoredDraft.presalePrice === '' ? 0 : parseFloat(restoredDraft.presalePrice) || 0);
+        setGatePrice(restoredDraft.gatePrice === '' ? 0 : parseFloat(restoredDraft.gatePrice) || 0);
+        setCategory(restoredDraft.category);
+        setVenue(restoredDraft.venue);
+        setImageUrls(restoredDraft.imageUrls || []);
+        setExternalLinks(restoredDraft.externalLinks);
+        setInitialDraftState(JSON.stringify(baseDraft));
+        setDraftReady(true);
+
+        if (savedDraft && !areDraftsEqual(baseDraft, restoredDraft)) {
+          setDraftMessage(`Local draft restored from ${new Date(savedDraft.savedAt).toLocaleString()}.`);
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'An unexpected error occurred while fetching event.');
       } finally {
@@ -199,70 +274,57 @@ export default function EditEventPage() {
     if (id) {
       fetchEvent();
     }
-  }, [id, router]);
+  }, [draftStorageKey, id, router]);
+
+  useEffect(() => {
+    if (!draftReady) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if (initialDraftState && areDraftsEqual(currentDraft, JSON.parse(initialDraftState))) {
+        clearEventDraft(draftStorageKey);
+        return;
+      }
+
+      saveEventDraft(draftStorageKey, {
+        ...currentDraft,
+        presalePrice: String(presalePrice || ''),
+        gatePrice: String(gatePrice || ''),
+      });
+      setDraftMessage('Draft saved locally on this device.');
+    }, 700);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [currentDraft, draftReady, draftStorageKey, initialDraftState, presalePrice, gatePrice]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = 'You have unsaved event changes. Are you sure you want to leave?';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const validateForm = useCallback((): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!name.trim()) {
-      errors.name = 'Event name is required';
-    }
-    
-    if (!description.trim()) {
-      errors.description = 'Description is required';
-    }
-    
-    if (!date) {
-      errors.date = 'Start date is required';
-    }
-
-    // Validate end date is after start date
-    if (date && endDate) {
-      const startDateTime = new Date(date);
-      const endDateTime = new Date(endDate);
-      
-      if (endDateTime <= startDateTime) {
-        errors.endDate = 'End date must be after the start date';
-      }
-    }
-
-    // Validate location
-    let finalLocation = selectedLocationType;
-    if (selectedLocationType === 'Other') {
-      finalLocation = customLocation;
-    }
-    if (!finalLocation || !finalLocation.trim()) {
-      errors.location = 'Please provide a location for the event';
-    }
-    
-    if (!category) {
-      errors.category = 'Please select a category';
-    }
-
-    if (presalePrice < 0) {
-      errors.presalePrice = 'Presale price cannot be negative';
-    }
-
-    if (gatePrice < 0) {
-      errors.gatePrice = 'Gate price cannot be negative';
-    }
-
-    if (presalePrice > 0 && gatePrice > 0 && presalePrice > gatePrice) {
-      errors.presalePrice = 'Presale price cannot be greater than gate price';
-      errors.gatePrice = 'Gate price must be greater than or equal to presale price';
-    }
-
-    const externalLinkEntries = Object.entries(externalLinks);
-    for (const [key, value] of externalLinkEntries) {
-      const trimmed = value.trim();
-      if (!trimmed) {
-        continue;
-      }
-
-      if (!isValidHttpUrl(trimmed)) {
-        errors[`external_${key}`] = `Please enter a valid ${key} URL starting with http:// or https://`;
-      }
-    }
+    const errors = validateEventForm({
+      name,
+      description,
+      date,
+      endDate,
+      selectedLocationType,
+      customLocation,
+      presalePrice,
+      gatePrice,
+      category,
+      externalLinks,
+    });
 
     setValidationErrors(errors);
 
@@ -294,7 +356,7 @@ export default function EditEventPage() {
     }
 
     return Object.keys(errors).length === 0;
-  }, [name, description, date, endDate, selectedLocationType, customLocation, category, presalePrice, gatePrice, externalLinks, isValidHttpUrl]);
+  }, [name, description, date, endDate, selectedLocationType, customLocation, presalePrice, gatePrice, category, externalLinks]);
 
   const handleExistingImagesRemove = useCallback((urlToRemove: string) => {
     setImageUrls(prev => prev.filter(url => url !== urlToRemove));
@@ -311,6 +373,11 @@ export default function EditEventPage() {
 
     // Validate form
     if (!validateForm()) {
+      return;
+    }
+
+    if (!isOnline && imageFiles.length > 0) {
+      setError('New images cannot be uploaded while offline yet. Remove them or reconnect before saving.');
       return;
     }
     
@@ -331,63 +398,43 @@ export default function EditEventPage() {
         return;
       }
 
-      let finalLocation = selectedLocationType;
-      if (selectedLocationType === 'Other') {
-        finalLocation = customLocation;
-      }
+      const finalLocation = resolveEventLocation(selectedLocationType, customLocation);
 
       // Handle image uploads
       let finalImageUrls: string[] = [...imageUrls];
 
       if (imageFiles.length > 0) {
-        if (!isOnline) {
-          setError('Note: Images will be uploaded when you reconnect to the internet.');
-        } else {
-          setUploadProgress({ current: 0, total: imageFiles.length });
-          const uploadedImageUrls = await Promise.all(
-            imageFiles.map(async (imageFile) => {
-              const fileExt = imageFile.name.split('.').pop();
-              const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 11)}.${fileExt}`;
-              const filePath = `event-images/${fileName}`;
+        setUploadProgress({ current: 0, total: imageFiles.length });
+        const uploadedImageUrls = await Promise.all(
+          imageFiles.map(async (imageFile) => {
+            const fileExt = imageFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
 
-              const { error: uploadError } = await supabase.storage
-                .from('event-images')
-                .upload(filePath, imageFile, {
-                  cacheControl: '3600',
-                  upsert: false,
-                });
+            const { error: uploadError } = await supabase.storage
+              .from('event-images')
+              .upload(filePath, imageFile, {
+                cacheControl: '3600',
+                upsert: false,
+              });
 
-              if (uploadError) {
-                throw new Error(`Error uploading image: ${uploadError.message}`);
-              }
+            if (uploadError) {
+              throw new Error(`Error uploading image: ${uploadError.message}`);
+            }
 
-              const { data: publicUrlData } = supabase.storage
-                .from('event-images')
-                .getPublicUrl(filePath);
+            const { data: publicUrlData } = supabase.storage
+              .from('event-images')
+              .getPublicUrl(filePath);
 
-              setUploadProgress((prev) => ({ current: prev.current + 1, total: prev.total }));
-              return publicUrlData.publicUrl;
-            })
-          );
+            setUploadProgress((prev) => ({ current: prev.current + 1, total: prev.total }));
+            return publicUrlData.publicUrl;
+          })
+        );
 
-          finalImageUrls = [...finalImageUrls, ...uploadedImageUrls];
-        }
+        finalImageUrls = [...finalImageUrls, ...uploadedImageUrls];
       }
 
-      // Build external links object (only include non-empty values)
-      const externalLinksData: Record<string, string> = {};
-      if (externalLinks.facebook?.trim()) {
-        externalLinksData.facebook = externalLinks.facebook.trim();
-      }
-      if (externalLinks.instagram?.trim()) {
-        externalLinksData.instagram = externalLinks.instagram.trim();
-      }
-      if (externalLinks.tiktok?.trim()) {
-        externalLinksData.tiktok = externalLinks.tiktok.trim();
-      }
-      if (externalLinks.website?.trim()) {
-        externalLinksData.website = externalLinks.website.trim();
-      }
+      const externalLinksData = buildExternalLinksPayload(externalLinks);
 
       const updateData = {
         name: name.trim(),
@@ -406,6 +453,8 @@ export default function EditEventPage() {
       // Check if we're online and queue for offline if needed
       if (!isOnline) {
         await queueOperation('update', TABLES.EVENTS, { id, ...updateData });
+        clearEventDraft(draftStorageKey);
+        setDraftMessage(null);
         setSuccessMessage('Event saved offline. It will be updated when you reconnect.');
         setTimeout(() => {
           router.push('/dashboard');
@@ -424,12 +473,14 @@ export default function EditEventPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to update event');
+        const errorData = await response.json().catch(() => null);
+        setError(errorData?.userMessage || errorData?.error || 'Failed to update event');
         setSubmitting(false);
         return;
       }
 
+      clearEventDraft(draftStorageKey);
+      setDraftMessage(null);
       setSuccessMessage('Event updated successfully!');
       
       // Trigger cache refresh so updated event appears immediately
@@ -447,11 +498,43 @@ export default function EditEventPage() {
     }
   };
 
+  const handleDiscardDraft = useCallback(() => {
+    if (!initialDraftState) {
+      return;
+    }
+
+    const initialDraft = JSON.parse(initialDraftState) as typeof currentDraft;
+    clearEventDraft(draftStorageKey);
+    setName(initialDraft.name);
+    setDescription(initialDraft.description);
+    setDate(initialDraft.date);
+    setEndDate(initialDraft.endDate);
+    setSelectedLocationType(initialDraft.selectedLocationType);
+    setCustomLocation(initialDraft.customLocation);
+    setPresalePrice(initialDraft.presalePrice === '' ? 0 : parseFloat(initialDraft.presalePrice) || 0);
+    setGatePrice(initialDraft.gatePrice === '' ? 0 : parseFloat(initialDraft.gatePrice) || 0);
+    setCategory(initialDraft.category);
+    setVenue(initialDraft.venue);
+    setImageUrls(initialDraft.imageUrls || []);
+    setImageFiles([]);
+    setExternalLinks(initialDraft.externalLinks);
+    setValidationErrors({});
+    setDraftMessage('Local draft cleared.');
+  }, [draftStorageKey, initialDraftState]);
+
+  const essentialsComplete = [
+    name.trim(),
+    description.trim(),
+    date,
+    category,
+    resolveEventLocation(selectedLocationType, customLocation),
+  ].filter(Boolean).length;
+
   // Loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 pb-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 pb-8 sm:pb-10 md:pb-12">
+        <div className="page-shell max-w-5xl pt-6 md:pt-8">
           <div className="mb-6">
             <SkeletonLoader className="h-12 w-40 rounded-xl" />
           </div>
@@ -459,7 +542,7 @@ export default function EditEventPage() {
             <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-8 py-8">
               <SkeletonLoader className="h-10 w-48 mx-auto rounded-lg" />
             </div>
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="p-5 sm:p-7 md:p-8 space-y-6">
               <SkeletonLoader className="h-48 w-full rounded-2xl" />
               <SkeletonLoader className="h-48 w-full rounded-2xl" />
               <SkeletonLoader className="h-32 w-full rounded-2xl" />
@@ -472,7 +555,13 @@ export default function EditEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 pb-12">
+    <>
+    <ConfirmLeaveModal
+      open={showLeaveModal}
+      onConfirm={confirmLeave}
+      onCancel={cancelLeave}
+    />
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600 pb-8 sm:pb-10 md:pb-12">
       {/* Offline Banner */}
       {!isOnline && (
         <div className="bg-yellow-400/90 backdrop-blur-sm text-yellow-900 px-4 py-3 text-center text-sm font-medium">
@@ -480,16 +569,16 @@ export default function EditEventPage() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+      <div className="page-shell max-w-5xl pt-4 sm:pt-6 md:pt-8">
         {/* Back Button */}
         <div className="mb-4 sm:mb-6">
-          <Link 
-            href="/dashboard" 
+          <button
+            onClick={() => guardedNavigate('/dashboard')}
             className="back-button"
           >
             <FiArrowLeft size={18} />
             Back to Dashboard
-          </Link>
+          </button>
         </div>
 
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
@@ -500,10 +589,19 @@ export default function EditEventPage() {
             </div>
             <h1 className="page-title text-white mb-2">Edit Event</h1>
             <p className="page-subtitle text-white/85">Update your event details</p>
+            <div className="mt-4 max-w-md mx-auto rounded-2xl bg-white/15 px-4 py-3 text-left text-white shadow-lg backdrop-blur-sm">
+              <div className="flex items-center justify-between text-sm font-semibold">
+                <span>{essentialsComplete}/5 essentials complete</span>
+                <span>{Math.round((essentialsComplete / 5) * 100)}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/20">
+                <div className="h-full rounded-full bg-white transition-all duration-300" style={{ width: `${(essentialsComplete / 5) * 100}%` }} />
+              </div>
+            </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-7 lg:p-8 space-y-5 sm:space-y-6">
             {/* Error & Success Messages */}
             {error && (
               <AlertBanner 
@@ -527,13 +625,35 @@ export default function EditEventPage() {
               />
             )}
 
+            {draftMessage && <AlertBanner type="info" message={draftMessage} onClose={() => setDraftMessage(null)} />}
+
+            <AlertBanner
+              type="info"
+              message="Strong event listings include a clear title, exact location, practical schedule details, and verified links. Save without new images if you are offline."
+            />
+
+            {hasUnsavedChanges && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p>Your draft is being saved locally. Existing image changes are restorable, but newly selected files are not restorable after refresh.</p>
+                  <button
+                    type="button"
+                    onClick={handleDiscardDraft}
+                    className="rounded-lg border border-amber-300 px-3 py-2 font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+                  >
+                    Revert Draft
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Basic Information */}
             <FormSection
               title="Basic Information"
               description="Tell us about your event"
               icon={<FiFileText size={20} />}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
                 <FormField 
                   label="Event Name" 
                   required 
@@ -547,7 +667,7 @@ export default function EditEventPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. PNG Music Festival 2024"
-                    maxLength={100}
+                    maxLength={MAX_EVENT_NAME_LENGTH}
                     required
                   />
                 </FormField>
@@ -561,8 +681,9 @@ export default function EditEventPage() {
                     value={category}
                     onChange={setCategory}
                     placeholder="Select a category"
-                    options={categories}
+                    options={EVENT_CATEGORY_OPTIONS}
                     required
+                    error={validationErrors.category}
                   />
                 </FormField>
               </div>
@@ -574,7 +695,7 @@ export default function EditEventPage() {
               description="Describe what attendees can expect"
               icon={<FiTag size={20} />}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
                 <FormField 
                   label="Description" 
                   required 
@@ -588,7 +709,7 @@ export default function EditEventPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="What's special about this event?"
-                    maxLength={2000}
+                    maxLength={MAX_EVENT_DESCRIPTION_LENGTH}
                     required
                   />
                 </FormField>
@@ -617,7 +738,7 @@ export default function EditEventPage() {
                       existingImages={imageUrls}
                       onImagesChange={setImageFiles}
                       onExistingImagesRemove={handleExistingImagesRemove}
-                      maxImages={3}
+                      maxImages={MAX_EVENT_IMAGES}
                       showConfirmRemove={true}
                     />
                   </FormField>
@@ -631,7 +752,7 @@ export default function EditEventPage() {
               description="When and where is your event?"
               icon={<FiCalendar size={20} />}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
                 <div className="space-y-4">
                   <FormField 
                     label="Start Date & Time" 
@@ -675,22 +796,23 @@ export default function EditEventPage() {
                       placeholder="Select a location"
                       options={POPULAR_PNG_CITIES.map(city => ({ value: city, label: city }))}
                       required
+                      error={validationErrors.location && selectedLocationType !== 'Other' ? validationErrors.location : undefined}
                     />
                   </FormField>
 
                   {selectedLocationType === 'Other' && (
-                    <FormField 
-                      label="Custom Location" 
+                    <FormField
+                      label="Custom Location"
                       required
-                      hint="Enter the location name"
+                      error={validationErrors.location}
+                      hint="Enter the town, suburb or area name"
                     >
-                      <input
-                        type="text"
+                      <LocationAutocomplete
                         id="customLocation"
-                        className="input-field"
-                        placeholder="Enter location name"
                         value={customLocation}
-                        onChange={(e) => setCustomLocation(e.target.value)}
+                        onChange={setCustomLocation}
+                        error={validationErrors.location}
+                        required
                       />
                     </FormField>
                   )}
@@ -704,7 +826,7 @@ export default function EditEventPage() {
               description="Set ticket prices for your event"
               icon={<FiDollarSign size={20} />}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
                 <FormField 
                   label="Presale Price (PGK)" 
                   error={validationErrors.presalePrice}
@@ -752,7 +874,7 @@ export default function EditEventPage() {
               <p className="form-hint mb-4">
                 Link to your event posts on Facebook, Instagram, TikTok, or a website. Users can view your event on these platforms.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
                 <FormField 
                   label="Facebook Event URL"
                   error={validationErrors.external_facebook}
@@ -837,5 +959,6 @@ export default function EditEventPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

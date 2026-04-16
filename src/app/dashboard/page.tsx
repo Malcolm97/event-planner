@@ -208,7 +208,7 @@ export default function DashboardPage() {
         className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40"
       >
         <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 py-3 sm:items-center sm:py-4 lg:py-4">
             <div>
               <h1 className="page-title text-gray-900">Dashboard</h1>
               <div className="flex items-center gap-2 mt-1">
@@ -301,9 +301,9 @@ export default function DashboardPage() {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-8 mt-3 sm:mt-4 lg:mt-8">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:mt-4 sm:gap-4 xl:mt-8 xl:grid-cols-3 xl:gap-8">
           {/* Left Column - Profile & Actions */}
-          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 xl:col-span-1 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:block xl:space-y-6">
             {/* Profile Section */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
@@ -367,7 +367,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column - Events */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-5">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-5 xl:col-span-2">
             {/* My Upcoming Events */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}

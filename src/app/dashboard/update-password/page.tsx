@@ -92,7 +92,7 @@ export default function UpdatePasswordPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
   {/* Header removed, now rendered globally in layout */}
-      <div className="relative flex flex-1 items-center justify-center p-4">
+      <div className="relative flex flex-1 items-center justify-center p-4 sm:p-6">
         <div className="absolute top-6 left-6">
           <Link href="/" className="back-button">
             <FiArrowLeft className="text-lg" />

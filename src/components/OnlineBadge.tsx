@@ -9,7 +9,7 @@ import { isAutoSyncEnabled } from '@/lib/utils';
 
 const OnlineBadge = React.memo(() => {
   const { isOnline, isSyncing, lastSyncTime, syncError, connectionQuality, connectionType, downlink, rtt } = useNetworkStatus();
-  const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
+  const { queueLength, failedOperationsCount, syncNow, isProcessingQueue } = useOfflineSync();
   const [isExpanded, setIsExpanded] = useState(false);
   const [cachedEventsCount, setCachedEventsCount] = useState(0);
 
@@ -68,7 +68,7 @@ const OnlineBadge = React.memo(() => {
           border: 'border-red-400/50',
           icon: <FiAlertTriangle className="w-5 h-5 flex-shrink-0" />,
           text: 'Sync Error',
-          subtext: 'Tap to retry'
+          subtext: failedOperationsCount > 0 ? `${failedOperationsCount} failed` : 'Tap to retry'
         };
       case 'has-queue':
         return {
@@ -76,7 +76,7 @@ const OnlineBadge = React.memo(() => {
           border: 'border-yellow-400/50',
           icon: <FiClock className="w-5 h-5 flex-shrink-0" />,
           text: 'Pending Sync',
-          subtext: `${queueLength} item${queueLength !== 1 ? 's' : ''}`
+          subtext: failedOperationsCount > 0 ? `${queueLength} pending • ${failedOperationsCount} failed` : `${queueLength} item${queueLength !== 1 ? 's' : ''}`
         };
       default:
         return {
@@ -181,6 +181,13 @@ const OnlineBadge = React.memo(() => {
               <div className="flex items-center gap-2 text-[10px] opacity-90">
                 <FiClock className="w-3 h-3 flex-shrink-0" />
                 <span>{queueLength} pending sync</span>
+              </div>
+            )}
+
+            {failedOperationsCount > 0 && (
+              <div className="flex items-center gap-2 text-[10px] opacity-90">
+                <FiAlertTriangle className="w-3 h-3 flex-shrink-0" />
+                <span>{failedOperationsCount} failed operation{failedOperationsCount !== 1 ? 's' : ''} queued for retry</span>
               </div>
             )}
 

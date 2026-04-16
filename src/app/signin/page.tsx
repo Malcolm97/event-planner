@@ -6,6 +6,7 @@ import Link from "next/link";
 import Button from "@/components/Button";
 import { FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
+import { validatePassword } from '@/lib/validation';
 
 import { getSigninRedirect, getSigninModalState, clearSigninRedirect, ModalState, safeRedirect } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ export default function SignInPage() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
   const [successMessage, setSuccessMessage] = useState(""); // New state for success message
+  const [hasPendingRedirect, setHasPendingRedirect] = useState(false);
   const router = useRouter();
 
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -55,14 +57,29 @@ export default function SignInPage() {
   };
 
   const passwordStrength = getPasswordStrength(password);
+  const passwordValidation = validatePassword(password);
+  const modeTitle = isForgotPassword ? "Reset your password" : isRegister ? "Create your account" : "Welcome to PNG Events";
+  const modeSubtitle = isForgotPassword
+    ? "We will email you a secure reset link."
+    : isRegister
+      ? "Create an account to publish events and manage your profile."
+      : "Sign in to discover, save, and create events.";
 
   useEffect(() => {
     // Check if user is already signed in
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const redirectUrl = getSigninRedirect();
+        if (redirectUrl) {
+          clearSigninRedirect();
+          safeRedirect(redirectUrl, router);
+          return;
+        }
         router.push("/dashboard");
       }
+
+      setHasPendingRedirect(Boolean(getSigninRedirect()));
     };
     checkUser();
   }, [router]);
@@ -120,8 +137,8 @@ export default function SignInPage() {
         setLoading(false);
         return;
       }
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters long");
+      if (!passwordValidation.isValid) {
+        setError(passwordValidation.errors[0] || "Please choose a stronger password.");
         setLoading(false);
         return;
       }
@@ -138,7 +155,6 @@ export default function SignInPage() {
 
     try {
       if (isRegister) {
-        console.log('Name state:', name); // Debugging: Log name state
         // Sign up
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -153,7 +169,6 @@ export default function SignInPage() {
         if (error) throw error;
 
         if (data.user) {
-          console.log('Supabase user data after signup:', data.user); // Debugging: Log user data
           // Create user profile
           const userProfile = {
             id: data.user.id,
@@ -167,11 +182,10 @@ export default function SignInPage() {
             updated_at: new Date().toISOString(),
           };
 
-          console.log('UserProfile object before insertion:', userProfile); // Debugging: Log userProfile
-          // Insert into users table
+          // Create or update the initial profile so repeated signup retries do not fail.
           const { error: profileError } = await supabase
             .from(TABLES.USERS)
-            .insert([userProfile]);
+            .upsert([userProfile], { onConflict: 'id' });
 
           if (profileError) {
             console.error('Error creating profile:', JSON.stringify(profileError));
@@ -253,6 +267,14 @@ export default function SignInPage() {
     setSuccessMessage(""); // Clear success message
   };
 
+  const switchMode = (mode: 'signin' | 'register' | 'forgot') => {
+    setIsRegister(mode === 'register');
+    setIsForgotPassword(mode === 'forgot');
+    setError('');
+    setEmailError('');
+    setConfirmPasswordError('');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
   {/* Header removed, now rendered globally in layout */}
@@ -269,10 +291,33 @@ export default function SignInPage() {
             <span className="text-white font-bold text-lg">PNG</span>
           </div>
           <h1 className="page-title text-gray-900 mb-2">
-          Welcome to PNG Events
+          {modeTitle}
         </h1>
-          <p className="page-subtitle text-gray-600">Sign in to discover and create events</p>
+          <p className="page-subtitle text-gray-600">{modeSubtitle}</p>
         </div>
+
+        {hasPendingRedirect && !isForgotPassword && (
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            You&apos;ll be returned to what you were doing after you sign in.
+          </div>
+        )}
+
+        {!isForgotPassword && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+              <p className="text-sm font-semibold text-gray-900">Create events</p>
+              <p className="mt-1 text-xs text-gray-600">Publish listings with dates, pricing, and images.</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+              <p className="text-sm font-semibold text-gray-900">Manage your profile</p>
+              <p className="mt-1 text-xs text-gray-600">Control how attendees can contact you.</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+              <p className="text-sm font-semibold text-gray-900">Pick up where you left off</p>
+              <p className="mt-1 text-xs text-gray-600">Redirects return you to the event or action you started.</p>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="grid grid-cols-2 gap-1 mb-5 sm:mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-1">
@@ -280,7 +325,7 @@ export default function SignInPage() {
             type="button"
             variant={!isRegister && !isForgotPassword ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => { setIsRegister(false); setIsForgotPassword(false); setError(""); }}
+            onClick={() => switchMode('signin')}
             tabIndex={0}
             className="w-full"
           >
@@ -290,7 +335,7 @@ export default function SignInPage() {
             type="button"
             variant={isRegister ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => { setIsRegister(true); setIsForgotPassword(false); setError(""); }}
+            onClick={() => switchMode('register')}
             tabIndex={0}
             className="w-full"
           >
@@ -403,6 +448,14 @@ export default function SignInPage() {
                     />
                   </div>
                   <p className={`text-xs mt-1 ${passwordStrength.color}`}>{passwordStrength.label}</p>
+                </div>
+                <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">Password requirements</p>
+                  <div className="mt-2 space-y-1 text-xs text-gray-700">
+                    <p className={password.length >= 8 ? 'text-green-700' : 'text-gray-600'}>At least 8 characters</p>
+                    <p className={/(?=.*[a-z])(?=.*[A-Z])/.test(password) ? 'text-green-700' : 'text-gray-600'}>Uppercase and lowercase letters</p>
+                    <p className={/\d/.test(password) ? 'text-green-700' : 'text-gray-600'}>At least one number</p>
+                  </div>
                 </div>
               </div>
               <div>
@@ -554,7 +607,7 @@ export default function SignInPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
+                  onClick={() => switchMode('forgot')}
                   className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium"
                 >
                   Forgot Password?

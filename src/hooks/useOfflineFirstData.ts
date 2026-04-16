@@ -405,7 +405,7 @@ export function useEventsByCategory(category: string) {
 }
 
 // Utility function to trigger cache refresh across the app
-export function triggerCacheRefresh(type: 'events' | 'users' | 'all' = 'all') {
+export function triggerCacheRefresh(type: string = 'all') {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('cache-refreshed', { detail: { type } }));
   }

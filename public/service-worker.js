@@ -15,6 +15,8 @@ const DYNAMIC_CACHE = `event-planner-dynamic-v${BUILD_TIMESTAMP}`;
 const API_CACHE = `event-planner-api-v${BUILD_TIMESTAMP}`;
 const PAGES_CACHE = `event-planner-pages-v${BUILD_TIMESTAMP}`;
 const APP_SHELL_CACHE = `event-planner-app-shell-v${BUILD_TIMESTAMP}`;
+const NOTIFICATION_HANDOFF_CACHE = 'event-planner-notification-handoff-v1';
+const NOTIFICATION_HANDOFF_URL = '/__notification_handoff__';
 
 // Track if we've notified about this version
 let hasNotifiedUpdate = false;
@@ -1040,6 +1042,23 @@ self.addEventListener('message', (event) => {
   }
 });
 
+async function persistPendingNotificationClick(payload) {
+  try {
+    const cache = await caches.open(NOTIFICATION_HANDOFF_CACHE);
+    await cache.put(
+      new Request(NOTIFICATION_HANDOFF_URL, { method: 'GET' }),
+      new Response(JSON.stringify(payload), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        }
+      })
+    );
+  } catch (error) {
+    console.error('Failed to persist notification handoff:', error);
+  }
+}
+
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
@@ -1048,14 +1067,21 @@ self.addEventListener('notificationclick', (event) => {
 
   const eventId = event.notification.data?.eventId;
   const url = event.notification.data?.url || '/';
+  const payload = {
+    type: 'NOTIFICATION_CLICK',
+    eventId,
+    url,
+    receivedAt: Date.now(),
+    source: 'service-worker'
+  };
 
   if (event.action === 'dismiss') {
     return;
   }
 
   event.waitUntil(
-    clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
+    persistPendingNotificationClick(payload)
+      .then(() => clients.matchAll({ type: 'window', includeUncontrolled: true }))
       .then((clientList) => {
         console.log(`Found ${clientList.length} open clients`);
         
@@ -1073,13 +1099,7 @@ self.addEventListener('notificationclick', (event) => {
             console.log('Found existing app window:', client.url);
             client.focus();
             
-            if (eventId) {
-              client.postMessage({
-                type: 'NOTIFICATION_CLICK',
-                eventId: eventId,
-                url: url
-              });
-            }
+            client.postMessage(payload);
             return client;
           }
         }
@@ -1087,13 +1107,9 @@ self.addEventListener('notificationclick', (event) => {
         console.log('No existing window found, opening new one:', url);
         if (clients.openWindow) {
           return clients.openWindow(url).then((client) => {
-            if (client && eventId) {
+            if (client) {
               setTimeout(() => {
-                client.postMessage({
-                  type: 'NOTIFICATION_CLICK',
-                  eventId: eventId,
-                  url: url
-                });
+                client.postMessage(payload);
               }, 1000);
             }
             return client;

@@ -47,6 +47,7 @@ interface NetworkStatusContextType {
   rtt: number;
   setLastSyncTime: (time: Date) => void;
   setIsSyncing: (syncing: boolean) => void;
+  setSyncError: (error: string | null) => void;
   refreshEventsCache: () => Promise<void>;
 }
 
@@ -260,11 +261,13 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
         // Came back online
         try {
           await refreshEventsCache();
+          setSyncError(null);
           if (offlineNotif) {
             toast.success('Back online! Events cache updated.');
           }
         } catch (error) {
           devError('Failed to refresh cache on reconnect:', error);
+          setSyncError('Back online, but failed to update cache.');
           if (offlineNotif) {
             toast.error('Back online, but failed to update cache.');
           }
@@ -281,6 +284,22 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   }, [isOnline, testConnectivity, refreshEventsCache]);
 
   useEffect(() => {
+    const hydrateSyncStatus = async () => {
+      try {
+        const status = await db.getSyncStatus();
+
+        if (status?.lastSync) {
+          setLastSyncTime(new Date(status.lastSync));
+        }
+
+        setSyncError(status?.error || null);
+      } catch (error) {
+        devWarn('Failed to hydrate sync status:', error);
+      }
+    };
+
+    hydrateSyncStatus();
+
     // Initialize network status
     updateNetworkStatus(navigator.onLine);
 
@@ -335,6 +354,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     rtt,
     setLastSyncTime,
     setIsSyncing,
+    setSyncError,
     refreshEventsCache,
   };
 

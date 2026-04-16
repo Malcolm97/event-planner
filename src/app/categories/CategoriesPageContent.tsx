@@ -173,8 +173,8 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Hero Section */}
-      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="w-full border-b border-black bg-gradient-to-br from-yellow-300 to-red-600 py-12 sm:py-16 lg:py-20">
+        <div className="page-shell text-center">
           <h1 className="text-display-lg text-white mb-6 tracking-tight">
             {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Categories'}
           </h1>
@@ -188,15 +188,15 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       </section>
 
       {/* Category Navigation */}
-      <section className="py-12 px-4 sm:px-8">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-10 sm:py-12">
+        <div className="page-shell max-w-6xl">
           <h2 className="text-heading-2xl text-gray-900 mb-8 text-center">Browse by Category</h2>
           {isOffline && (
             <div className="text-center mb-4">
               <div className="inline-block bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold text-base">Offline Mode: Registration, login, and event creation are disabled.</div>
             </div>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6 md:gap-5">
             {displayCategories
               .filter(cat => {
                 // Always show "All Events" category
@@ -218,12 +218,12 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
                   <button
                     key={cat.name}
                     onClick={() => setSelectedCategory(cat.name)}
-                    className={`card-hover flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[140px] ${cat.color} group ${selectedCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
+                    className={`card-hover flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[112px] sm:min-h-[124px] ${cat.color} group ${selectedCategory === cat.name ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
                   >
                     <span className="flex items-center justify-center w-12 h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
                       <CategoryIcon size={28} />
                     </span>
-                    <span className="text-base font-bold text-center">{cat.name}</span>
+                    <span className="text-sm sm:text-base font-bold text-center leading-snug">{cat.name}</span>
                   </button>
               );
             })}
@@ -232,8 +232,8 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
       </section>
 
       {/* Events Section */}
-      <section className="py-16 px-4 sm:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
+      <section className="bg-gray-50 py-12 sm:py-16">
+        <div className="page-shell">
           <div className="text-center mb-12">
             <h2 className="text-heading-2xl text-gray-900 mb-4">
               {selectedCategory !== 'All Events' ? `${selectedCategory} Events` : 'All Events'}
@@ -247,7 +247,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8" role="list" aria-label="Loading events">
+            <div className="responsive-grid" role="list" aria-label="Loading events">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="animate-pulse bg-white rounded-2xl h-72 shadow flex flex-col gap-4 p-6" role="listitem">
                   <div className="bg-gray-200 h-32 w-full rounded-xl" />
@@ -274,7 +274,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
                     </h3>
                     <p className="text-gray-500 mt-2 text-sm">Events that are currently in progress</p>
                   </div>
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8">
+                  <div className="responsive-grid">
                     {sortedHappeningNow.map(event => (
                       <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                     ))}
@@ -290,7 +290,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
                       <span className="text-2xl">📅</span> Upcoming Events
                     </h3>
                   </div>
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8">
+                  <div className="responsive-grid">
                     {sortedUpcoming.map(event => (
                       <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                     ))}
@@ -324,9 +324,9 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
 export default function CategoriesPageContent({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white px-4 sm:px-8 py-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-10">
+      <div className="min-h-screen bg-white py-12 sm:py-16">
+        <div className="page-shell">
+          <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6 md:gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={`category-skeleton-${i}`} className="animate-pulse rounded-2xl border-2 border-gray-200 min-h-[140px] p-6 flex flex-col items-center justify-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gray-200" />
@@ -334,7 +334,7 @@ export default function CategoriesPageContent({ initialEvents, initialDisplayCat
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8">
+          <div className="responsive-grid">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={`event-skeleton-${i}`} className="animate-pulse bg-white rounded-2xl h-72 shadow flex flex-col gap-4 p-6">
                 <div className="bg-gray-200 h-32 w-full rounded-xl" />

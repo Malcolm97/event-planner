@@ -139,7 +139,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   if (error) {
     return (
-      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md p-3 sm:p-4 md:p-5">
         <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center max-w-sm">
           <div className="text-5xl sm:text-6xl mb-3 sm:mb-4">❌</div>
           <h3 className="text-lg sm:text-xl font-semibold text-red-600 mb-2">Error</h3>
@@ -154,7 +154,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 lg:p-6 animate-fade-in"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-4 md:p-5 lg:p-6 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
@@ -170,7 +170,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         View event details, about information, host details, and browse event images in a modal dialog.
       </p>
       <div
-        className="bg-white rounded-[1.5rem] sm:rounded-[1.75rem] shadow-2xl w-full max-w-[96vw] sm:max-w-3xl md:max-w-4xl lg:max-w-4xl mx-auto relative animate-modal-in border border-white/60 overflow-hidden flex flex-col ring-1 ring-black/5"
+        className="bg-white rounded-[1.5rem] sm:rounded-[1.75rem] shadow-2xl w-full max-w-[97vw] sm:max-w-3xl md:max-w-[58rem] lg:max-w-5xl mx-auto relative animate-modal-in border border-white/60 overflow-hidden flex flex-col ring-1 ring-black/5"
         style={{
           minHeight: 'auto',
           maxHeight: 'calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
@@ -192,7 +192,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
           {/* Tab Navigation */}
           <EventModalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <div className="space-y-4 sm:space-y-6 px-3 sm:px-5 md:px-6 pb-4 sm:pb-6 md:pb-7">
+          <div className="space-y-4 sm:space-y-6 px-4 sm:px-5 md:px-6 lg:px-7 pb-4 sm:pb-6 md:pb-7">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
               <div role="tabpanel" id="event-details-panel" aria-labelledby="event-details-tab">

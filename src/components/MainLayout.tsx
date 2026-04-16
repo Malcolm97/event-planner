@@ -32,7 +32,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     <>
       <OfflineIndicator />
       <Header />
-      <main id="main-content" role="main" className="pb-16 sm:pb-20 md:pb-20 lg:pb-0 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <main id="main-content" role="main" className="min-h-screen bg-gray-50 pb-[5.25rem] sm:pb-24 md:pb-6 lg:pb-0 dark:bg-gray-900 transition-colors duration-300">
         {children}
       </main>
       <BottomNav />

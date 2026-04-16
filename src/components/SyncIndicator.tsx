@@ -9,7 +9,7 @@ import { isAutoSyncEnabled } from '@/lib/utils';
 
 export default function SyncIndicator() {
   const { isOnline, isSyncing, lastSyncTime, syncError } = useNetworkStatus();
-  const { queueLength, syncNow, isProcessingQueue } = useOfflineSync();
+  const { queueLength, failedOperationsCount, syncNow, isProcessingQueue } = useOfflineSync();
   const [cachedEventsCount, setCachedEventsCount] = useState(0);
 
   // Check cached events count
@@ -57,7 +57,10 @@ export default function SyncIndicator() {
       {queueLength > 0 && (
         <div className="bg-orange-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-xl shadow-xl border border-orange-400 flex items-center gap-2 animate-pulse">
           <FiClock className="h-4 w-4" />
-          <span className="text-sm font-medium">{queueLength} pending</span>
+          <span className="text-sm font-medium">
+            {queueLength} pending
+            {failedOperationsCount > 0 ? ` • ${failedOperationsCount} failed` : ''}
+          </span>
         </div>
       )}
 
@@ -115,6 +118,11 @@ export default function SyncIndicator() {
           <div className="text-sm opacity-90">
             {queueLength} operation{queueLength !== 1 ? 's' : ''} ready to sync
           </div>
+          {failedOperationsCount > 0 && (
+            <div className="text-xs opacity-80">
+              {failedOperationsCount} previously failed operation{failedOperationsCount !== 1 ? 's' : ''} will be retried too
+            </div>
+          )}
           <button
             onClick={syncNow}
             className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"

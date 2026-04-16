@@ -85,7 +85,7 @@ export default function DashboardEventsSection({
   }
 
   return (
-    <div className={`card p-3 sm:p-4 lg:p-4 ${colors.bg}`}>
+    <div className={`card p-3 sm:p-4 lg:p-5 ${colors.bg}`}>
       {/* Header Section - Improved for mobile */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
@@ -128,7 +128,7 @@ export default function DashboardEventsSection({
       ) : (
         <>
           {/* Event Cards Grid - Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-3 sm:mb-4">
             {visibleEvents.map(event => (
               <Link 
                 key={event.id} 

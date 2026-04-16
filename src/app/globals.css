@@ -406,6 +406,56 @@
     justify-content: center;
   }
 
+  .page-shell {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .page-shell {
+      padding-inline: 1.25rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .page-shell {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .page-shell {
+      padding-inline: 2rem;
+    }
+  }
+
+  .content-grid-relaxed {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .content-grid-relaxed {
+      gap: 1.25rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .content-grid-relaxed {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .content-grid-relaxed {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
   .touch-target-md {
     min-width: 3rem;
     min-height: 3rem;
@@ -742,15 +792,15 @@
   }
 
   .responsive-grid {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4;
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:gap-6 lg:grid-cols-3 xl:grid-cols-4;
   }
 
   .responsive-grid-2 {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-3;
   }
 
   .responsive-grid-3 {
-    @apply grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6 lg:gap-6;
+    @apply grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6 lg:gap-6;
   }
 
   /* Mobile-first responsive utilities */
@@ -780,7 +830,7 @@
   }
 
   .tablet-padding {
-    @apply px-4 sm:px-6 md:px-8 lg:px-12;
+    @apply px-4 sm:px-5 md:px-6 lg:px-10 xl:px-12;
   }
 
   /* Touch-friendly spacing */

@@ -10,70 +10,17 @@ import {
   successResponse,
   databaseError
 } from '@/lib/errorHandler';
+import {
+  EVENT_CATEGORY_VALUES,
+  MAX_EVENT_DESCRIPTION_LENGTH,
+  MAX_EVENT_IMAGES,
+  MAX_EVENT_NAME_LENGTH,
+  sanitizeExternalLinks,
+} from '@/lib/eventForm';
+import { sendPushNotifications } from '@/lib/pushNotifications';
 
-function getAppUrl(): string | null {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:3000';
-  }
-
-  return null;
-}
-
-function isValidHttpUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-function sanitizeExternalLinks(input: unknown): Record<string, string> | null {
-  if (!input) {
-    return null;
-  }
-
-  if (typeof input !== 'object' || Array.isArray(input)) {
-    throw new Error('external_links must be an object');
-  }
-
-  const allowedKeys = ['facebook', 'instagram', 'tiktok', 'website'] as const;
-  const links: Record<string, string> = {};
-
-  for (const key of allowedKeys) {
-    const value = (input as Record<string, unknown>)[key];
-    if (typeof value !== 'string') {
-      continue;
-    }
-
-    const trimmed = value.trim();
-    if (!trimmed) {
-      continue;
-    }
-
-    if (!isValidHttpUrl(trimmed)) {
-      throw new Error(`Invalid URL for ${key}`);
-    }
-
-    links[key] = trimmed;
-  }
-
-  return Object.keys(links).length > 0 ? links : null;
-}
-
-// Function to send push notifications for updated events to users who saved them
 async function sendPushNotificationForUpdatedEvent(event: any) {
   try {
-    const appUrl = getAppUrl();
-    if (!appUrl) {
-      return;
-    }
-
-    // Get all users who saved this event
     const { data: savedEvents, error: savedError } = await supabase
       .from(TABLES.SAVED_EVENTS)
       .select('user_id')
@@ -84,11 +31,10 @@ async function sendPushNotificationForUpdatedEvent(event: any) {
       return;
     }
 
-    // Get push subscriptions for these users
     const userIds = savedEvents.map(se => se.user_id);
     const { data: subscriptions, error: subError } = await supabase
-      .from('push_subscriptions')
-      .select('user_id, subscription')
+      .from(TABLES.PUSH_SUBSCRIPTIONS)
+      .select('id, user_id, device_id, subscription')
       .in('user_id', userIds);
 
     if (subError || !subscriptions || subscriptions.length === 0) {
@@ -96,28 +42,13 @@ async function sendPushNotificationForUpdatedEvent(event: any) {
       return;
     }
 
-    // Call the send-push-notification API with targeted subscriptions
-    const response = await fetch(`${appUrl}/api/send-push-notification`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'Event Updated!',
-        body: `${event.name} has been updated`,
-        url: `/events/${event.id}`,
-        eventId: event.id,
-        targetSubscriptions: subscriptions // Send to specific users only
-      })
+    await sendPushNotifications({
+      title: 'Event Updated!',
+      body: `${event.name} has been updated`,
+      url: `/events/${event.id}`,
+      eventId: event.id,
+      targetSubscriptions: subscriptions,
     });
-
-    if (!response.ok) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to send push notifications for updated event:', response.status);
-      }
-    } else {
-      await response.json();
-    }
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Error sending push notifications for updated event:', err);
@@ -379,8 +310,8 @@ export async function PUT(
       if (!Array.isArray(image_urls)) {
         return validationError('There was a problem with your images. Please try selecting them again.');
       }
-      if (image_urls.length > 3) {
-        return validationError('You can only upload up to 3 images per event.');
+      if (image_urls.length > MAX_EVENT_IMAGES) {
+        return validationError(`You can only upload up to ${MAX_EVENT_IMAGES} images per event.`);
       }
       validatedImageUrls = image_urls.filter(url => typeof url === 'string' && url.trim().length > 0);
     }
@@ -390,15 +321,48 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     };
 
-    if (name !== undefined) updateData.name = name.trim();
-    if (description !== undefined) updateData.description = description ? description.trim() : null;
+    if (name !== undefined) {
+      const trimmedName = typeof name === 'string' ? name.trim() : '';
+      if (!trimmedName) {
+        return validationError('Event name cannot be empty');
+      }
+      if (trimmedName.length > MAX_EVENT_NAME_LENGTH) {
+        return validationError(`Event name must be ${MAX_EVENT_NAME_LENGTH} characters or fewer`);
+      }
+      updateData.name = trimmedName;
+    }
+    if (description !== undefined) {
+      const trimmedDescription = typeof description === 'string' ? description.trim() : '';
+      if (!trimmedDescription) {
+        return validationError('Description cannot be empty');
+      }
+      if (trimmedDescription.length > MAX_EVENT_DESCRIPTION_LENGTH) {
+        return validationError(`Description must be ${MAX_EVENT_DESCRIPTION_LENGTH} characters or fewer`);
+      }
+      updateData.description = trimmedDescription;
+    }
     if (eventDate) updateData.date = eventDate.toISOString();
     if (end_date !== undefined) updateData.end_date = eventEndDate ? eventEndDate.toISOString() : null;
-    if (location !== undefined) updateData.location = location.trim();
+    if (location !== undefined) {
+      const trimmedLocation = typeof location === 'string' ? location.trim() : '';
+      if (!trimmedLocation) {
+        return validationError('Location cannot be empty');
+      }
+      updateData.location = trimmedLocation;
+    }
     if (venue !== undefined) updateData.venue = venue ? venue.trim() : null;
     if (presalePrice !== null) updateData.presale_price = presalePrice;
     if (gatePrice !== null) updateData.gate_price = gatePrice;
-    if (category !== undefined) updateData.category = category ? category.trim() : null;
+    if (category !== undefined) {
+      const trimmedCategory = typeof category === 'string' ? category.trim() : '';
+      if (!trimmedCategory) {
+        return validationError('Category cannot be empty');
+      }
+      if (!EVENT_CATEGORY_VALUES.includes(trimmedCategory as (typeof EVENT_CATEGORY_VALUES)[number])) {
+        return validationError('Invalid category');
+      }
+      updateData.category = trimmedCategory;
+    }
     if (validatedImageUrls !== undefined) updateData.image_urls = validatedImageUrls;
     if (external_links !== undefined) {
       try {

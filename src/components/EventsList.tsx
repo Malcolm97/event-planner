@@ -107,8 +107,8 @@ const EventsList = memo(function EventsList({
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 md:gap-6 xl:grid-cols-4 animate-fade-in">
         {displayedEvents.map(event => (
           <EventCard
             key={event.id}
@@ -141,7 +141,7 @@ const EventsList = memo(function EventsList({
 
       {/* View All Button */}
       {showViewAllButton && !hasMore && (
-        <div className="flex justify-center mt-16">
+        <div className="mt-10 flex justify-center sm:mt-14">
           <Button asChild size="lg">
             <a href={viewAllHref}>
               View all Events

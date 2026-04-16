@@ -184,8 +184,8 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Hero Section */}
-      <section className="w-full py-12 sm:py-16 lg:py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 text-white border-b border-black">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="w-full border-b border-black bg-gradient-to-br from-yellow-300 to-red-600 py-12 sm:py-16 lg:py-12 text-white">
+        <div className="page-shell max-w-5xl text-center">
           <h1 className="text-display-lg text-white mb-4 sm:mb-6">
             PNG Events: Connecting Communities
           </h1>
@@ -218,8 +218,9 @@ export default function AboutPage() {
       </section>
 
       {/* Mission Section */}
-      <section className="max-w-6xl mx-auto w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="w-full py-16 sm:py-20 lg:py-24">
+        <div className="page-shell max-w-6xl">
+        <div className="grid grid-cols-1 items-center gap-10 md:gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="text-center lg:text-left">
             <h2 className="section-title text-gray-900 mb-6 sm:mb-8">Our Mission</h2>
             <div className="space-y-6 text-body-md text-gray-700">
@@ -245,7 +246,7 @@ export default function AboutPage() {
             )}
           </div>
           <div className="flex justify-center lg:justify-end">
-            <div className="grid grid-cols-3 gap-6 sm:gap-8 w-full max-w-md">
+            <div className="grid w-full max-w-md grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center p-4 bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                   <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
@@ -255,11 +256,12 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* Key Features Section */}
-      <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-6xl mx-auto">
+      <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+        <div className="page-shell max-w-6xl">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="section-title text-gray-900 mb-4 sm:mb-6">Powerful Features for Event Management</h2>
             <p className="page-subtitle text-gray-700 max-w-4xl mx-auto">

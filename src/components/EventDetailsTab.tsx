@@ -4,6 +4,7 @@ import { FiMapPin, FiCalendar, FiClock, FiBookmark, FiImage, FiCopy, FiNavigatio
 import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getValidImageUrls, isEventPast, isEventCurrentlyHappening } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -97,7 +98,7 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`flex min-h-[68px] sm:min-h-[76px] flex-col items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded-2xl transition-all duration-200 min-w-[66px] sm:min-w-[84px] ${
+      className={`flex min-h-[68px] sm:min-h-[72px] flex-col items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded-2xl transition-all duration-200 min-w-[82px] sm:min-w-[96px] ${
         active
           ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-400'
           : 'bg-white/80 backdrop-blur-sm text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
@@ -116,6 +117,7 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
 
 const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand }) => {
   const { user } = useAuth();
+  const { queueOperation } = useOfflineSync();
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -177,33 +179,35 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
     }
     if (loading) return;
 
+    const nextBookmarked = !bookmarked;
+    setBookmarked(nextBookmarked);
     setLoading(true);
+
     try {
-      if (bookmarked) {
-        const { error } = await supabase
-          .from(TABLES.SAVED_EVENTS)
-          .delete()
-          .eq('user_id', user.id)
-          .eq('event_id', event.id);
-
-        if (!error) {
-          setBookmarked(false);
-          toast.success('Event removed from saved');
+      const result = await queueOperation(
+        nextBookmarked ? 'create' : 'delete',
+        TABLES.SAVED_EVENTS,
+        {
+          user_id: user.id,
+          event_id: event.id,
+        },
+        {
+          refreshTargets: ['saved-events'],
+          suppressSuccessToast: true,
         }
-      } else {
-        const { error } = await supabase
-          .from(TABLES.SAVED_EVENTS)
-          .insert({
-            user_id: user.id,
-            event_id: event.id
-          });
+      );
 
-        if (!error) {
-          setBookmarked(true);
-          toast.success('Event saved!');
-        }
-      }
+      toast.success(
+        nextBookmarked
+          ? result === 'queued'
+            ? 'Event save queued until you reconnect.'
+            : 'Event saved.'
+          : result === 'queued'
+            ? 'Saved-event removal queued until you reconnect.'
+            : 'Event removed from saved.'
+      );
     } catch (error) {
+      setBookmarked(!nextBookmarked);
       console.error('Error saving/unsaving event:', error);
       toast.error('Failed to save event');
     } finally {
@@ -353,12 +357,12 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
       </div>
 
       {/* Two-Column Layout for Tablet/Desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-7">
+      <div className="grid grid-cols-1 gap-4 md:gap-5 lg:grid-cols-2 lg:gap-7">
         {/* Left Column: Image Gallery */}
         <div className="space-y-3">
           {/* Primary Image */}
           <div
-            className={`relative group rounded-2xl overflow-hidden shadow-lg transition-all duration-300 border border-gray-200/50 bg-gradient-to-br from-gray-50 to-white aspect-[16/9] md:aspect-[4/3] ${
+            className={`relative group rounded-2xl overflow-hidden shadow-lg transition-all duration-300 border border-gray-200/50 bg-gradient-to-br from-gray-50 to-white aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] ${
               validImageUrls.length > 0 ? 'hover:shadow-xl cursor-pointer' : 'cursor-not-allowed opacity-80'
             }`}
             onClick={() => {
@@ -412,7 +416,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                   src={validImageUrls[clampedImageIndex]}
                   alt={event?.name ? `${event.name} image` : 'Event Image'}
                   fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 50vw"
                   quality={80}
                   className="object-cover transition-all duration-700 group-hover:scale-105"
                   onLoad={() => {
@@ -454,7 +458,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
 
           {/* Thumbnail Strip */}
           {validImageUrls.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:flex lg:gap-2 lg:overflow-x-auto lg:pb-1 scrollbar-hide">
               {validImageUrls.map((imageUrl: string, index: number) => (
                 <button
                   key={index}
@@ -462,7 +466,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                     setActiveImageIndex(index);
                     setImageLoading(true);
                   }}
-                  className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                  className={`relative aspect-square w-full rounded-lg overflow-hidden border-2 transition-all duration-200 lg:h-16 lg:w-16 lg:flex-shrink-0 ${
                     activeImageIndex === index
                       ? 'border-yellow-400 ring-2 ring-yellow-400/30'
                       : 'border-gray-200 hover:border-gray-300'
@@ -560,7 +564,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                   </div>
 
                   {/* Divider with duration */}
-                  <div className="flex items-center gap-2 px-2">
+                  <div className="flex flex-wrap items-center gap-2 px-2">
                     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
                     {dateInfo.duration && (
                       <span className="modal-caption text-indigo-600 font-medium bg-indigo-50 px-2.5 py-1 rounded-full">
@@ -587,7 +591,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                   </div>
 
                   {/* Relative time and calendar button */}
-                  <div className="flex items-center justify-between pt-2 border-t border-indigo-200/60">
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-indigo-200/60">
                     {dateInfo.relativeTime && (
                       <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 modal-caption font-medium">
                         ⏰ {dateInfo.relativeTime}
@@ -656,7 +660,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
 
       {/* Quick Actions Bar - Full Width at Bottom */}
       <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-gray-200/60">
-        <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           <QuickActionButton
             icon={<FiBookmark size={18} className={bookmarked ? 'fill-current' : ''} />}
             label="Save"
@@ -676,7 +680,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
             onClick={handleGetDirections}
             disabled={!event?.location && !event?.venue}
           />
-          <div className="flex-shrink-0">
+          <div className="col-span-2 sm:col-span-1">
             <ShareButtons event={event} />
           </div>
         </div>

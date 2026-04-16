@@ -8,6 +8,33 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+async function getAuthenticatedUserId(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.slice(7);
+  const authClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    }
+  );
+
+  const { data: { user }, error } = await authClient.auth.getUser();
+  if (error || !user) {
+    return null;
+  }
+
+  return user.id;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { subscription, device_id } = await request.json();
@@ -19,37 +46,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the user from the auth session (optional - can be logged in or anonymous)
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // FIX: Get user agent from request headers (server-side safe)
-    // navigator.userAgent is undefined on server-side
+    const userId = await getAuthenticatedUserId(request);
     const userAgent = request.headers.get('user-agent') || 'unknown';
-    
-    let dbData: any = {
-      subscription: subscription,
-      user_agent: userAgent
+    const basePayload = {
+      subscription,
+      endpoint: subscription.endpoint,
+      user_agent: userAgent,
     };
 
-    let existingSub = null;
+    let existingSub: { id: string } | null = null;
 
-    if (session) {
-      // Logged-in user - save with user_id
-      dbData.user_id = session.user.id;
-      
-      // Check if subscription already exists for this user
+    if (userId) {
       const { data: existingSubs } = await supabase
         .from(TABLES.PUSH_SUBSCRIPTIONS)
         .select('id')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .limit(1);
 
       existingSub = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
     } else if (device_id) {
-      // Anonymous PWA user - save with device_id
-      dbData.device_id = device_id;
-      
-      // Check if subscription already exists for this device
       const { data: existingSubs } = await supabase
         .from(TABLES.PUSH_SUBSCRIPTIONS)
         .select('id')
@@ -65,48 +80,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let data, error;
+    let data;
+    let error;
 
     if (existingSub) {
-      // Update existing subscription
-      if (session) {
-        const { data: updateData, error: updateError } = await supabase
+      if (userId) {
+        const result = await supabase
           .from(TABLES.PUSH_SUBSCRIPTIONS)
           .update({
-            subscription: subscription,
-            user_agent: userAgent,
-            updated_at: new Date().toISOString()
+            ...basePayload,
+            updated_at: new Date().toISOString(),
           })
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .select()
           .single();
 
-        data = updateData;
-        error = updateError;
+        data = result.data;
+        error = result.error;
       } else {
-        const { data: updateData, error: updateError } = await supabase
+        const result = await supabase
           .from(TABLES.PUSH_SUBSCRIPTIONS)
           .update({
-            subscription: subscription,
-            user_agent: userAgent,
-            updated_at: new Date().toISOString()
+            ...basePayload,
+            device_id,
+            updated_at: new Date().toISOString(),
           })
           .eq('device_id', device_id)
           .select()
           .single();
 
-        data = updateData;
-        error = updateError;
+        data = result.data;
+        error = result.error;
       }
     } else {
-      // Insert new subscription
-      const { data: insertData, error: insertError } = await supabase
+      const result = await supabase
         .from(TABLES.PUSH_SUBSCRIPTIONS)
-        .insert(dbData)
-        .select();
+        .insert({
+          ...basePayload,
+          ...(userId ? { user_id: userId } : { device_id }),
+        })
+        .select()
+        .single();
 
-      data = insertData;
-      error = insertError;
+      data = result.data;
+      error = result.error;
     }
 
     if (error) {
@@ -119,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { message: 'Subscription saved successfully', data },
-      { status: 201 }
+      { status: existingSub ? 200 : 201 }
     );
   } catch (error) {
     console.error('Subscribe error:', error);

@@ -140,8 +140,8 @@ export default function EventsPageContent() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300" role="main" tabIndex={-1} aria-label="Events Page">
       {/* Hero section */}
-      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="w-full border-b border-black bg-gradient-to-br from-yellow-300 to-red-600 py-12 sm:py-16 lg:py-20">
+        <div className="page-shell text-center">
           <h1 className="text-display-lg text-white mb-4 sm:mb-6">
             Events by Location
           </h1>
@@ -153,8 +153,8 @@ export default function EventsPageContent() {
 
       {/* Location Filter */}
       {!loading && events.length > 0 && (availableLocations.length > 0 || hasOtherLocations) && (
-        <section className="py-4 sm:py-6 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto container-padding">
+        <section className="border-b border-gray-200 bg-white py-4 sm:py-6">
+          <div className="page-shell">
             <div className="flex flex-col gap-3 sm:gap-4 items-center text-center">
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full max-w-md mx-auto">
                 <div className="flex items-center gap-2 sm:gap-3 justify-center">
@@ -203,7 +203,8 @@ export default function EventsPageContent() {
 
       {/* Skeleton loader while loading */}
       {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8" role="list" aria-label="Event List">
+        <div className="page-shell py-8 sm:py-10">
+          <div className="responsive-grid" role="list" aria-label="Event List">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="animate-pulse bg-white rounded-2xl h-72 shadow flex flex-col gap-4 p-6">
               <div className="bg-gray-200 h-32 w-full rounded-xl" />
@@ -212,6 +213,7 @@ export default function EventsPageContent() {
               <div className="h-3 bg-gray-100 rounded w-1/3" />
             </div>
           ))}
+          </div>
         </div>
       )}
 
@@ -245,7 +247,7 @@ export default function EventsPageContent() {
 
       {/* Events grid */}
       {!loading && upcomingEvents.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
+        <div className="page-shell py-8 lg:py-12">
               {/* Happening Now Section - currently happening events */}
               {sortedHappeningNow.length > 0 && (
                 <div className="mb-12 lg:mb-16">
@@ -255,7 +257,7 @@ export default function EventsPageContent() {
                     </h3>
                     <p className="text-gray-500 mt-2 text-sm lg:text-base">Events that are currently in progress</p>
                   </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
+              <div className="responsive-grid animate-fade-in">
                 {sortedHappeningNow.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -271,7 +273,7 @@ export default function EventsPageContent() {
                   <span className="text-2xl">📅</span> Upcoming Events
                 </h3>
               </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
+              <div className="responsive-grid animate-fade-in">
                 {sortedUpcoming.map((event: EventItem) => (
                   <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
                 ))}
@@ -283,13 +285,13 @@ export default function EventsPageContent() {
 
       {/* Previous Events */}
       {previousEvents.length > 0 && (
-        <section className="py-12 lg:py-20 bg-gray-50 border-t border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
+        <section className="border-t border-gray-200 bg-gray-50 py-12 lg:py-20">
+          <div className="page-shell">
             <div className="text-center mb-10 lg:mb-12">
               <h2 className="text-heading-2xl text-gray-900 mb-3">Previous Events</h2>
               <p className="text-gray-600 lg:text-lg">Browse events that have already taken place.</p>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-6 lg:gap-8 animate-fade-in">
+            <div className="responsive-grid animate-fade-in">
               {previousEvents.map((event: EventItem) => (
                 <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
               ))}

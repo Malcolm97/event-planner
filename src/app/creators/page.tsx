@@ -119,8 +119,8 @@ export default function CreatorsPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Hero Section */}
-      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black dark:border-gray-700">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="w-full border-b border-black bg-gradient-to-br from-yellow-300 to-red-600 py-12 sm:py-16 lg:py-20 dark:border-gray-700">
+        <div className="page-shell max-w-5xl text-center">
           <h1 className="page-title text-white mb-4 sm:mb-6">
             Event Creators
           </h1>
@@ -160,10 +160,11 @@ export default function CreatorsPage() {
       </section>
 
       {/* Creators Grid */}
-      <section className="max-w-7xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
+      <section className="w-full py-12">
+        <div className="page-shell">
         {loading ? (
           <div className="py-6 sm:py-8" role="status" aria-live="polite" aria-label="Loading creators">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 lg:gap-6">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div
                   key={`creator-skeleton-${index}`}
@@ -201,7 +202,7 @@ export default function CreatorsPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 lg:gap-6">
               {filteredCreators.map((creator) => (
                 <button
                   type="button"
@@ -295,6 +296,7 @@ export default function CreatorsPage() {
             </div>
           </>
         )}
+        </div>
       </section>
 
       {/* Creator Modal */}

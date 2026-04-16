@@ -196,7 +196,7 @@ export default function ImageUpload({
             </span>
             <p className="text-xs text-gray-500">Saved images</p>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {existingImages.map((url, index) => (
               <div key={`existing-${index}`} className="relative group">
                 <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
@@ -227,7 +227,7 @@ export default function ImageUpload({
                     alt={`Event image ${index + 1}`}
                     fill
                     className={`object-cover transition-opacity duration-200 ${loadingImages.has(url) || failedImages.has(url) ? 'opacity-0' : 'opacity-100'}`}
-                    sizes="(max-width: 768px) 33vw, 100px"
+                    sizes="(max-width: 640px) 48vw, (max-width: 1024px) 31vw, 100px"
                     onLoad={() => handleImageLoad(url)}
                     onError={() => handleImageError(url)}
                   />
@@ -270,7 +270,7 @@ export default function ImageUpload({
             </span>
             <p className="text-xs text-gray-500">New images (not yet saved)</p>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {previews.map((previewUrl, index) => (
               <div key={`new-${index}`} className="relative group">
                 <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 ring-2 ring-green-400 ring-offset-1">
@@ -302,7 +302,7 @@ export default function ImageUpload({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`
-            relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200
+            relative border-2 border-dashed rounded-xl p-5 text-center transition-all duration-200 sm:p-6
             ${isDragging 
               ? 'border-yellow-400 bg-yellow-50' 
               : 'border-gray-300 hover:border-yellow-400 hover:bg-gray-50'

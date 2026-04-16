@@ -47,7 +47,7 @@ const CategoryGrid = memo(function CategoryGrid({ events }: CategoryGridProps) {
   const currentEvents = useMemo(() => events.filter(isEventUpcomingOrActive), [events]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6 lg:gap-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-5 lg:grid-cols-6 xl:grid-cols-7 lg:gap-5">
       {allCategories
         .filter(cat => {
           if (cat.name === 'Other') {
@@ -64,12 +64,12 @@ const CategoryGrid = memo(function CategoryGrid({ events }: CategoryGridProps) {
             <Link
               href={`/categories?category=${encodeURIComponent(cat.name)}`}
               key={cat.name}
-              className={`card-hover flex flex-col items-center justify-center gap-2 lg:gap-3 px-5 py-6 lg:px-6 lg:py-7 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[120px] lg:min-h-[140px] ${categoryColor} group`}
+              className={`card-hover flex flex-col items-center justify-center gap-2 px-4 py-5 sm:px-5 sm:py-6 lg:gap-3 lg:px-6 lg:py-7 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[112px] sm:min-h-[120px] lg:min-h-[140px] ${categoryColor} group`}
             >
-              <span className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
+              <span className="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-card-background border-2 border-border-color group-hover:border-yellow-400 transition-all duration-300 shadow-md">
                 <Icon size={22} className="lg:w-6 lg:h-6" />
               </span>
-              <span className="text-sm lg:text-base font-bold text-center">{cat.name}</span>
+              <span className="text-xs sm:text-sm lg:text-base font-bold text-center leading-snug text-balance">{cat.name}</span>
             </Link>
           );
         })}

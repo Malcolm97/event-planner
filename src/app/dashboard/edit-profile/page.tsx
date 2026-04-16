@@ -311,7 +311,7 @@ export default function EditProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
   {/* Header removed, now rendered globally in layout */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="page-shell max-w-4xl py-6 sm:py-8">
         <div className="mb-4 sm:mb-6">
           <Link
             href="/dashboard"
@@ -461,8 +461,8 @@ export default function EditProfilePage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap -mx-2">
-              <div className="w-full md:w-1/2 px-2 mb-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
                 <label htmlFor="name" className="form-label block mb-2">
                   Full Name
                 </label>
@@ -480,7 +480,7 @@ export default function EditProfilePage() {
                 />
               </div>
 
-              <div className="w-full md:w-1/2 px-2 mb-4">
+              <div>
                 <label htmlFor="email" className="form-label block mb-2">
                   Email Address
                 </label>
@@ -501,7 +501,7 @@ export default function EditProfilePage() {
                 )}
               </div>
 
-              <div className="w-full md:w-1/2 px-2 mb-4">
+              <div>
                 <label htmlFor="company" className="form-label block mb-2">
                   Company
                 </label>
@@ -516,7 +516,7 @@ export default function EditProfilePage() {
                 />
               </div>
 
-              <div className="w-full md:w-1/2 px-2 mb-4">
+              <div>
                 <label htmlFor="phone" className="form-label block mb-2">
                   Phone Number
                 </label>

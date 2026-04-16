@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { getEventPrimaryImage, isEventUpcomingOrActive } from '@/lib/utils';
 import { supabase, TABLES, recordActivity } from '@/lib/supabase';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { toast } from 'react-hot-toast';
 import { shareUrls, getEventShareText } from '@/lib/thirdPartyUtils';
 
@@ -176,6 +177,7 @@ function ShareButtons({ event }: { event: EventItem }) {
 
 const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = false }: { event: EventItem; onClick?: () => void; onDelete?: (eventId: string) => void; isOwner?: boolean }) {
   const { user } = useAuth();
+  const { queueOperation } = useOfflineSync();
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   // Use save_count from event data (pre-fetched in API) to avoid N+1 queries
@@ -277,33 +279,42 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
     e.stopPropagation();
     if (!user || loading) return;
 
+    const nextBookmarked = !bookmarked;
+    const nextSaveCount = nextBookmarked
+      ? saveCount + 1
+      : Math.max(0, saveCount - 1);
+
+    setBookmarked(nextBookmarked);
+    setSaveCount(nextSaveCount);
     setLoading(true);
+
     try {
-      if (bookmarked) {
-        const { error } = await supabase
-          .from(TABLES.SAVED_EVENTS)
-          .delete()
-          .eq('user_id', user.id)
-          .eq('event_id', event.id);
-
-        if (!error) {
-          setBookmarked(false);
-          setSaveCount((prev: number) => Math.max(0, prev - 1));
+      const result = await queueOperation(
+        nextBookmarked ? 'create' : 'delete',
+        TABLES.SAVED_EVENTS,
+        {
+          user_id: user.id,
+          event_id: event.id,
+        },
+        {
+          refreshTargets: ['saved-events'],
+          suppressSuccessToast: true,
         }
-      } else {
-        const { error } = await supabase
-          .from(TABLES.SAVED_EVENTS)
-          .insert({
-            user_id: user.id,
-            event_id: event.id
-          });
+      );
 
-        if (!error) {
-          setBookmarked(true);
-          setSaveCount((prev: number) => prev + 1);
-        }
-      }
+      toast.success(
+        nextBookmarked
+          ? result === 'queued'
+            ? 'Event save queued until you reconnect.'
+            : 'Event saved.'
+          : result === 'queued'
+            ? 'Saved-event removal queued until you reconnect.'
+            : 'Event removed from saved.'
+      );
     } catch (error) {
+      setBookmarked(!nextBookmarked);
+      setSaveCount(saveCount);
+
       if (process.env.NODE_ENV === 'development') {
         console.error('Error saving/unsaving event:', error);
       }
@@ -319,44 +330,33 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
     setDeleting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Authentication session expired. Please sign in again.');
-        setDeleting(false);
-        return;
-      }
-
-      const response = await fetch(`/api/events/${event.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error deleting event:', errorData);
+      const result = await queueOperation(
+        'delete',
+        TABLES.EVENTS,
+        { id: event.id },
+        {
+          refreshTargets: ['events'],
+          suppressSuccessToast: true,
         }
-        toast.error(errorData.error || 'Failed to delete event. Please try again.');
-        setDeleting(false);
-        return;
-      }
+      );
 
       if (onDelete) {
         onDelete(event.id);
       }
 
-      await recordActivity(
-        user.id,
-        'event_completed',
-        `Deleted event: ${event.name}`,
-        { event_id: event.id, event_name: event.name },
-        event.id,
-        event.name
-      );
-
-      toast.success('Event deleted successfully.');
+      if (result === 'completed') {
+        await recordActivity(
+          user.id,
+          'event_completed',
+          `Deleted event: ${event.name}`,
+          { event_id: event.id, event_name: event.name },
+          event.id,
+          event.name
+        );
+        toast.success('Event deleted successfully.');
+      } else {
+        toast.success('Event deletion queued. It will finish when you reconnect.');
+      }
 
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -421,7 +421,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       }}
     >
       {/* Hero Image Area */}
-      <div className="relative h-36 sm:h-44 md:h-48 lg:h-48 xl:h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+      <div className="relative aspect-[16/10] min-h-[13rem] sm:min-h-[14rem] md:min-h-[14.5rem] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {imageSrc && (typeof imageSrc === 'string') ? (
           (imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')) ? (
             <img
@@ -452,7 +452,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
 
-        <div className="absolute inset-x-3 bottom-3 z-10 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group-focus-visible:opacity-100 group-focus-visible:translate-y-0 transition-all duration-300 pointer-events-none">
+        <div className="absolute inset-x-3 bottom-3 z-10 hidden sm:block opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group-focus-visible:opacity-100 group-focus-visible:translate-y-0 transition-all duration-300 pointer-events-none">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 text-white card-badge backdrop-blur-md shadow-lg">
             <FiEye size={12} />
             View details
@@ -480,9 +480,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
           </div>
 
           {/* Category Badge */}
-          <span className={`card-badge inline-flex items-center gap-1 px-2.5 py-1 rounded-lg ${categoryColor} shadow-lg backdrop-blur-sm`}>
+          <span className={`card-badge inline-flex max-w-[8.5rem] items-center gap-1 truncate px-2.5 py-1 rounded-lg ${categoryColor} shadow-lg backdrop-blur-sm`}>
             <Icon size={10} />
-            {categoryLabel}
+            <span className="truncate">{categoryLabel}</span>
           </span>
         </div>
 
@@ -512,27 +512,27 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       </div>
 
       {/* Content Area */}
-      <div className="p-4 sm:p-5 lg:p-4 xl:p-5">
+      <div className="flex h-full flex-col p-4 sm:p-5">
         {/* Event Title */}
         <h3 className="card-title text-gray-900 dark:text-white leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
           {event.name}
         </h3>
 
         {/* Location */}
-        <div className="flex items-start gap-2 mb-2">
+        <div className="mb-2 flex items-start gap-2">
           <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0">
             <FiMapPin size={12} />
           </div>
-              <span className="card-meta text-gray-600 dark:text-gray-400 font-medium line-clamp-1">{event.location}</span>
+          <span className="card-meta text-gray-600 dark:text-gray-400 font-medium line-clamp-2 break-words">{event.location}</span>
         </div>
 
         {/* Date and Time */}
         {event.date && (
-          <div className="flex items-start gap-2 mb-3">
+          <div className="mb-3 flex items-start gap-2">
             <div className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex-shrink-0">
               <FiCalendar size={12} />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="card-meta text-gray-700 dark:text-gray-300 font-medium block">
                 {formattedEndDate ? (
                   <>
@@ -543,7 +543,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
                 )}
               </span>
               {formattedTime && (
-                <span className="card-meta text-gray-500 flex items-center gap-1 mt-0.5">
+                <span className="card-meta text-gray-500 flex items-center gap-1 mt-0.5 flex-wrap">
                   <FiClock size={10} />
                   {formattedTime}
                   {formattedEndTime ? ` - ${formattedEndTime}` : ''}
@@ -555,20 +555,20 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
         {/* Save Count */}
         {saveCount > 0 && (
-          <div className="flex items-center gap-1.5 card-meta text-gray-500 mb-4">
+          <div className="mb-4 flex items-center gap-1.5 card-meta text-gray-500">
             <FiUsers size={12} />
             <span>{saveCount} {saveCount === 1 ? 'save' : 'saves'}</span>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
+        <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-gray-100/50">
           <div className="hidden sm:flex items-center gap-1.5 card-meta font-semibold text-gray-500 group-hover:text-yellow-600 transition-colors">
             <FiEye size={13} />
             <span>Open event</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             {/* Delete button for event owners */}
             {isOwner && (
               <button

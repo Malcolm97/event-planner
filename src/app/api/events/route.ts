@@ -10,90 +10,23 @@ import {
   successResponse
 } from '@/lib/errorHandler';
 import { validateRequiredFields, sanitizeString, validateDate, validatePrice } from '@/lib/errorHandler';
+import {
+  EVENT_CATEGORY_VALUES,
+  MAX_EVENT_DESCRIPTION_LENGTH,
+  MAX_EVENT_IMAGES,
+  MAX_EVENT_NAME_LENGTH,
+  sanitizeExternalLinks,
+} from '@/lib/eventForm';
+import { sendPushNotifications } from '@/lib/pushNotifications';
 
-function getAppUrl(): string | null {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:3000';
-  }
-
-  return null;
-}
-
-function isValidHttpUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-function sanitizeExternalLinks(input: unknown): Record<string, string> | null {
-  if (!input) {
-    return null;
-  }
-
-  if (typeof input !== 'object' || Array.isArray(input)) {
-    throw new Error('external_links must be an object');
-  }
-
-  const allowedKeys = ['facebook', 'instagram', 'tiktok', 'website'] as const;
-  const links: Record<string, string> = {};
-
-  for (const key of allowedKeys) {
-    const value = (input as Record<string, unknown>)[key];
-    if (typeof value !== 'string') {
-      continue;
-    }
-
-    const trimmed = value.trim();
-    if (!trimmed) {
-      continue;
-    }
-
-    if (!isValidHttpUrl(trimmed)) {
-      throw new Error(`Invalid URL for ${key}`);
-    }
-
-    links[key] = trimmed;
-  }
-
-  return Object.keys(links).length > 0 ? links : null;
-}
-
-// Function to send push notifications for new events
 async function sendPushNotificationForNewEvent(event: any) {
   try {
-    const appUrl = getAppUrl();
-    if (!appUrl) {
-      return;
-    }
-
-    // Call the send-push-notification API
-    const response = await fetch(`${appUrl}/api/send-push-notification`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'New Event Added!',
-        body: `${event.name} - ${new Date(event.date).toLocaleDateString()}`,
-        url: `/events/${event.id}`,
-        eventId: event.id
-      })
+    await sendPushNotifications({
+      title: 'New Event Added!',
+      body: `${event.name} - ${new Date(event.date).toLocaleDateString()}`,
+      url: `/events/${event.id}`,
+      eventId: event.id,
     });
-
-    if (!response.ok) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to send push notifications:', response.status);
-      }
-    } else {
-      await response.json();
-    }
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Error sending push notifications:', err);
@@ -253,7 +186,7 @@ export async function POST(request: Request) {
     } = body;
 
     // Validate required fields
-    const missingFields = validateRequiredFields({ name, date, location }, ['name', 'date', 'location']);
+    const missingFields = validateRequiredFields({ name, description, date, location, category }, ['name', 'description', 'date', 'location', 'category']);
     if (missingFields.length > 0) {
       return validationError(`Missing required fields: ${missingFields.join(', ')}`);
     }
@@ -265,8 +198,20 @@ export async function POST(request: Request) {
     const sanitizedVenue = venue ? sanitizeString(venue) : null;
     const sanitizedCategory = category ? sanitizeString(category) : null;
 
-    if (!sanitizedName || !sanitizedLocation) {
-      return validationError('Name and location cannot be empty');
+    if (!sanitizedName || !sanitizedLocation || !sanitizedDescription || !sanitizedCategory) {
+      return validationError('Name, description, category, and location cannot be empty');
+    }
+
+    if (sanitizedName.length > MAX_EVENT_NAME_LENGTH) {
+      return validationError(`Event name must be ${MAX_EVENT_NAME_LENGTH} characters or fewer`);
+    }
+
+    if (sanitizedDescription.length > MAX_EVENT_DESCRIPTION_LENGTH) {
+      return validationError(`Description must be ${MAX_EVENT_DESCRIPTION_LENGTH} characters or fewer`);
+    }
+
+    if (!EVENT_CATEGORY_VALUES.includes(sanitizedCategory as (typeof EVENT_CATEGORY_VALUES)[number])) {
+      return validationError('Invalid category');
     }
 
     // Validate date format
@@ -308,8 +253,8 @@ export async function POST(request: Request) {
       if (!Array.isArray(image_urls)) {
         return validationError('image_urls must be an array');
       }
-      if (image_urls.length > 3) {
-        return validationError('Maximum 3 images allowed');
+      if (image_urls.length > MAX_EVENT_IMAGES) {
+        return validationError(`Maximum ${MAX_EVENT_IMAGES} images allowed`);
       }
       validatedImageUrls = image_urls.filter(url => typeof url === 'string' && url.trim().length > 0);
     }
