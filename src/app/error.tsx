@@ -56,16 +56,16 @@ export default function Error({
             Offline
           </div>
           <div className="text-6xl mb-4">📡</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-3">
+          <h2 className="page-title text-gray-900 mb-3">
             You're Offline
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="page-subtitle text-gray-600 mb-6">
             This page requires an internet connection. Please check your connection and try again, or go to the homepage to browse cached content.
           </p>
           <div className="space-y-3">
             <Button
               onClick={() => window.location.reload()}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
+              className="w-full touch-target-md bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M23 4v6h-6"></path>
@@ -77,7 +77,7 @@ export default function Error({
             <Button
               variant="outline"
               onClick={() => window.location.href = '/'}
-              className="w-full"
+              className="w-full touch-target"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -99,23 +99,23 @@ export default function Error({
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
         <div className="text-6xl mb-4">😕</div>
-        <h2 className="text-xl font-bold text-gray-900 mb-3">
+        <h2 className="page-title text-gray-900 mb-3">
           Oops! Something went wrong
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="page-subtitle text-gray-600 mb-6">
           We're sorry, but something unexpected happened. Don't worry, it's not your fault!
         </p>
         <div className="space-y-3">
           <Button
             onClick={() => reset()}
-            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
+            className="w-full touch-target-md bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
           >
             Try Again
           </Button>
           <Button
             variant="outline"
             onClick={() => window.location.href = '/'}
-            className="w-full"
+            className="w-full touch-target"
           >
             Go to Homepage
           </Button>

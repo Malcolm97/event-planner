@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { supabase, TABLES, Event, User } from '@/lib/supabase';
 import { normalizeUser } from '@/lib/types';
 import { isEventUpcomingOrActive } from '@/lib/utils';
 import { EventItem } from '@/lib/types';
+import { reportClientTelemetry } from '@/lib/clientTelemetry';
 import AppFooter from '@/components/AppFooter';
 import DashboardEventsSection from '@/components/DashboardEventsSection';
 import ProfileSkeleton from '@/components/ProfileSkeleton';
@@ -12,32 +13,37 @@ import ProfileHeader from '@/components/ProfileHeader';
 import FeaturedEventsSection from '@/components/FeaturedEventsSection';
 import { FiUser, FiCalendar, FiClock } from 'react-icons/fi';
 
-// Force dynamic rendering to prevent prerendering issues
-export const dynamic = 'force-dynamic';
-
-export default function ProfilePage({ params }: { params: Promise<{ uid: string }> }) {
+export default function ProfilePage() {
   const router = useRouter();
+  const params = useParams<{ uid: string }>();
+  const uid = Array.isArray(params?.uid) ? params.uid[0] : (params?.uid ?? '');
   const [user, setUser] = useState<User | null>(null);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [uid, setUid] = useState<string>('');
 
   useEffect(() => {
-    const resolveParams = async () => {
-      const resolvedParams = await params;
-      setUid(resolvedParams.uid);
-    };
-    resolveParams();
-  }, [params]);
+    if (uid) return;
+    setError('Invalid creator profile link');
+    setLoading(false);
+    reportClientTelemetry({
+      route: '/profile/[uid]',
+      category: 'warning',
+      message: 'Profile page loaded without a uid route parameter',
+    });
+  }, [uid]);
 
   useEffect(() => {
     if (!uid) return;
 
+    let isActive = true;
+
     const fetchUserData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        if (isActive) {
+          setLoading(true);
+          setError(null);
+        }
         
         // Fetch user profile
         const { data: userData, error: userError } = await supabase
@@ -47,16 +53,31 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
           .single();
           
         if (userError || !userData) {
-          setError('User not found');
-          setUser(null);
-          setUserEvents([]);
-          setLoading(false);
+          if (isActive) {
+            setError('User not found');
+            setUser(null);
+            setUserEvents([]);
+            setLoading(false);
+          }
+
+          reportClientTelemetry({
+            route: '/profile/[uid]',
+            category: 'warning',
+            message: 'Creator profile not found',
+            details: {
+              uid,
+              code: userError?.code,
+              message: userError?.message,
+            },
+          });
           return;
         }
         
         // Normalize user data to handle field name variants (full_name/name, avatar_url/photo_url)
         const normalizedUser = normalizeUser(userData);
-        setUser(normalizedUser);
+        if (isActive) {
+          setUser(normalizedUser);
+        }
         
         // Fetch user's events
         const { data: eventsData, error: eventsError } = await supabase
@@ -69,25 +90,48 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
           console.warn('Error fetching events:', eventsError);
         }
         
-        setUserEvents(eventsData || []);
-        setLoading(false);
+        if (isActive) {
+          setUserEvents(eventsData || []);
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Error fetching profile:', err);
-        setError('Failed to load profile');
-        setUser(null);
-        setUserEvents([]);
-        setLoading(false);
+        if (isActive) {
+          setError('Failed to load profile');
+          setUser(null);
+          setUserEvents([]);
+          setLoading(false);
+        }
+
+        reportClientTelemetry({
+          route: '/profile/[uid]',
+          category: 'error',
+          message: 'Profile data fetch failed',
+          details: {
+            uid,
+            error: err instanceof Error ? err.message : 'Unknown fetch error',
+          },
+        });
       }
     };
     
     fetchUserData();
+
+    return () => {
+      isActive = false;
+    };
   }, [uid]);
 
   // Restore scroll position when component mounts
   useEffect(() => {
     const scrollPosition = sessionStorage.getItem('creatorsScrollPosition');
     if (scrollPosition) {
-      window.scrollTo(0, parseInt(scrollPosition, 10));
+      const y = parseInt(scrollPosition, 10);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, y);
+        });
+      });
       sessionStorage.removeItem('creatorsScrollPosition');
     }
   }, []);
@@ -137,13 +181,13 @@ export default function ProfilePage({ params }: { params: Promise<{ uid: string 
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+              className="touch-target px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors text-sm font-medium"
             >
               Retry
             </button>
             <button
               onClick={handleBackToCreators}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              className="touch-target px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors text-sm font-medium"
             >
               Browse Creators
             </button>

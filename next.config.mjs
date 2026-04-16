@@ -30,27 +30,20 @@ const nextConfig = {
     },
   },
 
-  // Bundle analysis (only in development)
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-      // Add bundle analyzer
-      if (!dev && !isServer) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            reportFilename: './analyze/client.html',
-            openAnalyzer: false,
-          })
-        );
-      }
+  // Unified webpack config to avoid override collisions in production
+  webpack: (config, { dev, isServer }) => {
+    // Optional bundle analysis
+    if (process.env.ANALYZE === 'true' && !dev && !isServer) {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: './analyze/client.html',
+          openAnalyzer: false,
+        })
+      );
+    }
 
-      return config;
-    },
-  }),
-
-  // Optimize chunks
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Split chunks more aggressively
     if (!dev && !isServer) {
       config.optimization = {
@@ -84,6 +77,13 @@ const nextConfig = {
             },
           },
         },
+      };
+
+      // Performance budgets
+      config.performance = {
+        hints: 'warning',
+        maxEntrypointSize: 512000, // 512KB
+        maxAssetSize: 1024000,     // 1MB
       };
     }
 
@@ -139,6 +139,7 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24,
     // Allow unoptimized images for external sources that may fail optimization
     unoptimized: false,
   },
@@ -153,19 +154,6 @@ const nextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
-  // Performance budgets
-  ...(process.env.NODE_ENV === 'production' && {
-    webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-      if (!dev && !isServer) {
-        config.performance = {
-          hints: 'warning',
-          maxEntrypointSize: 512000, // 512KB
-          maxAssetSize: 1024000,     // 1MB
-        };
-      }
-      return config;
-    },
-  }),
 };
 
 export default nextConfig;

@@ -11,11 +11,70 @@ import {
 } from '@/lib/errorHandler';
 import { validateRequiredFields, sanitizeString, validateDate, validatePrice } from '@/lib/errorHandler';
 
+function getAppUrl(): string | null {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:3000';
+  }
+
+  return null;
+}
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeExternalLinks(input: unknown): Record<string, string> | null {
+  if (!input) {
+    return null;
+  }
+
+  if (typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('external_links must be an object');
+  }
+
+  const allowedKeys = ['facebook', 'instagram', 'tiktok', 'website'] as const;
+  const links: Record<string, string> = {};
+
+  for (const key of allowedKeys) {
+    const value = (input as Record<string, unknown>)[key];
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      continue;
+    }
+
+    if (!isValidHttpUrl(trimmed)) {
+      throw new Error(`Invalid URL for ${key}`);
+    }
+
+    links[key] = trimmed;
+  }
+
+  return Object.keys(links).length > 0 ? links : null;
+}
+
 // Function to send push notifications for new events
 async function sendPushNotificationForNewEvent(event: any) {
   try {
+    const appUrl = getAppUrl();
+    if (!appUrl) {
+      return;
+    }
+
     // Call the send-push-notification API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-push-notification`, {
+    const response = await fetch(`${appUrl}/api/send-push-notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,13 +88,16 @@ async function sendPushNotificationForNewEvent(event: any) {
     });
 
     if (!response.ok) {
-      console.error('Failed to send push notifications:', response.status);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to send push notifications:', response.status);
+      }
     } else {
-      const result = await response.json();
-      console.log(`Push notifications sent: ${result.sent || 0} successful`);
+      await response.json();
     }
   } catch (err) {
-    console.error('Error sending push notifications:', err);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error sending push notifications:', err);
+    }
   }
 }
 
@@ -236,6 +298,10 @@ export async function POST(request: Request) {
     const presalePrice = presale_price !== undefined ? parseFloat(presale_price) : null;
     const gatePrice = gate_price !== undefined ? parseFloat(gate_price) : null;
 
+    if (presalePrice !== null && gatePrice !== null && presalePrice > gatePrice) {
+      return validationError('Presale price cannot be greater than gate price');
+    }
+
     // Validate image_urls array
     let validatedImageUrls = null;
     if (image_urls) {
@@ -246,6 +312,15 @@ export async function POST(request: Request) {
         return validationError('Maximum 3 images allowed');
       }
       validatedImageUrls = image_urls.filter(url => typeof url === 'string' && url.trim().length > 0);
+    }
+
+    let sanitizedExternalLinks = null;
+    if (external_links !== undefined) {
+      try {
+        sanitizedExternalLinks = sanitizeExternalLinks(external_links);
+      } catch (error: unknown) {
+        return validationError(error instanceof Error ? error.message : 'Invalid external_links');
+      }
     }
 
     // Prepare event data
@@ -260,7 +335,7 @@ export async function POST(request: Request) {
       gate_price: gatePrice,
       category: sanitizedCategory,
       image_urls: validatedImageUrls,
-      external_links: external_links || null,
+      external_links: sanitizedExternalLinks,
       created_by: user.id,
     };
 

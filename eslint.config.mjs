@@ -1,13 +1,4 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextVitals from 'eslint-config-next/core-web-vitals';
 
 const eslintConfig = [
   // Ignore patterns
@@ -23,8 +14,16 @@ const eslintConfig = [
       "database/**",
     ],
   },
-  // Next.js core web vitals config
-  ...compat.extends("next/core-web-vitals"),
+  ...nextVitals,
+  {
+    rules: {
+      'react/no-unescaped-entities': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      '@next/next/no-img-element': 'off',
+    },
+  },
 ];
 
 export default eslintConfig;

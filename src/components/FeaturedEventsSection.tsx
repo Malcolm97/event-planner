@@ -35,7 +35,7 @@ export default function FeaturedEventsSection({
             <div className="w-6 h-6 rounded bg-yellow-500 flex items-center justify-center">
               <FiStar size={12} className="text-white" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">Featured Events</h3>
+            <h3 className="section-title text-gray-900">Featured Events</h3>
           </div>
           <Link
             href="#all-events"
@@ -50,7 +50,7 @@ export default function FeaturedEventsSection({
       {/* Featured Event Cards - Horizontal scroll on mobile */}
       <div className="p-4 sm:p-6">
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
-          {visibleEvents.map((event) => {
+          {visibleEvents.map((event, index) => {
             const eventDate = event.date ? new Date(event.date).toLocaleDateString('en-US', { 
               month: 'short', 
               day: 'numeric',
@@ -68,13 +68,15 @@ export default function FeaturedEventsSection({
               >
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-yellow-300 transition-all duration-300 group-hover:scale-[1.02]">
                   {/* Image */}
-                  <div className="relative h-36 sm:h-40">
+                  <div className="relative aspect-[16/10]">
                     <Image
                       src={imageUrl}
                       alt={event.name || 'Event'}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 280px, (max-width: 1024px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 280px, (max-width: 1024px) 50vw, 340px"
+                      quality={75}
+                      priority={index === 0 && !showAll}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     
@@ -93,20 +95,20 @@ export default function FeaturedEventsSection({
 
                   {/* Content */}
                   <div className="p-3 sm:p-4">
-                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-yellow-600 transition-colors">
+                    <h4 className="card-title text-gray-900 line-clamp-1 group-hover:text-yellow-600 transition-colors">
                       {event.name}
                     </h4>
                     
                     <div className="mt-2 space-y-1.5">
                       {event.venue && (
-                        <div className="flex items-center gap-1.5 text-gray-500 text-xs sm:text-sm">
+                        <div className="flex items-center gap-1.5 text-gray-500 card-meta">
                           <FiMapPin size={12} />
                           <span className="truncate">{event.venue}</span>
                         </div>
                       )}
                       
                       {event.location && (
-                        <div className="flex items-center gap-1.5 text-gray-500 text-xs sm:text-sm">
+                        <div className="flex items-center gap-1.5 text-gray-500 card-meta">
                           <FiMapPin size={12} />
                           <span className="truncate">{event.location}</span>
                         </div>
@@ -140,7 +142,7 @@ export default function FeaturedEventsSection({
           <div className="mt-4 text-center">
             <button
               onClick={() => setShowAll(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-yellow-600 hover:text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"
+              className="touch-target inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-yellow-600 hover:text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"
             >
               <FiCalendar size={16} />
               View all {events.length} events

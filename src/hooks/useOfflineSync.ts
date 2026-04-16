@@ -13,6 +13,18 @@ import {
 import { EventItem } from '@/lib/types';
 import { toast } from 'react-hot-toast';
 
+function devWarn(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(...args);
+  }
+}
+
+function devError(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(...args);
+  }
+}
+
 export function useOfflineSync() {
   const { isOnline, setIsSyncing, setLastSyncTime, refreshEventsCache } = useNetworkStatus();
   const [queueLength, setQueueLength] = useState(0);
@@ -64,7 +76,7 @@ export function useOfflineSync() {
 
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error('Failed to process operation:', operation?.id || 'unknown', errorMessage);
+          devError('Failed to process operation:', operation?.id || 'unknown', errorMessage);
 
           // Non-recoverable errors - fail immediately and remove from queue
           const isNonRecoverable = errorMessage.includes('infinite recursion') ||
@@ -72,7 +84,7 @@ export function useOfflineSync() {
             errorMessage.includes('violates row-level security');
 
           if (isNonRecoverable) {
-            console.warn('Non-recoverable error, removing from queue:', errorMessage);
+            devWarn('Non-recoverable error, removing from queue:', errorMessage);
             await removeFromQueue(operation.id!);
           } else {
             const retryCount = (operation.retryCount || 0) + 1;
@@ -104,7 +116,7 @@ export function useOfflineSync() {
       await updateQueueLength();
 
     } catch (error) {
-      console.error('Queue processing error:', error);
+      devError('Queue processing error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
       setSyncError(errorMessage);
       toast.error('Failed to sync offline operations');
@@ -120,8 +132,13 @@ export function useOfflineSync() {
   const processOperation = async (operation: QueuedOperation) => {
     const { operation: opType, table, data } = operation;
 
-    const throwSupabaseError = (error: any) => {
-      const message = error?.message || error?.details || error?.hint || JSON.stringify(error) || 'Unknown database error';
+    const throwSupabaseError = (error: unknown) => {
+      const message =
+        (error as { message?: string })?.message ||
+        (error as { details?: string })?.details ||
+        (error as { hint?: string })?.hint ||
+        JSON.stringify(error) ||
+        'Unknown database error';
       throw new Error(`${opType} on ${table} failed: ${message}`);
     };
 
@@ -164,7 +181,7 @@ export function useOfflineSync() {
   const queueOperation = async (
     operation: 'create' | 'update' | 'delete',
     table: string,
-    data: any
+    data: Record<string, unknown>
   ): Promise<void> => {
     if (isOnline) {
       // If online, process immediately
@@ -172,7 +189,7 @@ export function useOfflineSync() {
         await processOperation({ operation, table, data } as QueuedOperation);
         toast.success('Operation completed successfully');
       } catch (error) {
-        console.error('Immediate operation failed:', error);
+        devError('Immediate operation failed:', error);
         // Fall back to queuing
         await addToQueue({ operation, table, data });
         await updateQueueLength();
@@ -206,7 +223,7 @@ export function useOfflineSync() {
           if (op.id) await removeFromQueue(op.id);
         }
       } catch (e) {
-        console.warn('Failed to clean up stale queue operations:', e);
+        devWarn('Failed to clean up stale queue operations:', e);
       }
       await updateQueueLength();
     };

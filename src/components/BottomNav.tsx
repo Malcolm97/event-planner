@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { FiHome, FiSearch, FiPlus, FiUser, FiSettings, FiTag, FiInfo, FiMenu, FiUsers, FiLogIn, FiLogOut } from 'react-icons/fi';
@@ -14,7 +14,72 @@ export default function BottomNav() {
   const { user } = useAuth();
   const router = useRouter();
   const currentPath = usePathname();
+  const hamburgerMenuId = 'mobile-main-menu';
+  const hamburgerMenuTitleId = 'mobile-main-menu-title';
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
+  const hamburgerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuContainerRef = useRef<HTMLDivElement | null>(null);
+  const previousFocusedElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
+    if (!isHamburgerOpen) {
+      document.body.style.overflow = previousOverflow;
+      if (previousFocusedElementRef.current) {
+        previousFocusedElementRef.current.focus();
+      }
+      return;
+    }
+
+    document.body.style.overflow = 'hidden';
+
+    previousFocusedElementRef.current = document.activeElement as HTMLElement;
+    const menu = menuContainerRef.current;
+    if (!menu) return;
+
+    const focusable = menu.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (focusable.length > 0) {
+      focusable[0].focus();
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsHamburgerOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const items = menu.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (items.length === 0) return;
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isHamburgerOpen]);
   
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -115,6 +180,7 @@ export default function BottomNav() {
           return (
             <button
               key={item.path}
+              ref={item.hamburger ? hamburgerButtonRef : undefined}
               onClick={() => {
                 if (item.hamburger) {
                   setIsHamburgerOpen(!isHamburgerOpen);
@@ -124,19 +190,22 @@ export default function BottomNav() {
               }}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all duration-200 touch-target focus-ring ${
                 isActive
-                  ? 'text-yellow-600 bg-yellow-50'
+                  ? 'text-amber-700 bg-amber-50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
-              aria-label={item.hamburger ? 'Open menu' : `Go to ${item.label}`}
+              aria-label={item.hamburger ? (isHamburgerOpen ? 'Close menu' : 'Open menu') : `Go to ${item.label}`}
+              aria-expanded={item.hamburger ? isHamburgerOpen : undefined}
+              aria-controls={item.hamburger ? hamburgerMenuId : undefined}
+              aria-haspopup={item.hamburger ? 'dialog' : undefined}
             >
               <Icon
                 size={16}
                 className={`mb-0.5 transition-colors ${
-                  isActive ? 'text-yellow-600' : 'text-gray-600'
+                  isActive ? 'text-amber-700' : 'text-gray-600'
                 }`}
               />
               <span className={`text-[10px] font-medium hidden sm:inline ${
-                isActive ? 'text-yellow-700' : 'text-gray-600'
+                isActive ? 'text-amber-800' : 'text-gray-600'
               }`}>
                 {item.label}
               </span>
@@ -147,12 +216,26 @@ export default function BottomNav() {
 
       {/* Hamburger Menu Overlay */}
       {isHamburgerOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm" onClick={() => setIsHamburgerOpen(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto transition-colors duration-300">
+        <div
+          className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsHamburgerOpen(false);
+            }
+          }}
+        >
+          <div
+            ref={menuContainerRef}
+            id={hamburgerMenuId}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={hamburgerMenuTitleId}
+            className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto transition-colors duration-300"
+          >
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Menu</h3>
+                <h3 id={hamburgerMenuTitleId} className="text-lg font-semibold text-gray-900 dark:text-white">Menu</h3>
                 <button
                   onClick={() => setIsHamburgerOpen(false)}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300"

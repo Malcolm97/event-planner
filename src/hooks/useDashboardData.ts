@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, getSupabaseConnectionStatus, USER_FIELDS } from '@/lib/supabase';
+import { supabase, TABLES, Event, Activity, User, getUserActivities, isSupabaseConfigured, getSupabaseConnectionStatus } from '@/lib/supabase';
 import { getEvents, addEvents, getUsers, addUsers, getSyncStatus, updateSyncStatus } from '@/lib/indexedDB';
 import { normalizeUser } from '@/lib/types';
+import type { User as AuthUser } from '@supabase/supabase-js';
 
 interface UseDashboardDataResult {
-  user: any;
+  user: AuthUser | null;
   userProfile: User | null;
   userEvents: Event[];
   savedEvents: Event[];
@@ -20,12 +21,17 @@ interface UseDashboardDataResult {
   lastUpdated: Date | null;
 }
 
-// Cache key for dashboard data
-const DASHBOARD_CACHE_KEY = 'dashboard-cache';
 const MIN_REFETCH_INTERVAL = 30000; // 30 seconds minimum between refetches
+const REFRESH_TRIGGER_COOLDOWN = 1500; // avoid rapid double refresh from focus + visibility events
+
+function devWarn(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(...args);
+  }
+}
 
 export function useDashboardData(): UseDashboardDataResult {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [savedEvents, setSavedEvents] = useState<Event[]>([]);
@@ -37,6 +43,7 @@ export function useDashboardData(): UseDashboardDataResult {
 
   // Refs for debouncing and preventing race conditions
   const lastFetchTimeRef = useRef<number>(0);
+  const lastRefreshTriggerRef = useRef<number>(0);
   const isFetchingRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -46,7 +53,7 @@ export function useDashboardData(): UseDashboardDataResult {
       // Try to load cached events
       const cachedEvents = await getEvents();
       if (cachedEvents && cachedEvents.length > 0) {
-        const userCachedEvents = cachedEvents.filter((e: any) => e.created_by === userId);
+        const userCachedEvents = cachedEvents.filter((e: Event) => e.created_by === userId);
         if (userCachedEvents.length > 0) {
           setUserEvents(userCachedEvents as Event[]);
         }
@@ -55,7 +62,7 @@ export function useDashboardData(): UseDashboardDataResult {
       // Try to load cached users (for profile)
       const cachedUsers = await getUsers();
       if (cachedUsers && cachedUsers.length > 0) {
-        const userProfile = cachedUsers.find((u: any) => u.id === userId);
+        const userProfile = cachedUsers.find((u: User) => u.id === userId);
         if (userProfile) {
           setUserProfile(userProfile as User);
         }
@@ -67,7 +74,7 @@ export function useDashboardData(): UseDashboardDataResult {
         setLastUpdated(new Date(syncStatus.lastSync));
       }
     } catch (err) {
-      console.warn('Failed to load cached dashboard data:', err);
+      devWarn('Failed to load cached dashboard data:', err);
     }
   }, []);
 
@@ -82,7 +89,7 @@ export function useDashboardData(): UseDashboardDataResult {
       }
       await updateSyncStatus({ lastSync: Date.now(), inProgress: false });
     } catch (err) {
-      console.warn('Failed to cache dashboard data:', err);
+      devWarn('Failed to cache dashboard data:', err);
     }
   }, []);
 
@@ -95,7 +102,7 @@ export function useDashboardData(): UseDashboardDataResult {
         .order('date', { ascending: true });
 
       if (fetchError) {
-        console.warn('Failed to fetch user events:', fetchError.message);
+        devWarn('Failed to fetch user events:', fetchError.message);
         return [];
       }
 
@@ -107,7 +114,7 @@ export function useDashboardData(): UseDashboardDataResult {
 
       return validEvents as Event[];
     } catch (err) {
-      console.warn('Failed to load user events:', err);
+      devWarn('Failed to load user events:', err);
       return [];
     }
   }, []);
@@ -121,7 +128,7 @@ export function useDashboardData(): UseDashboardDataResult {
         .order('created_at', { ascending: false });
 
       if (savedError) {
-        console.warn('Failed to fetch saved events:', savedError.message);
+        devWarn('Failed to fetch saved events:', savedError.message);
         return [];
       }
 
@@ -137,7 +144,7 @@ export function useDashboardData(): UseDashboardDataResult {
         .order('date', { ascending: true });
 
       if (eventsError) {
-        console.warn('Could not fetch event details:', eventsError.message);
+        devWarn('Could not fetch event details:', eventsError.message);
         return [];
       }
 
@@ -149,7 +156,7 @@ export function useDashboardData(): UseDashboardDataResult {
 
       return validEvents as Event[];
     } catch (err) {
-      console.warn('Failed to load saved events:', err);
+      devWarn('Failed to load saved events:', err);
       return [];
     }
   }, []);
@@ -159,12 +166,12 @@ export function useDashboardData(): UseDashboardDataResult {
       const activitiesData = await getUserActivities(userId, 20);
       return activitiesData;
     } catch (err) {
-      console.warn('Failed to load activities:', err);
+      devWarn('Failed to load activities:', err);
       return [];
     }
   }, []);
 
-  const fetchUserProfile = useCallback(async (userId: string): Promise<User | null> => {
+  const fetchUserProfile = useCallback(async (userId: string, authEmail?: string): Promise<User | null> => {
     try {
       const { data, error: fetchError } = await supabase
         .from(TABLES.USERS)
@@ -174,10 +181,10 @@ export function useDashboardData(): UseDashboardDataResult {
 
       if (fetchError) {
         if (fetchError.code === 'PGRST116') {
-          console.warn('User profile not yet created:', userId);
+          devWarn('User profile not yet created:', userId);
           return null;
         }
-        console.warn('Failed to fetch user profile:', fetchError.message);
+        devWarn('Failed to fetch user profile:', fetchError.message);
         return null;
       }
 
@@ -185,22 +192,19 @@ export function useDashboardData(): UseDashboardDataResult {
       // Database uses 'full_name' and 'avatar_url', but code may expect 'name' and 'photo_url'
       const profileData = normalizeUser(data) as User;
       
-      // Get email from auth user if not in profile
-      if (!profileData.email) {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser?.email) {
-          profileData.email = authUser.email;
-        }
+      // Use auth email passed from caller to avoid redundant auth request.
+      if (!profileData.email && authEmail) {
+        profileData.email = authEmail;
       }
       return profileData;
     } catch (err) {
-      console.warn('Failed to load user profile:', err);
+      devWarn('Failed to load user profile:', err);
       return null;
     }
   }, []);
 
   // Main data fetching function with caching
-  const fetchAllData = useCallback(async (authUser: any, isRefresh = false) => {
+  const fetchAllData = useCallback(async (authUser: AuthUser, isRefresh = false) => {
     // Prevent concurrent fetches
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
@@ -223,7 +227,7 @@ export function useDashboardData(): UseDashboardDataResult {
         fetchUserEvents(authUser.id),
         fetchSavedEvents(authUser.id),
         fetchUserActivities(authUser.id),
-        fetchUserProfile(authUser.id)
+        fetchUserProfile(authUser.id, authUser.email)
       ]);
 
       // Only update state if component is still mounted
@@ -239,7 +243,7 @@ export function useDashboardData(): UseDashboardDataResult {
         await cacheData(events, profile);
       }
     } catch (err) {
-      console.warn('Error fetching dashboard data:', err);
+      devWarn('Error fetching dashboard data:', err);
       if (mountedRef.current && !isRefresh) {
         const appError = err instanceof Error ? err : new Error(String(err));
         setError(`Failed to load dashboard: ${appError.message}`);
@@ -299,13 +303,23 @@ export function useDashboardData(): UseDashboardDataResult {
 
   // Debounced focus refetch - only refetch if more than 30 seconds have passed
   useEffect(() => {
-    const handleFocus = async () => {
-      if (user && !isFetchingRef.current) {
-        const now = Date.now();
-        if ((now - lastFetchTimeRef.current) >= MIN_REFETCH_INTERVAL) {
-          await fetchAllData(user, true);
-        }
+    const maybeRefresh = async () => {
+      if (!user || isFetchingRef.current) return;
+
+      const now = Date.now();
+      if ((now - lastRefreshTriggerRef.current) < REFRESH_TRIGGER_COOLDOWN) {
+        return;
       }
+      if ((now - lastFetchTimeRef.current) < MIN_REFETCH_INTERVAL) {
+        return;
+      }
+
+      lastRefreshTriggerRef.current = now;
+      await fetchAllData(user, true);
+    };
+
+    const handleFocus = async () => {
+      await maybeRefresh();
     };
 
     window.addEventListener('focus', handleFocus);
@@ -316,13 +330,23 @@ export function useDashboardData(): UseDashboardDataResult {
 
   // Visibility change handler for mobile
   useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && user && !isFetchingRef.current) {
-        const now = Date.now();
-        if ((now - lastFetchTimeRef.current) >= MIN_REFETCH_INTERVAL) {
-          await fetchAllData(user, true);
-        }
+    const maybeRefresh = async () => {
+      if (!user || isFetchingRef.current || document.visibilityState !== 'visible') return;
+
+      const now = Date.now();
+      if ((now - lastRefreshTriggerRef.current) < REFRESH_TRIGGER_COOLDOWN) {
+        return;
       }
+      if ((now - lastFetchTimeRef.current) < MIN_REFETCH_INTERVAL) {
+        return;
+      }
+
+      lastRefreshTriggerRef.current = now;
+      await fetchAllData(user, true);
+    };
+
+    const handleVisibilityChange = async () => {
+      await maybeRefresh();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);

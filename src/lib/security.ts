@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from './supabase';
 import { getUserFriendlyError } from './userMessages';
+import { checkRateLimit as checkIpRateLimit } from './rateLimit';
 
 /**
  * Rate Limiting Implementation
@@ -23,10 +24,6 @@ import { getUserFriendlyError } from './userMessages';
  * ```
  */
 
-// Rate limiting store - in-memory for development
-// WARNING: This will reset on server restart and won't work across multiple instances
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
 // Rate limit configuration
 const RATE_LIMITS = {
   api: { maxRequests: 100, windowMs: 15 * 60 * 1000 },
@@ -44,7 +41,7 @@ export const SECURITY_HEADERS = {
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://*.vercel.com",
+    "script-src 'self' https://*.supabase.co https://*.vercel.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
@@ -65,30 +62,7 @@ export function checkRateLimit(
              request.headers.get('x-real-ip') ||
              request.headers.get('cf-connecting-ip') ||
              'unknown';
-  const key = `${type}:${ip}`;
-  const now = Date.now();
-  const limit = RATE_LIMITS[type];
-
-  const current = rateLimitStore.get(key);
-
-  if (!current || now > current.resetTime) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetTime: now + limit.windowMs,
-    });
-    return { allowed: true, resetTime: now + limit.windowMs, remaining: limit.maxRequests - 1 };
-  }
-
-  if (current.count >= limit.maxRequests) {
-    return { allowed: false, resetTime: current.resetTime, remaining: 0 };
-  }
-
-  current.count++;
-  return {
-    allowed: true,
-    resetTime: current.resetTime,
-    remaining: limit.maxRequests - current.count
-  };
+  return checkIpRateLimit(ip, type);
 }
 
 // Check admin access - uses 'users' table
@@ -200,5 +174,7 @@ export function logSecurityEvent(
     userAgent: request?.headers.get('user-agent'),
   };
 
-  console.warn('[SECURITY]', JSON.stringify(logData, null, 2));
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('[SECURITY]', JSON.stringify(logData, null, 2));
+  }
 }

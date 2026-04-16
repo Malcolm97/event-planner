@@ -113,6 +113,14 @@ export default function EditProfilePage() {
       window.addEventListener('beforeunload', handleBeforeUnload);
     }
 
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      }
+    };
+  }, [formData.email, formData.name]);
+
+  useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -155,12 +163,6 @@ export default function EditProfilePage() {
       setLoading(false);
     };
     checkUser();
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-      }
-    };
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,27 +311,27 @@ export default function EditProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
   {/* Header removed, now rendered globally in layout */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-4 sm:mb-6">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-900 hover:text-yellow-400 bg-white bg-opacity-90 px-3 py-2 rounded-lg transition-colors"
+            className="back-button"
           >
             <FiArrowLeft size={16} />
             Back to Dashboard
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 mt-4 border border-gray-200">
-          <div className="text-center mb-6">
-            <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Edit Profile</h1>
-            <p className="text-gray-600 mt-2">Update your personal information</p>
+        <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-8 flex flex-col gap-4 mt-3 sm:mt-4 border border-gray-200">
+          <div className="text-center mb-5 sm:mb-6">
+            <h1 className="page-title text-gray-900">Edit Profile</h1>
+            <p className="page-subtitle text-gray-600 mt-2">Update your personal information</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Profile Photo Section */}
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+              <label className="form-label block mb-4">
                 Profile Photo
               </label>
               
@@ -371,7 +373,7 @@ export default function EditProfilePage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 bg-yellow-500 text-white rounded-full p-2 shadow-lg hover:bg-yellow-600 transition-colors"
+                      className="absolute bottom-0 right-0 touch-target rounded-full bg-yellow-500 text-white shadow-lg hover:bg-yellow-600 transition-colors"
                       title="Change photo"
                     >
                       <FiCamera size={16} />
@@ -418,7 +420,7 @@ export default function EditProfilePage() {
                       <button
                         type="button"
                         onClick={handleCancelPhoto}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors"
+                        className="absolute -top-1 -right-1 min-w-[32px] min-h-[32px] inline-flex items-center justify-center bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
                         title="Cancel new photo"
                       >
                         <FiX size={12} />
@@ -446,7 +448,7 @@ export default function EditProfilePage() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="touch-target inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <FiCamera size={16} />
                     {photoUrl ? 'Change Photo' : 'Upload Photo'}
@@ -461,7 +463,7 @@ export default function EditProfilePage() {
 
             <div className="flex flex-wrap -mx-2">
               <div className="w-full md:w-1/2 px-2 mb-4">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="form-label block mb-2">
                   Full Name
                 </label>
                 <input
@@ -472,12 +474,14 @@ export default function EditProfilePage() {
                   onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                   placeholder="Enter your full name"
+                  autoComplete="name"
+                  maxLength={120}
                   required
                 />
               </div>
 
               <div className="w-full md:w-1/2 px-2 mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="form-label block mb-2">
                   Email Address
                 </label>
                 <input
@@ -488,15 +492,17 @@ export default function EditProfilePage() {
                   onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                   placeholder="Enter your email address"
+                  autoComplete="email"
+                  inputMode="email"
                   required
                 />
                 {formData.email !== user.email && (
-                  <p className="text-sm text-amber-600 mt-2">⚠️ Changing your email requires verification. Check your new email for a confirmation link.</p>
+                  <p className="form-hint text-amber-600 mt-2">⚠️ Changing your email requires verification. Check your new email for a confirmation link.</p>
                 )}
               </div>
 
               <div className="w-full md:w-1/2 px-2 mb-4">
-                <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="company" className="form-label block mb-2">
                   Company
                 </label>
                 <input
@@ -511,7 +517,7 @@ export default function EditProfilePage() {
               </div>
 
               <div className="w-full md:w-1/2 px-2 mb-4">
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="phone" className="form-label block mb-2">
                   Phone Number
                 </label>
                 <input
@@ -522,12 +528,14 @@ export default function EditProfilePage() {
                   onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                   placeholder="Enter your phone number"
+                  autoComplete="tel"
+                  inputMode="tel"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="about" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="about" className="form-label block mb-2">
                 About
               </label>
               <textarea
@@ -542,7 +550,7 @@ export default function EditProfilePage() {
             </div>
 
             {/* Contact Preferences */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-gray-200 pt-5 sm:pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Preferences</h3>
               <p className="text-sm text-gray-600 mb-4">Choose how other users can contact you about your events. This information will be visible to logged-in users only.</p>
 
@@ -577,6 +585,8 @@ export default function EditProfilePage() {
                     onChange={handleChange}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                     placeholder="Enter your WhatsApp number"
+                    autoComplete="tel"
+                    inputMode="tel"
                   />
                 </div>
               </div>
@@ -597,7 +607,7 @@ export default function EditProfilePage() {
             </div>
 
             {/* Social Links */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-gray-200 pt-5 sm:pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Links</h3>
               <p className="text-sm text-gray-600 mb-4">Add your social media profiles. These will be displayed on your public creator profile.</p>
 
@@ -727,7 +737,7 @@ export default function EditProfilePage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="touch-target-md rounded-xl px-6 py-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Updating...' : 'Update Profile'}
               </button>

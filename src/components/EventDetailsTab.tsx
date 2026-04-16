@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { FiMapPin, FiCalendar, FiClock, FiBookmark, FiImage, FiCopy, FiNavigation, FiCalendar as FiCalendarAdd, FiCheck, FiDownload } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 import ShareButtons from './ShareButtons';
@@ -67,7 +68,7 @@ const EventStatusBadge: React.FC<EventStatusBadgeProps> = ({ event }) => {
   if (!status) return null;
 
   return (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${status.color} shadow-lg`}>
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full modal-caption sm:text-sm font-semibold ${status.color} shadow-lg`}>
       <span>{status.icon}</span>
       <span>{status.label}</span>
     </div>
@@ -96,7 +97,7 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`flex flex-col items-center justify-center gap-1 p-2 sm:p-3 rounded-xl transition-all duration-200 min-w-[60px] sm:min-w-[72px] ${
+      className={`flex min-h-[68px] sm:min-h-[76px] flex-col items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded-2xl transition-all duration-200 min-w-[66px] sm:min-w-[84px] ${
         active
           ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-400'
           : 'bg-white/80 backdrop-blur-sm text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
@@ -108,7 +109,7 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
       ) : (
         icon
       )}
-      <span className="text-[10px] sm:text-xs font-medium">{label}</span>
+      <span className="modal-caption sm:text-sm font-medium leading-none">{label}</span>
     </button>
   );
 };
@@ -123,6 +124,26 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
   const [copied, setCopied] = useState<'location' | null>(null);
 
   const validImageUrls = useMemo(() => getValidImageUrls(event?.image_urls), [event?.image_urls]);
+  const clampedImageIndex = validImageUrls.length > 0
+    ? Math.min(activeImageIndex, validImageUrls.length - 1)
+    : 0;
+
+  useEffect(() => {
+    if (validImageUrls.length === 0) {
+      setActiveImageIndex(0);
+      setImageLoading(false);
+      setImageError(false);
+      return;
+    }
+
+    if (activeImageIndex >= validImageUrls.length) {
+      setActiveImageIndex(validImageUrls.length - 1);
+      return;
+    }
+
+    setImageLoading(true);
+    setImageError(false);
+  }, [validImageUrls, activeImageIndex]);
 
   // Check if event is saved on component mount
   useEffect(() => {
@@ -325,20 +346,26 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
   const dateInfo = formatDateInfo();
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6">
       {/* Mobile: Status Banner - Centered */}
       <div className="flex items-center justify-center md:hidden">
         <EventStatusBadge event={event} />
       </div>
 
       {/* Two-Column Layout for Tablet/Desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-7">
         {/* Left Column: Image Gallery */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Primary Image */}
           <div
-            className="relative group rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200/50 bg-gradient-to-br from-gray-50 to-white aspect-[16/9] md:aspect-[4/3]"
-            onClick={() => onImageExpand(activeImageIndex)}
+            className={`relative group rounded-2xl overflow-hidden shadow-lg transition-all duration-300 border border-gray-200/50 bg-gradient-to-br from-gray-50 to-white aspect-[16/9] md:aspect-[4/3] ${
+              validImageUrls.length > 0 ? 'hover:shadow-xl cursor-pointer' : 'cursor-not-allowed opacity-80'
+            }`}
+            onClick={() => {
+              if (validImageUrls.length > 0) {
+                onImageExpand(clampedImageIndex);
+              }
+            }}
           >
             {/* Loading skeleton */}
             {imageLoading && (
@@ -363,20 +390,41 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
               </div>
             )}
 
-            {!imageError && validImageUrls[activeImageIndex] && (
-              <img
-                src={validImageUrls[activeImageIndex]}
-                alt={event?.name ? `${event.name} image` : 'Event Image'}
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
-                onLoad={() => {
-                  setImageLoading(false);
-                  setImageError(false);
-                }}
-                onError={() => {
-                  setImageLoading(false);
-                  setImageError(true);
-                }}
-              />
+            {!imageError && validImageUrls[clampedImageIndex] && (
+              (validImageUrls[clampedImageIndex].startsWith('data:') || validImageUrls[clampedImageIndex].startsWith('blob:')) ? (
+                <img
+                  src={validImageUrls[clampedImageIndex]}
+                  alt={event?.name ? `${event.name} image` : 'Event Image'}
+                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={() => {
+                    setImageLoading(false);
+                    setImageError(false);
+                  }}
+                  onError={() => {
+                    setImageLoading(false);
+                    setImageError(true);
+                  }}
+                />
+              ) : (
+                <Image
+                  src={validImageUrls[clampedImageIndex]}
+                  alt={event?.name ? `${event.name} image` : 'Event Image'}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  quality={80}
+                  className="object-cover transition-all duration-700 group-hover:scale-105"
+                  onLoad={() => {
+                    setImageLoading(false);
+                    setImageError(false);
+                  }}
+                  onError={() => {
+                    setImageLoading(false);
+                    setImageError(true);
+                  }}
+                />
+              )
             )}
 
             {/* Hover overlay */}
@@ -390,7 +438,16 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
             {validImageUrls.length > 1 && (
               <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                 <FiImage size={12} />
-                <span>{activeImageIndex + 1} / {validImageUrls.length}</span>
+                <span>{clampedImageIndex + 1} / {validImageUrls.length}</span>
+              </div>
+            )}
+
+            {validImageUrls.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-2xl">
+                <div className="text-center text-gray-500">
+                  <div className="text-5xl mb-3">📷</div>
+                  <p className="text-sm font-medium">No images available</p>
+                </div>
               </div>
             )}
           </div>
@@ -411,11 +468,26 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img
-                    src={imageUrl}
-                    alt={`${event?.name} thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {(imageUrl.startsWith('data:') || imageUrl.startsWith('blob:')) ? (
+                    <img
+                      src={imageUrl}
+                      alt={`${event?.name} thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={imageUrl}
+                        alt={`${event?.name} thumbnail ${index + 1}`}
+                        fill
+                        sizes="64px"
+                        quality={70}
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -423,7 +495,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
         </div>
 
         {/* Right Column: Event Details */}
-        <div className="space-y-3 md:space-y-4">
+        <div className="space-y-4 md:space-y-5">
           {/* Tablet/Desktop: Status Banner */}
           <div className="hidden md:flex items-center justify-start">
             <EventStatusBadge event={event} />
@@ -431,7 +503,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
 
           {/* Date & Time Card */}
           {dateInfo && (
-            <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl p-4 border border-indigo-200/60 shadow-sm">
+            <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl p-4 sm:p-5 border border-indigo-200/60 shadow-sm">
               {/* Same-day event - Compact display */}
               {dateInfo.isSameDay ? (
                 <div className="flex items-start gap-3">
@@ -439,23 +511,23 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                     <FiCalendar size={22} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-semibold text-sm sm:text-base">
+                    <p className="modal-section-title text-gray-900">
                       {dateInfo.fullFormattedDate}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <FiClock size={14} className="text-indigo-500" />
-                      <span className="text-gray-700 text-sm font-medium">
+                      <span className="modal-body-copy text-gray-700 font-medium">
                         {dateInfo.formattedStartTime}
                         {dateInfo.formattedEndTime && ` - ${dateInfo.formattedEndTime}`}
                       </span>
                     </div>
                     {dateInfo.duration && (
-                      <div className="mt-1.5 text-xs text-indigo-600 font-medium">
+                      <div className="mt-1.5 text-sm text-indigo-600 font-medium">
                         ⏱️ {dateInfo.duration}
                       </div>
                     )}
                     {dateInfo.relativeTime && (
-                      <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+                      <div className="mt-2 inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 modal-caption font-medium">
                         ⏰ {dateInfo.relativeTime}
                       </div>
                     )}
@@ -470,19 +542,19 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                 </div>
               ) : (
                 /* Multi-day event - Split display */
-                <div className="space-y-3">
+                <div className="space-y-3.5 sm:space-y-4">
                   {/* Start Date/Time */}
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-md">
                       <span className="text-white text-xs font-bold">START</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 font-semibold text-sm">
+                      <p className="modal-section-title text-gray-900">
                         {dateInfo.formattedStartDate}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <FiClock size={12} className="text-green-500" />
-                        <span className="text-gray-700 text-sm">{dateInfo.formattedStartTime}</span>
+                        <span className="modal-body-copy text-gray-700">{dateInfo.formattedStartTime}</span>
                       </div>
                     </div>
                   </div>
@@ -491,7 +563,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                   <div className="flex items-center gap-2 px-2">
                     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
                     {dateInfo.duration && (
-                      <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">
+                      <span className="modal-caption text-indigo-600 font-medium bg-indigo-50 px-2.5 py-1 rounded-full">
                         ⏱️ {dateInfo.duration}
                       </span>
                     )}
@@ -504,12 +576,12 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                       <span className="text-white text-xs font-bold">END</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 font-semibold text-sm">
+                      <p className="modal-section-title text-gray-900">
                         {dateInfo.formattedEndDate}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <FiClock size={12} className="text-red-500" />
-                        <span className="text-gray-700 text-sm">{dateInfo.formattedEndTime}</span>
+                        <span className="modal-body-copy text-gray-700">{dateInfo.formattedEndTime}</span>
                       </div>
                     </div>
                   </div>
@@ -517,13 +589,13 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                   {/* Relative time and calendar button */}
                   <div className="flex items-center justify-between pt-2 border-t border-indigo-200/60">
                     {dateInfo.relativeTime && (
-                      <div className="inline-flex items-center px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 modal-caption font-medium">
                         ⏰ {dateInfo.relativeTime}
                       </div>
                     )}
                     <button
                       onClick={handleAddToCalendar}
-                      className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-xs font-medium text-gray-600"
+                      className="ml-auto flex min-h-[40px] items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm font-medium text-gray-600"
                       aria-label="Add to Calendar"
                     >
                       <FiCalendarAdd size={14} />
@@ -537,24 +609,24 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
 
           {/* Location Card */}
           {event?.location && (
-            <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 rounded-2xl p-4 border border-blue-200/60 shadow-sm">
+            <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 rounded-2xl p-4 sm:p-5 border border-blue-200/60 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                   <FiMapPin size={22} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   {event?.venue && (
-                    <p className="text-gray-900 font-semibold text-sm truncate">{event.venue}</p>
+                    <p className="modal-section-title text-gray-900 truncate">{event.venue}</p>
                   )}
-                  <p className="text-gray-700 text-sm mt-0.5 break-words">{event.location}</p>
+                  <p className="modal-body-copy text-gray-700 mt-1 break-words leading-6">{event.location}</p>
                 </div>
               </div>
 
               {/* Location Actions */}
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2.5 mt-4">
                 <button
                   onClick={handleCopyLocation}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm font-medium text-gray-700"
+                  className="flex-1 flex min-h-[44px] items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm sm:text-base font-medium text-gray-700"
                 >
                   {copied === 'location' ? (
                     <>
@@ -570,7 +642,7 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
                 </button>
                 <button
                   onClick={handleGetDirections}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-500 hover:bg-blue-600 transition-all duration-200 text-sm font-medium text-white shadow-sm"
+                  className="flex-1 flex min-h-[44px] items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-500 hover:bg-blue-600 transition-all duration-200 text-sm sm:text-base font-medium text-white shadow-sm"
                 >
                   <FiNavigation size={16} />
                   <span>Directions</span>
@@ -583,8 +655,8 @@ const EventDetailsTab: React.FC<EventDetailsTabProps> = ({ event, onImageExpand 
       </div>
 
       {/* Quick Actions Bar - Full Width at Bottom */}
-      <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-3 border border-gray-200/60">
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
+      <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-gray-200/60">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
           <QuickActionButton
             icon={<FiBookmark size={18} className={bookmarked ? 'fill-current' : ''} />}
             label="Save"

@@ -4,6 +4,65 @@ import { TABLES, USER_FIELDS } from '@/lib/supabase';
 import { getUserFriendlyError } from '@/lib/userMessages';
 import { normalizeUser } from '@/lib/types';
 
+interface CreatorEventSummary {
+  id: string;
+  name: string;
+  date: string | null;
+  end_date: string | null;
+  image_url?: string | null;
+  image_urls?: string[] | null;
+  location?: string | null;
+  venue?: string | null;
+  created_by?: string | null;
+}
+
+interface CreatorSummary {
+  id: string;
+  eventsCount: number;
+  hasUpcomingEvent: boolean;
+  latestEvent: CreatorEventSummary | null;
+  allEvents: CreatorEventSummary[];
+}
+
+function isSummaryEventUpcomingOrActive(event: CreatorEventSummary): boolean {
+  if (!event?.date) return false;
+
+  const now = new Date();
+  const eventDate = new Date(event.date);
+
+  if (event.end_date) {
+    const endDate = new Date(event.end_date);
+    return now <= endDate;
+  }
+
+  const endOfEventDay = new Date(eventDate);
+  endOfEventDay.setHours(23, 59, 59, 999);
+  return now <= endOfEventDay;
+}
+
+function buildCreatorSummary(events: CreatorEventSummary[]): CreatorSummary {
+  const upcomingEvents = events.filter((event) => isSummaryEventUpcomingOrActive(event));
+  const sortedUpcoming = [...upcomingEvents].sort((a, b) => {
+    const aTime = a.date ? new Date(a.date).getTime() : Number.MAX_SAFE_INTEGER;
+    const bTime = b.date ? new Date(b.date).getTime() : Number.MAX_SAFE_INTEGER;
+    return aTime - bTime;
+  });
+  const sortedPast = [...events.filter((event) => !isSummaryEventUpcomingOrActive(event))].sort((a, b) => {
+    const aTime = a.date ? new Date(a.date).getTime() : 0;
+    const bTime = b.date ? new Date(b.date).getTime() : 0;
+    return bTime - aTime;
+  });
+  const orderedEvents = [...sortedUpcoming, ...sortedPast];
+
+  return {
+    id: events[0]?.created_by || '',
+    eventsCount: events.length,
+    hasUpcomingEvent: sortedUpcoming.length > 0,
+    latestEvent: sortedUpcoming[0] || orderedEvents[0] || null,
+    allEvents: orderedEvents.slice(0, 12),
+  };
+}
+
 // Public endpoint for fetching creator profiles
 // This endpoint is accessible without authentication and returns only public user information
 export async function GET(request: Request) {
@@ -12,6 +71,7 @@ export async function GET(request: Request) {
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
     const search = searchParams.get('search');
+    const includeEventSummary = searchParams.get('includeEventSummary') !== 'false';
 
     // Use server-side client for better security and SSR compatibility
     const supabase = await createServerSupabaseClient();
@@ -100,9 +160,52 @@ export async function GET(request: Request) {
     // Normalize the data to include both field name variants for backward compatibility
     const normalizedData = (data || []).map(user => normalizeUser(user));
 
+    let creatorsWithSummary = normalizedData;
+
+    if (includeEventSummary && normalizedData.length > 0) {
+      const creatorIds = normalizedData.map((creator) => creator.id);
+      const { data: eventsData, error: eventsError } = await supabase
+        .from(TABLES.EVENTS)
+        .select('id, name, date, end_date, image_url, image_urls, location, venue, created_by')
+        .in('created_by', creatorIds);
+
+      if (eventsError) {
+        console.error('Error fetching creator events from Supabase:', {
+          message: eventsError.message,
+          code: eventsError.code,
+          details: eventsError.details,
+          hint: eventsError.hint,
+        });
+      } else {
+        const eventsByCreator = new Map<string, CreatorEventSummary[]>();
+
+        for (const rawEvent of (eventsData || []) as CreatorEventSummary[]) {
+          if (!rawEvent?.created_by) continue;
+          const current = eventsByCreator.get(rawEvent.created_by) || [];
+          current.push(rawEvent);
+          eventsByCreator.set(rawEvent.created_by, current);
+        }
+
+        creatorsWithSummary = normalizedData
+          .filter((creator) => eventsByCreator.has(creator.id))
+          .map((creator) => {
+            const creatorEvents = eventsByCreator.get(creator.id) || [];
+            const summary = buildCreatorSummary(creatorEvents);
+
+            return {
+              ...creator,
+              eventsCount: summary.eventsCount,
+              hasUpcomingEvent: summary.hasUpcomingEvent,
+              latestEvent: summary.latestEvent,
+              allEvents: summary.allEvents,
+            };
+          });
+      }
+    }
+
     // Return data with count for pagination
     const response = NextResponse.json({
-      data: normalizedData,
+      data: creatorsWithSummary,
       count: count || 0
     });
     

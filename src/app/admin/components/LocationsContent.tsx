@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
@@ -28,7 +28,7 @@ export default function LocationsContent() {
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
-  const fetchLocations = async (page = 1, retryCount = 0) => {
+  const fetchLocations = useCallback(async (page = 1, retryCount = 0) => {
     try {
       setError(null)
       const params = new URLSearchParams({
@@ -82,7 +82,7 @@ export default function LocationsContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchTerm, toast])
 
   const handleSearch = () => {
     setLoading(true)
@@ -117,7 +117,7 @@ export default function LocationsContent() {
       channel.unsubscribe()
       clearInterval(interval)
     }
-  }, [])
+  }, [fetchLocations])
 
   if (loading) {
     return <div className="text-center py-8">Loading locations...</div>

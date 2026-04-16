@@ -143,7 +143,7 @@ export function revalidateAllEvents() {
   );
 }
 
-export default {
+const swrData = {
   useEventsSWR,
   useEventSWR,
   useStatsSWR,
@@ -151,3 +151,5 @@ export default {
   prefetchEvent,
   revalidateAllEvents,
 };
+
+export default swrData;

@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { FiX, FiEdit, FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiDollarSign } from 'react-icons/fi';
-import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
 
@@ -24,7 +23,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
     'Other': 'bg-gray-500/90 text-white',
   };
 
-  const categoryIconMap: { [key: string]: any } = {
+  const categoryIconMap: { [key: string]: React.ComponentType<{ size?: number; className?: string }> } = {
     'Music': FiMusic,
     'Art': FiImage,
     'Food': FiCoffee,
@@ -39,11 +38,12 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
   const Icon = categoryIconMap[categoryLabel] || FiStar;
 
   return (
-    <div className="relative border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/30 to-white px-4 sm:px-6 pt-5 pb-4 sm:pt-6 sm:pb-4">
+    <div className="relative border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/30 to-white px-4 sm:px-6 md:px-7 pt-5 pb-4 sm:pt-6 sm:pb-5">
+      <h2 id="event-modal-title" className="sr-only">{selectedEvent?.name}</h2>
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-3 sm:top-4 right-3 sm:right-4 z-20 p-2 sm:p-2.5 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+        className="absolute top-3 sm:top-4 right-3 sm:right-4 z-20 touch-target rounded-xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
         aria-label="Close Modal"
       >
         <FiX size={20} className="text-gray-600" />
@@ -53,7 +53,7 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       {authUser && selectedEvent?.created_by === authUser.id && (
         <Link
           href={`/dashboard/edit-event/${selectedEvent.id}`}
-          className="absolute top-3 sm:top-4 right-14 sm:right-16 z-20 p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+          className="absolute top-3 sm:top-4 right-14 sm:right-16 z-20 touch-target rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
           aria-label="Manage Event"
         >
           <FiEdit size={18} />
@@ -61,24 +61,27 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       )}
 
       {/* Mobile/Tablet Layout - Centered with proper spacing */}
-      <div className="lg:hidden flex flex-col items-center gap-3 pr-24 sm:pr-28">
+      <div className="lg:hidden flex flex-col items-center gap-3 sm:gap-3.5 pr-24 sm:pr-28">
         {/* Event Title - Centered */}
-        <div className="text-center w-full px-8">
-          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 leading-tight break-words">
+        <div className="text-center w-full px-6 sm:px-8">
+          <p className="modal-eyebrow text-gray-400 mb-1.5">
+            Event Overview
+          </p>
+          <h1 className="modal-title text-gray-900 leading-[1.15] break-words text-balance">
             {selectedEvent?.name}
           </h1>
         </div>
 
         {/* Pricing and Category - Centered below title */}
-        <div className="flex flex-wrap justify-center items-center gap-2">
+        <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-2.5">
           {/* Presale Price */}
           {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg modal-caption font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md">
               <FiDollarSign size={12} />
               Presale: K{selectedEvent.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg modal-caption font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md">
               <FiDollarSign size={12} />
               Free
             </span>
@@ -86,13 +89,13 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
 
           {/* Gate Price */}
           {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 && (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-md border border-gray-200">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg modal-caption font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-md border border-gray-200">
               Gate: K{selectedEvent.gate_price.toFixed(0)}
             </span>
           )}
 
           {/* Category */}
-          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold ${categoryColor} shadow-md`}>
+          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg modal-caption font-semibold ${categoryColor} shadow-md`}>
             <Icon size={12} />
             {categoryLabel}
           </span>
@@ -100,24 +103,27 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
       </div>
 
       {/* Desktop Layout - Centered with proper spacing */}
-      <div className="hidden lg:flex flex-col items-center gap-3">
+      <div className="hidden lg:flex flex-col items-center gap-3.5">
         {/* Event Title - Centered */}
         <div className="text-center w-full px-16">
-          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 leading-tight break-words">
+          <p className="modal-eyebrow text-gray-400 mb-2">
+            Event Overview
+          </p>
+          <h1 className="modal-title text-gray-900 leading-[1.1] break-words text-balance">
             {selectedEvent?.name}
           </h1>
         </div>
 
         {/* Pricing and Category - Centered below title */}
-        <div className="flex flex-wrap justify-center items-center gap-2">
+        <div className="flex flex-wrap justify-center items-center gap-2.5">
           {/* Presale Price */}
           {selectedEvent?.presale_price !== undefined && selectedEvent.presale_price !== null && selectedEvent.presale_price > 0 ? (
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl modal-caption sm:text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
               <FiDollarSign size={14} />
               Presale: K{selectedEvent.presale_price.toFixed(0)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl modal-caption sm:text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
               <FiDollarSign size={14} />
               Free Event
             </span>
@@ -125,13 +131,13 @@ const EventModalHeader: React.FC<EventModalHeaderProps> = ({ selectedEvent, onCl
 
           {/* Gate Price */}
           {selectedEvent?.gate_price !== undefined && selectedEvent.gate_price !== null && selectedEvent.gate_price > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg border border-gray-200">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl modal-caption sm:text-sm font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg border border-gray-200">
               Gate: K{selectedEvent.gate_price.toFixed(0)}
             </span>
           )}
 
           {/* Category */}
-          <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold ${categoryColor} shadow-lg`}>
+          <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl modal-caption sm:text-sm font-semibold ${categoryColor} shadow-lg`}>
             <Icon size={14} />
             {categoryLabel}
           </span>

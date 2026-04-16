@@ -12,6 +12,35 @@ interface PushSubscriptionData {
   };
 }
 
+interface PushSubscriptionInsert {
+  subscription: PushSubscriptionData;
+  user_agent: string;
+  user_id?: string;
+  device_id?: string;
+}
+
+interface IOSNavigator extends Navigator {
+  standalone?: boolean;
+}
+
+function devLog(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(...args);
+  }
+}
+
+function devWarn(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(...args);
+  }
+}
+
+function devError(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(...args);
+  }
+}
+
 // Generate or retrieve a unique device ID for anonymous users
 function getDeviceId(): string | null {
   if (typeof window === 'undefined') return null;
@@ -25,13 +54,6 @@ function getDeviceId(): string | null {
     localStorage.setItem(DEVICE_ID_KEY, deviceId);
   }
   return deviceId;
-}
-
-// Check if PWA is installed (standalone mode)
-function isPWAInstalled(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         (window.navigator as any).standalone === true;
 }
 
 interface UsePushNotificationsReturn {
@@ -55,11 +77,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
   // Check if push notifications are supported and register service worker
   useEffect(() => {
-    let isMounted = true;
-
     const registerServiceWorker = async () => {
       if (!('serviceWorker' in navigator)) {
-        console.log('Service workers not supported');
+        devLog('Service workers not supported');
         return;
       }
 
@@ -73,18 +93,18 @@ export function usePushNotifications(): UsePushNotificationsReturn {
             reg = await navigator.serviceWorker.register('/service-worker.js', {
               scope: '/'
             });
-            console.log('Service worker registered for push notifications:', reg.scope);
+            devLog('Service worker registered for push notifications:', reg.scope);
             
             // Wait for the service worker to be ready
             await navigator.serviceWorker.ready;
-            console.log('Service worker is ready');
+            devLog('Service worker is ready');
           } catch (regError) {
             // Service worker registration failed - this is common in some browsers
-            console.warn('Service worker registration failed (non-critical):', regError);
+            devWarn('Service worker registration failed (non-critical):', regError);
             return; // Don't throw, just return silently
           }
         } else {
-          console.log('Service worker already registered:', reg.scope);
+          devLog('Service worker already registered:', reg.scope);
           
           // Ensure it's ready
           if (!reg.active) {
@@ -93,7 +113,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         }
       } catch (err) {
         // Catch any other errors but don't crash - service worker is optional
-        console.warn('Service worker setup error (non-critical):', err);
+        devWarn('Service worker setup error (non-critical):', err);
         return;
       }
     };
@@ -104,19 +124,19 @@ export function usePushNotifications(): UsePushNotificationsReturn {
                        'Notification' in window;
 
       setIsSupported(supported);
-      console.log('Push notifications supported:', supported);
+      devLog('Push notifications supported:', supported);
 
       if (supported) {
         // Check current permission
         if ('Notification' in window) {
           setPermission(Notification.permission);
-          console.log('Current notification permission:', Notification.permission);
+          devLog('Current notification permission:', Notification.permission);
         }
 
         // Register service worker
         if ('serviceWorker' in navigator) {
           registerServiceWorker().catch((err) =>
-            console.error('Error during service worker registration:', err)
+            devError('Error during service worker registration:', err)
           );
         }
       }
@@ -124,10 +144,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
     checkSupport();
 
-    // Cleanup
-    return () => {
-      isMounted = false;
-    };
+    return undefined;
   }, []);
 
   // Check current subscription status
@@ -139,7 +156,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const subscription = await registration.pushManager.getSubscription();
       setIsSubscribed(!!subscription);
     } catch (err) {
-      console.error('Error checking subscription status:', err);
+      devError('Error checking subscription status:', err);
       setError('Failed to check subscription status');
     }
   }, [isSupported]);
@@ -216,33 +233,33 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Get service worker registration
       // On Android, ensure service worker is fully activated
       const registration = await navigator.serviceWorker.ready;
-      console.log('Service worker ready for subscription');
+      devLog('Service worker ready for subscription');
 
       // Check if already subscribed
       let subscription = await registration.pushManager.getSubscription();
-      console.log('Current subscription:', subscription ? 'exists' : 'none');
+      devLog('Current subscription:', subscription ? 'exists' : 'none');
 
       if (!subscription) {
         // Subscribe with VAPID key
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-        console.log('VAPID Public Key from env:', vapidPublicKey);
+        devLog('VAPID Public Key from env:', vapidPublicKey);
         
         if (!vapidPublicKey) {
-          console.error('Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set');
+          devError('Environment variable NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set');
           throw new Error("Notifications aren't set up properly. Please contact support.");
         }
 
         if (vapidPublicKey.length < 80) {
-          console.error('VAPID Public Key appears to be invalid or too short:', vapidPublicKey);
+          devError('VAPID Public Key appears to be invalid or too short:', vapidPublicKey);
           throw new Error("Notifications aren't set up correctly. Please contact support.");
         }
 
         let applicationServerKey;
         try {
           applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-          console.log('VAPID key successfully converted to Uint8Array');
+          devLog('VAPID key successfully converted to Uint8Array');
         } catch (keyError) {
-          console.error('Failed to convert VAPID key to Uint8Array:', keyError);
+          devError('Failed to convert VAPID key to Uint8Array:', keyError);
           throw new Error("Notifications aren't working properly. Please try again later.");
         }
 
@@ -252,9 +269,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           applicationServerKey: applicationServerKey as BufferSource
         });
         
-        console.log('Push subscription created successfully');
+        devLog('Push subscription created successfully');
       } else {
-        console.log('Already subscribed, reusing existing subscription');
+        devLog('Already subscribed, reusing existing subscription');
       }
 
       if (!subscription) {
@@ -280,7 +297,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Save subscription to database - support both logged-in users and anonymous PWA users
       const { data: { user } } = await supabase.auth.getUser();
       
-      let dbData: any = {
+      const dbData: PushSubscriptionInsert = {
         subscription: subscriptionData,
         user_agent: navigator.userAgent
       };
@@ -288,7 +305,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       if (user) {
         // Logged-in user - save with user_id
         dbData.user_id = user.id;
-        console.log('Saving subscription for logged-in user:', user.id);
+        devLog('Saving subscription for logged-in user:', user.id);
       } else {
         // Anonymous PWA user - save with device_id
         const deviceId = getDeviceId();
@@ -296,7 +313,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           throw new Error("Couldn't generate device ID. Please try again.");
         }
         dbData.device_id = deviceId;
-        console.log('Saving subscription for anonymous device:', deviceId);
+        devLog('Saving subscription for anonymous device:', deviceId);
       }
 
       const { error: dbError } = await supabase
@@ -304,21 +321,21 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         .upsert(dbData);
 
       if (dbError) {
-        console.error('Database error:', dbError);
+        devError('Database error:', dbError);
         throw new Error("Couldn't save your notification settings. Please try again.");
       }
 
-      console.log('Subscription saved to database successfully');
+      devLog('Subscription saved to database successfully');
       setIsSubscribed(true);
     } catch (err) {
       const errorMessage = getUserFriendlyError(err, "Couldn't set up notifications. Please try again.");
-      console.error('Subscription error:', errorMessage);
+      devError('Subscription error:', errorMessage);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, permission, requestPermission]);
+  }, [isSupported, requestPermission]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
@@ -333,7 +350,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (subscription) {
         await subscription.unsubscribe();
-        console.log('Push subscription unsubscribed');
+        devLog('Push subscription unsubscribed');
 
         // Remove from database - support both logged-in and anonymous users
         const { data: { user } } = await supabase.auth.getUser();
@@ -346,10 +363,10 @@ export function usePushNotifications(): UsePushNotificationsReturn {
             .eq('user_id', user.id);
 
           if (dbError) {
-            console.error('Database error during unsubscribe:', dbError);
+            devError('Database error during unsubscribe:', dbError);
             // Don't throw - subscription was already removed from browser
           } else {
-            console.log('Subscription removed from database for user:', user.id);
+            devLog('Subscription removed from database for user:', user.id);
           }
         } else {
           // Anonymous user - delete by device_id
@@ -361,21 +378,21 @@ export function usePushNotifications(): UsePushNotificationsReturn {
               .eq('device_id', deviceId);
 
             if (dbError) {
-              console.error('Database error during unsubscribe:', dbError);
+              devError('Database error during unsubscribe:', dbError);
               // Don't throw - subscription was already removed from browser
             } else {
-              console.log('Subscription removed from database for device:', deviceId);
+              devLog('Subscription removed from database for device:', deviceId);
             }
           }
         }
       } else {
-        console.log('No subscription to unsubscribe from');
+        devLog('No subscription to unsubscribe from');
       }
 
       setIsSubscribed(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe';
-      console.error('Unsubscribe error:', errorMessage);
+      devError('Unsubscribe error:', errorMessage);
       // Still mark as unsubscribed even if database removal fails
       setError(errorMessage);
       setIsSubscribed(false);

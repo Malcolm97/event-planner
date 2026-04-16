@@ -115,7 +115,7 @@ export default function AuditLogsPage() {
 
   useEffect(() => {
     fetchLogs()
-  }, [])
+  }, [fetchLogs])
 
   const renderValueChange = (log: AuditLog) => {
     if (!log.old_values && !log.new_values) return null

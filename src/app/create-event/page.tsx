@@ -85,8 +85,9 @@ export default function CreateEventPage() {
 
   // Cleanup image previews on unmount
   useEffect(() => {
+    const previewUrls = previewsRef.current;
     return () => {
-      previewsRef.current.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -271,12 +272,12 @@ export default function CreateEventPage() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {/* Back Button */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Link 
             href="/dashboard" 
-            className="inline-flex items-center gap-2 text-gray-900 hover:text-white bg-white/90 hover:bg-gray-900 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium"
+            className="back-button"
           >
             <FiArrowLeft size={18} />
             Back to Dashboard
@@ -285,16 +286,16 @@ export default function CreateEventPage() {
 
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-6 py-6 lg:px-8 lg:py-6 text-center">
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="bg-gradient-to-r from-yellow-400 to-red-500 px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-6 text-center">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
               <FiPlus className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-base sm:text-base lg:text-xl font-bold text-white mb-1">Create New Event</h1>
-            <p className="text-white/80 text-sm">Fill in the details to create your amazing event</p>
+            <h1 className="page-title text-white mb-1">Create New Event</h1>
+            <p className="page-subtitle text-white/85">Fill in the details to create your amazing event</p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-5 sm:p-6 lg:p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-6 space-y-5">
             {/* Error & Success Messages */}
             {error && (
               <AlertBanner 
@@ -505,6 +506,7 @@ export default function CreateEventPage() {
                     onChange={(e) => setPresalePrice(e.target.value)}
                     min="0"
                     step="0.01"
+                    inputMode="decimal"
                     placeholder="0.00"
                   />
                 </FormField>
@@ -521,6 +523,7 @@ export default function CreateEventPage() {
                     onChange={(e) => setGatePrice(e.target.value)}
                     min="0"
                     step="0.01"
+                    inputMode="decimal"
                     placeholder="0.00"
                   />
                 </FormField>
@@ -533,7 +536,7 @@ export default function CreateEventPage() {
               description="Add links to where this event is posted on social media"
               icon={<FiExternalLink size={20} />}
             >
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="form-hint mb-4">
                 Link to your event posts on Facebook, Instagram, TikTok, or a website. Users can view your event on these platforms.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

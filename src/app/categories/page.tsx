@@ -144,7 +144,7 @@ const allCategories = [
   { name: 'Food', icon: 'FiCoffee', color: 'bg-orange-100 text-orange-600' },
   { name: 'Technology', icon: 'FiCpu', color: 'bg-blue-100 text-blue-600' },
   { name: 'Wellness', icon: 'FiHeart', color: 'bg-green-100 text-green-600' },
-  { name: 'Comedy', icon: 'FiSmile', color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Comedy', icon: 'FiSmile', color: 'bg-amber-100 text-amber-800' },
   { name: 'Other', icon: 'FiStar', color: 'bg-gray-100 text-gray-600' },
 ];
 

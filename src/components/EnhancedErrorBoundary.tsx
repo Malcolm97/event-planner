@@ -123,11 +123,11 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
               </div>
             </div>
 
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">
+            <h1 className="page-title text-gray-900 mb-2">
               Something went wrong
             </h1>
 
-            <p className="text-gray-600 mb-6">
+            <p className="page-subtitle text-gray-600 mb-6">
               We encountered an unexpected error. This has been reported and we're working to fix it.
             </p>
 
@@ -155,7 +155,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={this.handleRetry}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="touch-target flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
               >
                 <FiRefreshCw size={16} />
                 Try Again
@@ -163,7 +163,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
               <button
                 onClick={this.handleGoHome}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="touch-target flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 transition-colors"
               >
                 <FiHome size={16} />
                 Go Home

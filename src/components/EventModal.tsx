@@ -10,7 +10,7 @@ import AboutEventTab from './AboutEventTab';
 import HostDetailsTab from './HostDetailsTab';
 import ImageModal from './ImageModal';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import { getAllImageUrls } from '@/lib/utils';
+import { getValidImageUrls } from '@/lib/utils';
 import '../components/EventModal.animations.css';
 
 interface EventModalProps {
@@ -33,10 +33,26 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   useEffect(() => {
     if (!dialogOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [dialogOpen]);
+
+  useEffect(() => {
+    if (!dialogOpen) return;
     lastActiveElement.current = document.activeElement as HTMLElement;
     if (modalRef.current) modalRef.current.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDialogOpen(false);
+      if (e.key === 'Escape') {
+        if (imageExpanded) {
+          setImageExpanded(false);
+        } else {
+          setDialogOpen(false);
+        }
+      }
       if (e.key === 'Tab') {
         // Trap focus inside modal
         const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
@@ -59,7 +75,7 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
       document.removeEventListener('keydown', handleKeyDown);
       lastActiveElement.current?.focus();
     };
-  }, [dialogOpen, setDialogOpen]);
+  }, [dialogOpen, imageExpanded, setDialogOpen]);
 
   // Error handling for missing event/host
   useEffect(() => {
@@ -89,33 +105,41 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
 
   // Navigation helper functions
   const handlePrevImage = () => {
-    const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
+    const imageUrls = getValidImageUrls(selectedEvent?.image_urls);
     if (imageUrls.length > 0) {
       setActiveImageIndex((prevIndex) => (prevIndex - 1 + imageUrls.length) % imageUrls.length);
     }
   };
 
   const handleNextImage = () => {
-    const imageUrls = getAllImageUrls(selectedEvent?.image_urls);
+    const imageUrls = getValidImageUrls(selectedEvent?.image_urls);
     if (imageUrls.length > 0) {
       setActiveImageIndex((prevIndex) => (prevIndex + 1) % imageUrls.length);
     }
   };
 
   const handleImageExpand = (index: number) => {
-    setActiveImageIndex(index);
+    const imageUrls = getValidImageUrls(selectedEvent?.image_urls);
+    if (imageUrls.length === 0) {
+      return;
+    }
+    setActiveImageIndex(Math.max(0, Math.min(index, imageUrls.length - 1)));
     setImageExpanded(true);
   };
 
   const handleImageSelect = (index: number) => {
-    setActiveImageIndex(index);
+    const imageUrls = getValidImageUrls(selectedEvent?.image_urls);
+    if (imageUrls.length === 0) {
+      return;
+    }
+    setActiveImageIndex(Math.max(0, Math.min(index, imageUrls.length - 1)));
   };
 
   if (!dialogOpen) return null;
 
   if (error) {
     return (
-      <div className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 text-center max-w-sm">
           <div className="text-5xl sm:text-6xl mb-3 sm:mb-4">❌</div>
           <h3 className="text-lg sm:text-xl font-semibold text-red-600 mb-2">Error</h3>
@@ -130,18 +154,26 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
   return (
     <div
       ref={modalRef}
-      className="fixed inset-x-0 top-14 sm:top-16 md:top-20 lg:top-0 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 lg:p-6 animate-fade-in"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
       aria-labelledby="event-modal-title"
       aria-describedby="event-modal-desc"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !imageExpanded) {
+          setDialogOpen(false);
+        }
+      }}
     >
+      <p id="event-modal-desc" className="sr-only">
+        View event details, about information, host details, and browse event images in a modal dialog.
+      </p>
       <div
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-4xl mx-auto relative animate-modal-in border border-gray-200 overflow-hidden flex flex-col"
+        className="bg-white rounded-[1.5rem] sm:rounded-[1.75rem] shadow-2xl w-full max-w-[96vw] sm:max-w-3xl md:max-w-4xl lg:max-w-4xl mx-auto relative animate-modal-in border border-white/60 overflow-hidden flex flex-col ring-1 ring-black/5"
         style={{
           minHeight: 'auto',
-          maxHeight: 'calc(79dvh - 4rem)',
+          maxHeight: 'calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
           boxSizing: 'border-box',
         }}
       >
@@ -156,24 +188,30 @@ export default function EventModal({ selectedEvent, host, dialogOpen, setDialogO
         <EventModalHeader selectedEvent={selectedEvent} onClose={() => setDialogOpen(false)} />
 
         {/* Content */}
-        <div className="event-card-modal-content flex-1 overflow-y-auto">
+        <div className="event-card-modal-content flex-1 overflow-y-auto bg-gradient-to-b from-white via-white to-gray-50/70">
           {/* Tab Navigation */}
           <EventModalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <div className="space-y-3 sm:space-y-6 px-2 sm:px-4 md:px-6 pb-3 sm:pb-6">
+          <div className="space-y-4 sm:space-y-6 px-3 sm:px-5 md:px-6 pb-4 sm:pb-6 md:pb-7">
             {/* Event Details Section */}
             {activeTab === 'event-details' && (
-              <EventDetailsTab event={selectedEvent} onImageExpand={handleImageExpand} />
+              <div role="tabpanel" id="event-details-panel" aria-labelledby="event-details-tab">
+                <EventDetailsTab event={selectedEvent} onImageExpand={handleImageExpand} />
+              </div>
             )}
 
             {/* About Event Section */}
             {activeTab === 'about-event' && (
-              <AboutEventTab event={selectedEvent} />
+              <div role="tabpanel" id="about-event-panel" aria-labelledby="about-event-tab">
+                <AboutEventTab event={selectedEvent} />
+              </div>
             )}
 
             {/* Host Details Section */}
             {activeTab === 'host-details' && (
-              <HostDetailsTab event={selectedEvent} host={host} />
+              <div role="tabpanel" id="host-details-panel" aria-labelledby="host-details-tab">
+                <HostDetailsTab event={selectedEvent} host={host} />
+              </div>
             )}
           </div>
         </div>

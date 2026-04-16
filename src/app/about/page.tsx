@@ -179,7 +179,7 @@ export default function AboutPage() {
     );
     setStats(newStats);
     setHasCache(!!(cachedEvents && cachedEvents.length > 0));
-  }, [cachedEvents, isOnline, userCount, isLoadingUserCount, eventsCount, isLoadingStats]);
+  }, [cachedEvents, isOnline, hasCache, userCount, isLoadingUserCount, eventsCount, isLoadingStats]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -189,17 +189,17 @@ export default function AboutPage() {
           <h1 className="text-display-lg text-white mb-4 sm:mb-6">
             PNG Events: Connecting Communities
           </h1>
-          <p className="text-lg sm:text-xl text-gray-100 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12">
+          <p className="page-subtitle text-gray-100 max-w-4xl mx-auto mb-8 sm:mb-12">
             Discover, create, and celebrate events that bring Papua New Guinea together. Our platform empowers everyone to share their passions and build vibrant communities.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
             <Link href="/events">
-              <Button variant="secondary" size="md" className="min-w-[160px] lg:px-8 lg:py-4">Explore Events</Button>
+              <Button variant="secondary" size="md" className="min-w-[140px]">Explore Events</Button>
             </Link>
             <Button
               variant="primary"
               size="md"
-              className="min-w-[160px] lg:px-8 lg:py-4"
+              className="min-w-[140px]"
               disabled={!isOnline}
               aria-disabled={!isOnline}
               style={!isOnline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
@@ -221,8 +221,8 @@ export default function AboutPage() {
       <section className="max-w-6xl mx-auto w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 sm:mb-8">Our Mission</h2>
-            <div className="space-y-6 text-lg text-gray-700 leading-relaxed">
+            <h2 className="section-title text-gray-900 mb-6 sm:mb-8">Our Mission</h2>
+            <div className="space-y-6 text-body-md text-gray-700">
               <p>
                 We believe that every community deserves access to vibrant, engaging events that bring people together.
                 Our mission is to democratize event discovery and creation, making it easy for anyone to find their tribe
@@ -261,8 +261,8 @@ export default function AboutPage() {
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Powerful Features for Event Management</h2>
-            <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
+            <h2 className="section-title text-gray-900 mb-4 sm:mb-6">Powerful Features for Event Management</h2>
+            <p className="page-subtitle text-gray-700 max-w-4xl mx-auto">
               Everything you need to discover, create, and manage events with ease
             </p>
           </div>
@@ -275,8 +275,8 @@ export default function AboutPage() {
                   <FiPlus className="text-white w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Create & Edit Events</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Full event management</p>
+                  <h3 className="text-heading-lg text-gray-900 mb-1">Create & Edit Events</h3>
+                  <p className="text-caption text-gray-600">Full event management</p>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-gray-700 mb-4 leading-relaxed">
@@ -295,8 +295,8 @@ export default function AboutPage() {
                   <FiSearch className="text-white w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Smart Discovery</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Find events easily</p>
+                  <h3 className="text-heading-lg text-gray-900 mb-1">Smart Discovery</h3>
+                  <p className="text-caption text-gray-600">Find events easily</p>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-gray-700 mb-4 leading-relaxed">
@@ -315,8 +315,8 @@ export default function AboutPage() {
                   <FiGrid className="text-white w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Organized Categories</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Structured event types</p>
+                  <h3 className="text-heading-lg text-gray-900 mb-1">Organized Categories</h3>
+                  <p className="text-caption text-gray-600">Structured event types</p>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-gray-700 mb-4 leading-relaxed">
@@ -335,8 +335,8 @@ export default function AboutPage() {
                   <FiUser className="text-white w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">User Profiles</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Personal event spaces</p>
+                  <h3 className="text-heading-lg text-gray-900 mb-1">User Profiles</h3>
+                  <p className="text-caption text-gray-600">Personal event spaces</p>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-gray-700 mb-4 leading-relaxed">
@@ -355,8 +355,8 @@ export default function AboutPage() {
                   <FiImage className="text-white w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Rich Media Support</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Visual event showcase</p>
+                  <h3 className="text-heading-lg text-gray-900 mb-1">Rich Media Support</h3>
+                  <p className="text-caption text-gray-600">Visual event showcase</p>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-gray-700 mb-4 leading-relaxed">
@@ -375,8 +375,8 @@ export default function AboutPage() {
                   <FiSettings className="text-white w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Personalized Settings</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Tailored experience</p>
+                  <h3 className="text-heading-lg text-gray-900 mb-1">Personalized Settings</h3>
+                  <p className="text-caption text-gray-600">Tailored experience</p>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-gray-700 mb-4 leading-relaxed">
@@ -393,7 +393,7 @@ export default function AboutPage() {
           <div className="mt-12 sm:mt-16 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 sm:p-8 border border-gray-200">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Built for Papua New Guinea</h3>
+                <h3 className="text-heading-xl text-gray-900 mb-4">Built for Papua New Guinea</h3>
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-6">
                   Our platform is specifically designed to serve PNG communities with features that understand local needs,
                   connectivity challenges, and cultural preferences. We support multiple languages and local event types.
@@ -407,12 +407,12 @@ export default function AboutPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-white rounded-xl shadow-sm">
                   <FiTrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">24/7</div>
+                  <div className="text-heading-lg text-gray-900">24/7</div>
                   <div className="text-sm text-gray-600">Available</div>
                 </div>
                 <div className="text-center p-4 bg-white rounded-xl shadow-sm">
                   <FiUsers className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-heading-lg text-gray-900">
                     {isOnline
                       ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : '1000+'))
                       : '1000+'}
@@ -429,7 +429,7 @@ export default function AboutPage() {
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Never Miss an Event</h2>
+            <h2 className="section-title text-gray-900 mb-4 sm:mb-6">Never Miss an Event</h2>
             <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
               Experience the freedom of discovering events anywhere, anytime - even without internet connection
             </p>
@@ -447,7 +447,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Smart Offline Mode</h3>
+                  <h3 className="text-heading-lg text-gray-900">Smart Offline Mode</h3>
                   <p className="text-sm sm:text-base text-gray-600">Works without internet</p>
                 </div>
               </div>
@@ -468,7 +468,7 @@ export default function AboutPage() {
                   <FiSmartphone className="text-green-600 w-6 sm:w-8 h-6 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Save to Your Phone</h3>
+                  <h3 className="text-heading-lg text-gray-900">Save to Your Phone</h3>
                   <p className="text-sm sm:text-base text-gray-600">Progressive Web App</p>
                 </div>
               </div>
@@ -489,7 +489,7 @@ export default function AboutPage() {
       <section className="w-full py-16 sm:py-20 lg:py-24 bg-gradient-to-r from-yellow-400 to-red-500">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-white">
-                <h2 className="text-2xl font-bold mb-6 sm:mb-8">Why Choose PNG Events?</h2>
+                <h2 className="section-title mb-6 sm:mb-8">Why Choose PNG Events?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
               <div className="flex flex-col items-center p-4 rounded-xl bg-white bg-opacity-10">
                 <FiHeart className="w-10 sm:w-12 h-10 sm:h-12 mb-3 sm:mb-4 text-white" />
@@ -516,8 +516,8 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gray-100 border-t border-gray-200">
         <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Ready to Get Started?</h2>
-          <p className="text-lg sm:text-xl text-gray-700 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+          <h2 className="section-title text-gray-900 mb-4 sm:mb-6">Ready to Get Started?</h2>
+            <p className="page-subtitle text-gray-700 mb-8 sm:mb-12 max-w-3xl mx-auto">
             Join {isOnline
               ? (isLoadingUserCount ? '...' : (userCount !== null ? userCount.toLocaleString() + '+' : 'thousands of'))
               : 'thousands of'} Papua New Guineans who are already discovering amazing events and
@@ -527,7 +527,7 @@ export default function AboutPage() {
             <Button
               variant="primary"
               size="md"
-              className="min-w-[180px] lg:px-8 lg:py-4"
+              className="min-w-[140px]"
               disabled={!isOnline}
               aria-disabled={!isOnline}
               style={!isOnline ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
@@ -535,7 +535,7 @@ export default function AboutPage() {
               Sign Up Now
             </Button>
             <Link href="/events">
-              <Button variant="secondary" size="md" className="min-w-[180px] lg:px-8 lg:py-4">
+              <Button variant="secondary" size="md" className="min-w-[140px]">
                 Browse Events
               </Button>
             </Link>

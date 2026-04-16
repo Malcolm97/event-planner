@@ -82,7 +82,8 @@ export default function ProfileHeader({
           <div className="flex items-center justify-between py-3">
             <button
               onClick={onBack}
-              className="inline-flex items-center gap-1.5 text-gray-600 hover:text-yellow-600 transition-colors text-sm"
+              className="back-button-subtle text-gray-600 hover:text-yellow-600 text-sm"
+              aria-label="Back to creators"
             >
               <FiArrowLeft size={16} />
               <span className="hidden sm:inline">Back</span>
@@ -98,8 +99,9 @@ export default function ProfileHeader({
             <div className="relative">
               <button
                 onClick={handleShare}
-                className="inline-flex items-center gap-1.5 text-gray-600 hover:text-yellow-600 transition-colors text-sm"
+                className="back-button-subtle text-gray-600 hover:text-yellow-600 text-sm"
                 aria-label="Share profile"
+                aria-describedby={showShareTooltip ? 'share-tooltip' : undefined}
               >
                 {copied ? (
                   <>
@@ -116,10 +118,13 @@ export default function ProfileHeader({
               
               {/* Tooltip */}
               {showShareTooltip && (
-                <div className="absolute right-0 top-full mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-20">
+                <div id="share-tooltip" role="tooltip" className="absolute right-0 top-full mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-20">
                   Link copied!
                 </div>
               )}
+              <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                {copied ? 'Profile link copied to clipboard.' : ''}
+              </div>
             </div>
           </div>
         </div>
@@ -166,7 +171,7 @@ export default function ProfileHeader({
             {/* Name with Stats - Inline */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-1">
               <div className="flex items-center justify-center sm:justify-start gap-1.5">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-gray-900 truncate">
                   {user.name || 'Unnamed Creator'}
                 </h2>
                 {isVerified && (
@@ -194,7 +199,7 @@ export default function ProfileHeader({
 
             {/* Bio - Compact */}
             {user.about && (
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{user.about}</p>
+              <p className="modal-body-copy text-gray-600 mb-3 line-clamp-2">{user.about}</p>
             )}
 
             {/* Contact & Social - Inline */}
@@ -205,8 +210,9 @@ export default function ProfileHeader({
                   {user.email && (
                     <a
                       href={`mailto:${user.email}`}
-                      className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center hover:bg-blue-100 transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 flex items-center justify-center hover:bg-blue-100 transition-colors"
                       title={`Email: ${user.email}`}
+                      aria-label={`Email ${user.name || 'creator'}`}
                     >
                       <FiMail size={14} className="text-blue-600" />
                     </a>
@@ -214,8 +220,9 @@ export default function ProfileHeader({
                   {user.phone && (
                     <a
                       href={`tel:${user.phone}`}
-                      className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center hover:bg-green-100 transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 flex items-center justify-center hover:bg-green-100 transition-colors"
                       title={`Phone: ${user.phone}`}
+                      aria-label={`Call ${user.name || 'creator'}`}
                     >
                       <FiPhone size={14} className="text-green-600" />
                     </a>
@@ -225,8 +232,9 @@ export default function ProfileHeader({
                       href={getWhatsAppUrl(user.whatsapp_number)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center hover:bg-emerald-100 transition-colors"
                       title="WhatsApp"
+                      aria-label={`WhatsApp ${user.name || 'creator'}`}
                     >
                       <FaWhatsapp size={14} className="text-emerald-600" />
                     </a>
@@ -242,7 +250,7 @@ export default function ProfileHeader({
                       href={user.social_links.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors"
                       aria-label="Facebook"
                     >
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -255,7 +263,7 @@ export default function ProfileHeader({
                       href={user.social_links.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:opacity-90 transition-opacity"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:opacity-90 transition-opacity"
                       aria-label="Instagram"
                     >
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -268,7 +276,7 @@ export default function ProfileHeader({
                       href={user.social_links.tiktok}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
                       aria-label="TikTok"
                     >
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -281,7 +289,7 @@ export default function ProfileHeader({
                       href={user.social_links.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-black transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-900 text-white flex items-center justify-center hover:bg-black transition-colors"
                       aria-label="Twitter/X"
                     >
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">

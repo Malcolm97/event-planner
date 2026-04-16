@@ -135,6 +135,8 @@ export function useOptimizedData<T>(
     isLoadMore = false,
     forceRefresh = false
   ): Promise<void> => {
+    const opts = memoizedOptions.current;
+
     // Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -189,11 +191,11 @@ export function useOptimizedData<T>(
 
       // Build API URL with optimized parameters
       const params = new URLSearchParams();
-      if (options.limit) params.set('limit', options.limit.toString());
-      if (options.offset && isLoadMore) params.set('offset', options.offset.toString());
-      if (options.fields) params.set('fields', options.fields);
-      if (options.category) params.set('category', options.category);
-      if (options.upcoming) params.set('upcoming', 'true');
+      if (opts.limit) params.set('limit', opts.limit.toString());
+      if (opts.offset && isLoadMore) params.set('offset', opts.offset.toString());
+      if (opts.fields) params.set('fields', opts.fields);
+      if (opts.category) params.set('category', opts.category);
+      if (opts.upcoming) params.set('upcoming', 'true');
 
       const apiUrl = `/api/${storeName}?${params.toString()}`;
 
@@ -277,8 +279,9 @@ export function useOptimizedData<T>(
       }
 
       // Update state
+      const currentLimit = memoizedOptions.current.limit || 50;
       setData(prevData => isLoadMore ? [...prevData, ...freshData] : freshData);
-      setHasMore(freshData.length === (options.limit || 50));
+      setHasMore(freshData.length === currentLimit);
       setTotalCount(totalRecords);
 
       // Cache data in background
@@ -325,12 +328,13 @@ export function useOptimizedData<T>(
   // Initial data load
   useEffect(() => {
     fetchData();
+    const refreshInterval = memoizedOptions.current.refreshInterval;
 
     // Set up periodic refresh if specified
-    if (options.refreshInterval && options.refreshInterval > 0) {
+    if (refreshInterval && refreshInterval > 0) {
       refreshTimeoutRef.current = setInterval(() => {
         fetchData(false, true);
-      }, options.refreshInterval);
+      }, refreshInterval);
     }
 
     return () => {
@@ -341,13 +345,15 @@ export function useOptimizedData<T>(
         clearInterval(refreshTimeoutRef.current);
       }
     };
-  }, [storeName]); // Only depend on storeName to prevent unnecessary re-fetches
+  }, [storeName, fetchData]);
 
   // Listen for cache refresh events
   useEffect(() => {
     const handleCacheRefresh = (event: CustomEvent) => {
       if (event.detail?.type === storeName || event.detail?.type === 'all') {
-        console.log(`Cache refresh triggered for ${storeName}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Cache refresh triggered for ${storeName}`);
+        }
         fetchData(false, true);
       }
     };

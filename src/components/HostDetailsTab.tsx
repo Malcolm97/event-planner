@@ -6,7 +6,7 @@ import { User } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { EventItem } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { storeSigninRedirect, ModalState } from '@/lib/utils';
+import { storeSigninRedirect } from '@/lib/utils';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
 import { getWhatsAppUrl, getEventInquiryMessage } from '@/lib/thirdPartyUtils';
 
@@ -32,13 +32,13 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4 sm:space-y-5">
       {host ? (
-        <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-xl p-4 border border-gray-200/60 shadow-sm">
+        <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-sm">
           {/* Host Profile Section */}
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 sm:gap-4 mb-5">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden shadow-sm">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden shadow-sm ring-1 ring-black/5">
                 {host?.photo_url ? (
                   <Image
                     src={host.photo_url}
@@ -55,48 +55,48 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
 
             <div className="flex-1 min-w-0">
               {host?.name && (
-                <span className="font-semibold text-sm sm:text-base text-gray-900 truncate block">{host.name}</span>
+                <span className="modal-subtitle font-semibold text-gray-900 truncate block">{host.name}</span>
               )}
 
               {host?.company && (
-                <span className="text-gray-600 text-xs sm:text-sm truncate block">{host.company}</span>
+                <span className="modal-body-copy text-gray-600 truncate block">{host.company}</span>
               )}
             </div>
           </div>
 
           {/* Host Bio */}
           {host?.about && (
-            <div className="mb-4">
-              <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">{host.about}</p>
+            <div className="mb-5">
+              <p className="modal-body-copy text-gray-700 leading-7">{host.about}</p>
             </div>
           )}
 
           {/* Contact Information */}
-          <div className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border border-gray-200/60">
+          <div className="bg-gradient-to-r from-gray-50 to-white p-3 sm:p-4 rounded-2xl border border-gray-200/60">
             {authUser ? (
               host?.contact_visibility ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {(host.contact_method === 'email' || host.contact_method === 'both') && host.email && (
                     <a
                       href={`mailto:${host.email}`}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 border border-blue-200/60"
+                      className="flex items-center gap-3 min-h-[48px] p-3 rounded-xl bg-blue-50 border border-blue-200/60 hover:bg-blue-100/70 transition-colors"
                     >
-                      <div className="w-6 h-6 rounded bg-blue-100 flex items-center justify-center">
-                        <FiMail size={12} className="text-blue-600" />
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <FiMail size={14} className="text-blue-600" />
                       </div>
-                      <span className="text-blue-700 text-xs truncate">{host.email}</span>
+                      <span className="text-blue-700 text-sm font-medium truncate">{host.email}</span>
                     </a>
                   )}
 
                   {(host.contact_method === 'phone' || host.contact_method === 'both') && host.phone && (
                     <a
                       href={`tel:${host.phone}`}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-green-50 border border-green-200/60"
+                      className="flex items-center gap-3 min-h-[48px] p-3 rounded-xl bg-green-50 border border-green-200/60 hover:bg-green-100/70 transition-colors"
                     >
-                      <div className="w-6 h-6 rounded bg-green-100 flex items-center justify-center">
-                        <FiPhone size={12} className="text-green-600" />
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                        <FiPhone size={14} className="text-green-600" />
                       </div>
-                      <span className="text-green-700 text-xs truncate">{host.phone}</span>
+                      <span className="text-green-700 text-sm font-medium truncate">{host.phone}</span>
                     </a>
                   )}
 
@@ -105,49 +105,49 @@ const HostDetailsTab: React.FC<HostDetailsTabProps> = ({ event, host }) => {
                       href={getWhatsAppUrl(host.whatsapp_number, getEventInquiryMessage(event.name || 'your event'))}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 rounded-lg bg-green-50 border border-green-200/60 hover:bg-green-100 transition-colors"
+                      className="flex items-center gap-3 min-h-[48px] p-3 rounded-xl bg-green-50 border border-green-200/60 hover:bg-green-100 transition-colors"
                     >
-                      <div className="w-6 h-6 rounded bg-green-100 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
                         <FaWhatsapp size={14} className="text-green-600" />
                       </div>
-                      <span className="text-green-700 text-xs truncate">WhatsApp</span>
+                      <span className="text-green-700 text-sm font-medium truncate">WhatsApp</span>
                     </a>
                   )}
 
                   {(!host.contact_method || host.contact_method === 'none') && !host.whatsapp_number && (
-                    <div className="col-span-full text-center py-2 px-3 bg-gray-50 border border-gray-200 rounded-lg">
-                      <p className="text-gray-500 text-xs">Host prefers not to be contacted</p>
+                    <div className="col-span-full text-center py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                      <p className="text-gray-500 text-sm">Host prefers not to be contacted</p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-3 px-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-gray-500 text-xs">Contact information private</p>
+                <div className="text-center py-4 px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                  <p className="text-gray-500 text-sm">Contact information private</p>
                 </div>
               )
             ) : (
-              <div className="text-center py-3 px-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/60 rounded-lg">
-                <p className="text-yellow-800 text-xs mb-2">
+              <div className="text-center py-4 px-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/60 rounded-xl">
+                <p className="text-yellow-800 text-sm leading-6 mb-3">
                   <span className="font-semibold">Sign in</span> to view contact info
                 </p>
                 <button
                   onClick={handleSignInClick}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-xs font-medium"
+                  className="inline-flex items-center gap-1.5 min-h-[42px] px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors text-sm font-medium"
                 >
                   Sign In
-                  <FiExternalLink size={10} />
+                  <FiExternalLink size={12} />
                 </button>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200/60 text-orange-800 px-4 py-5 rounded-xl text-center">
-          <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-orange-100 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200/60 text-orange-800 px-4 py-6 rounded-2xl text-center">
+          <div className="w-11 h-11 mx-auto mb-3 rounded-xl bg-orange-100 flex items-center justify-center">
             <FiUser size={18} className="text-orange-600" />
           </div>
-          <h3 className="font-medium text-sm mb-1">Host Unavailable</h3>
-          <p className="text-xs">
+          <h3 className="modal-section-title mb-1.5">Host Unavailable</h3>
+          <p className="modal-body-copy">
             {!isOnline ? 'Offline mode' : event?.created_by ? 'Unable to fetch' : 'Not available'}
           </p>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { User } from '@/lib/supabase';
 import { normalizeUser, EventItem } from '@/lib/types';
 import { FiChevronRight } from 'react-icons/fi';
@@ -43,6 +43,11 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
   const lastActiveElement = useRef<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(onClose, 200);
+  }, [onClose]);
+
   // Animation on mount
   useEffect(() => {
     if (isOpen) {
@@ -65,7 +70,11 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        if (!focusable || focusable.length === 0) return;
+        if (!focusable || focusable.length === 0) {
+          modalRef.current?.focus();
+          e.preventDefault();
+          return;
+        }
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.shiftKey && document.activeElement === first) {
@@ -83,7 +92,7 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
       document.removeEventListener('keydown', handleKeyDown);
       lastActiveElement.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -127,14 +136,9 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
     router.push('/signin');
   };
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 200);
-  };
-
   return (
     <div
-      className={`fixed inset-x-0 top-14 sm:top-16 lg:top-0 bottom-16 sm:bottom-20 lg:bottom-0 z-50 flex items-center justify-center p-3 sm:p-4 lg:p-6 transition-all duration-300 ${
+      className={`fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 lg:p-6 transition-all duration-300 ${
         isVisible 
           ? 'bg-black/60 backdrop-blur-sm opacity-100' 
           : 'bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none'
@@ -149,13 +153,16 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         aria-labelledby="creator-modal-title"
         aria-describedby="creator-modal-desc"
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-out ${
+        className={`relative w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden ring-1 ring-black/5 transform transition-all duration-300 ease-out ${
           isVisible 
             ? 'translate-y-0 opacity-100 scale-100' 
             : 'translate-y-8 opacity-0 scale-95'
         }`}
-        style={{ maxHeight: 'calc(90dvh - 3.5rem - 4rem - env(safe-area-inset-bottom, 0px))' }}
+        style={{ maxHeight: 'calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' }}
       >
+        <p id="creator-modal-desc" className="sr-only">
+          View the creator profile summary, social links, bio, recent events, and navigate to the full profile page.
+        </p>
         {/* Offline indicator */}
         {!isOnline && (
           <div className="w-full bg-yellow-100 text-yellow-800 text-center py-2 text-sm sm:text-base font-semibold" role="alert">
@@ -169,10 +176,10 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
         {/* Scrollable Content */}
         <div 
           ref={contentRef}
-          className="overflow-y-auto"
-          style={{ maxHeight: 'calc(90dvh - 3.5rem - 4rem - 4rem - env(safe-area-inset-bottom, 0px))' }}
+          className="overflow-y-auto bg-gradient-to-b from-white via-white to-gray-50/70"
+          style={{ maxHeight: 'calc(100dvh - 6.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' }}
         >
-          <div className="p-4 sm:p-5 space-y-4">
+          <div className="p-4 sm:p-5 md:p-6 space-y-5 sm:space-y-6">
             {/* Avatar Section */}
             <CreatorAvatarSection
               name={creatorName}
@@ -190,8 +197,9 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
 
             {/* Bio */}
             {creator.about && (
-              <div className="py-2">
-                <p className="text-gray-700 leading-relaxed text-sm">{creator.about}</p>
+              <div className="modal-section-card bg-white/80 border border-gray-100/80 shadow-sm">
+                <p className="modal-eyebrow text-gray-400 mb-2">About</p>
+                <p className="modal-body-copy text-gray-700">{creator.about}</p>
               </div>
             )}
 
@@ -204,7 +212,8 @@ export default function CreatorModal({ creator, isOpen, onClose }: CreatorModalP
             {/* View Full Profile CTA */}
             <button
               onClick={handleViewFullProfile}
-              className="w-full py-3 px-4 bg-white border-2 border-gray-200 text-gray-700 font-medium rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+              className="w-full min-h-[48px] py-3 px-4 bg-white border-2 border-gray-200 text-gray-700 font-medium rounded-2xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+              aria-label={`View full profile for ${creatorName}`}
             >
               View Full Profile
               <FiChevronRight size={16} />

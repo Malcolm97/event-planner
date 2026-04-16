@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Button from '@/components/Button';
 import { useRouter } from 'next/navigation';
@@ -25,6 +25,10 @@ const Header = React.memo(function Header() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
   const [cachedEventsCount, setCachedEventsCount] = useState(0);
+  const networkButtonRef = useRef<HTMLButtonElement | null>(null);
+  const networkMenuRef = useRef<HTMLDivElement | null>(null);
+  const profileButtonRef = useRef<HTMLButtonElement | null>(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false);
@@ -48,6 +52,44 @@ const Header = React.memo(function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isNetworkDropdownOpen) {
+      return;
+    }
+
+    const focusableItems = networkMenuRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])');
+    focusableItems?.[0]?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsNetworkDropdownOpen(false);
+        networkButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isNetworkDropdownOpen]);
+
+  useEffect(() => {
+    if (!isProfileDropdownOpen) {
+      return;
+    }
+
+    const focusableItems = profileMenuRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])');
+    focusableItems?.[0]?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsProfileDropdownOpen(false);
+        profileButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isProfileDropdownOpen]);
 
   // Check cached events count
   useEffect(() => {
@@ -164,8 +206,8 @@ const Header = React.memo(function Header() {
     },
     'has-queue': {
       icon: FiClock,
-      color: 'text-yellow-600 hover:bg-yellow-50',
-      bgClass: 'bg-yellow-100 text-yellow-600',
+      color: 'text-amber-700 hover:bg-amber-50',
+      bgClass: 'bg-amber-100 text-amber-800',
       label: 'Pending Sync',
       description: 'Changes ready to sync',
       showNotification: true,
@@ -228,10 +270,10 @@ const Header = React.memo(function Header() {
 
             {/* Centered nav for desktop */}
             <nav className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 items-center space-x-6 xl:space-x-8 mr-52">
-              <Button onClick={() => navigateWithOfflineCheck('/events', 'Events')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Events</Button>
-              <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Categories</Button>
-              <Button onClick={() => router.push('/creators')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">Creators</Button>
-              <Button onClick={() => router.push('/about')} variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-3 py-2">About</Button>
+              <Button onClick={() => navigateWithOfflineCheck('/events', 'Events')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Events</Button>
+              <Button onClick={() => navigateWithOfflineCheck('/categories', 'Categories')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Categories</Button>
+              <Button onClick={() => router.push('/creators')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Creators</Button>
+              <Button onClick={() => router.push('/about')} variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</Button>
             </nav>
 
             {/* Right side actions */}
@@ -239,9 +281,11 @@ const Header = React.memo(function Header() {
               {/* Network Status - Mobile/Tablet only */}
               <div className="relative network-dropdown lg:hidden">
                 <Button
+                  ref={networkButtonRef}
                   onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
                   variant="ghost"
-                  className={`relative flex items-center text-sm xl:text-base h-auto px-3 py-2 rounded-xl transition-all duration-200 hover:bg-gray-50 hover:scale-105 active:scale-95 ${
+                  size="sm"
+                  className={`relative flex items-center rounded-xl transition-all duration-200 hover:bg-gray-50 hover:scale-105 active:scale-95 ${
                     syncState === 'offline' ? 'text-red-600 hover:bg-red-50' :
                     syncState === 'syncing' ? 'text-blue-600 hover:bg-blue-50' :
                     syncState === 'error' ? 'text-red-600 hover:bg-red-50' :
@@ -249,7 +293,8 @@ const Header = React.memo(function Header() {
                     'text-green-600 hover:bg-green-50'
                   }`}
                   aria-expanded={isNetworkDropdownOpen}
-                  aria-haspopup="menu"
+                  aria-haspopup="dialog"
+                  aria-controls="network-status-menu"
                   title={syncState === 'offline' ? 'Offline Mode' :
                          syncState === 'syncing' ? 'Syncing...' :
                          syncState === 'error' ? 'Sync Error' :
@@ -273,16 +318,16 @@ const Header = React.memo(function Header() {
                 </Button>
 
                 {isNetworkDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 backdrop-blur-xl z-[100] animate-in slide-in-from-top-2 fade-in duration-200">
+                  <div ref={networkMenuRef} id="network-status-menu" role="dialog" aria-label="Network status panel" className="absolute right-0 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 backdrop-blur-xl z-[100] animate-in slide-in-from-top-2 fade-in duration-200">
                     {/* Header */}
                     <div className="px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-gray-50/50 to-white/50">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-xl ${
                           syncState === 'offline' ? 'bg-red-100 text-red-600' :
-                          syncState === 'syncing' ? 'bg-blue-100 text-blue-600' :
+                          syncState === 'syncing' ? 'bg-blue-100 text-blue-700' :
                           syncState === 'error' ? 'bg-red-100 text-red-600' :
-                          syncState === 'has-queue' ? 'bg-yellow-100 text-yellow-600' :
-                          'bg-green-100 text-green-600'
+                          syncState === 'has-queue' ? 'bg-amber-100 text-amber-800' :
+                          'bg-green-100 text-green-700'
                         }`}>
                           {syncState === 'offline' ? <FiWifiOff size={20} /> :
                            syncState === 'syncing' ? <FiRefreshCw size={20} className="animate-spin" /> :
@@ -393,7 +438,7 @@ const Header = React.memo(function Header() {
 
               {/* Desktop: Create Event + User Profile grouped together */}
               <div className="hidden lg:flex items-center gap-2">
-                <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="flex items-center text-sm xl:text-base">
+                <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 xl:h-5 xl:w-5 mr-1 xl:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
@@ -404,14 +449,17 @@ const Header = React.memo(function Header() {
                 {user ? (
                   <div className="relative profile-dropdown">
                     <Button
+                      ref={profileButtonRef}
                       onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                       variant="ghost"
-                      className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2 rounded-lg hover:bg-gray-100"
+                      size="sm"
+                      className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors rounded-lg hover:bg-gray-100"
                       aria-expanded={isProfileDropdownOpen}
-                      aria-haspopup="menu"
+                      aria-haspopup="dialog"
+                      aria-controls="profile-actions-menu"
                     >
                       {userPhotoUrl ? (
-                        <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} className="rounded-full inline mr-1 xl:mr-2" />
+                        <Image src={userPhotoUrl} alt="User Photo" width={24} height={24} sizes="24px" className="rounded-full inline mr-1 xl:mr-2" />
                       ) : (
                         <FiUser size={16} className="inline mr-1 xl:mr-2" />
                       )}
@@ -423,7 +471,7 @@ const Header = React.memo(function Header() {
                     </Button>
 
                     {isProfileDropdownOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-[100] backdrop-blur-sm">
+                      <div ref={profileMenuRef} id="profile-actions-menu" role="dialog" aria-label="Profile actions" className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-3 z-[100] backdrop-blur-sm">
                         <div className="px-4 py-2 border-b border-gray-100">
                           <p className="text-sm font-medium text-gray-900">{userName || 'User'}</p>
                           <p className="text-xs text-gray-500">Manage your account</p>
@@ -467,7 +515,8 @@ const Header = React.memo(function Header() {
                         router.push('/signin');
                       }}
                       variant="ghost"
-                      className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm xl:text-base h-auto px-2 py-2"
+                      size="sm"
+                      className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors"
                     >
                       <FiUser size={14} className="inline mr-1 sm:mr-2" />Sign In
                     </Button>

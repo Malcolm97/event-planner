@@ -21,13 +21,15 @@ export default function CreatorSocialLinks({ socialLinks, showSocialLinks }: Cre
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="modal-section-card bg-white/80 border border-gray-100/80 shadow-sm">
+      <p className="modal-eyebrow text-gray-400 mb-3">Social Links</p>
+      <div className="flex flex-wrap gap-2.5">
       {socialLinks.facebook && (
         <a
           href={socialLinks.facebook}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all duration-200 hover:scale-105"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all duration-200 hover:scale-105"
           aria-label="Facebook"
           onClick={(e) => e.stopPropagation()}
         >
@@ -39,7 +41,7 @@ export default function CreatorSocialLinks({ socialLinks, showSocialLinks }: Cre
           href={socialLinks.instagram}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-9 h-9 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:scale-105 transition-all duration-200"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:scale-105 transition-all duration-200"
           aria-label="Instagram"
           onClick={(e) => e.stopPropagation()}
         >
@@ -51,7 +53,7 @@ export default function CreatorSocialLinks({ socialLinks, showSocialLinks }: Cre
           href={socialLinks.tiktok}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-9 h-9 rounded-lg bg-black text-white flex items-center justify-center hover:bg-gray-800 hover:scale-105 transition-all duration-200"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-black text-white flex items-center justify-center hover:bg-gray-800 hover:scale-105 transition-all duration-200"
           aria-label="TikTok"
           onClick={(e) => e.stopPropagation()}
         >
@@ -63,13 +65,14 @@ export default function CreatorSocialLinks({ socialLinks, showSocialLinks }: Cre
           href={socialLinks.twitter}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-black hover:scale-105 transition-all duration-200"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gray-900 text-white flex items-center justify-center hover:bg-black hover:scale-105 transition-all duration-200"
           aria-label="Twitter/X"
           onClick={(e) => e.stopPropagation()}
         >
           <FaXTwitter size={14} />
         </a>
       )}
+      </div>
     </div>
   );
 }

@@ -8,12 +8,13 @@ import UserProfile from '@/components/UserProfile';
 import DashboardStats from '@/components/DashboardStats';
 import DashboardEventsSection from '@/components/DashboardEventsSection';
 import DashboardActivity from '@/components/DashboardActivity';
+import Button from '@/components/Button';
 import Link from 'next/link';
 import { FiPlus, FiEdit, FiCalendar, FiBookmark, FiClock, FiRefreshCw, FiWifi, FiWifiOff } from 'react-icons/fi';
 import { isEventUpcomingOrActive } from '@/lib/utils';
 import { EventItem } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic';
@@ -37,8 +38,44 @@ export default function DashboardPage() {
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
+  const [telemetryHealth, setTelemetryHealth] = useState<'good' | 'fair' | 'poor' | 'unknown'>('unknown');
+  const [telemetryWindow, setTelemetryWindow] = useState(60);
   const pullStartY = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTelemetryHealth = async () => {
+      try {
+        const response = await fetch('/api/client-telemetry/health?minutes=60', {
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+
+        if (!isActive) return;
+        const status = result?.data?.status;
+        const windowMinutes = result?.data?.windowMinutes;
+        if (status === 'good' || status === 'fair' || status === 'poor') {
+          setTelemetryHealth(status);
+        }
+        if (typeof windowMinutes === 'number') {
+          setTelemetryWindow(windowMinutes);
+        }
+      } catch {
+        // Health indicator is best-effort only.
+      }
+    };
+
+    loadTelemetryHealth();
+    const timer = setInterval(loadTelemetryHealth, 60 * 1000);
+
+    return () => {
+      isActive = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -101,7 +138,7 @@ export default function DashboardPage() {
           className="text-center max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg"
         >
           <div className="text-6xl mb-6">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Unable to load dashboard</h2>
+          <h2 className="section-title text-gray-900 mb-4">Unable to load dashboard</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-y-3">
             <motion.button
@@ -153,6 +190,9 @@ export default function DashboardPage() {
             exit={{ opacity: 0, y: -50 }}
             transition={{ rotate: { duration: 0.5, repeat: isRefreshing ? Infinity : 0 } }}
             className="fixed top-0 left-0 right-0 z-50 flex justify-center py-4"
+            role="status"
+            aria-live="polite"
+            aria-label={isRefreshing ? 'Refreshing dashboard data' : 'Pull to refresh'}
           >
             <div className="bg-white rounded-full p-3 shadow-lg">
               <FiRefreshCw className="w-6 h-6 text-yellow-500" />
@@ -170,9 +210,9 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto lg:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex justify-between items-center py-3 sm:py-4 lg:py-4">
             <div>
-              <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="page-title text-gray-900">Dashboard</h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-gray-600 text-sm">Manage your events and profile</p>
+                <p className="page-subtitle text-gray-600">Manage your events and profile</p>
                 {/* Online/Offline indicator */}
                 <motion.div
                   initial={{ scale: 0 }}
@@ -195,6 +235,24 @@ export default function DashboardPage() {
                     </>
                   )}
                 </motion.div>
+
+                <div
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    telemetryHealth === 'good'
+                      ? 'bg-green-100 text-green-700'
+                      : telemetryHealth === 'fair'
+                        ? 'bg-amber-100 text-amber-700'
+                        : telemetryHealth === 'poor'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-600'
+                  }`}
+                  title={`Creator/Profile telemetry health in the last ${telemetryWindow} minutes`}
+                  aria-label={`Creator and profile telemetry health is ${telemetryHealth} over the last ${telemetryWindow} minutes`}
+                >
+                  <span className="hidden sm:inline">Creator/Profile</span>
+                  <span className="sm:hidden">CP</span>
+                  <span className="capitalize">{telemetryHealth}</span>
+                </div>
               </div>
             </div>
             
@@ -204,7 +262,7 @@ export default function DashboardPage() {
               whileTap={{ scale: 0.95 }}
               onClick={() => refetch()}
               disabled={isRefreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium transition-colors disabled:opacity-50"
+              className="touch-target flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium transition-colors disabled:opacity-50"
             >
               <motion.div
                 animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
@@ -254,14 +312,13 @@ export default function DashboardPage() {
               className="card p-4 sm:p-6 lg:p-8"
             >
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Profile</h2>
-                <Link
-                  href="/dashboard/edit-profile"
-                  className="btn-ghost text-xs sm:text-sm gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2"
-                >
-                  <FiEdit size={14} className="sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Edit Profile</span>
-                </Link>
+                <h2 className="section-title text-gray-900">Profile</h2>
+                <Button asChild variant="ghost" size="sm" className="gap-1.5 sm:gap-2">
+                  <Link href="/dashboard/edit-profile">
+                    <FiEdit size={14} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Edit Profile</span>
+                  </Link>
+                </Button>
               </div>
               <UserProfile userProfile={userProfile} />
             </motion.div>
@@ -273,7 +330,7 @@ export default function DashboardPage() {
               transition={{ delay: 0.3 }}
               className="card p-4 sm:p-6"
             >
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h3>
+              <h3 className="section-title text-gray-900 mb-3 sm:mb-4">Quick Actions</h3>
               <div className="space-y-2 sm:space-y-3">
                 <Link
                   href="/create-event"

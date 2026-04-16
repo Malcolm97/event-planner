@@ -1,23 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppFooter from '@/components/AppFooter';
-import { supabase, TABLES, User } from '@/lib/supabase';
-import { normalizeUser } from '@/lib/types';
-import { FiSearch, FiUser, FiCalendar, FiMapPin, FiClock } from 'react-icons/fi';
+import { User } from '@/lib/supabase';
+import { FiSearch, FiCalendar } from 'react-icons/fi';
 import Image from 'next/image';
-import Link from 'next/link';
 import CreatorModal from '@/components/CreatorModal';
 import { useOfflineFirstData } from '@/hooks/useOfflineFirstData';
 import { useNetworkStatus } from '@/context/NetworkStatusContext';
-import { isEventUpcomingOrActive } from '@/lib/utils';
+import { reportClientTelemetry } from '@/lib/clientTelemetry';
 
 // Base64 encoded SVG for a default user avatar
 const DEFAULT_AVATAR_SVG_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIjk5YTNhZiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiLz4KICA8cGF0aCBkPSJNMTIgMTRjLTQuNDE4IDAtOCAyLjIzOS04IDV2MWgxNnYtMWMwLTIuNzYxLTMuNTgyLTUtOC01eiIvPgo8L3N2Zz4=`;
-
-// Default placeholder image for events
-const DEFAULT_EVENT_IMAGE = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgODAwIDYwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiNlN2U3ZTciLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiM5Y2EzYWYiPkV2ZW50PC90ZXh0Pjwvc3ZnPg==`;
 
 interface CreatorWithEvents extends User {
   eventsCount: number;
@@ -34,87 +29,42 @@ interface CreatorWithEvents extends User {
 export default function CreatorsPage() {
   const searchParams = useSearchParams();
   const { isOnline } = useNetworkStatus();
-  // Use 'creators' endpoint which is a public API that doesn't require admin auth
-  const { data: users = [], isLoading: usersLoading } = useOfflineFirstData<User>('creators');
-  const { data: events = [] } = useOfflineFirstData(TABLES.EVENTS);
-  const [creators, setCreators] = useState<CreatorWithEvents[]>([]);
-  const [filteredCreators, setFilteredCreators] = useState<CreatorWithEvents[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: creatorsData = [], isLoading: usersLoading } = useOfflineFirstData<CreatorWithEvents>('creators');
   const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedCreator, setSelectedCreator] = useState<CreatorWithEvents | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Process creators data from cached users and events
-  useEffect(() => {
-    if (usersLoading) return;
+  const creators = useMemo<CreatorWithEvents[]>(() => {
+    if (usersLoading || creatorsData.length === 0) {
+      return [];
+    }
 
-    const processCreators = async () => {
-      try {
-        setLoading(true);
-
-        // Get all users who have created events
-        const creatorIds = [...new Set(events.map((event: any) => event.created_by).filter(Boolean))];
-
-        if (creatorIds.length === 0) {
-          setCreators([]);
-          setFilteredCreators([]);
-          setLoading(false);
-          return;
+    return creatorsData
+      .filter((creator) => (creator.eventsCount || 0) > 0)
+      .sort((a, b) => {
+        if (a.hasUpcomingEvent !== b.hasUpcomingEvent) {
+          return a.hasUpcomingEvent ? -1 : 1;
         }
-
-        // Filter users to only creators and normalize their data
-        const creatorsData = users
-          .filter(user => creatorIds.includes(user.id))
-          .map(user => normalizeUser(user));
-
-        // Add event data to creators
-        const creatorsWithData = creatorsData.map(creator => {
-          const creatorEvents = events.filter((event: any) => event.created_by === creator.id);
-          const eventsCount = creatorEvents.length;
-          // Use proper timing logic - event is upcoming/current if it hasn't ended yet
-          const upcomingEvents = creatorEvents.filter((event: any) =>
-            isEventUpcomingOrActive(event)
-          );
-          const latestEvent = upcomingEvents[0] || creatorEvents[0];
-          const hasUpcomingEvent = upcomingEvents.length > 0;
-
-          return {
-            ...creator,
-            eventsCount,
-            latestEvent,
-            allEvents: creatorEvents,
-            hasUpcomingEvent
-          };
+        if (a.eventsCount !== b.eventsCount) {
+          return b.eventsCount - a.eventsCount;
+        }
+        return (a.name || '').localeCompare(b.name || '');
         });
+      }, [creatorsData, usersLoading]);
 
-        setCreators(creatorsWithData);
-        setFilteredCreators(creatorsWithData);
-      } catch (error) {
-        console.error('Error processing creators:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loading = usersLoading;
 
-    processCreators();
-  }, [users, events, usersLoading]);
-
-  // Memoized filtered creators list with proper dependency array
-  const filteredCreatorsList = useMemo(() => {
-    if (!searchTerm) return creators;
+  const filteredCreators = useMemo(() => {
+    if (!deferredSearchTerm) return creators;
     
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = deferredSearchTerm.toLowerCase();
     return creators.filter(creator =>
       creator.name?.toLowerCase().includes(searchLower) ||
       creator.company?.toLowerCase().includes(searchLower) ||
       creator.about?.toLowerCase().includes(searchLower)
     );
-  }, [creators, searchTerm]);
-
-  // Sync memoized result to state for rendering
-  useEffect(() => {
-    setFilteredCreators(filteredCreatorsList);
-  }, [filteredCreatorsList]);
+  }, [creators, deferredSearchTerm]);
 
   // Check for modal state in URL parameters (after sign-in redirect)
   useEffect(() => {
@@ -134,10 +84,32 @@ export default function CreatorsPage() {
           }
         }
       } catch (error) {
-        console.error('Error parsing modal state:', error);
+        reportClientTelemetry({
+          route: '/creators',
+          category: 'warning',
+          message: 'Failed to parse creator modal state',
+          details: {
+            modalStateParam,
+            error: error instanceof Error ? error.message : 'Unknown parse error',
+          },
+        });
       }
     }
   }, [searchParams, creators]);
+
+  useEffect(() => {
+    if (usersLoading || !isOnline) return;
+    if (creatorsData.length > 0) return;
+
+    reportClientTelemetry({
+      route: '/creators',
+      category: 'info',
+      message: 'Creators page returned no creator records while online',
+      details: {
+        creatorsDataLength: creatorsData.length,
+      },
+    });
+  }, [creatorsData.length, isOnline, usersLoading]);
 
   const handleCreatorClick = (creator: CreatorWithEvents) => {
     setSelectedCreator(creator);
@@ -149,7 +121,7 @@ export default function CreatorsPage() {
       {/* Hero Section */}
       <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-300 to-red-600 border-b border-black dark:border-gray-700">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-base sm:text-base lg:text-2xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight">
+          <h1 className="page-title text-white mb-4 sm:mb-6">
             Event Creators
           </h1>
           <p className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed mb-8">
@@ -159,14 +131,29 @@ export default function CreatorsPage() {
           {/* Search Bar */}
           <div className="w-full max-w-md mx-auto">
             <div className="relative">
+              <label htmlFor="creator-search" className="sr-only">
+                Search creators by name, company, or bio
+              </label>
               <input
                 type="text"
+                id="creator-search"
+                aria-label="Search creators"
                 placeholder="Search creators..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 pl-12 text-base border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-white focus:border-white transition-all duration-200 placeholder-gray-500 shadow-lg"
               />
               <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 hover:text-gray-800 px-2 py-1 rounded-md hover:bg-gray-100"
+                  aria-label="Clear creator search"
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -175,13 +162,29 @@ export default function CreatorsPage() {
       {/* Creators Grid */}
       <section className="max-w-7xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto mb-6"></div>
-            <p className="text-gray-600 text-lg">Loading creators...</p>
+          <div className="py-6 sm:py-8" role="status" aria-live="polite" aria-label="Loading creators">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={`creator-skeleton-${index}`}
+                  className="bg-white rounded-2xl lg:rounded-3xl border border-gray-200 p-5 sm:p-6 lg:p-7 xl:p-8 animate-pulse"
+                >
+                  <div className="text-center">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-xl lg:rounded-2xl bg-gray-200 mx-auto mb-4 lg:mb-5" />
+                    <div className="h-5 sm:h-6 bg-gray-200 rounded-lg w-3/4 mx-auto mb-3" />
+                    <div className="h-4 bg-gray-100 rounded-lg w-2/3 mx-auto mb-2" />
+                    <div className="h-4 bg-gray-100 rounded-lg w-1/2 mx-auto mb-4" />
+                    <div className="h-24 lg:h-28 w-full bg-gray-100 rounded-lg mb-3" />
+                    <div className="h-8 bg-gray-200 rounded-full w-28 mx-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : filteredCreators.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">👥</div>
+            <div className="text-6xl mb-4" aria-hidden="true">👥</div>
+            <span className="sr-only">No creators found</span>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchTerm ? 'No creators found' : 'No creators available'}
             </h3>
@@ -192,7 +195,7 @@ export default function CreatorsPage() {
         ) : (
           <>
             <div className="text-center mb-8">
-              <p className="text-gray-600">
+              <p className="text-gray-600" aria-live="polite">
                 Showing {filteredCreators.length} creator{filteredCreators.length !== 1 ? 's' : ''}
                 {searchTerm && ` for "${searchTerm}"`}
               </p>
@@ -200,10 +203,12 @@ export default function CreatorsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
               {filteredCreators.map((creator) => (
-                <div
+                <button
+                  type="button"
                   key={creator.id}
                   onClick={() => handleCreatorClick(creator)}
-                  className="bg-white rounded-2xl lg:rounded-3xl shadow-md hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-yellow-400 group p-5 sm:p-6 lg:p-7 xl:p-8 transform hover:scale-[1.02] lg:hover:scale-[1.03]"
+                  className="bg-white rounded-2xl lg:rounded-3xl shadow-md hover:shadow-xl lg:hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-yellow-400 group p-5 sm:p-6 lg:p-7 xl:p-8 transform hover:scale-[1.02] lg:hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 text-left"
+                  aria-label={`View ${creator.name || 'creator'} profile with ${creator.eventsCount} events`}
                 >
                   <div className="text-center">
                     {/* Profile Picture with Status Indicator */}
@@ -216,6 +221,7 @@ export default function CreatorsPage() {
                             width={96}
                             height={96}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <Image
@@ -229,7 +235,10 @@ export default function CreatorsPage() {
                       </div>
                       {/* Status Indicator - Green dot for upcoming events */}
                       {creator.hasUpcomingEvent && (
-                        <div className="absolute bottom-1 right-1 sm:bottom-1 sm:right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" title="Has upcoming events"></div>
+                        <>
+                          <div className="absolute bottom-1 right-1 sm:bottom-1 sm:right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" title="Has upcoming events"></div>
+                          <span className="sr-only">Has upcoming events</span>
+                        </>
                       )}
                     </div>
 
@@ -260,7 +269,9 @@ export default function CreatorsPage() {
                           alt={creator.latestEvent.name || 'Event'}
                           fill
                           className="object-cover"
-                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 320px"
+                          quality={75}
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                         <div className="absolute bottom-2 left-2 right-2 text-white text-xs font-medium truncate">
@@ -279,7 +290,7 @@ export default function CreatorsPage() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </>

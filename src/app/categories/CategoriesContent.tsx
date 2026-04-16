@@ -92,14 +92,14 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Category Header */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-10 sm:mb-12">
         <div className="flex items-center justify-center gap-3 mb-4">
           <Icon className="w-8 h-8 text-yellow-500" />
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="page-title text-gray-900">
             {queryCategory || 'All Events'}
           </h1>
         </div>
-        <p className="text-lg text-gray-600">
+        <p className="page-subtitle text-gray-600">
           {queryCategory
             ? `Discover amazing ${queryCategory.toLowerCase()} events happening near you`
             : 'Browse all events by category'}
@@ -138,7 +138,7 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
       {/* Events List */}
       {upcomingEvents.length > 0 && (
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Events</h2>
+          <h2 className="section-title text-gray-900 mb-6">Upcoming Events</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingEvents.map(event => (
               <EventCard
@@ -158,7 +158,7 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
       {/* No Events Message */}
       {!upcomingEvents.length && (
         <div className="text-center py-12">
-          <p className="text-xl text-gray-600">
+          <p className="text-body-lg text-gray-600">
             {queryCategory ? `No ${queryCategory.toLowerCase()} events found` : 'No events found'}
           </p>
         </div>

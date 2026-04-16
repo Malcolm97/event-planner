@@ -9,19 +9,19 @@ interface CreatorModalHeaderProps {
 
 export default function CreatorModalHeader({ onClose }: CreatorModalHeaderProps) {
   return (
-    <div className="relative h-14 sm:h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
+    <div className="relative h-16 sm:h-[4.5rem] bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex-shrink-0">
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200"
+        className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 touch-target rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
         aria-label="Close modal"
       >
-        <FiX size={16} />
+        <FiX size={18} />
       </button>
 
       {/* Title badge */}
-      <div className="absolute bottom-3 left-4">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/25 backdrop-blur-md text-white text-xs font-medium">
+      <div className="absolute bottom-3.5 left-4 sm:left-5">
+        <div className="inline-flex items-center gap-1.5 modal-pill bg-white/25 backdrop-blur-md text-white shadow-lg">
           <FiUser size={12} />
           Event Creator
         </div>

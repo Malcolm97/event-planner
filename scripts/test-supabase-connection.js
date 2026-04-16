@@ -103,7 +103,13 @@ async function testAuthentication() {
     const { data, error } = await supabase.auth.getUser();
     
     if (error) {
-      console.log(`  ❌ Authentication failed: ${error.message}`);
+      // No active session is expected for this non-interactive smoke test.
+      if (error.message?.toLowerCase().includes('auth session missing')) {
+        console.log('  ⚠️  No active auth session (expected for CLI smoke test)');
+        return true;
+      }
+
+      console.log(`  ❌ Authentication client check failed: ${error.message}`);
       return false;
     }
 
@@ -166,7 +172,7 @@ async function runTests() {
 
   console.log('\n📊 Test Summary:');
   console.log(`  Database Connection: ${dbConnected ? '✅ PASS' : '❌ FAIL'}`);
-  console.log(`  Authentication: ${authWorking ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`  Authentication Client: ${authWorking ? '✅ PASS' : '❌ FAIL'}`);
   console.log(`  Required Tables: ${tablesExist ? '✅ PASS' : '❌ FAIL'}`);
 
   if (dbConnected && authWorking && tablesExist) {

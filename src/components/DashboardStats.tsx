@@ -76,12 +76,12 @@ export default function DashboardStats({ userEvents, savedEvents, loading = fals
           className="bg-white rounded-2xl p-4 sm:p-6 lg:p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
         >
           <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-xs sm:text-sm font-medium text-gray-600">{stat.label}</span>
+            <span className="card-meta font-medium text-gray-600">{stat.label}</span>
             <div className={`p-2 rounded-lg ${stat.bgColor}`}>
               <stat.icon className={`w-5 h-5 text-white`} />
             </div>
           </div>
-          <div className="text-base sm:text-base lg:text-xl font-bold text-gray-900">
+          <div className="section-title text-gray-900">
             {stat.value}
           </div>
         </div>

@@ -34,6 +34,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  ArrowLeft,
   Monitor,
   Bell,
   BellOff,
@@ -355,26 +356,26 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-2xl mx-auto w-full flex-1 py-10 px-2 sm:px-4 flex flex-col">
+      <div className="max-w-2xl mx-auto w-full flex-1 py-6 sm:py-10 px-3 sm:px-4 flex flex-col">
         {/* Back Button */}
-        <Button
+        <button
           onClick={() => router.back()}
-          variant="ghost"
-          size="sm"
-          className="mb-6 self-start"
+          className="back-button mb-6 self-start"
           aria-label="Back"
+          type="button"
         >
-          ← Back
-        </Button>
-        <h1 className="text-base sm:text-base lg:text-xl font-bold mb-6 text-center text-gray-900 dark:text-white">Settings</h1>
-        <div className="grid gap-8">
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+        <h1 className="page-title mb-6 text-center text-gray-900 dark:text-white">Settings</h1>
+        <div className="grid gap-6 sm:gap-8">
 
           {/* Appearance Section */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100 dark:border-gray-700"
+            className="rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-5 sm:p-8 flex flex-col gap-5 sm:gap-6 border border-gray-100 dark:border-gray-700"
           >
             <div className="flex items-center gap-3 mb-2">
               <Settings className="w-6 h-6 text-yellow-600" />
@@ -382,7 +383,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Theme Selection */}
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
               <div className="flex items-center gap-3 mb-3">
                 {theme === 'light' ? (
                   <Sun className="w-5 h-5 text-yellow-500" />
@@ -437,7 +438,7 @@ export default function SettingsPage() {
 
             {/* Landing Page Selector */}
             <motion.div
-              className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50"
+              className="p-3.5 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50"
             >
               <div className="flex items-center gap-3 mb-3">
                 <Home className="w-5 h-5 text-yellow-600" />
@@ -462,7 +463,7 @@ export default function SettingsPage() {
 
             {/* Language Selector (Disabled) */}
             <motion.div
-              className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 opacity-60"
+              className="p-3.5 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 opacity-60"
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-2xl">🌐</span>
@@ -486,7 +487,7 @@ export default function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100 dark:border-gray-700"
+            className="rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-5 sm:p-8 flex flex-col gap-5 sm:gap-6 border border-gray-100 dark:border-gray-700"
           >
             <div className="flex items-center gap-3 mb-2">
               <Bell className="w-6 h-6 text-blue-600" />
@@ -497,7 +498,7 @@ export default function SettingsPage() {
               {/* Push Notifications Toggle */}
               {pushSupported && (
                 <motion.div
-                  className={`p-4 rounded-xl transition-colors ${isPWA
+                  className={`p-3.5 sm:p-4 rounded-xl transition-colors ${isPWA
                     ? 'bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
                     : 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
                     }`}
@@ -568,7 +569,7 @@ export default function SettingsPage() {
 
               {/* Offline Notifications Toggle */}
               <motion.div
-                className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   {offlineNotif ? (
@@ -599,7 +600,7 @@ export default function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-6 sm:p-8 flex flex-col gap-6 border border-gray-100 dark:border-gray-700"
+            className="rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-5 sm:p-8 flex flex-col gap-5 sm:gap-6 border border-gray-100 dark:border-gray-700"
           >
             <div className="flex items-center gap-3 mb-2">
               <Database className="w-6 h-6 text-purple-600" />
@@ -608,7 +609,7 @@ export default function SettingsPage() {
 
             {/* Auto Sync Toggle */}
             <motion.div
-              className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <RefreshCw className="w-5 h-5 text-blue-600" />
@@ -760,27 +761,27 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <motion.div>
                   <Link href="/dashboard/edit-profile">
-                    <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-800/40 dark:hover:to-blue-700/40 border-blue-200 dark:border-blue-700 transition-all">
+                    <Button variant="secondary" size="md" className="w-full min-h-[72px] sm:min-h-[76px] flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-800/40 dark:hover:to-blue-700/40 border-blue-200 dark:border-blue-700 transition-all">
                       <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                      <span className="font-medium text-gray-800 dark:text-white">Edit Profile</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-white">Edit Profile</span>
                     </Button>
                   </Link>
                 </motion.div>
 
                 <motion.div>
                   <Link href="/dashboard/update-password">
-                    <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-800/40 dark:hover:to-orange-700/40 border-orange-200 dark:border-orange-700 transition-all">
+                    <Button variant="secondary" size="md" className="w-full min-h-[72px] sm:min-h-[76px] flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-800/40 dark:hover:to-orange-700/40 border-orange-200 dark:border-orange-700 transition-all">
                       <Settings className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                      <span className="font-medium text-gray-800 dark:text-white">Change Password</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-white">Change Password</span>
                     </Button>
                   </Link>
                 </motion.div>
 
                 <motion.div>
                   <Link href="/dashboard">
-                    <Button variant="secondary" className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800/40 dark:hover:to-green-700/40 border-green-200 dark:border-green-700 transition-all">
+                    <Button variant="secondary" size="md" className="w-full min-h-[72px] sm:min-h-[76px] flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800/40 dark:hover:to-green-700/40 border-green-200 dark:border-green-700 transition-all">
                       <Grid3X3 className="w-6 h-6 text-green-600 dark:text-green-400" />
-                      <span className="font-medium text-gray-800 dark:text-white">Dashboard</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-white">Dashboard</span>
                     </Button>
                   </Link>
                 </motion.div>

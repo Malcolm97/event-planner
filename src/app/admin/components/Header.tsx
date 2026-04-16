@@ -21,7 +21,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu size={20} />
           </button>
-          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="page-title text-gray-900">Admin Dashboard</h1>
         </div>
 
         <div className="flex items-center space-x-3">

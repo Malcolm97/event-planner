@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FiX, FiZoomIn, FiZoomOut, FiRotateCcw } from 'react-icons/fi';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FiX, FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import { EventItem } from '@/lib/types';
 
 import { getValidImageUrls } from '@/lib/utils';
@@ -26,7 +26,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ src, alt, isActive, onCli
 
   return (
     <div
-      className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
+      className={`relative flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
         isActive
           ? 'border-white scale-105 shadow-white/50'
           : 'border-white/30 hover:border-white/70'
@@ -76,6 +76,9 @@ const ImageModal: React.FC<ImageModalProps> = ({
 }) => {
   const allImageUrls = getValidImageUrls(event?.image_urls);
   const hasImages = allImageUrls.length > 0;
+  const clampedImageIndex = hasImages
+    ? Math.max(0, Math.min(activeImageIndex, allImageUrls.length - 1))
+    : 0;
 
   // All hooks must be called before any conditional returns
   const [imageLoading, setImageLoading] = useState(true);
@@ -85,15 +88,19 @@ const ImageModal: React.FC<ImageModalProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const touchStartRef = useRef({ x: 0, y: 0 });
+  const touchLastRef = useRef({ x: 0, y: 0 });
+  const touchActionRef = useRef<'swipe' | 'pan' | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Determine the current image URL and alt text
   let currentImageUrl = '';
   let currentImageAlt = 'Event Image';
 
   if (allImageUrls.length > 0) {
-    const safeIndex = activeImageIndex % allImageUrls.length;
+    const safeIndex = clampedImageIndex;
     currentImageUrl = allImageUrls[safeIndex];
     currentImageAlt = event?.name ? `${event.name} image ${safeIndex + 1}` : 'Event Image';
   }
@@ -104,10 +111,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
     setPan({ x: 0, y: 0 });
     setImageLoading(true);
     setImageError(false);
-  }, [activeImageIndex]);
+  }, [clampedImageIndex]);
 
   // Handle zoom controls with bounds checking
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     setZoom(prev => {
       const oldZoom = prev;
       const newZoom = Math.min(prev * 1.2, 3);
@@ -122,9 +129,9 @@ const ImageModal: React.FC<ImageModalProps> = ({
       }
       return newZoom;
     });
-  };
+  }, [mousePos.x, mousePos.y]);
 
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     setZoom(prev => {
       const oldZoom = prev;
       const newZoom = Math.max(prev / 1.2, 0.5);
@@ -139,7 +146,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
       }
       return newZoom;
     });
-  };
+  }, [mousePos.x, mousePos.y]);
 
   const handleResetZoom = () => {
     setZoom(1);
@@ -166,19 +173,12 @@ const ImageModal: React.FC<ImageModalProps> = ({
       const maxPanX = (containerWidth * (zoom - 1)) / 2;
       const maxPanY = (containerHeight * (zoom - 1)) / 2;
 
-      // Account for header area and modal padding - create generous upward pan limit
-      // Use dynamic restriction based on zoom level for better UX
-      const headerHeight = 80;
-      const modalTopPadding = window.innerWidth >= 1024 ? 96 : 80; // lg:pt-24 = 96px
-      const totalRestriction = headerHeight + modalTopPadding * 0.5; // Conservative restriction
-      const safeMaxPanY = Math.max(0, maxPanY - totalRestriction);
-
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
 
       setPan(prevPan => ({
         x: Math.max(-maxPanX, Math.min(maxPanX, prevPan.x + deltaX)),
-        y: Math.max(-safeMaxPanY, Math.min(maxPanY, prevPan.y + deltaY))
+        y: Math.max(-maxPanY, Math.min(maxPanY, prevPan.y + deltaY))
       }));
 
       setDragStart({ x: e.clientX, y: e.clientY });
@@ -186,6 +186,76 @@ const ImageModal: React.FC<ImageModalProps> = ({
   };
 
   const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) {
+      return;
+    }
+
+    const point = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchStartRef.current = point;
+    touchLastRef.current = point;
+    touchActionRef.current = null;
+    setIsDragging(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) {
+      return;
+    }
+
+    const currentPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    const deltaXFromStart = currentPoint.x - touchStartRef.current.x;
+    const deltaYFromStart = currentPoint.y - touchStartRef.current.y;
+
+    if (!touchActionRef.current) {
+      touchActionRef.current = Math.abs(deltaXFromStart) > Math.abs(deltaYFromStart) ? 'swipe' : 'pan';
+    }
+
+    // Prioritize pan when zoomed in for precise image control.
+    if (zoom > 1) {
+      touchActionRef.current = 'pan';
+    }
+
+    if (touchActionRef.current === 'pan' && zoom > 1 && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
+      const maxPanX = (containerWidth * (zoom - 1)) / 2;
+      const maxPanY = (containerHeight * (zoom - 1)) / 2;
+
+      const deltaX = currentPoint.x - touchLastRef.current.x;
+      const deltaY = currentPoint.y - touchLastRef.current.y;
+
+      setPan(prevPan => ({
+        x: Math.max(-maxPanX, Math.min(maxPanX, prevPan.x + deltaX)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, prevPan.y + deltaY))
+      }));
+      setIsDragging(true);
+      e.preventDefault();
+    }
+
+    touchLastRef.current = currentPoint;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (zoom <= 1 && touchActionRef.current === 'swipe' && allImageUrls.length > 1) {
+      const endX = e.changedTouches[0]?.clientX ?? touchLastRef.current.x;
+      const deltaX = endX - touchStartRef.current.x;
+      const swipeThreshold = 50;
+
+      if (Math.abs(deltaX) >= swipeThreshold) {
+        if (deltaX < 0) {
+          onNextImage();
+        } else {
+          onPrevImage();
+        }
+      }
+    }
+
+    touchActionRef.current = null;
     setIsDragging(false);
   };
 
@@ -211,6 +281,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   // Handle keyboard navigation
   useEffect(() => {
+    closeButtonRef.current?.focus();
+
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
@@ -242,34 +314,42 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, onPrevImage, onNextImage]);
+  }, [onClose, onPrevImage, onNextImage, handleZoomIn, handleZoomOut]);
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md animate-fade-in flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="image-modal-title"
+      aria-describedby="image-modal-desc"
+      className="fixed inset-0 z-[130] bg-black/95 backdrop-blur-md animate-fade-in flex flex-col"
       onClick={onClose}
     >
+      <h2 id="image-modal-title" className="sr-only">Image viewer</h2>
+      <p id="image-modal-desc" className="sr-only">
+        View event images in fullscreen. Use arrow keys to switch images, plus and minus to zoom, and Escape to close.
+      </p>
       {/* Top Controls Bar - Fixed at top */}
-      <div className="flex-shrink-0 flex justify-between items-center p-3 sm:p-4 md:p-5 lg:py-6">
+      <div className="animate-control-in flex-shrink-0 flex justify-between items-center gap-3 px-3 py-3 sm:px-4 sm:py-4 md:px-5 lg:px-6 lg:py-5 bg-gradient-to-b from-black/45 to-transparent">
         {/* Left side - Zoom Controls */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
-            className="p-2 sm:p-2.5 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 shadow-lg"
+            className="touch-target rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 shadow-lg"
             aria-label="Zoom Out"
           >
             <FiZoomOut size={18} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
-            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 text-sm font-medium shadow-lg"
+            className="touch-target rounded-full px-3 sm:px-4 bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 text-sm font-medium shadow-lg"
             aria-label="Reset Zoom"
           >
             {Math.round(zoom * 100)}%
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
-            className="p-2 sm:p-2.5 rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 shadow-lg"
+            className="touch-target rounded-full bg-black/70 backdrop-blur-lg text-white hover:bg-black/80 transition-all duration-200 shadow-lg"
             aria-label="Zoom In"
           >
             <FiZoomIn size={18} />
@@ -278,8 +358,9 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
         {/* Right side - Close button - always visible */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
-          className="p-2.5 sm:p-3 md:p-3.5 rounded-full bg-black/80 backdrop-blur-xl text-white hover:bg-yellow-500 hover:text-black transition-all duration-200 shadow-xl border-2 border-white/20 hover:border-yellow-400"
+          className="touch-target-md rounded-full bg-black/80 backdrop-blur-xl text-white hover:bg-yellow-500 hover:text-black transition-all duration-200 shadow-xl border-2 border-white/20 hover:border-yellow-400"
           aria-label="Close Image Viewer"
         >
           <FiX size={22} className="sm:size-24 md:size-26" />
@@ -287,11 +368,15 @@ const ImageModal: React.FC<ImageModalProps> = ({
       </div>
 
       {/* Main Image Area - Takes remaining space, reduced height on desktop by 10% */}
-      <div className="flex-1 relative flex items-center justify-center px-12 sm:px-16 md:px-20 lg:px-24 lg:py-8 w-full min-h-0">
+      {hasImages ? (
+      <div className="flex-1 relative flex items-center justify-center px-4 sm:px-16 md:px-20 lg:px-24 py-3 sm:py-4 lg:py-8 w-full min-h-0">
         {/* Navigation Buttons - visible on tablet+ */}
         <button
           onClick={(e) => { e.stopPropagation(); onPrevImage(); }}
-          className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-black/70 backdrop-blur-lg hover:bg-black/80 text-white p-2 sm:p-3 rounded-full transition-all duration-200 z-20 shadow-lg"
+          disabled={allImageUrls.length <= 1}
+          className={`absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 touch-target rounded-full backdrop-blur-lg text-white transition-all duration-200 z-20 shadow-lg ${
+            allImageUrls.length <= 1 ? 'bg-black/35 opacity-40 cursor-not-allowed' : 'bg-black/70 hover:bg-black/80'
+          }`}
           aria-label="Previous Image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -302,7 +387,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
         {/* Main Image Container */}
         <div
           ref={containerRef}
-          className="relative w-full h-full max-h-full overflow-hidden rounded-lg sm:rounded-xl shadow-2xl cursor-grab active:cursor-grabbing"
+          className="relative w-full h-full max-h-full overflow-hidden rounded-2xl sm:rounded-[1.75rem] shadow-2xl ring-1 ring-white/10 bg-black/20 cursor-grab active:cursor-grabbing"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={handleMouseDown}
           onMouseMove={(e) => {
@@ -318,6 +403,9 @@ const ImageModal: React.FC<ImageModalProps> = ({
           }}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           style={{ touchAction: 'none' }}
         >
@@ -366,7 +454,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
         <button
           onClick={(e) => { e.stopPropagation(); onNextImage(); }}
-          className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-black/70 backdrop-blur-lg hover:bg-black/80 text-white p-2 sm:p-3 rounded-full transition-all duration-200 z-20 shadow-lg"
+          disabled={allImageUrls.length <= 1}
+          className={`absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 touch-target rounded-full backdrop-blur-lg text-white transition-all duration-200 z-20 shadow-lg ${
+            allImageUrls.length <= 1 ? 'bg-black/35 opacity-40 cursor-not-allowed' : 'bg-black/70 hover:bg-black/80'
+          }`}
           aria-label="Next Image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,27 +465,44 @@ const ImageModal: React.FC<ImageModalProps> = ({
           </svg>
         </button>
       </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center px-6 py-8">
+          <div className="text-center text-white bg-white/5 border border-white/10 rounded-[1.75rem] px-8 py-10 backdrop-blur-sm shadow-2xl animate-modal-in">
+            <div className="text-6xl mb-4">📷</div>
+            <p className="text-lg font-medium">No images available</p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="mt-4 touch-target px-5 rounded-full bg-white/90 text-gray-900 font-semibold hover:bg-white transition-colors"
+            >
+              Close Viewer
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom UI Section - Fixed at bottom with spacing for mobile nav */}
-      <div className="flex-shrink-0 p-3 sm:p-4 pb-16 sm:pb-6 md:pb-4 lg:pb-6">
+      <div className="animate-control-in flex-shrink-0 px-3 pt-2 pb-4 sm:px-4 sm:pt-3 sm:pb-5 md:pb-4 lg:px-6 lg:pb-6 bg-gradient-to-t from-black/55 to-transparent">
         {/* Image Counter */}
         <div className="bg-gradient-to-r from-black/70 via-black/60 to-black/70 backdrop-blur-md rounded-xl px-4 py-2 mx-auto max-w-md border border-white/10 mb-3">
           <div className="flex items-center justify-center gap-2">
             <p className="text-xs sm:text-sm text-white/90 font-medium">
-              {activeImageIndex + 1} / {allImageUrls.length}
+              {hasImages ? clampedImageIndex + 1 : 0} / {allImageUrls.length}
             </p>
           </div>
         </div>
 
         {/* Thumbnail Strip */}
         {allImageUrls.length > 1 && (
-          <div className="flex gap-2 justify-center max-w-2xl mx-auto">
+          <div className="flex gap-2 justify-center max-w-2xl mx-auto overflow-x-auto pb-1 scrollbar-hide">
             {allImageUrls.slice(0, 6).map((imageUrl: string, index: number) => (
               <ThumbnailItem
                 key={index}
                 src={imageUrl}
                 alt={`${event?.name} image ${index + 1}`}
-                isActive={activeImageIndex === index}
+                isActive={clampedImageIndex === index}
                 onClick={() => onImageSelect(index)}
               />
             ))}

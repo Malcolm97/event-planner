@@ -20,10 +20,10 @@ export default function CreatorAvatarSection({
   hasUpcomingEvents,
 }: CreatorAvatarSectionProps) {
   return (
-    <div className="flex items-start gap-4">
+    <div className="flex items-start gap-4 sm:gap-5">
       <div className="relative flex-shrink-0">
-        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-xl bg-white p-1 shadow-md">
-          <div className="w-full h-full rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white p-1 shadow-md ring-1 ring-black/5">
+          <div className="w-full h-full rounded-[0.9rem] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
             {photoUrl ? (
               <Image
                 src={photoUrl}
@@ -44,21 +44,22 @@ export default function CreatorAvatarSection({
       </div>
 
       <div className="flex-1 min-w-0 pt-1">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+        <p className="modal-eyebrow text-gray-400 mb-1">Creator</p>
+        <h2 id="creator-modal-title" className="modal-title text-gray-900 truncate">
           {name}
         </h2>
         {company && (
-          <span className="text-gray-600 text-sm truncate block">{company}</span>
+          <span className="modal-subtitle text-gray-600 truncate block mt-1">{company}</span>
         )}
         {/* Stats row */}
-        <div className="flex items-center gap-3 mt-1.5">
-          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+        <div className="flex flex-wrap items-center gap-3 mt-2.5">
+          <div className="flex items-center gap-1.5 text-sm sm:text-base text-gray-500">
             <FiCalendar size={14} />
             <span className="font-medium">{eventsCount}</span>
             <span className="hidden sm:inline">events</span>
           </div>
           {hasUpcomingEvents && (
-            <div className="flex items-center gap-1.5 text-sm text-green-600">
+            <div className="flex items-center gap-1.5 text-sm sm:text-base text-green-600">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               Active
             </div>

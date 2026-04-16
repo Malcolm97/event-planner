@@ -45,9 +45,9 @@ export default function CustomSelect({
 
   // Size classes
   const sizeClasses = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-3 text-base',
-    lg: 'px-4 py-4 text-lg'
+    sm: 'px-3 py-2.5 text-sm min-h-[44px]',
+    md: 'px-4 py-3 text-base min-h-[48px]',
+    lg: 'px-4 py-4 text-lg min-h-[52px]'
   };
 
   // Close dropdown when clicking outside
@@ -81,7 +81,7 @@ export default function CustomSelect({
   return (
     <div className={`relative ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="form-label block mb-1.5">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -94,7 +94,7 @@ export default function CustomSelect({
           onClick={toggleDropdown}
           disabled={disabled}
           className={`
-            w-full ${sizeClasses[size]} text-left bg-white border border-gray-300 rounded-lg
+            w-full ${sizeClasses[size]} text-left bg-white border border-gray-300 rounded-xl
             flex items-center justify-between
             ${disabled ? 'cursor-not-allowed opacity-50 bg-gray-50' : 'cursor-pointer hover:border-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20'}
             transition-colors duration-200
@@ -113,7 +113,7 @@ export default function CustomSelect({
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto">
             {options.map((option) => (
               <button
                 key={option.value}
@@ -121,7 +121,7 @@ export default function CustomSelect({
                 onClick={() => handleOptionClick(option)}
                 disabled={option.disabled}
                 className={`
-                  w-full px-4 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none
+                  w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none
                   ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                   ${option.value === value ? 'bg-yellow-50 text-yellow-800 font-medium' : 'text-gray-900'}
                   transition-colors duration-150
@@ -136,7 +136,7 @@ export default function CustomSelect({
 
       {/* Error Message */}
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 form-error">{error}</p>
       )}
     </div>
   );

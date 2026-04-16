@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
@@ -28,7 +28,7 @@ export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
-  const fetchCategories = async (page = 1) => {
+  const fetchCategories = useCallback(async (page = 1) => {
     try {
       setError(null)
       const params = new URLSearchParams({
@@ -69,7 +69,7 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchTerm, toast])
 
   const handleSearch = () => {
     setLoading(true)
@@ -104,7 +104,7 @@ export default function CategoriesPage() {
       channel.unsubscribe()
       clearInterval(interval)
     }
-  }, [])
+  }, [fetchCategories])
 
 
 

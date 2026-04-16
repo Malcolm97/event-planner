@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Event, User } from "@/lib/supabase";
 import EventModal from "@/components/EventModal";
 import Button from "@/components/Button";
@@ -45,6 +46,7 @@ export default function EventDetailClient({ event, host }: EventDetailClientProp
   const imageUrl = event.image_urls && event.image_urls.length > 0 
     ? event.image_urls[0] 
     : null;
+  const isRawImageUrl = !!imageUrl && (imageUrl.startsWith('data:') || imageUrl.startsWith('blob:'));
 
   return (
     <div className="min-h-screen bg-white">
@@ -94,11 +96,26 @@ export default function EventDetailClient({ event, host }: EventDetailClientProp
           {/* Event Image */}
           {imageUrl && (
             <div className="relative aspect-video rounded-2xl overflow-hidden shadow-lg">
-              <img
-                src={imageUrl}
-                alt={event.name}
-                className="w-full h-full object-cover"
-              />
+              {isRawImageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={event.name}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              ) : (
+                <Image
+                  src={imageUrl}
+                  alt={event.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                  quality={80}
+                  priority
+                />
+              )}
             </div>
           )}
 
@@ -156,7 +173,7 @@ export default function EventDetailClient({ event, host }: EventDetailClientProp
 
         {/* SEO-friendly content for search engines */}
         <div className="mt-12 prose prose-lg max-w-none">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <h2 className="section-title text-gray-900 mb-4">
             About {event.name}
           </h2>
           <p className="text-gray-600">

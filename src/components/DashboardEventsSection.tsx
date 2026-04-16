@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FiPlus, FiCalendar, FiEye, FiChevronDown, FiChevronUp, FiBookmark, FiClock } from 'react-icons/fi';
 import EventCard from '@/components/EventCard';
+import Button from '@/components/Button';
 import { Event } from '@/lib/supabase';
 
 // Color mappings for different event section types
@@ -93,15 +94,15 @@ export default function DashboardEventsSection({
             <Icon size={14} />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">{title}</h2>
-            <p className="text-gray-500 text-xs">{events.length} {events.length === 1 ? 'event' : 'events'}</p>
+            <h2 className="section-title text-gray-900">{title}</h2>
+            <p className="card-meta text-gray-500">{events.length} {events.length === 1 ? 'event' : 'events'}</p>
           </div>
         </div>
 
         {collapsible && events.length > 0 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`flex items-center gap-2 ${colors.text} hover:opacity-80 transition-opacity text-sm font-medium px-3 py-2 rounded-lg touch-target`}
+            className={`touch-target flex items-center gap-2 ${colors.text} hover:opacity-80 transition-opacity text-sm font-medium px-3 py-2 rounded-lg`}
           >
             {isExpanded ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
             <span className="hidden sm:inline">{isExpanded ? 'Collapse' : 'Expand'}</span>
@@ -112,17 +113,16 @@ export default function DashboardEventsSection({
       {/* Content Section */}
       {!isExpanded && collapsible ? null : events.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
-          <div className="text-base sm:text-base lg:text-2xl mb-4">{emptyState.emoji}</div>
+          <div className="text-3xl sm:text-4xl mb-4">{emptyState.emoji}</div>
           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">{emptyState.title}</h3>
           <p className="text-gray-500 text-sm sm:text-base mb-6 sm:mb-8 max-w-sm mx-auto">{emptyState.description}</p>
           {emptyState.actionText && emptyState.actionLink && (
-            <Link
-              href={emptyState.actionLink}
-              className="btn-primary gap-2 text-sm sm:text-base px-6 py-3 sm:px-8 sm:py-3 inline-flex"
-            >
-              <FiPlus size={16} />
-              {emptyState.actionText}
-            </Link>
+            <Button asChild variant="primary" size="md">
+              <Link href={emptyState.actionLink}>
+                <FiPlus size={16} />
+                {emptyState.actionText}
+              </Link>
+            </Button>
           )}
         </div>
       ) : (
@@ -147,13 +147,15 @@ export default function DashboardEventsSection({
           {/* Show More Button */}
           {hasMore && (
             <div className="text-center">
-              <button
+              <Button
                 onClick={() => setShowAll(!showAll)}
-                className={`btn-ghost gap-2 ${colors.text} hover:${colors.bg} text-sm sm:text-base px-4 py-2`}
+                variant="ghost"
+                size="sm"
+                className={colors.text}
               >
                 <FiEye size={16} />
                 {showAll ? 'Show Less' : `View All ${events.length} Events`}
-              </button>
+              </Button>
             </div>
           )}
         </>

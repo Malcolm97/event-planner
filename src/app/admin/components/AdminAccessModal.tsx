@@ -19,10 +19,10 @@ const AdminAccessModal: React.FC<AdminAccessModalProps> = ({ isOpen, onClose }) 
           <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-white font-bold text-xl">PNG</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
+          <h1 className="modal-title text-gray-900 mb-2">
             Admin Access Required
           </h1>
-          <p className="text-gray-600 text-lg">You need administrator privileges to access this area</p>
+          <p className="modal-body-copy text-gray-600">You need administrator privileges to access this area</p>
         </div>
 
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl">

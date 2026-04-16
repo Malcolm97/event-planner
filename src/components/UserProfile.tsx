@@ -33,12 +33,12 @@ export default function UserProfile({ userProfile, onError }: UserProfileProps) 
     <div className="text-center">
       {displayPhotoUrl ? (
         <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
-          <Image src={displayPhotoUrl} alt="User Photo" width={80} height={80} className="object-cover" />
+          <Image src={displayPhotoUrl} alt="User Photo" width={80} height={80} sizes="80px" className="object-cover" />
         </div>
       ) : (
         <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4">
           {/* Using a local image for the default avatar */}
-          <Image src={DEFAULT_AVATAR_SVG_BASE64} alt="Default User Avatar" width={80} height={80} />
+          <Image src={DEFAULT_AVATAR_SVG_BASE64} alt="Default User Avatar" width={80} height={80} sizes="80px" />
         </div>
       )}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{displayName}</h3>

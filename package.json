@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . --no-config-lookup --config eslint.config.mjs",
+    "lint:fix": "eslint . --no-config-lookup --config eslint.config.mjs --fix",
     "postcss:build": "postcss src/app/globals.css -o public/output.css",
     "test:supabase": "node scripts/test-supabase-connection.js"
   },

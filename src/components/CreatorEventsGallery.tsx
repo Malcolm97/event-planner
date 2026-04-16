@@ -17,28 +17,30 @@ export default function CreatorEventsGallery({ events, totalEventsCount }: Creat
   }
 
   return (
-    <div className="py-2">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-medium text-gray-500">
+    <div className="modal-section-card bg-white/80 border border-gray-100/80 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="modal-section-title text-gray-700">
           Events ({totalEventsCount})
-        </h4>
+        </h3>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {events.map((event, index) => {
           const isUpcoming = isEventUpcomingOrActive(event);
+          const eventImage = getEventPrimaryImage(event);
           return (
             <div
               key={event.id || index}
-              className="relative rounded-xl overflow-hidden group cursor-pointer shadow-md"
+              className="relative rounded-2xl overflow-hidden group cursor-pointer shadow-md ring-1 ring-black/5"
             >
               <div className="aspect-[4/3] relative">
-                {getEventPrimaryImage(event) !== '/next.svg' ? (
+                {eventImage !== '/next.svg' ? (
                   <Image
-                    src={getEventPrimaryImage(event)}
-                    alt={event.name || 'Event'}
+                    src={eventImage}
+                    alt={event.name ? `${event.name} event image` : 'Event image'}
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 50vw, 25vw"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -50,17 +52,17 @@ export default function CreatorEventsGallery({ events, totalEventsCount }: Creat
                 
                 {/* Upcoming badge */}
                 {isUpcoming && (
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-[9px] font-bold rounded-full">
+                  <div className="absolute top-2 right-2 inline-flex items-center px-2 py-1 rounded-full bg-green-500 text-white modal-caption font-bold leading-none tracking-[0.01em]">
                     UPCOMING
                   </div>
                 )}
               </div>
               
               {/* Event info */}
-              <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                <p className="text-white font-semibold text-xs truncate">{event.name}</p>
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <p className="card-title text-white truncate">{event.name}</p>
                 {event.date && (
-                  <p className="text-white/70 text-[10px] mt-0.5">
+                  <p className="card-meta text-white/75 mt-1">
                     {new Date(event.date).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric' 

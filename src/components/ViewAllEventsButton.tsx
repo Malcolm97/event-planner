@@ -11,4 +11,6 @@ const ViewAllEventsButton = React.memo(() => {
   );
 });
 
+ViewAllEventsButton.displayName = 'ViewAllEventsButton';
+
 export default ViewAllEventsButton;

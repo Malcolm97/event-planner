@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import StatCard from "../components/StatCard"
 import RecentActivity from "../components/RecentActivity"
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const { toast } = useToast()
   const router = useRouter()
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setError(null)
       const response = await fetch("/api/admin/dashboard")
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     fetchDashboardData()
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
       activitiesChannel.unsubscribe()
       clearInterval(interval)
     }
-  }, [])
+  }, [fetchDashboardData])
 
   const calculateTrend = (current: number, previous: number) => {
     if (previous === 0) return { value: current > 0 ? 100 : 0, isPositive: current > 0 }
@@ -206,7 +206,7 @@ export default function AdminDashboard() {
       {/* Header with quick actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="page-title text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600">Monitor your event platform's performance</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">

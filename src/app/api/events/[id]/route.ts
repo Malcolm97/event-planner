@@ -11,9 +11,68 @@ import {
   databaseError
 } from '@/lib/errorHandler';
 
+function getAppUrl(): string | null {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:3000';
+  }
+
+  return null;
+}
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeExternalLinks(input: unknown): Record<string, string> | null {
+  if (!input) {
+    return null;
+  }
+
+  if (typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('external_links must be an object');
+  }
+
+  const allowedKeys = ['facebook', 'instagram', 'tiktok', 'website'] as const;
+  const links: Record<string, string> = {};
+
+  for (const key of allowedKeys) {
+    const value = (input as Record<string, unknown>)[key];
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      continue;
+    }
+
+    if (!isValidHttpUrl(trimmed)) {
+      throw new Error(`Invalid URL for ${key}`);
+    }
+
+    links[key] = trimmed;
+  }
+
+  return Object.keys(links).length > 0 ? links : null;
+}
+
 // Function to send push notifications for updated events to users who saved them
 async function sendPushNotificationForUpdatedEvent(event: any) {
   try {
+    const appUrl = getAppUrl();
+    if (!appUrl) {
+      return;
+    }
+
     // Get all users who saved this event
     const { data: savedEvents, error: savedError } = await supabase
       .from(TABLES.SAVED_EVENTS)
@@ -38,7 +97,7 @@ async function sendPushNotificationForUpdatedEvent(event: any) {
     }
 
     // Call the send-push-notification API with targeted subscriptions
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-push-notification`, {
+    const response = await fetch(`${appUrl}/api/send-push-notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,13 +112,16 @@ async function sendPushNotificationForUpdatedEvent(event: any) {
     });
 
     if (!response.ok) {
-      console.error('Failed to send push notifications for updated event:', response.status);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to send push notifications for updated event:', response.status);
+      }
     } else {
-      const result = await response.json();
-      console.log(`Push notifications sent for updated event: ${result.sent || 0} successful`);
+      await response.json();
     }
   } catch (err) {
-    console.error('Error sending push notifications for updated event:', err);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error sending push notifications for updated event:', err);
+    }
   }
 }
 
@@ -143,6 +205,10 @@ export async function DELETE(
         return notFoundError('Event');
       }
       return handleSupabaseError(fetchError);
+    }
+
+    if (!existingEvent) {
+      return notFoundError('Event');
     }
 
     if (existingEvent.created_by !== user.id) {
@@ -239,6 +305,10 @@ export async function PUT(
       return handleSupabaseError(fetchError);
     }
 
+    if (!existingEvent) {
+      return notFoundError('Event');
+    }
+
     if (existingEvent.created_by !== user.id) {
       return authorizationError('You can only update your own events');
     }
@@ -299,6 +369,10 @@ export async function PUT(
       }
     }
 
+    if (presalePrice !== null && gatePrice !== null && presalePrice > gatePrice) {
+      return validationError('Presale price cannot be greater than gate price');
+    }
+
     // Validate image_urls array if provided
     let validatedImageUrls = undefined;
     if (image_urls !== undefined) {
@@ -326,7 +400,13 @@ export async function PUT(
     if (gatePrice !== null) updateData.gate_price = gatePrice;
     if (category !== undefined) updateData.category = category ? category.trim() : null;
     if (validatedImageUrls !== undefined) updateData.image_urls = validatedImageUrls;
-    if (external_links !== undefined) updateData.external_links = external_links;
+    if (external_links !== undefined) {
+      try {
+        updateData.external_links = sanitizeExternalLinks(external_links);
+      } catch (error: unknown) {
+        return validationError(error instanceof Error ? error.message : 'Invalid external_links');
+      }
+    }
 
     // Update event in database
     const { data, error } = await supabaseAuth

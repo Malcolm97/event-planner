@@ -23,7 +23,7 @@ const allCategories = [
   { name: 'Food', icon: 'FiCoffee', color: 'bg-orange-100 text-orange-600' },
   { name: 'Technology', icon: 'FiCpu', color: 'bg-blue-100 text-blue-600' },
   { name: 'Wellness', icon: 'FiHeart', color: 'bg-green-100 text-green-600' },
-  { name: 'Comedy', icon: 'FiSmile', color: 'bg-yellow-100 text-yellow-600' },
+  { name: 'Comedy', icon: 'FiSmile', color: 'bg-amber-100 text-amber-800' },
   { name: 'Other', icon: 'FiStar', color: 'bg-gray-100 text-gray-600' }, // Ensure 'Other' has an icon
 ];
 
@@ -44,7 +44,7 @@ const categoryColorMap: { [key: string]: string } = {
   'Food': 'bg-orange-100 text-orange-600',
   'Technology': 'bg-blue-100 text-blue-600',
   'Wellness': 'bg-green-100 text-green-600',
-  'Comedy': 'bg-yellow-100 text-yellow-600',
+  'Comedy': 'bg-amber-100 text-amber-800',
   'Other': 'bg-gray-100 text-gray-700', // Ensure 'Other' has a color
 };
 
@@ -247,9 +247,15 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
           </div>
 
           {loading ? (
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-              <p className="text-gray-500 mt-6 text-lg">Loading events...</p>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8" role="list" aria-label="Loading events">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse bg-white rounded-2xl h-72 shadow flex flex-col gap-4 p-6" role="listitem">
+                  <div className="bg-gray-200 h-32 w-full rounded-xl" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                </div>
+              ))}
             </div>
           ) : events.length === 0 ? (
             <div className="text-center py-16">
@@ -318,10 +324,26 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
 export default function CategoriesPageContent({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-600 mx-auto"></div>
-          <p className="text-gray-500 mt-6 text-lg">Loading categories...</p>
+      <div className="min-h-screen bg-white px-4 sm:px-8 py-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-10">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={`category-skeleton-${i}`} className="animate-pulse rounded-2xl border-2 border-gray-200 min-h-[140px] p-6 flex flex-col items-center justify-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-200" />
+                <div className="h-4 bg-gray-200 rounded w-20" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 sm:gap-4 md:gap-8">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={`event-skeleton-${i}`} className="animate-pulse bg-white rounded-2xl h-72 shadow flex flex-col gap-4 p-6">
+                <div className="bg-gray-200 h-32 w-full rounded-xl" />
+                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
+                <div className="h-3 bg-gray-100 rounded w-1/3" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     }>

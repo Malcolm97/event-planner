@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState, useEffect } from 'react';
+import React, { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { FiStar, FiMapPin, FiCalendar, FiDollarSign, FiClock, FiShare2, FiBookmark, FiTrash2, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile, FiUsers, FiEye } from 'react-icons/fi';
 import { FaFacebook, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
@@ -55,19 +55,50 @@ const formatDate = (date: Date): string => {
 function ShareButtons({ event }: { event: EventItem }) {
   const [showShareOptions, setShowShareOptions] = useState<boolean>(false);
   const [eventUrl, setEventUrl] = useState<string>('');
-  const [isClient, setIsClient] = useState<boolean>(false);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    setIsClient(true);
     if (typeof window !== 'undefined') {
       setEventUrl(`${window.location.origin}/events/${event.id}`);
     }
   }, [event.id]);
 
+  useEffect(() => {
+    if (!showShareOptions) {
+      return;
+    }
+
+    const focusableItems = shareMenuRef.current?.querySelectorAll<HTMLElement>('button:not([disabled])');
+    focusableItems?.[0]?.focus();
+
+    const handleClickOutside = (eventTarget: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(eventTarget.target as Node)) {
+        setShowShareOptions(false);
+        shareButtonRef.current?.focus();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowShareOptions(false);
+        shareButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showShareOptions]);
+
   const shareText = getEventShareText(event);
 
   const handleShare = async () => {
-    if (isClient && navigator.share) {
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: event.name ?? 'Event',
@@ -107,30 +138,34 @@ function ShareButtons({ event }: { event: EventItem }) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={shareMenuRef}>
       <button
+        ref={shareButtonRef}
         onClick={(e) => {
           e.stopPropagation();
           handleShare();
         }}
-        className="p-2 rounded-xl bg-white/95 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 border border-gray-200/50 min-w-[36px] min-h-[36px] flex items-center justify-center"
+        className="touch-target rounded-xl bg-white/95 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 border border-gray-200/50"
         aria-label="Share Event"
+        aria-expanded={showShareOptions}
+        aria-haspopup="menu"
+        aria-controls={`event-card-share-menu-${event.id}`}
       >
         <FiShare2 size={14} />
       </button>
 
       {showShareOptions && (
-        <div className="absolute bottom-full right-0 mb-2 w-auto bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-100/50 p-2 flex gap-1 z-30 animate-slide-up">
-          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
+        <div id={`event-card-share-menu-${event.id}`} className="absolute bottom-full right-0 mb-2 w-auto bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-100/50 p-2 flex gap-1 z-30 animate-slide-up" role="menu" aria-label="Share event options">
+          <button onClick={(e) => { e.stopPropagation(); shareOnFacebook(); }} role="menuitem" className="touch-target p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Share on Facebook">
             <FaFacebook size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnX(); }} className="p-2 rounded-lg hover:bg-gray-100 text-gray-900 transition-colors" aria-label="Share on X">
+          <button onClick={(e) => { e.stopPropagation(); shareOnX(); }} role="menuitem" className="touch-target p-2 rounded-lg hover:bg-gray-100 text-gray-900 transition-colors" aria-label="Share on X">
             <SiX size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
+          <button onClick={(e) => { e.stopPropagation(); shareOnLinkedIn(); }} role="menuitem" className="touch-target p-2 rounded-lg hover:bg-blue-50 text-blue-700 transition-colors" aria-label="Share on LinkedIn">
             <FaLinkedin size={16} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} className="p-2 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
+          <button onClick={(e) => { e.stopPropagation(); shareOnWhatsApp(); }} role="menuitem" className="touch-target p-2 rounded-lg hover:bg-green-50 text-green-500 transition-colors" aria-label="Share on WhatsApp">
             <FaWhatsapp size={16} />
           </button>
         </div>
@@ -161,7 +196,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
   // Use proper timing logic - event is current/upcoming if it hasn't ended yet
   const isCurrentEvent = useMemo(() =>
     isEventUpcomingOrActive(event),
-    [event.date, event.end_date]
+    [event]
   );
   const isPopular = useMemo(() =>
     isCurrentEvent && saveCount >= 5,
@@ -202,7 +237,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       // Return null to indicate no image available - will show placeholder
       return null;
     }
-  }, [event.image_urls, event.name, event.date, event]);
+  }, [event]);
 
   // Note: save_count is now pre-fetched in the API to avoid N+1 queries
   // No need for individual fetchSaveCount queries per card
@@ -269,7 +304,10 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         }
       }
     } catch (error) {
-      console.error('Error saving/unsaving event:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error saving/unsaving event:', error);
+      }
+      toast.error('Could not update saved status. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -297,7 +335,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error deleting event:', errorData);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error deleting event:', errorData);
+        }
         toast.error(errorData.error || 'Failed to delete event. Please try again.');
         setDeleting(false);
         return;
@@ -319,7 +359,9 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       toast.success('Event deleted successfully.');
 
     } catch (error) {
-      console.error('Error deleting event:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error deleting event:', error);
+      }
       toast.error('Failed to delete event. Please try again.');
     } finally {
       setDeleting(false);
@@ -360,7 +402,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
   return (
     <article
       data-event-id={event.id}
-      className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.2)] overflow-hidden h-full border border-gray-100/50 dark:border-gray-700/50"
+      className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.2)] overflow-hidden h-full border border-gray-100/50 dark:border-gray-700/50 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400/40 focus-visible:ring-offset-2"
       tabIndex={0}
       role="button"
       aria-label={`View details for ${event.name} event`}
@@ -393,7 +435,8 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
               src={imageSrc}
               alt={`Event image for ${event.name}`}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+              quality={75}
               className="transition-transform duration-700 group-hover:scale-110 object-cover"
               loading="lazy"
             />
@@ -409,28 +452,35 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
 
+        <div className="absolute inset-x-3 bottom-3 z-10 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group-focus-visible:opacity-100 group-focus-visible:translate-y-0 transition-all duration-300 pointer-events-none">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 text-white card-badge backdrop-blur-md shadow-lg">
+            <FiEye size={12} />
+            View details
+          </div>
+        </div>
+
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
           <div className="flex flex-wrap gap-1.5">
             {event.featured && (
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
+              <span className="card-badge px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
                 Featured
               </span>
             )}
             {isPopular && (
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg flex items-center gap-1">
+              <span className="card-badge px-2.5 py-1 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg flex items-center gap-1">
                 <FiStar size={10} /> Popular
               </span>
             )}
             {isNew && (
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg">
+              <span className="card-badge px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg">
                 New
               </span>
             )}
           </div>
 
           {/* Category Badge */}
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold ${categoryColor} shadow-lg backdrop-blur-sm`}>
+          <span className={`card-badge inline-flex items-center gap-1 px-2.5 py-1 rounded-lg ${categoryColor} shadow-lg backdrop-blur-sm`}>
             <Icon size={10} />
             {categoryLabel}
           </span>
@@ -440,11 +490,11 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         <div className="absolute bottom-3 left-3 z-10">
           {event.presale_price !== undefined && event.presale_price !== null ? (
             event.presale_price === 0 ? (
-              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-900 shadow-lg flex items-center gap-1">
+              <span className="card-badge px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-sm text-gray-900 shadow-lg flex items-center gap-1">
                 Free Event
               </span>
             ) : (
-              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
+              <span className="card-badge px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
                 K{event.presale_price.toFixed(0)}
               </span>
             )
@@ -454,7 +504,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
         {/* Gate Price - Bottom Right */}
         {event.gate_price !== undefined && event.gate_price !== null && event.gate_price > 0 && (
           <div className="absolute bottom-3 right-3 z-10">
-            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg">
+            <span className="card-badge px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-sm text-gray-700 shadow-lg">
               Gate: K{event.gate_price.toFixed(0)}
             </span>
           </div>
@@ -464,7 +514,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
       {/* Content Area */}
       <div className="p-4 sm:p-5 lg:p-4 xl:p-5">
         {/* Event Title */}
-        <h3 className="text-base sm:text-lg lg:text-lg font-bold text-gray-900 dark:text-white leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
+        <h3 className="card-title text-gray-900 dark:text-white leading-tight group-hover:text-yellow-600 transition-colors line-clamp-2 mb-3 text-left">
           {event.name}
         </h3>
 
@@ -473,7 +523,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
           <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0">
             <FiMapPin size={12} />
           </div>
-          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium line-clamp-1">{event.location}</span>
+              <span className="card-meta text-gray-600 dark:text-gray-400 font-medium line-clamp-1">{event.location}</span>
         </div>
 
         {/* Date and Time */}
@@ -483,7 +533,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
               <FiCalendar size={12} />
             </div>
             <div>
-              <span className="text-sm text-gray-700 dark:text-gray-300 font-medium block">
+              <span className="card-meta text-gray-700 dark:text-gray-300 font-medium block">
                 {formattedEndDate ? (
                   <>
                     {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.end_date!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -493,7 +543,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
                 )}
               </span>
               {formattedTime && (
-                <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                <span className="card-meta text-gray-500 flex items-center gap-1 mt-0.5">
                   <FiClock size={10} />
                   {formattedTime}
                   {formattedEndTime ? ` - ${formattedEndTime}` : ''}
@@ -505,7 +555,7 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
         {/* Save Count */}
         {saveCount > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+          <div className="flex items-center gap-1.5 card-meta text-gray-500 mb-4">
             <FiUsers size={12} />
             <span>{saveCount} {saveCount === 1 ? 'save' : 'saves'}</span>
           </div>
@@ -513,6 +563,11 @@ const EventCard = memo(function EventCard({ event, onClick, onDelete, isOwner = 
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
+          <div className="hidden sm:flex items-center gap-1.5 card-meta font-semibold text-gray-500 group-hover:text-yellow-600 transition-colors">
+            <FiEye size={13} />
+            <span>Open event</span>
+          </div>
+
           <div className="flex items-center gap-2">
             {/* Delete button for event owners */}
             {isOwner && (

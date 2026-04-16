@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react"
+import Image from "next/image"
 import ExportButton from "../components/ExportButton"
 
 interface User {
@@ -96,14 +97,14 @@ export default function UsersPage() {
       .channel('profiles_changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
-        () => fetchUsers(pagination?.page || 1)
+        () => fetchUsers(1)
       )
       .subscribe()
 
     return () => {
       channel.unsubscribe()
     }
-  }, [])
+  }, [fetchUsers])
 
   if (loading && users.length === 0) {
     return <div className="text-center py-8">Loading users...</div>
@@ -183,7 +184,15 @@ export default function UsersPage() {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                       {user.avatar_url ? (
-                        <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full" />
+                        <div className="relative w-10 h-10">
+                          <Image
+                            src={user.avatar_url}
+                            alt={`${user.full_name || 'User'} avatar`}
+                            fill
+                            sizes="40px"
+                            className="rounded-full object-cover"
+                          />
+                        </div>
                       ) : (
                         <UserIcon className="w-5 h-5 text-gray-500" />
                       )}
@@ -253,7 +262,15 @@ export default function UsersPage() {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
                         {user.avatar_url ? (
-                          <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                          <div className="relative w-10 h-10">
+                            <Image
+                              src={user.avatar_url}
+                              alt={`${user.full_name || 'User'} avatar`}
+                              fill
+                              sizes="40px"
+                              className="rounded-full object-cover"
+                            />
+                          </div>
                         ) : (
                           <UserIcon className="w-5 h-5 text-gray-500" />
                         )}

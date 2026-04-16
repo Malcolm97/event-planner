@@ -20,7 +20,9 @@ const OnlineBadge = React.memo(() => {
         const events = await db.getEvents();
         setCachedEventsCount(events.length);
       } catch (error) {
-        console.warn('Failed to check cached events:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to check cached events:', error);
+        }
         setCachedEventsCount(0);
       }
     };
@@ -217,5 +219,7 @@ const OnlineBadge = React.memo(() => {
     </div>
   );
 });
+
+OnlineBadge.displayName = 'OnlineBadge';
 
 export default OnlineBadge;

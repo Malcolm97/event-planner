@@ -62,7 +62,7 @@ export default function ImageUpload({
   const totalImages = images.length + existingImages.length;
   const remainingSlots = maxImages - totalImages;
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = useCallback((file: File): string | null => {
     if (!acceptedTypes.includes(file.type)) {
       return `Invalid file type. Allowed: JPG, PNG, GIF, WebP`;
     }
@@ -70,7 +70,7 @@ export default function ImageUpload({
       return `File too large. Maximum size: ${maxSizeMB}MB`;
     }
     return null;
-  };
+  }, [acceptedTypes, maxSizeMB]);
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -93,7 +93,7 @@ export default function ImageUpload({
     }
 
     onImagesChange([...images, ...fileArray]);
-  }, [images, remainingSlots, onImagesChange]);
+  }, [images, remainingSlots, onImagesChange, validateFile]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -322,30 +322,30 @@ export default function ImageUpload({
           <div className="flex flex-col items-center gap-2">
             <div className={`
               p-3 rounded-full transition-colors
-              ${isDragging ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'}
+              ${isDragging ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}
             `}>
               <FiImage size={24} />
             </div>
             <div className="text-sm">
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-gray-800">
                 Click to upload
               </span>
-              <span className="text-gray-500"> or drag and drop</span>
+              <span className="text-gray-600"> or drag and drop</span>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               {remainingSlots} image{remainingSlots > 1 ? 's' : ''} remaining • JPG, PNG, GIF, WebP • Max {maxSizeMB}MB each
             </p>
           </div>
         </div>
       ) : (
-        <div className="p-4 bg-gray-50 rounded-xl text-center text-sm text-gray-500">
+        <div className="p-4 bg-gray-50 rounded-xl text-center text-sm text-gray-600">
           Maximum of {maxImages} images reached
         </div>
       )}
 
       {/* Image Count */}
       {totalImages > 0 && (
-        <p className="text-xs text-gray-400 text-center">
+        <p className="text-xs text-gray-500 text-center">
           {totalImages} of {maxImages} images
         </p>
       )}
@@ -365,20 +365,20 @@ interface FormSectionProps {
 export function FormSection({ title, description, icon, children, className = '' }: FormSectionProps) {
   return (
     <div className={`
-      bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100/50 p-6
+      bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100/50 p-4 sm:p-6
       shadow-sm hover:shadow-md transition-shadow duration-200
       ${className}
     `}>
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-3 sm:mb-4">
         {icon && (
           <div className="p-2 bg-gradient-to-br from-yellow-400 to-red-500 rounded-lg text-white">
             {icon}
           </div>
         )}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <h2 className="section-title text-gray-900">{title}</h2>
           {description && (
-            <p className="text-sm text-gray-500">{description}</p>
+            <p className="page-subtitle text-gray-500">{description}</p>
           )}
         </div>
       </div>
@@ -399,19 +399,19 @@ interface FormFieldProps {
 export function FormField({ label, required, error, hint, children }: FormFieldProps) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="form-label block">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {children}
       {error && (
-        <p className="text-sm text-red-600 flex items-center gap-1">
+        <p className="form-error">
           <FiAlertCircle size={14} />
           {error}
         </p>
       )}
       {hint && !error && (
-        <p className="text-xs text-gray-500">{hint}</p>
+        <p className="form-hint">{hint}</p>
       )}
     </div>
   );
@@ -438,7 +438,7 @@ export function LoadingButton({
   return (
     <button
       className={`
-        rounded-xl px-6 py-3.5 font-semibold
+        rounded-xl px-6 py-3.5 min-h-[48px] font-semibold
         bg-gradient-to-r from-yellow-400 to-red-500 text-white
         hover:from-yellow-500 hover:to-red-600
         focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2
@@ -524,11 +524,11 @@ export function PageHeader({ title, subtitle, icon, children }: PageHeaderProps)
           {icon}
         </div>
       )}
-      <h1 className="text-base sm:text-base lg:text-2xl font-bold text-gray-900 mb-2">
+      <h1 className="page-title text-gray-900 mb-2">
         {title}
       </h1>
       {subtitle && (
-        <p className="text-gray-600">{subtitle}</p>
+        <p className="page-subtitle text-gray-600">{subtitle}</p>
       )}
       {children}
     </div>

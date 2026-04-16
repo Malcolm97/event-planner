@@ -16,6 +16,23 @@ export default function UpdatePasswordPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
 
+  const getPasswordStrength = (value: string) => {
+    if (!value) return { label: 'Enter a password', score: 0, color: 'text-gray-500' };
+
+    let score = 0;
+    if (value.length >= 8) score++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+    if (/\d/.test(value)) score++;
+    if (/[^A-Za-z0-9]/.test(value)) score++;
+
+    if (score <= 1) return { label: 'Weak password', score, color: 'text-red-600' };
+    if (score <= 2) return { label: 'Fair password', score, color: 'text-amber-600' };
+    if (score === 3) return { label: 'Good password', score, color: 'text-blue-600' };
+    return { label: 'Strong password', score, color: 'text-green-600' };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+
   useEffect(() => {
     // Check if there's an access token in the URL (from the password reset email)
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -77,41 +94,60 @@ export default function UpdatePasswordPage() {
   {/* Header removed, now rendered globally in layout */}
       <div className="relative flex flex-1 items-center justify-center p-4">
         <div className="absolute top-6 left-6">
-          <Link href="/" className="flex items-center text-gray-900 hover:text-yellow-400 text-sm font-medium gap-2 bg-white bg-opacity-90 px-3 py-2 rounded-lg">
+          <Link href="/" className="back-button">
             <FiArrowLeft className="text-lg" />
             Back to Events
           </Link>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
-          <h2 className="text-base sm:text-base lg:text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
+          <h2 className="page-title text-center mb-1 text-gray-900">
             Update Your Password
           </h2>
-          <p className="text-center text-gray-500 text-base mb-2">Enter your new password below.</p>
+          <p className="page-subtitle text-center text-gray-500 mb-2">Enter your new password below.</p>
           <div className="flex flex-col gap-4">
-            <label className="text-sm font-medium text-gray-700">New Password</label>
+            <label className="form-label">New Password</label>
             <input
               type="password"
               placeholder="Enter your new password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="input-field"
+              autoComplete="new-password"
               required
             />
-            <label className="text-sm font-medium text-gray-700">Confirm New Password</label>
+            <div className="mt-1" aria-live="polite">
+              <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    passwordStrength.score <= 1
+                      ? 'bg-red-500'
+                      : passwordStrength.score <= 2
+                        ? 'bg-amber-500'
+                        : passwordStrength.score === 3
+                          ? 'bg-blue-500'
+                          : 'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.max(passwordStrength.score, 1) * 25}%` }}
+                />
+              </div>
+              <p className={`text-xs mt-1 ${passwordStrength.color}`}>{passwordStrength.label}</p>
+            </div>
+            <label className="form-label">Confirm New Password</label>
             <input
               type="password"
               placeholder="Confirm your new password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="rounded-lg px-4 py-2 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="input-field"
+              autoComplete="new-password"
               required
             />
           </div>
-          {error && <div className="text-red-500 text-sm text-center mt-2">{error}</div>}
+          {error && <div className="form-error justify-center mt-2">{error}</div>}
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg px-6 py-3 bg-yellow-400 text-black font-semibold text-lg shadow-md hover:bg-yellow-500 transition disabled:opacity-50 mt-2"
+            className="touch-target-md w-full rounded-xl px-6 py-3 bg-yellow-400 text-black font-semibold text-base shadow-md hover:bg-yellow-500 transition disabled:opacity-50 mt-2"
           >
             {loading ? "Loading..." : "Update Password"}
           </button>
@@ -124,7 +160,7 @@ export default function UpdatePasswordPage() {
             <p className="text-gray-700 mb-4">{successMessage}</p>
             <button
               onClick={handleCloseSuccessModal}
-              className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
+              className="w-full min-h-[44px] bg-green-500 text-white py-2.5 px-4 rounded-xl font-medium hover:bg-green-600 transition"
             >
               Continue
             </button>

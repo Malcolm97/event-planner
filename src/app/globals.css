@@ -277,6 +277,185 @@
 
 /* Utility Classes */
 @layer utilities {
+  .modal-eyebrow {
+    font-size: clamp(0.68rem, 0.62rem + 0.2vw, 0.8rem);
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .modal-title {
+    font-size: clamp(1.15rem, 0.95rem + 1vw, 2.3rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  .modal-subtitle {
+    font-size: clamp(0.92rem, 0.84rem + 0.28vw, 1.08rem);
+    line-height: 1.45;
+  }
+
+  .modal-body-copy {
+    font-size: clamp(0.92rem, 0.86rem + 0.28vw, 1rem);
+    line-height: 1.75;
+  }
+
+  .modal-caption {
+    font-size: clamp(0.72rem, 0.7rem + 0.16vw, 0.86rem);
+    line-height: 1.35;
+  }
+
+  .modal-tab-label {
+    font-size: clamp(0.76rem, 0.73rem + 0.22vw, 0.95rem);
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+  }
+
+  .modal-section-title {
+    font-size: clamp(1rem, 0.92rem + 0.38vw, 1.22rem);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+
+  .modal-pill {
+    min-height: 2.25rem;
+    border-radius: 0.9rem;
+    padding: 0.5rem 0.85rem;
+    font-size: clamp(0.72rem, 0.68rem + 0.2vw, 0.9rem);
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .modal-section-card {
+    border-radius: 1rem;
+    padding: clamp(1rem, 0.9rem + 0.35vw, 1.35rem);
+  }
+
+  /* Card-level typography — complements the modal utilities */
+  .card-title {
+    font-size: clamp(0.95rem, 0.88rem + 0.38vw, 1.15rem);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+
+  .card-meta {
+    font-size: clamp(0.78rem, 0.74rem + 0.18vw, 0.875rem);
+    line-height: 1.4;
+  }
+
+  .card-badge {
+    font-size: clamp(0.625rem, 0.58rem + 0.15vw, 0.75rem);
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .page-title {
+    font-size: clamp(1.2rem, 1.05rem + 0.8vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  .page-subtitle {
+    font-size: clamp(0.9rem, 0.84rem + 0.28vw, 1.05rem);
+    line-height: 1.55;
+  }
+
+  .section-title {
+    font-size: clamp(1rem, 0.92rem + 0.4vw, 1.25rem);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+
+  .form-label {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    font-weight: 500;
+    color: rgb(55 65 81);
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: rgb(107 114 128);
+  }
+
+  .form-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    color: rgb(220 38 38);
+  }
+
+  .touch-target {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .touch-target-md {
+    min-width: 3rem;
+    min-height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .back-button {
+    min-height: 2.75rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.92);
+    color: rgb(17 24 39);
+    transition: all 180ms ease;
+    border: 1px solid rgba(229, 231, 235, 0.8);
+  }
+
+  .back-button:hover {
+    background: rgb(17 24 39);
+    color: rgb(255 255 255);
+    border-color: rgb(17 24 39);
+  }
+
+  .back-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.45);
+  }
+
+  .back-button-subtle {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 180ms ease;
+  }
+
+  .back-button-subtle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35);
+  }
+
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
@@ -425,35 +604,35 @@
   }
 
   .text-heading-2xl {
-    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+    @apply text-2xl sm:text-3xl lg:text-3xl font-bold tracking-tight;
   }
 
   .text-heading-xl {
-    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+    @apply text-xl sm:text-2xl lg:text-2xl font-bold tracking-tight;
   }
 
   .text-heading-lg {
-    @apply text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight;
+    @apply text-lg sm:text-xl lg:text-xl font-semibold tracking-tight;
   }
 
   .text-heading-md {
-    @apply text-base sm:text-lg lg:text-xl font-semibold tracking-tight;
+    @apply text-base sm:text-lg lg:text-lg font-semibold tracking-tight;
   }
 
   .text-heading-sm {
-    @apply text-sm sm:text-base lg:text-lg font-semibold tracking-tight;
+    @apply text-sm sm:text-base lg:text-base font-semibold tracking-tight;
   }
 
   .text-body-lg {
-    @apply text-base sm:text-lg lg:text-xl leading-relaxed;
+    @apply text-base sm:text-lg lg:text-lg leading-relaxed;
   }
 
   .text-body-md {
-    @apply text-sm sm:text-base lg:text-lg leading-relaxed;
+    @apply text-sm sm:text-base lg:text-base leading-relaxed;
   }
 
   .text-body-sm {
-    @apply text-xs sm:text-sm lg:text-base leading-relaxed;
+    @apply text-xs sm:text-sm lg:text-sm leading-relaxed;
   }
 
   .text-caption {
@@ -463,12 +642,13 @@
   /* Button Styles */
   .btn {
     @apply inline-flex items-center justify-center;
-    @apply px-4 py-2 sm:px-6 sm:py-3 rounded-xl;
+    @apply px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl;
     @apply font-semibold transition-all duration-200;
-    @apply whitespace-nowrap min-w-max;
+    @apply whitespace-nowrap;
+    @apply min-h-[44px];
     @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
     @apply shadow-sm hover:shadow-md;
-    @apply text-sm sm:text-base;
+    @apply text-sm;
   }
 
   .btn-primary {

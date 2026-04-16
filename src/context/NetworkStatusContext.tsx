@@ -6,6 +6,35 @@ import { EventItem } from '@/lib/types';
 import * as db from '@/lib/indexedDB';
 import { toast } from 'react-hot-toast';
 
+interface NetworkInformation extends EventTarget {
+  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
+  downlink?: number;
+  rtt?: number;
+}
+
+function getNetworkInformation(): NetworkInformation | null {
+  const nav = navigator as Navigator & { connection?: NetworkInformation };
+  return nav.connection || null;
+}
+
+function devWarn(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(...args);
+  }
+}
+
+function devError(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(...args);
+  }
+}
+
+function devLog(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(...args);
+  }
+}
+
 interface NetworkStatusContextType {
   isOnline: boolean;
   isPwaOnMobile: boolean;
@@ -42,17 +71,18 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
   // Connection quality detection using Network Information API
   const updateConnectionQuality = useCallback(() => {
     try {
-      if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+      const connection = getNetworkInformation();
+      if (connection) {
+        const downlinkValue = connection.downlink ?? 0;
 
         // Update connection type and metrics with error handling
         try {
           setConnectionType(connection?.effectiveType || 'unknown');
-          setDownlink(connection?.downlink || 0);
+          setDownlink(downlinkValue);
           setRtt(connection?.rtt || 0);
         } catch (e) {
           // Some properties might not be available
-          console.warn('Error reading connection properties:', e);
+          devWarn('Error reading connection properties:', e);
         }
 
         // Determine connection quality based on effectiveType and downlink
@@ -65,12 +95,12 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
               quality = 'poor';
               break;
             case '3g':
-              quality = (connection.downlink >= 1) ? 'fair' : 'poor';
+              quality = (downlinkValue >= 1) ? 'fair' : 'poor';
               break;
             case '4g':
-              if (connection.downlink >= 5) {
+              if (downlinkValue >= 5) {
                 quality = 'excellent';
-              } else if (connection.downlink >= 2) {
+              } else if (downlinkValue >= 2) {
                 quality = 'good';
               } else {
                 quality = 'fair';
@@ -79,13 +109,13 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
             default:
               quality = 'unknown';
           }
-        } else if (connection?.downlink > 0) {
+        } else if (downlinkValue > 0) {
           // Fallback to downlink speed if effectiveType not available
-          if (connection.downlink >= 5) {
+          if (downlinkValue >= 5) {
             quality = 'excellent';
-          } else if (connection.downlink >= 2) {
+          } else if (downlinkValue >= 2) {
             quality = 'good';
-          } else if (connection.downlink >= 0.5) {
+          } else if (downlinkValue >= 0.5) {
             quality = 'fair';
           } else {
             quality = 'poor';
@@ -102,7 +132,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
       }
     } catch (error) {
       // Fallback for any errors
-      console.warn('Error detecting connection quality:', error);
+      devWarn('Error detecting connection quality:', error);
       setConnectionQuality('unknown');
       setConnectionType('unknown');
       setDownlink(0);
@@ -149,23 +179,23 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
                   await cache.put(url, response);
                 }
               } catch (error) {
-                console.warn(`Failed to pre-cache ${url}:`, error);
+                devWarn(`Failed to pre-cache ${url}:`, error);
               }
             }
           }
         } catch (cacheError) {
-          console.warn('Failed to open cache:', cacheError);
+          devWarn('Failed to open cache:', cacheError);
         }
       }
     } catch (error) {
-      console.warn('Pre-caching failed:', error);
+      devWarn('Pre-caching failed:', error);
     }
   }, []);
 
   // Refresh events cache from server
   const refreshEventsCache = useCallback(async () => {
     try {
-      console.log('Refreshing events cache...');
+      devLog('Refreshing events cache...');
       await db.clearEventsCache();
       await clearServiceWorkerCache();
 
@@ -182,13 +212,13 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
 
       if (eventsData && eventsData.length > 0) {
         await db.addEvents(eventsData as EventItem[]);
-        console.log(`Cached ${eventsData.length} events for offline use`);
+        devLog(`Cached ${eventsData.length} events for offline use`);
       }
 
       // Force refresh of any components using cached data
       window.dispatchEvent(new CustomEvent('cache-refreshed', { detail: { type: 'events' } }));
     } catch (error) {
-      console.error('Failed to refresh events cache:', error);
+      devError('Failed to refresh events cache:', error);
       throw error;
     }
   }, [clearServiceWorkerCache, preCacheEssentialContent]);
@@ -234,7 +264,7 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
             toast.success('Back online! Events cache updated.');
           }
         } catch (error) {
-          console.error('Failed to refresh cache on reconnect:', error);
+          devError('Failed to refresh cache on reconnect:', error);
           if (offlineNotif) {
             toast.error('Back online, but failed to update cache.');
           }
@@ -264,8 +294,8 @@ export const NetworkStatusProvider: React.FC<{ children: ReactNode }> = ({ child
     window.addEventListener('offline', handleOffline);
 
     // Listen for connection changes if Network Information API is available
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+    const connection = getNetworkInformation();
+    if (connection) {
       const handleConnectionChange = () => updateConnectionQuality();
       connection.addEventListener('change', handleConnectionChange);
 

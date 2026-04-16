@@ -12,6 +12,7 @@ import {
   ExternalLink
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import ExportButton from "../components/ExportButton"
 
 interface Event {
@@ -123,14 +124,14 @@ export default function EventsPage() {
       .channel('events_changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'events' },
-        () => fetchEvents(pagination?.page || 1)
+        () => fetchEvents(1)
       )
       .subscribe()
 
     return () => {
       channel.unsubscribe()
     }
-  }, [])
+  }, [fetchEvents])
 
   if (loading && events.length === 0) {
     return <div className="text-center py-8">Loading events...</div>
@@ -297,11 +298,15 @@ export default function EventsPage() {
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
                         {event.image_url || (event.image_urls && event.image_urls[0]) ? (
-                          <img 
-                            src={event.image_url || event.image_urls?.[0]} 
-                            alt="" 
-                            className="w-12 h-12 object-cover" 
-                          />
+                          <div className="relative w-12 h-12">
+                            <Image
+                              src={event.image_url || event.image_urls?.[0] || ''}
+                              alt={event.name || 'Event image'}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
                         ) : (
                           <div className="w-12 h-12 flex items-center justify-center">
                             <Calendar className="w-6 h-6 text-gray-400" />

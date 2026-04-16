@@ -17,8 +17,8 @@ export default function StatCard({ title, count, icon, trend, subtitle }: StatCa
     <div className="p-6 bg-white shadow rounded-lg">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-          <p className="text-3xl font-bold text-gray-900">{count}</p>
+          <h3 className="text-caption font-medium text-gray-600 mb-1">{title}</h3>
+          <p className="text-heading-xl text-gray-900">{count}</p>
           {subtitle && (
             <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
           )}

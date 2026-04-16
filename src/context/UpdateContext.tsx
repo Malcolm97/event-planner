@@ -2,6 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
+function devLog(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(...args);
+  }
+}
+
+function devError(...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(...args);
+  }
+}
+
 interface VersionInfo {
   version: string;
   buildTimestamp: string;
@@ -129,7 +141,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
       
       return hasUpdate;
     } catch (err) {
-      console.error('Update check failed:', err);
+      devError('Update check failed:', err);
       setError(err instanceof Error ? err.message : 'Update check failed');
       return false;
     } finally {
@@ -145,7 +157,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('All caches cleared');
+        devLog('All caches cleared');
       }
       
       // Clear local storage update-related items
@@ -157,13 +169,13 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(reg => reg.unregister()));
-        console.log('Service workers unregistered');
+        devLog('Service workers unregistered');
       }
       
       // Force reload from server
       window.location.reload();
     } catch (err) {
-      console.error('Failed to apply update:', err);
+      devError('Failed to apply update:', err);
       // Fallback: just reload
       window.location.reload();
     }
@@ -185,7 +197,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
         switch (event.data.type) {
           case 'SW_ACTIVATED':
           case 'SW_UPDATE_AVAILABLE':
-            console.log('SW message received:', event.data);
+            devLog('SW message received:', event.data);
             // Check for update when SW notifies us
             checkForUpdate();
             break;

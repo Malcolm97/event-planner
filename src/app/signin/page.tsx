@@ -31,9 +31,30 @@ export default function SignInPage() {
   const [contactMethod, setContactMethod] = useState<'email' | 'phone' | 'both' | 'none'>('both');
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false); // New state for modal visibility
   const [successMessage, setSuccessMessage] = useState(""); // New state for success message
   const router = useRouter();
+
+  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const getPasswordStrength = (value: string) => {
+    if (!value) return { label: 'Enter a password', score: 0, color: 'text-gray-500' };
+
+    let score = 0;
+    if (value.length >= 8) score++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+    if (/\d/.test(value)) score++;
+    if (/[^A-Za-z0-9]/.test(value)) score++;
+
+    if (score <= 1) return { label: 'Weak password', score, color: 'text-red-600' };
+    if (score <= 2) return { label: 'Fair password', score, color: 'text-amber-600' };
+    if (score === 3) return { label: 'Good password', score, color: 'text-blue-600' };
+    return { label: 'Strong password', score, color: 'text-green-600' };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
 
   useEffect(() => {
     // Check if user is already signed in
@@ -53,19 +74,17 @@ export default function SignInPage() {
   {/* Header removed, now rendered globally in layout */}
         <div className="relative flex flex-1 items-center justify-center p-4">
           <div className="absolute top-6 left-6">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="back-button">
               <FiArrowLeft className="text-lg" />
               Back to Events
             </Link>
-          </Button>
           </div>
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
-            <h2 className="text-2xl font-bold text-center mb-1 text-gray-900 tracking-tight">
+            <h2 className="page-title text-center mb-1 text-gray-900">
               Welcome to PNG Events
             </h2>
-            <p className="text-center text-gray-500 text-base mb-2">Sign in to discover and create events</p>
-            <div className="text-center text-gray-600">Sign-in and registration are not available when offline.</div>
+            <p className="page-subtitle text-center text-gray-500 mb-2">Sign in to discover and create events</p>
+            <div className="page-subtitle text-center text-gray-600">Sign-in and registration are not available when offline.</div>
           </div>
         </div>
       </div>
@@ -76,17 +95,20 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setEmailError("");
+    setConfirmPasswordError("");
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!validateEmail(email)) {
       setError("Please enter a valid email address");
+      setEmailError("Please enter a valid email address");
       setLoading(false);
       return;
     }
 
     if (isRegister && password !== confirmPassword) {
       setError("Passwords do not match");
+      setConfirmPasswordError("Passwords do not match");
       setLoading(false);
       return;
     }
@@ -234,34 +256,33 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-300 via-red-500 to-red-600">
   {/* Header removed, now rendered globally in layout */}
-      <div className="relative flex flex-1 items-center justify-center p-4">
+      <div className="relative flex flex-1 items-center justify-center p-4 sm:p-5">
         <div className="absolute top-6 left-6">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/" className="flex items-center gap-2">
-              <FiArrowLeft className="text-lg" />
-              Back to Events
-            </Link>
-          </Button>
+          <Link href="/" className="back-button">
+            <FiArrowLeft className="text-lg" />
+            Back to Events
+          </Link>
         </div>
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-6 border border-gray-200">
-        <div className="text-center mb-4">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 w-full max-w-md flex flex-col gap-5 sm:gap-6 border border-gray-200">
+        <div className="text-center mb-3 sm:mb-4">
           <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-white font-bold text-lg">PNG</span>
           </div>
-          <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900 tracking-tight mb-2">
+          <h1 className="page-title text-gray-900 mb-2">
           Welcome to PNG Events
         </h1>
-          <p className="text-gray-600 text-base">Sign in to discover and create events</p>
+          <p className="page-subtitle text-gray-600">Sign in to discover and create events</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-1">
+        <div className="grid grid-cols-2 gap-1 mb-5 sm:mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-1">
           <Button
             type="button"
             variant={!isRegister && !isForgotPassword ? "secondary" : "ghost"}
             size="sm"
             onClick={() => { setIsRegister(false); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
+            className="w-full"
           >
             Sign In
           </Button>
@@ -271,6 +292,7 @@ export default function SignInPage() {
             size="sm"
             onClick={() => { setIsRegister(true); setIsForgotPassword(false); setError(""); }}
             tabIndex={0}
+            className="w-full"
           >
             Register
           </Button>
@@ -288,10 +310,22 @@ export default function SignInPage() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError("");
+                }}
+                onBlur={() => {
+                  if (email && !validateEmail(email)) {
+                    setEmailError("Please enter a valid email address");
+                  }
+                }}
                 className="input-field"
+                autoFocus={isForgotPassword}
+                autoComplete="email"
+                inputMode="email"
                 required
               />
+              {emailError && <p className="form-error mt-2">{emailError}</p>}
               </div>
             </>
           ) : isRegister ? (
@@ -304,6 +338,9 @@ export default function SignInPage() {
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="input-field"
+                autoFocus={isRegister && !isForgotPassword}
+                autoComplete="name"
+                maxLength={120}
                 required
               />
               </div>
@@ -313,10 +350,21 @@ export default function SignInPage() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError("");
+                }}
+                onBlur={() => {
+                  if (email && !validateEmail(email)) {
+                    setEmailError("Please enter a valid email address");
+                  }
+                }}
                 className="input-field"
+                autoComplete="email"
+                inputMode="email"
                 required
               />
+              {emailError && <p className="form-error mt-2">{emailError}</p>}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
@@ -327,16 +375,34 @@ export default function SignInPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="input-field pr-12"
+                    autoComplete="new-password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 touch-target text-gray-500 hover:text-gray-700 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                   </button>
+                </div>
+                <div className="mt-2" aria-live="polite">
+                  <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        passwordStrength.score <= 1
+                          ? 'bg-red-500'
+                          : passwordStrength.score <= 2
+                            ? 'bg-amber-500'
+                            : passwordStrength.score === 3
+                              ? 'bg-blue-500'
+                              : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.max(passwordStrength.score, 1) * 25}%` }}
+                    />
+                  </div>
+                  <p className={`text-xs mt-1 ${passwordStrength.color}`}>{passwordStrength.label}</p>
                 </div>
               </div>
               <div>
@@ -346,19 +412,29 @@ export default function SignInPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
                     value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
+                    onChange={e => {
+                      setConfirmPassword(e.target.value);
+                      if (confirmPasswordError) setConfirmPasswordError("");
+                    }}
+                    onBlur={() => {
+                      if (confirmPassword && password && confirmPassword !== password) {
+                        setConfirmPasswordError("Passwords do not match");
+                      }
+                    }}
                     className="input-field pr-12"
+                    autoComplete="new-password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 touch-target text-gray-500 hover:text-gray-700 transition-colors"
                     tabIndex={-1}
                   >
                     {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                   </button>
                 </div>
+                {confirmPasswordError && <p className="form-error mt-2">{confirmPasswordError}</p>}
               </div>
 
               {/* Contact Preferences */}
@@ -388,6 +464,8 @@ export default function SignInPage() {
                     value={whatsappNumber}
                     onChange={e => setWhatsappNumber(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    autoComplete="tel"
+                    inputMode="tel"
                   />
                 </div>
 
@@ -399,6 +477,8 @@ export default function SignInPage() {
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    autoComplete="tel"
+                    inputMode="tel"
                   />
                 </div>
 
@@ -410,6 +490,7 @@ export default function SignInPage() {
                     value={company}
                     onChange={e => setCompany(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    autoComplete="organization"
                   />
                 </div>
 
@@ -433,10 +514,22 @@ export default function SignInPage() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError("");
+                }}
+                onBlur={() => {
+                  if (email && !validateEmail(email)) {
+                    setEmailError("Please enter a valid email address");
+                  }
+                }}
                 className="input-field"
+                autoFocus={!isRegister && !isForgotPassword}
+                autoComplete="email"
+                inputMode="email"
                 required
               />
+              {emailError && <p className="form-error mt-2">{emailError}</p>}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
@@ -447,26 +540,25 @@ export default function SignInPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="input-field pr-12"
+                    autoComplete="current-password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-1"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 touch-target text-gray-500 hover:text-gray-700 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                   </button>
                 </div>
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
                   onClick={() => { setIsForgotPassword(true); setIsRegister(false); setError(""); }}
-                  className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium p-0 h-auto"
+                  className="text-sm text-yellow-600 hover:text-yellow-700 self-end font-medium"
                 >
                   Forgot Password?
-                </Button>
+                </button>
               </div>
             </>
           )}
@@ -498,12 +590,12 @@ export default function SignInPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white">Success!</h3>
+              <h3 className="page-title text-white">Success!</h3>
             </div>
             
             {/* Content */}
             <div className="p-6">
-              <p className="text-gray-700 text-center leading-relaxed">{successMessage}</p>
+              <p className="page-subtitle text-gray-700 text-center">{successMessage}</p>
             </div>
             
             {/* Footer */}
