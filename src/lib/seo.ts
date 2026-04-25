@@ -5,7 +5,7 @@ export const SITE_CONFIG = {
   name: 'PNG Events',
   fullName: 'PNG Events - Discover Local Events in Papua New Guinea',
   description: 'Find concerts, festivals, workshops, sports, and community events happening in Papua New Guinea. Discover what\'s on in Port Moresby, Lae, and across PNG.',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  url: process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   locale: 'en_PG',
   language: 'en',
   timezone: 'Pacific/Port_Moresby',
