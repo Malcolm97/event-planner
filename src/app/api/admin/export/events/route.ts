@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { TABLES } from "@/lib/supabase"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { withAdminAuth } from "@/lib/admin-auth"
 
-export async function GET(request: Request) {
+async function exportEventsHandler(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
@@ -79,3 +80,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Export failed' }, { status: 500 })
   }
 }
+
+export const GET = withAdminAuth(exportEventsHandler)

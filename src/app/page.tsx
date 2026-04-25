@@ -9,6 +9,7 @@ import { Metadata } from 'next';
 
 // Revalidate the page every 60 seconds
 export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 // Home page metadata for SEO
 export const metadata: Metadata = {
@@ -52,32 +53,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Fetch stats from our server-side API endpoint
-async function getStats() {
-  try {
-    // Build a reliable absolute URL for server-side fetches.
-    const configuredUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-    const baseUrl = configuredUrl
-      ? configuredUrl.startsWith('http://') || configuredUrl.startsWith('https://')
-        ? configuredUrl
-        : `https://${configuredUrl}`
-      : 'http://localhost:3000';
-    
-    const response = await fetch(`${baseUrl}/api/stats`, {
-      next: { revalidate: 60 } // Cache for 60 seconds
-    });
-    
-    if (!response.ok) {
-      return { totalUsers: 0, totalEvents: 0, citiesCovered: 0 };
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-    return { totalUsers: 0, totalEvents: 0, citiesCovered: 0 };
-  }
-}
-
 async function getEvents() {
   // Check if Supabase is properly configured
   if (!isSupabaseConfigured()) {
@@ -99,11 +74,17 @@ async function getEvents() {
 
     // Fetch upcoming and current events (events that haven't ended yet)
     // We fetch events where date >= today OR end_date >= today (for multi-day events currently happening)
-    const { data: eventsData, error: eventsError } = await supabase
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const { data: eventsData, error: eventsError, count: totalUpcomingEvents } = await supabase
       .from(TABLES.EVENTS)
-      .select('id, name, date, end_date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by')
+      .select('id, name, date, end_date, location, venue, category, presale_price, gate_price, description, image_urls, featured, created_by', { count: 'exact' })
       .or(`date.gte.${todayStart},end_date.gte.${todayStart}`)
-      .order('date', { ascending: true });
+      .order('date', { ascending: true })
+      .abortSignal(controller.signal);
+
+    clearTimeout(timeout);
 
     if (eventsError) {
       console.warn('Error fetching events from Supabase:', eventsError.message);
@@ -124,6 +105,19 @@ async function getEvents() {
         featured: event.featured || false,
         created_by: event.created_by || '',
       }));
+
+      const citiesCovered = new Set(
+        events
+          .map((event) => event.location?.split(',')[0]?.trim().toLowerCase())
+          .filter(Boolean)
+      ).size;
+
+      return {
+        events,
+        totalEvents: totalUpcomingEvents || events.length,
+        totalUsers: 0,
+        citiesCovered,
+      };
     }
 
   } catch (error) {
@@ -137,14 +131,17 @@ async function getEvents() {
     };
   }
 
-  // Fetch stats from the dedicated API endpoint
-  const stats = await getStats();
+  const citiesCovered = new Set(
+    events
+      .map((event) => event.location?.split(',')[0]?.trim().toLowerCase())
+      .filter(Boolean)
+  ).size;
 
   return {
     events,
-    totalEvents: stats.totalEvents,
-    totalUsers: stats.totalUsers,
-    citiesCovered: stats.citiesCovered,
+    totalEvents: events.length,
+    totalUsers: 0,
+    citiesCovered,
   };
 }
 

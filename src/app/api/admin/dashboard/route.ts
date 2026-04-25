@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
 import { TABLES } from "@/lib/supabase"
+import { withAdminAuth } from "@/lib/admin-auth"
 
-export async function GET() {
+async function dashboardHandler(_request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
     
@@ -139,3 +140,5 @@ export async function GET() {
     )
   }
 }
+
+export const GET = withAdminAuth(dashboardHandler)

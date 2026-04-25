@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { getUserFriendlyError } from "@/lib/userMessages"
 import { normalizeUser } from "@/lib/types"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { withAdminAuth } from "@/lib/admin-auth"
 
-export async function GET(request: Request) {
+async function usersHandler(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
@@ -132,3 +133,5 @@ export async function GET(request: Request) {
     )
   }
 }
+
+export const GET = withAdminAuth(usersHandler)

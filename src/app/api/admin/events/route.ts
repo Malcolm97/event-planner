@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { TABLES, USER_FIELDS } from "@/lib/supabase"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { withAdminAuth } from "@/lib/admin-auth"
 
-export async function GET(request: Request) {
+async function eventsHandler(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
     const { searchParams } = new URL(request.url)
@@ -117,3 +118,5 @@ export async function GET(request: Request) {
     )
   }
 }
+
+export const GET = withAdminAuth(eventsHandler)

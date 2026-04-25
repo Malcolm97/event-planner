@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAdminAccess, createSecureResponse, logSecurityEvent } from './security';
+import { createSecureResponse, logSecurityEvent } from './security';
+import { createServerSupabaseClient } from './supabase-server';
+
+async function checkAdminAccess(): Promise<{
+  isAdmin: boolean;
+  user?: any;
+  error?: string;
+}> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { isAdmin: false, error: 'Please sign in to continue.' };
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (userError) {
+      return { isAdmin: false, error: 'Unable to verify admin access.' };
+    }
+
+    return { isAdmin: userData?.role === 'admin', user };
+  } catch {
+    return { isAdmin: false, error: 'Unable to verify admin access.' };
+  }
+}
 
 // Wrapper for admin API routes
 export function withAdminAuth(
