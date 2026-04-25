@@ -217,6 +217,8 @@ export function EventListJsonLd({ events, pageTitle, pageUrl }: EventListJsonLdP
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: pageTitle,
+    url: pageUrl,
+    mainEntityOfPage: pageUrl,
     description: `Events in Papua New Guinea - ${pageTitle}`,
     numberOfItems: events.length,
     itemListElement: events.slice(0, 10).map((event, index) => ({

@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
-import { SITE_CONFIG } from '@/lib/seo';
+import { SITE_CONFIG, categoryToSlug } from '@/lib/seo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
@@ -87,12 +87,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Create sitemap entries for each event
-    const eventPages: MetadataRoute.Sitemap = (events || []).map((event) => ({
-      url: `${baseUrl}/events/${event.id}`,
-      lastModified: new Date(event.updated_at || event.created_at || new Date()),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
+    const now = Date.now();
+    const eventPages: MetadataRoute.Sitemap = (events || [])
+      .slice(0, 1500)
+      .map((event) => {
+        const eventTimestamp = event.date ? new Date(event.date).getTime() : null;
+        const isUpcoming = !!eventTimestamp && eventTimestamp >= now;
+
+        return {
+          url: `${baseUrl}/events/${event.id}`,
+          lastModified: new Date(event.updated_at || event.created_at || new Date()),
+          changeFrequency: 'weekly' as const,
+          priority: isUpcoming ? 0.8 : 0.6,
+        };
+      });
 
     // Fetch all categories
     const { data: categories, error: categoriesError } = await supabase
@@ -102,7 +110,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (!categoriesError && categories) {
       const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
-        url: `${baseUrl}/categories?category=${encodeURIComponent(category.name)}`,
+        url: `${baseUrl}/categories/${categoryToSlug(category.name)}`,
         lastModified: new Date(category.updated_at || new Date()),
         changeFrequency: 'weekly' as const,
         priority: 0.7,

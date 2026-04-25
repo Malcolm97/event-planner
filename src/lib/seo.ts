@@ -85,6 +85,22 @@ export const ALL_KEYWORDS = [
   'community',
 ];
 
+// Convert a category name into a stable SEO-friendly slug.
+export function categoryToSlug(category: string): string {
+  return category
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
+// Resolve a slug back to a category name from an allowed list.
+export function slugToCategory(slug: string, categories: string[]): string | null {
+  const match = categories.find((category) => categoryToSlug(category) === slug);
+  return match || null;
+}
+
 // Event categories with SEO-friendly names and descriptions
 export const EVENT_CATEGORIES = {
   Music: {
@@ -315,5 +331,5 @@ export function generateEventUrl(eventId: string): string {
 
 // Generate category URL
 export function generateCategoryUrl(category: string): string {
-  return `${SITE_CONFIG.url}/categories?category=${encodeURIComponent(category)}`;
+  return `${SITE_CONFIG.url}/categories/${categoryToSlug(category)}`;
 }

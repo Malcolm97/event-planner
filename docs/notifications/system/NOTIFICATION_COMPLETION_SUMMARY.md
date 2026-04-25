@@ -203,8 +203,8 @@ The implementation has been verified to:
 
 ### New Files
 1. `/src/hooks/useNotificationClick.ts` - New hook for client-side message handling
-2. `/NOTIFICATION_SYSTEM_IMPROVEMENTS.md` - Complete technical documentation
-3. `/NOTIFICATION_TESTING_GUIDE.md` - User-friendly testing procedures
+2. `./NOTIFICATION_SYSTEM_IMPROVEMENTS.md` - Complete technical documentation
+3. `./NOTIFICATION_TESTING_GUIDE.md` - User-friendly testing procedures
 
 ## Deployment Checklist
 

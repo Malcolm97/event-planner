@@ -1,7 +1,8 @@
 // Categories Page with Server-Side SEO
 import { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_CONFIG, PRIMARY_KEYWORDS, EVENT_CATEGORIES } from '@/lib/seo';
+import { redirect } from 'next/navigation';
+import { SITE_CONFIG, PRIMARY_KEYWORDS, categoryToSlug } from '@/lib/seo';
 import { BreadcrumbJsonLd } from '@/components/JsonLd';
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase';
 import CategoriesPageContent from './CategoriesPageContent';
@@ -56,7 +57,7 @@ const breadcrumbs = [
 ];
 
 // Fetch initial data server-side
-async function getInitialData() {
+export async function getInitialData() {
   if (!isSupabaseConfigured()) {
     return {
       events: [],
@@ -137,7 +138,7 @@ async function getInitialData() {
 }
 
 // Define categories
-const allCategories = [
+export const allCategories = [
   { name: 'All Events', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
   { name: 'Music', icon: 'FiMusic', color: 'bg-purple-100 text-purple-600' },
   { name: 'Art', icon: 'FiImage', color: 'bg-pink-100 text-pink-600' },
@@ -148,7 +149,18 @@ const allCategories = [
   { name: 'Other', icon: 'FiStar', color: 'bg-gray-100 text-gray-600' },
 ];
 
-export default async function CategoriesPage() {
+export default async function CategoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const category = resolvedSearchParams?.category;
+
+  if (category) {
+    redirect(`/categories/${categoryToSlug(category)}`);
+  }
+
   const { events, totalEvents, totalUsers, citiesCovered } = await getInitialData();
 
   return (

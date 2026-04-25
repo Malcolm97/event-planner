@@ -79,7 +79,7 @@ async function testDatabaseConnection() {
       } else if (error.message.includes('infinite recursion')) {
         console.log('  🔧 Issue: RLS policy infinite recursion detected!');
         console.log('     1. Run the RLS policy fix in your Supabase SQL Editor');
-        console.log('     2. Use the fix-rls-policies.sql file provided');
+        console.log('     2. Use database/migrations/fixes/fix-rls-policies.sql');
       }
       
       return false;
@@ -184,7 +184,7 @@ async function runTests() {
   console.log('\n💡 Additional Resources:');
   console.log('  - Supabase Dashboard: https://app.supabase.com');
   console.log('  - Database Schema: Check database/schemas/ directory');
-  console.log('  - RLS Policies: Run fix-rls-policies.sql if needed');
+  console.log('  - RLS Policies: Run database/migrations/fixes/fix-rls-policies.sql if needed');
 }
 
 // Run the tests

@@ -139,7 +139,7 @@ log('   Columns: id, user_id, subscription, user_agent, created_at, updated_at',
 
 log('\n7. DOCUMENTATION', 'blue');
 log('─────────────────────────────────────────────────────────────────', 'blue');
-allPassed &= checkFile('PUSH_NOTIFICATIONS_CONFIGURATION.md', false);
+allPassed &= checkFile('docs/notifications/push/PUSH_NOTIFICATIONS_CONFIGURATION.md', false);
 
 // Summary
 log('\n╔════════════════════════════════════════════════════════════════╗', 'blue');

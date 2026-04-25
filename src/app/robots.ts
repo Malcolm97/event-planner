@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
           '/events',
           '/events/*',
           '/categories',
+          '/categories/*',
           '/about',
           '/creators',
           '/profile/*',

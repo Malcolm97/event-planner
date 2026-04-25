@@ -2,7 +2,7 @@
 
 /**
  * Test script to verify VAPID key configuration
- * Run with: node test-vapid-config.js
+ * Run with: node scripts/test-vapid-config.js
  */
 
 console.log('🔍 Testing VAPID Configuration...\n');

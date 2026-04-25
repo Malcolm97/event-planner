@@ -118,7 +118,7 @@ export const handleSupabaseError = (error: any, operation: string) => {
     console.error(`🚨 CRITICAL: RLS policy infinite recursion detected!`)
     console.error(`   This is preventing all database operations.`)
     console.error(`   Solution: Run the RLS policy fix in your Supabase SQL Editor`)
-    console.error(`   File: fix-rls-policies.sql contains the exact SQL to run`)
+    console.error(`   File: database/migrations/fixes/fix-rls-policies.sql contains the exact SQL to run`)
     console.error(`   Operation: ${operation}`)
   }
   

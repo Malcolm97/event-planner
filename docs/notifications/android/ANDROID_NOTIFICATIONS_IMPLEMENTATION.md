@@ -89,7 +89,7 @@ Better error messages for debugging on Android.
    - Service worker readiness verification
    - More detailed error messages
 
-3. **`/ANDROID_NOTIFICATIONS_GUIDE.md`** (NEW)
+3. **`./ANDROID_NOTIFICATIONS_GUIDE.md`** (NEW)
    - Comprehensive Android testing guide
    - Troubleshooting for common Android issues
    - Browser-specific guidance
@@ -295,7 +295,7 @@ Potential improvements for future versions:
 
 ## Support & Troubleshooting
 
-See **ANDROID_NOTIFICATIONS_GUIDE.md** for:
+See [ANDROID_NOTIFICATIONS_GUIDE.md](./ANDROID_NOTIFICATIONS_GUIDE.md) for:
 - Detailed troubleshooting steps
 - Common Android issues and solutions
 - Browser-specific guidance

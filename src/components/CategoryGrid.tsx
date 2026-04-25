@@ -6,6 +6,7 @@ import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'rea
 import type { IconType } from 'react-icons';
 import { EventItem } from '@/lib/types';
 import { isEventUpcomingOrActive } from '@/lib/utils';
+import { categoryToSlug } from '@/lib/seo';
 
 // Define PNG-specific categories and their properties
 const allCategories = [
@@ -62,7 +63,7 @@ const CategoryGrid = memo(function CategoryGrid({ events }: CategoryGridProps) {
           const categoryColor = categoryColorMap[cat.name] || 'bg-yellow-100 text-black';
           return (
             <Link
-              href={`/categories?category=${encodeURIComponent(cat.name)}`}
+              href={`/categories/${categoryToSlug(cat.name)}`}
               key={cat.name}
               className={`card-hover flex flex-col items-center justify-center gap-2 px-4 py-5 sm:px-5 sm:py-6 lg:gap-3 lg:px-6 lg:py-7 rounded-2xl border-2 border-border-color font-bold shadow-lg hover:shadow-xl hover:border-yellow-400 transition-all duration-300 min-h-[112px] sm:min-h-[120px] lg:min-h-[140px] ${categoryColor} group`}
             >

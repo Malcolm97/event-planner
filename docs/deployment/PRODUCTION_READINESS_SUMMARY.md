@@ -80,8 +80,8 @@ vercel --prod
 ## 📁 Files Created for You
 
 ### 📋 Documentation
-1. **`PRODUCTION_DEPLOYMENT_GUIDE.md`** - Comprehensive deployment guide
-2. **`DEPLOYMENT_ACTION_PLAN.md`** - Step-by-step action plan
+1. **[PRODUCTION_DEPLOYMENT_GUIDE.md](./PRODUCTION_DEPLOYMENT_GUIDE.md)** - Comprehensive deployment guide
+2. **[DEPLOYMENT_ACTION_PLAN.md](./DEPLOYMENT_ACTION_PLAN.md)** - Step-by-step action plan
 3. **`.env.production.example`** - Production environment template
 
 ### 🔧 Configuration Templates
@@ -175,8 +175,8 @@ Your PNG Events webapp demonstrates excellent engineering practices and is **95%
 
 ## 📞 Next Steps
 
-1. **Follow the deployment guide**: Use `PRODUCTION_DEPLOYMENT_GUIDE.md`
-2. **Execute the action plan**: Follow `DEPLOYMENT_ACTION_PLAN.md`
+1. **Follow the deployment guide**: Use [PRODUCTION_DEPLOYMENT_GUIDE.md](./PRODUCTION_DEPLOYMENT_GUIDE.md)
+2. **Execute the action plan**: Follow [DEPLOYMENT_ACTION_PLAN.md](./DEPLOYMENT_ACTION_PLAN.md)
 3. **Configure environment**: Update `.env.local` with real credentials
 4. **Set up database**: Run SQL migrations in Supabase
 5. **Deploy to Vercel**: Use provided deployment commands

@@ -48,3 +48,6 @@ SUPABASE_SETUP.md
 
 # continue config
 .continue/
+
+# temporary workspace artifacts
+/tmp/

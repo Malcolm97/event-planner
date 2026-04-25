@@ -2,6 +2,14 @@
 
 A modern, offline-first Progressive Web App (PWA) for discovering local events in Papua New Guinea.
 
+## Documentation Map
+
+- Main docs hub: [docs/README.md](docs/README.md)
+- Deployment docs: [docs/deployment](docs/deployment)
+- Notifications docs: [docs/notifications](docs/notifications)
+- Database and Supabase docs: [docs/database](docs/database)
+- Audit docs: [docs/audit](docs/audit)
+
 ## 🚀 Production Deployment Checklist
 
 ### ✅ Completed Tasks

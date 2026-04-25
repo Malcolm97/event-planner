@@ -4,7 +4,6 @@ import AppFooter from '@/components/AppFooter';
 // Offline mode detection
 const isOffline = typeof window !== 'undefined' && !navigator.onLine;
 import { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES, User } from '@/lib/supabase';
 import { EventItem } from '../../lib/types';
 import { useEvents, useOfflineFirstData } from '@/hooks/useOfflineFirstData';
@@ -54,6 +53,7 @@ interface CategoriesPageContentInnerProps {
   initialTotalEvents: number | null;
   initialTotalUsers: number | null;
   initialCitiesCovered: number;
+  initialSelectedCategory?: string;
 }
 
 // Hook to get events from IndexedDB when offline
@@ -76,7 +76,7 @@ const useOfflineEvents = (setEvents: (events: EventItem[]) => void) => {
   }, [setEvents]);
 }
 
-function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
+function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered, initialSelectedCategory = 'All Events' }: CategoriesPageContentInnerProps) {
   const { data: fetchedEvents = [], isLoading: loading } = useEvents();
   // Use initial events as fallback while loading or if no fetched events
   const events = fetchedEvents.length > 0 ? fetchedEvents : initialEvents;
@@ -84,7 +84,10 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   const { data: users = [] } = useOfflineFirstData<User>('creators');
   const { isOnline } = useNetworkStatus();
   const [displayCategories] = useState<typeof allCategories>(initialDisplayCategories);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
+    const existsInCategoryList = initialDisplayCategories.some((category) => category.name === initialSelectedCategory);
+    return existsInCategoryList ? initialSelectedCategory : 'All Events';
+  });
 
   const selectedCategoryInfo = displayCategories.find(cat => cat.name === selectedCategory);
   const Icon = selectedCategoryInfo?.icon ? categoryIconMap[selectedCategoryInfo.icon] : FiStar;
@@ -321,7 +324,7 @@ function CategoriesPageContentInner({ initialEvents, initialDisplayCategories, i
   );
 }
 
-export default function CategoriesPageContent({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered }: CategoriesPageContentInnerProps) {
+export default function CategoriesPageContent({ initialEvents, initialDisplayCategories, initialTotalEvents, initialTotalUsers, initialCitiesCovered, initialSelectedCategory = 'All Events' }: CategoriesPageContentInnerProps) {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white py-12 sm:py-16">
@@ -353,6 +356,7 @@ export default function CategoriesPageContent({ initialEvents, initialDisplayCat
         initialTotalEvents={initialTotalEvents}
         initialTotalUsers={initialTotalUsers}
         initialCitiesCovered={initialCitiesCovered}
+  initialSelectedCategory={initialSelectedCategory}
       />
     </Suspense>
   );

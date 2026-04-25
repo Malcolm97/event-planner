@@ -37,9 +37,9 @@
 - [ ] Log aggregation configured
 
 ### Documentation
-- [x] WEBAPP_AUDIT_REPORT.md created
-- [x] AUDIT_SUMMARY.md created
-- [x] CHANGES_SUMMARY.md created
+- [x] [WEBAPP_AUDIT_REPORT.md](../audit/WEBAPP_AUDIT_REPORT.md) created
+- [x] [AUDIT_SUMMARY.md](../audit/AUDIT_SUMMARY.md) created
+- [x] [CHANGES_SUMMARY.md](../audit/CHANGES_SUMMARY.md) created
 - [ ] README.md updated with deployment instructions
 - [ ] Admin documentation created
 - [ ] User documentation updated
@@ -307,9 +307,9 @@ Based on this deployment, plan for:
 ## Resources
 
 ### Documentation
-- WEBAPP_AUDIT_REPORT.md - Comprehensive audit findings
-- AUDIT_SUMMARY.md - Quick reference summary
-- CHANGES_SUMMARY.md - Detailed change log
+- [WEBAPP_AUDIT_REPORT.md](../audit/WEBAPP_AUDIT_REPORT.md) - Comprehensive audit findings
+- [AUDIT_SUMMARY.md](../audit/AUDIT_SUMMARY.md) - Quick reference summary
+- [CHANGES_SUMMARY.md](../audit/CHANGES_SUMMARY.md) - Detailed change log
 - README.md - Project overview
 
 ### Tools

@@ -10,6 +10,7 @@ import { FiStar, FiMusic, FiImage, FiCoffee, FiCpu, FiHeart, FiSmile } from 'rea
 import EventModal from '@/components/EventModal';
 import Link from 'next/link';
 import { isEventUpcomingOrActive } from '@/lib/utils';
+import { categoryToSlug } from '@/lib/seo';
 
 const allCategories = [
   { name: 'All Categories', icon: 'FiStar', color: 'bg-gray-200 text-gray-800' },
@@ -117,7 +118,7 @@ export default function CategoriesContent({ initialEvents }: CategoriesContentPr
           return (
             <Link
               key={cat.name}
-              href={`/categories?category=${encodeURIComponent(cat.name)}`}
+              href={`/categories/${categoryToSlug(cat.name)}`}
               className={`
                 flex flex-col items-center justify-center gap-2 md:gap-3 p-3 md:p-6 rounded-xl md:rounded-2xl 
                 transition duration-200 ease-in-out transform hover:scale-105
