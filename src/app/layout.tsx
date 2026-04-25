@@ -112,7 +112,7 @@ export const metadata = {
     },
   },
   verification: {
-    google: 'google-site-verification-code', // Replace with actual verification code
+    google: 'E890bCztrcOT586vO0hl5qmTtpXxQiiwROsn3yRugXQ',
   },
   category: 'Events',
   classification: 'Event Discovery Platform',
