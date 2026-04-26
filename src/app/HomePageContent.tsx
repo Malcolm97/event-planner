@@ -13,7 +13,7 @@ import { useEventsSWR, useStatsSWR, prefetchEvent } from '@/hooks/useSWRData';
 import { SkeletonEventCard, SkeletonGrid } from '@/components/SkeletonLoader';
 import ProgressiveLoader, { ProgressiveEnhancement } from '@/components/ProgressiveLoader';
 import { useNotificationClick } from '@/hooks/useNotificationClick';
-import { isEventUpcomingOrActive, isEventCurrentlyHappening, sortEventsByDate } from '@/lib/utils';
+import { isEventUpcomingOrActive } from '@/lib/utils';
 
 // Dynamic imports for better code splitting
 const EventModal = dynamic(() => import('@/components/EventModal'), { ssr: false });
@@ -185,14 +185,6 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
   const upcomingEvents = useMemo(() => {
     return filteredEvents.filter((ev: EventItem) => isEventUpcomingOrActive(ev));
   }, [filteredEvents]);
-
-  // Separate events into "Happening Now" and "Upcoming" categories
-  const happeningNowEvents = upcomingEvents.filter(event => isEventCurrentlyHappening(event));
-  const upcomingOnlyEvents = upcomingEvents.filter(event => !isEventCurrentlyHappening(event));
-
-  // Sort events: happening now first (by end date), then upcoming (by start date)
-  const sortedHappeningNow = sortEventsByDate(happeningNowEvents);
-  const sortedUpcoming = sortEventsByDate(upcomingOnlyEvents);
 
   useEffect(() => {
     const filterEvents = () => {
@@ -446,38 +438,11 @@ export default function HomePageContent({ initialEvents, initialTotalEvents, ini
             <>
               {upcomingEvents.length > 0 ? (
                 <>
-                  {/* Happening Now Section - currently happening events */}
-                  {sortedHappeningNow.length > 0 && (
-                    <div className="mb-12 lg:mb-16">
-                      <div className="text-center mb-6 lg:mb-8">
-                        <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                          <span className="text-2xl">🔥</span> Happening Now
-                        </h3>
-                        <p className="text-gray-500 mt-2 text-sm lg:text-base">Events that are currently in progress</p>
-                      </div>
-              <div className="responsive-grid animate-fade-in">
-                        {sortedHappeningNow.slice(0, 6).map(event => (
-                          <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Upcoming Events Section - only show if there are upcoming events */}
-                  {sortedUpcoming.length > 0 && (
-                    <div>
-                      <div className="text-center mb-6 lg:mb-8">
-                        <h3 className="text-heading-2xl flex items-center justify-center gap-4">
-                          <span className="text-2xl">📅</span> Upcoming Events
-                        </h3>
-                      </div>
-                      <div className="responsive-grid animate-fade-in">
-                        {sortedUpcoming.slice(0, 6).map(event => (
-                          <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="responsive-grid animate-fade-in">
+                    {upcomingEvents.slice(0, 6).map(event => (
+                      <EventCard key={event.id} event={event} onClick={() => { setSelectedEvent(event); setDialogOpen(true); }} />
+                    ))}
+                  </div>
                 </>
               ) : (
                 <div className="col-span-full text-center py-20">

@@ -429,28 +429,6 @@ const Header = React.memo(function Header() {
                 {isNetworkDropdownOpen && renderNetworkStatusMenu()}
               </div>
 
-              <div className="relative network-dropdown hidden md:flex items-center">
-                <Button
-                  onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
-                  variant="ghost"
-                  size="sm"
-                  className={`relative flex items-center gap-2 rounded-xl px-3 py-2 transition-all duration-200 ${currentSyncConfig.color}`}
-                  aria-expanded={isNetworkDropdownOpen}
-                  aria-haspopup="dialog"
-                  aria-controls="network-status-menu"
-                >
-                  <SyncIcon size={16} className={'animate' in currentSyncConfig && currentSyncConfig.animate ? 'animate-spin' : ''} />
-                  <span className="hidden md:inline text-sm font-medium">{currentSyncConfig.label}</span>
-                  {(queueLength > 0 || failedOperationsCount > 0) && (
-                    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-semibold text-gray-900">
-                      {failedOperationsCount > 0 ? `${failedOperationsCount}!` : queueLength}
-                    </span>
-                  )}
-                </Button>
-
-                {isNetworkDropdownOpen && renderNetworkStatusMenu()}
-              </div>
-
               {/* Desktop: Create Event + User Profile grouped together */}
               <div className="hidden lg:flex items-center gap-2">
                 <Button onClick={() => navigateWithOfflineCheck('/create-event', 'Create Event')} variant="primary" size="sm" className="flex items-center">
